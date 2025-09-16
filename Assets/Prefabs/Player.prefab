@@ -575,11 +575,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d64c980f1032d434193c2585326028fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSearchRadius: 4
+  targetSearchRadius: 0.6
   targetMask:
     serializedVersion: 2
     m_Bits: 192
-  rotationSpeed: 150
+  rotationSpeed: 300
+  moveClearDelay: 0.2
+  forgetDistanceExtra: 1
 --- !u!195 &453094759342051032
 NavMeshAgent:
   m_ObjectHideFlags: 0

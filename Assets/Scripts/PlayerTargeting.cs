@@ -9,8 +9,17 @@ public class PlayerTargeting : MonoBehaviour
     [Header("Скорость поворота")]
     public float rotationSpeed = 8f;
 
+    [Header("Сброс таргета")]
+    [Tooltip("Задержка перед сбросом цели после начала движения (сек).")]
+    public float moveClearDelay = 0.2f;
+
+    [Tooltip("Насколько дальше радиуса поиска держать цель, прежде чем забыть.")]
+    public float forgetDistanceExtra = 1f;
+
     private ITargetable currentTarget;
     private PlayerController controller;
+
+    private float moveStartTime = -1f;
 
     void Start()
     {
@@ -19,33 +28,64 @@ public class PlayerTargeting : MonoBehaviour
 
     void Update()
     {
-        // ВРЕМЕННО отключаем сброс при движении
-        // if (controller != null && controller.IsMoving()) { ClearTarget(); return; }
+        bool isMoving = controller != null && controller.IsMoving();
 
-        if (currentTarget == null || !currentTarget.IsAlive())
+        // Если начали двигаться — запускаем таймер и через короткую задержку сбрасываем цель.
+        if (isMoving)
+        {
+            if (moveStartTime < 0f) moveStartTime = Time.time;
+
+            if (currentTarget != null && Time.time - moveStartTime >= moveClearDelay)
+                ClearTarget();
+
+            // во время движения не разворачиваемся на цель
+            return;
+        }
+        else
+        {
+            // стоим — сбрасываем таймер движения
+            moveStartTime = -1f;
+        }
+
+        // Валидируем текущую цель: жива ли и не слишком ли далеко
+        if (currentTarget != null)
+        {
+            if (!currentTarget.IsAlive())
+            {
+                ClearTarget();
+            }
+            else
+            {
+                float dist = Vector3.Distance(transform.position, currentTarget.GetTransform().position);
+                if (dist > targetSearchRadius + forgetDistanceExtra)
+                    ClearTarget();
+            }
+        }
+
+        // Если цели нет — ищем новую
+        if (currentTarget == null)
             FindNewTarget();
 
+        // Поворот к цели (на месте)
         if (currentTarget != null)
         {
             Vector3 dir = currentTarget.GetTransform().position - transform.position;
             dir.y = 0f;
-            if (dir.sqrMagnitude > 0.01f)
+            if (dir.sqrMagnitude > 0.001f)
             {
                 Quaternion targetRot = Quaternion.LookRotation(dir);
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
                     targetRot,
-                    rotationSpeed * Time.deltaTime);
-                Debug.Log("Поворачиваемся к: " + currentTarget.GetTransform().name);
+                    rotationSpeed * Time.deltaTime
+                );
             }
         }
     }
 
-
     void FindNewTarget()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, targetSearchRadius, targetMask);
-        Debug.Log("Overlap найдено: " + hits.Length);
 
         if (hits.Length > 0)
         {
@@ -54,7 +94,6 @@ public class PlayerTargeting : MonoBehaviour
 
             foreach (var h in hits)
             {
-                Debug.Log("Проверяем: " + h.name);
                 ITargetable t = h.GetComponent<ITargetable>();
                 if (t != null && t.IsAlive())
                 {
@@ -66,13 +105,9 @@ public class PlayerTargeting : MonoBehaviour
                     }
                 }
             }
-
             currentTarget = closest;
-            if (currentTarget != null)
-                Debug.Log("Выбран таргет: " + currentTarget.GetTransform().name);
         }
     }
-
 
     public void ClearTarget()
     {
