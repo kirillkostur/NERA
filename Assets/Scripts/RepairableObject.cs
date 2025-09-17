@@ -28,6 +28,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     private Animator interactorAnimator;
     private float progress = 0f;
     private bool repairing = false;
+    private bool isTargeted = false;
 
     private void Start()
     {
@@ -44,8 +45,6 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
     private void Update()
     {
-        UpdateRepairEffect();
-
         if (repairing && !isRepaired)
         {
             // Проверяем дистанцию
@@ -71,6 +70,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
                 if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
 
                 Debug.Log($"✅ {objectName} отремонтирован!");
+                UpdateRepairEffect();
                 OnRepaired?.Invoke(this);
             }
         }
@@ -80,7 +80,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     private void UpdateRepairEffect()
     {
         if (repairEffectMesh != null)
-            repairEffectMesh.SetActive(!isRepaired);
+            repairEffectMesh.SetActive(isTargeted && !isRepaired);
     }
 
     // === Взаимодействие ===
@@ -131,4 +131,11 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     // === ITargetable ===
     public Transform GetTransform() => transform;
     public bool IsAlive() => !isRepaired;
+    public void SetTargeted(bool active)
+    {
+        if (isTargeted == active) return;
+
+        isTargeted = active;
+        UpdateRepairEffect();
+    }
 }

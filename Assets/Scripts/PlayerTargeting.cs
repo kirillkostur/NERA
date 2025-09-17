@@ -110,8 +110,6 @@ public class PlayerTargeting : MonoBehaviour
     private void FindNewTarget()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, targetSearchRadius, targetMask);
-        if (hits.Length == 0) return;
-
         ITargetable closest = null;
         float closestDist = Mathf.Infinity;
 
@@ -129,12 +127,29 @@ public class PlayerTargeting : MonoBehaviour
             }
         }
 
-        currentTarget = closest;
+        SetCurrentTarget(closest);
     }
 
     public void ClearTarget()
     {
-        currentTarget = null;
+        SetCurrentTarget(null);
+    }
+
+    private void SetCurrentTarget(ITargetable newTarget)
+    {
+        if (currentTarget == newTarget) return;
+
+        if (currentTarget != null)
+        {
+            currentTarget.SetTargeted(false);
+        }
+
+        currentTarget = newTarget;
+
+        if (currentTarget != null)
+        {
+            currentTarget.SetTargeted(true);
+        }
     }
 
     private void OnDrawGizmosSelected()

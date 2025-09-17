@@ -89,6 +89,11 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
 
     public bool IsAlive() => !isDead;
 
+    public void SetTargeted(bool active)
+    {
+        // Для паука отдельной подсветки пока нет, но метод оставлен для совместимости.
+    }
+
     // Вызвать этот метод при смерти паука
     public void Die()
     {
