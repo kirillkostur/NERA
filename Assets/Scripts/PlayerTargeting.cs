@@ -1,10 +1,16 @@
 using UnityEngine;
+using System.Collections;
 
+/// <summary>
+/// Управление выбором ремонтируемых объектов и взаимодействием с ними.
+/// Оптимизирован для мобильных: поиск целей выполняется раз в searchInterval секунд.
+/// </summary>
 public class PlayerTargeting : MonoBehaviour
 {
     [Header("Настройки таргета")]
     public float targetSearchRadius = 8f;
     public LayerMask targetMask;
+    public float searchInterval = 0.15f; // 🔧 Интервал поиска (сек)
 
     [Header("Поворот")]
     public float rotationSpeed = 120f;
@@ -24,12 +30,13 @@ public class PlayerTargeting : MonoBehaviour
     private const int MaxColliders = 20;
     private readonly Collider[] hitBuffer = new Collider[MaxColliders];
 
-    void Start()
+    private void Start()
     {
         controller = GetComponent<PlayerController>();
+        StartCoroutine(SearchRoutine());
     }
 
-    void Update()
+    private void Update()
     {
         bool isMoving = controller != null && controller.IsMoving();
 
@@ -60,9 +67,7 @@ public class PlayerTargeting : MonoBehaviour
             }
         }
 
-        if (currentTarget == null)
-            FindNewTarget();
-
+        // Взаимодействие с текущей целью
         if (currentTarget != null)
         {
             RotateTowardsTarget();
@@ -87,6 +92,19 @@ public class PlayerTargeting : MonoBehaviour
         else
         {
             CancelInteraction();
+        }
+    }
+
+    /// <summary>
+    /// Короутина поиска новых целей через заданный интервал.
+    /// </summary>
+    private IEnumerator SearchRoutine()
+    {
+        WaitForSeconds wait = new WaitForSeconds(searchInterval);
+        while (true)
+        {
+            if (currentTarget == null) FindNewTarget();
+            yield return wait;
         }
     }
 
