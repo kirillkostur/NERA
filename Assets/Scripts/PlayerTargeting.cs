@@ -21,6 +21,9 @@ public class PlayerTargeting : MonoBehaviour
     private float moveStartTime = -1f;
     private IInteractable currentInteractable;
 
+    private const int MaxColliders = 20;
+    private readonly Collider[] hitBuffer = new Collider[MaxColliders];
+
     void Start()
     {
         controller = GetComponent<PlayerController>();
@@ -30,6 +33,7 @@ public class PlayerTargeting : MonoBehaviour
     {
         bool isMoving = controller != null && controller.IsMoving();
 
+        // Сбрасываем таргет при движении
         if (isMoving)
         {
             if (moveStartTime < 0f) moveStartTime = Time.time;
@@ -61,13 +65,7 @@ public class PlayerTargeting : MonoBehaviour
 
         if (currentTarget != null)
         {
-            Vector3 dir = currentTarget.GetTransform().position - transform.position;
-            dir.y = 0f;
-            if (dir.sqrMagnitude > 0.001f)
-            {
-                Quaternion targetRot = Quaternion.LookRotation(dir);
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
-            }
+            RotateTowardsTarget();
 
             float dist = Vector3.Distance(transform.position, currentTarget.GetTransform().position);
             if (dist <= interactRange)
@@ -75,17 +73,11 @@ public class PlayerTargeting : MonoBehaviour
                 currentInteractable = currentTarget.GetTransform().GetComponent<IInteractable>();
 
                 if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
-                {
                     currentInteractable.StartInteract(gameObject);
-                }
                 else if (Input.GetKey(KeyCode.E) && currentInteractable != null)
-                {
                     currentInteractable.HoldInteract();
-                }
                 else if (Input.GetKeyUp(KeyCode.E) || !Input.GetKey(KeyCode.E))
-                {
                     CancelInteraction();
-                }
             }
             else
             {
@@ -95,6 +87,17 @@ public class PlayerTargeting : MonoBehaviour
         else
         {
             CancelInteraction();
+        }
+    }
+
+    private void RotateTowardsTarget()
+    {
+        Vector3 dir = currentTarget.GetTransform().position - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
         }
     }
 
@@ -109,14 +112,17 @@ public class PlayerTargeting : MonoBehaviour
 
     private void FindNewTarget()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, targetSearchRadius, targetMask);
-        if (hits.Length == 0) return;
+        int hits = Physics.OverlapSphereNonAlloc(transform.position, targetSearchRadius, hitBuffer, targetMask);
+        if (hits == 0) return;
 
         ITargetable closest = null;
         float closestDist = Mathf.Infinity;
 
-        foreach (var h in hits)
+        for (int i = 0; i < hits; i++)
         {
+            var h = hitBuffer[i];
+            if (h == null) continue;
+
             ITargetable t = h.GetComponent<ITargetable>();
             if (t != null && t.IsAlive())
             {
@@ -129,11 +135,38 @@ public class PlayerTargeting : MonoBehaviour
             }
         }
 
-        currentTarget = closest;
+        SetTarget(closest);
+    }
+
+    private void SetTarget(ITargetable target)
+    {
+        // Отключаем эффект старой цели
+        if (currentTarget != null)
+        {
+            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
+                oldRepairable.targetHighlightEffect.SetActive(false);
+        }
+
+        currentTarget = target;
+
+        // Включаем эффект новой цели
+        if (currentTarget != null)
+        {
+            var newRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            if (newRepairable != null && newRepairable.targetHighlightEffect != null)
+                newRepairable.targetHighlightEffect.SetActive(true);
+        }
     }
 
     public void ClearTarget()
     {
+        if (currentTarget != null)
+        {
+            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
+                oldRepairable.targetHighlightEffect.SetActive(false);
+        }
         currentTarget = null;
     }
 

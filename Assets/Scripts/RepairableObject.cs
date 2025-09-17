@@ -16,10 +16,12 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     public float maxInteractDistance = 4f;
 
     [Header("UI и эффекты")]
+    [Tooltip("Индикатор состояния (горит, когда объект сломан)")]
+    public GameObject repairEffectMesh;
+    [Tooltip("Эффект подсветки при выборе цели игроком (Particle/Plane и т.д.)")]
+    public GameObject targetHighlightEffect;
     [Tooltip("Слайдер прогресса ремонта (опционально)")]
     public Slider progressBar;
-    [Tooltip("Квад/меш или Particle System для подсветки объекта")]
-    public GameObject repairEffectMesh;
 
     public delegate void RepairEvent(RepairableObject obj);
     public event RepairEvent OnRepaired;
@@ -32,6 +34,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     private void Start()
     {
         UpdateRepairEffect();
+        HideHighlight();
 
         if (progressBar != null)
         {
@@ -48,7 +51,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
         if (repairing && !isRepaired)
         {
-            // Проверяем дистанцию
+            // Проверка дистанции: если игрок отошёл — отменяем ремонт
             if (interactor == null || Vector3.Distance(interactor.transform.position, transform.position) > maxInteractDistance)
             {
                 CancelInteract();
@@ -70,17 +73,32 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
                 if (progressBar != null) progressBar.gameObject.SetActive(false);
                 if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
 
+                HideHighlight(); // при ремонте сразу убираем подсветку
                 Debug.Log($"✅ {objectName} отремонтирован!");
                 OnRepaired?.Invoke(this);
             }
         }
     }
 
-    /// <summary>Обновляет видимость подсветки/меша в зависимости от статуса ремонта.</summary>
+    /// <summary>Обновляет визуал состояния: горит ли постоянный индикатор поломки.</summary>
     private void UpdateRepairEffect()
     {
         if (repairEffectMesh != null)
             repairEffectMesh.SetActive(!isRepaired);
+    }
+
+    /// <summary>Включить подсветку при выборе игроком.</summary>
+    public void ShowHighlight()
+    {
+        if (!isRepaired && targetHighlightEffect != null)
+            targetHighlightEffect.SetActive(true);
+    }
+
+    /// <summary>Выключить подсветку выбора.</summary>
+    public void HideHighlight()
+    {
+        if (targetHighlightEffect != null)
+            targetHighlightEffect.SetActive(false);
     }
 
     // === Взаимодействие ===
@@ -125,6 +143,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         isRepaired = false;
         progress = 0f;
         UpdateRepairEffect();
+        HideHighlight(); // сбрасываем подсветку, если объект снова сломан
         Debug.Log($"❗ {objectName} снова сломан.");
     }
 
