@@ -2,103 +2,133 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Collider))]
-public class RepairableObject : MonoBehaviour, ITargetable
+public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 {
     [Header("Основные настройки")]
-    public string objectName = "Объект";
+    public string objectName = "Генератор";
+    [Tooltip("Время ремонта (сек.)")]
     public float repairTime = 3f;
+    [Tooltip("Починен ли объект в начале игры")]
     public bool isRepaired = false;
 
-    private float currentProgress = 0f;
-    private bool isPlayerNearby = false;
-    private Animator playerAnimator;
+    [Header("Дистанция взаимодействия")]
+    [Tooltip("Макс. дистанция, на которой ремонт не прервётся")]
+    public float maxInteractDistance = 4f;
 
     [Header("UI и эффекты")]
+    [Tooltip("Слайдер прогресса ремонта (опционально)")]
     public Slider progressBar;
+    [Tooltip("Квад/меш или Particle System для подсветки объекта")]
     public GameObject repairEffectMesh;
 
     public delegate void RepairEvent(RepairableObject obj);
     public event RepairEvent OnRepaired;
 
-    void Start()
+    private GameObject interactor;
+    private Animator interactorAnimator;
+    private float progress = 0f;
+    private bool repairing = false;
+
+    private void Start()
     {
-        if (repairEffectMesh != null)
-            repairEffectMesh.SetActive(!isRepaired);
+        UpdateRepairEffect();
+
+        if (progressBar != null)
+        {
+            progressBar.minValue = 0f;
+            progressBar.maxValue = 1f;
+            progressBar.value = 0f;
+            progressBar.gameObject.SetActive(false);
+        }
     }
 
-    void Update()
+    private void Update()
     {
-        if (repairEffectMesh != null)
-            repairEffectMesh.SetActive(!isRepaired);
+        UpdateRepairEffect();
 
-        if (!isPlayerNearby || isRepaired) return;
-
-        if (Input.GetKey(KeyCode.E))
+        if (repairing && !isRepaired)
         {
-            currentProgress += Time.deltaTime;
+            // Проверяем дистанцию
+            if (interactor == null || Vector3.Distance(interactor.transform.position, transform.position) > maxInteractDistance)
+            {
+                CancelInteract();
+                return;
+            }
 
-            if (progressBar != null && !progressBar.gameObject.activeSelf)
-                progressBar.gameObject.SetActive(true);
-
+            progress += Time.deltaTime / repairTime;
             if (progressBar != null)
-                progressBar.value = currentProgress / repairTime;
+            {
+                if (!progressBar.gameObject.activeSelf) progressBar.gameObject.SetActive(true);
+                progressBar.value = progress;
+            }
 
-            if (playerAnimator != null)
-                playerAnimator.SetBool("Repair", true);
-
-            if (currentProgress >= repairTime)
+            if (progress >= 1f)
             {
                 isRepaired = true;
-                Debug.Log($"✅ {objectName} починен!");
+                repairing = false;
 
                 if (progressBar != null) progressBar.gameObject.SetActive(false);
-                if (playerAnimator != null) playerAnimator.SetBool("Repair", false);
+                if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
 
+                Debug.Log($"✅ {objectName} отремонтирован!");
                 OnRepaired?.Invoke(this);
             }
         }
-        else
-        {
-            if (currentProgress > 0f)
-            {
-                currentProgress = 0f;
-                if (progressBar != null) progressBar.value = 0f;
-            }
-
-            if (progressBar != null && progressBar.gameObject.activeSelf)
-                progressBar.gameObject.SetActive(false);
-
-            if (playerAnimator != null)
-                playerAnimator.SetBool("Repair", false);
-        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    /// <summary>Обновляет видимость подсветки/меша в зависимости от статуса ремонта.</summary>
+    private void UpdateRepairEffect()
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerNearby = true;
-            playerAnimator = other.GetComponent<Animator>();
-        }
+        if (repairEffectMesh != null)
+            repairEffectMesh.SetActive(!isRepaired);
     }
 
-    private void OnTriggerExit(Collider other)
+    // === Взаимодействие ===
+    public void StartInteract(GameObject player)
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerNearby = false;
-            currentProgress = 0f;
+        if (isRepaired) return;
 
-            if (progressBar != null) progressBar.gameObject.SetActive(false);
+        interactor = player;
+        interactorAnimator = player.GetComponent<Animator>();
 
-            if (playerAnimator != null)
-                playerAnimator.SetBool("Repair", false);
+        repairing = true;
+        Debug.Log($"🔧 Начат ремонт: {objectName}");
 
-            playerAnimator = null;
-        }
+        if (interactorAnimator != null)
+            interactorAnimator.SetBool("Repair", true);
     }
 
-    // === Реализация ITargetable ===
+    public void HoldInteract() { /* Ремонт продолжается в Update */ }
+
+    public void CancelInteract()
+    {
+        if (!repairing) return;
+
+        repairing = false;
+        progress = 0f;
+
+        if (progressBar != null)
+        {
+            progressBar.value = 0f;
+            progressBar.gameObject.SetActive(false);
+        }
+
+        if (interactorAnimator != null)
+            interactorAnimator.SetBool("Repair", false);
+
+        Debug.Log($"⛔ Ремонт {objectName} отменён");
+    }
+
+    // === Поломка ===
+    public void BreakObject()
+    {
+        isRepaired = false;
+        progress = 0f;
+        UpdateRepairEffect();
+        Debug.Log($"❗ {objectName} снова сломан.");
+    }
+
+    // === ITargetable ===
     public Transform GetTransform() => transform;
     public bool IsAlive() => !isRepaired;
 }

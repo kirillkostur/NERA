@@ -2,23 +2,31 @@ using UnityEngine;
 
 public class GeneratorSystem : MonoBehaviour
 {
-    public bool isRepaired = false;     // Текущее состояние генератора
-    public bool gameStarted = false;    // Флаг: уже ли запущен цикл дней и спавн
+    [Header("Состояние генератора")]
+    [Tooltip("Починен ли генератор сейчас")]
+    public bool isRepaired = false;
+    [Tooltip("Игра запущена после первой починки")]
+    public bool gameStarted = false;
 
-    void Start()
+    private RepairableObject repairable;
+
+    private void Awake()
     {
-        RepairableObject repair = GetComponent<RepairableObject>();
-        if (repair != null)
-        {
-            repair.OnRepaired += OnGeneratorFixed;
-        }
+        repairable = GetComponent<RepairableObject>();
+        if (repairable != null)
+            repairable.OnRepaired += OnGeneratorFixed;
+    }
+
+    private void OnDestroy()
+    {
+        if (repairable != null)
+            repairable.OnRepaired -= OnGeneratorFixed;
     }
 
     private void OnGeneratorFixed(RepairableObject obj)
     {
         isRepaired = true;
 
-        // Первый ремонт → запуск игры
         if (!gameStarted)
         {
             gameStarted = true;
@@ -26,14 +34,23 @@ public class GeneratorSystem : MonoBehaviour
         }
         else
         {
-            Debug.Log("🔧 Генератор снова починен (для геймплея).");
+            Debug.Log("🔧 Генератор снова починен.");
         }
     }
 
-    // В будущем можно добавить метод для "поломки"
+    /// <summary>
+    /// Сломать генератор снова (для геймплея).
+    /// Сбрасывает свои флаги и передаёт поломку RepairableObject.
+    /// </summary>
     public void BreakGenerator()
     {
         isRepaired = false;
+
+        if (repairable != null)
+        {
+            repairable.BreakObject();
+        }
+
         Debug.Log("💥 Генератор снова сломался!");
     }
 }
