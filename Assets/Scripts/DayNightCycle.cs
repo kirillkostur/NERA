@@ -56,7 +56,7 @@ public class DayNightCycle : MonoBehaviour
         if (nowNight != isNight)
         {
             isNight = nowNight;
-            Debug.Log(isNight ? "🌙 Наступила ночь" : "☀ Наступил день");
+            Logger.Log(isNight ? "🌙 Наступила ночь" : "☀ Наступил день");
         }
 
         // Считаем новый день один раз за цикл, только если аккумулятор стартовал игру
@@ -67,7 +67,7 @@ public class DayNightCycle : MonoBehaviour
         {
             currentDay++;
             dayCounted = true;
-            Debug.Log($"📆 Наступил {currentDay}-й день");
+            Logger.Log($"📆 Наступил {currentDay}-й день");
             OnNewDay?.Invoke();
         }
     }

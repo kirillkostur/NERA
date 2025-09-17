@@ -40,7 +40,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         currentSpiders = 0;
         nextSpawnTime = 0f;
         activeWave = null;
-        Debug.Log("🌅 Новый день — сброшены счётчики спавна пауков");
+        Logger.Log("🌅 Новый день — сброшены счётчики спавна пауков");
     }
 
     private void Update()
@@ -113,7 +113,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         }
 
         currentSpiders++;
-        Debug.Log($"🕷 Spawned | Day={dayNight.currentDay} | Scale={scale:F2} | Speed={finalSpeed:F2}");
+        Logger.Log($"🕷 Spawned | Day={dayNight.currentDay} | Scale={scale:F2} | Speed={finalSpeed:F2}");
     }
 
     public void SpiderDied()

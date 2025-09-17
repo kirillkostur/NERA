@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Питаемый объект. Управляет своим состоянием и активируемыми объектами.
-/// </summary>
 public class PoweredDevice : MonoBehaviour, IPowerConsumer
 {
     [Header("Питание")]
@@ -10,8 +7,9 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     public float consumptionPerSecond = 1f;
 
     [Header("Активация")]
-    public bool requiresRepairToRun = false;  // Требует ручного запуска после ремонта
-    public bool autoActivateOnPower = false;  // Включается автоматически при появлении питания
+    public bool requiresRepairToRun = false;     // Требует ремонта перед работой
+    public bool autoActivateOnPower = false;     // Авто активация при питании
+    public bool onlyActivateAtNight = false;     // ✅ Работает только ночью
 
     [Header("Что включать/выключать при работе")]
     public GameObject[] enableOnActive;
@@ -22,24 +20,27 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     private bool initialized = false;
 
     private RepairableObject repairable;
+    private DayNightCycle dayNight;
 
     private void Awake()
     {
         if (battery == null) battery = StationBatterySystem.Instance;
-        repairable = GetComponent<RepairableObject>();
 
+#if UNITY_2023_1_OR_NEWER
+        dayNight = Object.FindFirstObjectByType<DayNightCycle>();
+#else
+        dayNight = Object.FindObjectOfType<DayNightCycle>();
+#endif
+
+        repairable = GetComponent<RepairableObject>();
         if (repairable != null)
-        {
             repairable.OnRepaired += OnDeviceRepaired;
-        }
     }
 
     private void OnDestroy()
     {
         if (repairable != null)
-        {
             repairable.OnRepaired -= OnDeviceRepaired;
-        }
     }
 
     private void OnEnable()
@@ -57,30 +58,36 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         SetActive(false);
     }
 
-    /// <summary>
-    /// Обработчик успешного ремонта.
-    /// </summary>
+    private void Update()
+    {
+        // ✅ Проверка смены дня/ночи, чтобы сразу выключить свет на рассвете
+        if (onlyActivateAtNight && dayNight != null && initialized)
+        {
+            // Если день настал, а свет ещё горит — выключаем
+            if (!dayNight.isNight && isActive)
+                SetActive(false);
+
+            // Если ночь и условия выполнены — обновляем состояние
+            if (dayNight.isNight && hasPower)
+                UpdateActiveState();
+        }
+    }
+
     private void OnDeviceRepaired(RepairableObject _)
     {
-        // Проверяем, запущен ли аккумулятор
         if (battery == null || !battery.GameStarted || !battery.HasPower)
         {
-            // Нельзя починить — откатываем ремонт
-            Debug.Log("⚠ Нет активного аккумулятора или питания — ремонт невозможен.");
+            Logger.Log("⚠ Невозможно починить — аккумулятор не активен или без питания");
             if (repairable != null) repairable.BreakObject();
             manuallyEnabled = false;
             SetActive(false);
             return;
         }
 
-        // Всё в порядке — включаем устройство
         manuallyEnabled = true;
         UpdateActiveState();
     }
 
-    /// <summary>
-    /// Вызывается аккумулятором при изменении состояния питания.
-    /// </summary>
     public void OnPowerChanged(bool available)
     {
         hasPower = available;
@@ -93,10 +100,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
             SetActive(false);
 
             if (requiresRepairToRun && repairable != null && repairable.isRepaired)
-            {
-                // Ломаем устройство при потере питания
                 repairable.BreakObject();
-            }
         }
 
         UpdateActiveState();
@@ -113,12 +117,13 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (hasPower && autoActivateOnPower && !requiresRepairToRun)
             shouldBeActive = true;
 
+        // ✅ Проверяем ночь
+        if (onlyActivateAtNight && dayNight != null)
+            shouldBeActive = shouldBeActive && dayNight.isNight;
+
         SetActive(shouldBeActive);
     }
 
-    /// <summary>
-    /// Включает или выключает объекты из массива enableOnActive.
-    /// </summary>
     private void SetActive(bool value)
     {
         if (isActive == value && initialized) return;

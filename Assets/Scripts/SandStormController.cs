@@ -37,14 +37,14 @@ public class SandStormController : MonoBehaviour
             if (r != null) r.BreakObject();
         }
 
-        Debug.Log("🌪 Буря началась! Панели повреждены.");
+        Logger.Log("🌪 Буря началась! Панели повреждены.");
         Invoke(nameof(StopStorm), stormDuration);
     }
 
     public void StopStorm()
     {
         if (stormFx != null) stormFx.Stop();
-        Debug.Log("🌤 Буря закончилась.");
+        Logger.Log("🌤 Буря закончилась.");
     }
 
     private IEnumerator Loop()

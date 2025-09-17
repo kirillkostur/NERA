@@ -96,7 +96,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
                 c.OnPowerChanged(hasPower);
 
             OnPowerStateChanged?.Invoke(hasPower);
-            Debug.Log(hasPower ? "🔌 Питание подано" : "🚫 Питание отключено");
+            Logger.Log(hasPower ? "🔌 Питание подано" : "🚫 Питание отключено");
 
             // если была реальная просадка питания — «ломаем» аккумулятор для ручного рестарта
             if (wasPower && !hasPower && isRepaired)
@@ -127,22 +127,22 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             if (!gameStarted)
             {
                 gameStarted = true; // ← именно этот флаг увидят DayNightCycle/спавнер
-                Debug.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
+                Logger.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
             }
             else
             {
-                Debug.Log("🔧 Аккумулятор снова запущен.");
+                Logger.Log("🔧 Аккумулятор снова запущен.");
             }
             // питание включится в Update на следующем кадре (если хватит заряда)
         }
         else
         {
             // Заряда мало — запуск неудачен: оставляем «сломанным», сбрасываем визуал.
-            Debug.Log($"⚠ Недостаточно заряда (< {minPercentToSupply}%) для запуска аккумулятора.");
+            Logger.Log($"⚠ Недостаточно заряда (< {minPercentToSupply}%) для запуска аккумулятора.");
             if (dayNight != null && dayNight.isNight)
-                Debug.Log("ℹ Сейчас ночь — панели не заряжают. Дождитесь рассвета.");
+                Logger.Log("ℹ Сейчас ночь — панели не заряжают. Дождитесь рассвета.");
             else if (GetPanelsOutputNow() <= 0.01f)
-                Debug.Log("ℹ Зарядка не идёт. Проверь солнечные панели (возможно, их повредила буря).");
+                Logger.Log("ℹ Зарядка не идёт. Проверь солнечные панели (возможно, их повредила буря).");
 
             repairable.BreakObject();
             isRepaired = false;

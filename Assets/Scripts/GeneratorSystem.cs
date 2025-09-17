@@ -30,11 +30,11 @@ public class GeneratorSystem : MonoBehaviour
         if (!gameStarted)
         {
             gameStarted = true;
-            Debug.Log("⚡ Генератор впервые починен — игра началась!");
+            Logger.Log("⚡ Генератор впервые починен — игра началась!");
         }
         else
         {
-            Debug.Log("🔧 Генератор снова починен.");
+            Logger.Log("🔧 Генератор снова починен.");
         }
     }
 
@@ -51,6 +51,6 @@ public class GeneratorSystem : MonoBehaviour
             repairable.BreakObject();
         }
 
-        Debug.Log("💥 Генератор снова сломался!");
+        Logger.Log("💥 Генератор снова сломался!");
     }
 }

@@ -11,16 +11,17 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     [Tooltip("Починен ли объект в начале игры")]
     public bool isRepaired = false;
 
+    [Header("Режим взаимодействия")]
+    [Tooltip("Если включено — ремонт происходит мгновенно без анимации и прогресс-бара")]
+    public bool instantInteract = false;
+
     [Header("Дистанция взаимодействия")]
     [Tooltip("Макс. дистанция, на которой ремонт не прервётся")]
     public float maxInteractDistance = 4f;
 
     [Header("UI и эффекты")]
-    [Tooltip("Индикатор состояния (горит, когда объект сломан)")]
-    public GameObject repairEffectMesh;           // КРАСНЫЙ индикатор проблемы
-    [Tooltip("Эффект подсветки при выборе цели игроком (зелёный таргет)")]
-    public GameObject targetHighlightEffect;      // ЗЕЛЁНАЯ подсветка (её включает/выключает PlayerTargeting)
-    [Tooltip("Слайдер прогресса ремонта (опционально)")]
+    public GameObject repairEffectMesh;     // Красная иконка проблем
+    public GameObject targetHighlightEffect; // Зелёный таргет
     public Slider progressBar;
 
     public delegate void RepairEvent(RepairableObject obj);
@@ -49,9 +50,8 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     {
         UpdateRepairEffect();
 
-        if (repairing && !isRepaired)
+        if (repairing && !isRepaired && !instantInteract)
         {
-            // Проверка дистанции: если игрок отошёл — отменяем ремонт
             if (interactor == null || Vector3.Distance(interactor.transform.position, transform.position) > maxInteractDistance)
             {
                 CancelInteract();
@@ -67,35 +67,36 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
             if (progress >= 1f)
             {
-                isRepaired = true;
-                repairing = false;
-
-                if (progressBar != null) progressBar.gameObject.SetActive(false);
-                if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
-
-                HideHighlight(); // при завершении ремонта убираем подсветку
-                Debug.Log($"✅ {objectName} отремонтирован!");
-                OnRepaired?.Invoke(this);
+                CompleteRepair();
             }
         }
     }
 
-    /// <summary>Обновляет визуал состояния: горит ли постоянный индикатор поломки.</summary>
+    private void CompleteRepair()
+    {
+        isRepaired = true;
+        repairing = false;
+
+        if (progressBar != null) progressBar.gameObject.SetActive(false);
+        if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
+
+        HideHighlight();
+        Logger.Log($"✅ {objectName} отремонтирован!");
+        OnRepaired?.Invoke(this);
+    }
+
     private void UpdateRepairEffect()
     {
         if (repairEffectMesh != null)
             repairEffectMesh.SetActive(!isRepaired);
     }
 
-    /// <summary>Включить зелёную подсветку при выборе игроком.</summary>
     public void ShowHighlight()
     {
-        // Подсветку даём всегда по запросу PlayerTargeting — состояние ремонта не мешает таргету
         if (targetHighlightEffect != null)
             targetHighlightEffect.SetActive(true);
     }
 
-    /// <summary>Выключить зелёную подсветку выбора.</summary>
     public void HideHighlight()
     {
         if (targetHighlightEffect != null)
@@ -110,8 +111,16 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         interactor = player;
         interactorAnimator = player.GetComponent<Animator>();
 
+        // ❌ Эффекты солнечной панели больше не запускаем здесь
+
+        if (instantInteract)
+        {
+            CompleteRepair();
+            return;
+        }
+
         repairing = true;
-        Debug.Log($"🔧 Начат ремонт: {objectName}");
+        Logger.Log($"🔧 Начат ремонт: {objectName}");
 
         if (interactorAnimator != null)
             interactorAnimator.SetBool("Repair", true);
@@ -121,7 +130,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
     public void CancelInteract()
     {
-        if (!repairing) return;
+        if (!repairing || instantInteract) return;
 
         repairing = false;
         progress = 0f;
@@ -135,10 +144,9 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         if (interactorAnimator != null)
             interactorAnimator.SetBool("Repair", false);
 
-        Debug.Log($"⛔ Ремонт {objectName} отменён");
+        Logger.Log($"⛔ Ремонт {objectName} отменён");
     }
 
-    // === Поломка ===
     public void BreakObject()
     {
         if (!isRepaired) return;
@@ -146,15 +154,14 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         isRepaired = false;
         progress = 0f;
         UpdateRepairEffect();
-        HideHighlight(); // сбрасываем зелёную подсветку; PlayerTargeting включит её заново при наведении
-        Debug.Log($"❗ {objectName} снова сломан.");
+        HideHighlight();
+        Logger.Log($"❗ {objectName} снова сломан.");
     }
 
     // === ITargetable ===
     public Transform GetTransform() => transform;
-    public bool IsAlive() => !isRepaired; // объект «цель», пока он сломан
+    public bool IsAlive() => !isRepaired;
 
-    // === Вспомогательное: это использует PlayerTargeting напрямую ===
     public void ToggleHighlight(bool on)
     {
         if (on) ShowHighlight(); else HideHighlight();
