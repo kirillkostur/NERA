@@ -20,6 +20,8 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     public Slider progressBar;
     [Tooltip("Квад/меш или Particle System для подсветки объекта")]
     public GameObject repairEffectMesh;
+    [Tooltip("Иконка поломки над объектом (опционально)")]
+    public GameObject brokenIcon;
 
     public delegate void RepairEvent(RepairableObject obj);
     public event RepairEvent OnRepaired;
@@ -64,14 +66,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
             if (progress >= 1f)
             {
-                isRepaired = true;
-                repairing = false;
-
-                if (progressBar != null) progressBar.gameObject.SetActive(false);
-                if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
-
-                Debug.Log($"✅ {objectName} отремонтирован!");
-                OnRepaired?.Invoke(this);
+                CompleteRepair();
             }
         }
     }
@@ -79,8 +74,26 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     /// <summary>Обновляет видимость подсветки/меша в зависимости от статуса ремонта.</summary>
     private void UpdateRepairEffect()
     {
+        bool broken = !isRepaired;
+
         if (repairEffectMesh != null)
-            repairEffectMesh.SetActive(!isRepaired);
+            repairEffectMesh.SetActive(broken);
+
+        if (brokenIcon != null)
+            brokenIcon.SetActive(broken);
+    }
+
+    private void CompleteRepair()
+    {
+        isRepaired = true;
+        repairing = false;
+        UpdateRepairEffect();
+
+        if (progressBar != null) progressBar.gameObject.SetActive(false);
+        if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
+
+        Debug.Log($"✅ {objectName} отремонтирован!");
+        OnRepaired?.Invoke(this);
     }
 
     // === Взаимодействие ===
