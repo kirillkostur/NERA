@@ -1,74 +1,74 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// Цикл дня/ночи. Дни начинают считаться только после первого старта аккумулятора:
+/// StationBatterySystem.Instance.GameStarted == true.
+/// </summary>
 public class DayNightCycle : MonoBehaviour
 {
     [Header("Настройки дня/ночи")]
-    public Light sun;                       // Дирекшн-лайт солнца
-    public float dayDuration = 120f;        // Длительность дня (секунды = один оборот солнца)
-    public Gradient sunColor;               // Плавный переход цвета солнца
-    public AnimationCurve sunIntensity;     // Кривая интенсивности (день -> ночь)
+    [Tooltip("Directional Light солнца")]
+    public Light sun;
+    [Tooltip("Длительность полного дня в секундах (от рассвета до следующего рассвета)")]
+    public float dayDuration = 120f;
+    [Tooltip("Плавный переход цвета солнца в течение дня")]
+    public Gradient sunColor;
+    [Tooltip("Кривая интенсивности света (день -> ночь)")]
+    public AnimationCurve sunIntensity;
 
-    [Header("Отладка")]
+    [Header("Состояние")]
+    [Tooltip("Текущий номер дня")]
     public int currentDay = 0;
-    public float timeOfDay = 0f;            // От 0 до 1 (0 — рассвет, 0.5 — полдень, 1 — снова рассвет)
+    [Tooltip("Время суток от 0 до 1 (0 — рассвет, 0.5 — полдень, 1 — снова рассвет)")]
+    public float timeOfDay = 0f;
+    [Tooltip("Сейчас ночь?")]
     public bool isNight = false;
+
     private bool dayCounted = false;
 
-    [Header("Ссылки")]
-    public GeneratorSystem _generator;
-
-    // 🔔 Событие, уведомляющее о наступлении нового дня
+    /// <summary>Событие наступления нового дня.</summary>
     public event Action OnNewDay;
 
-    void Update()
+    private void Update()
     {
-        // Инкремент времени суток
+        // Инкремент времени
         timeOfDay += Time.deltaTime / dayDuration;
-
         if (timeOfDay >= 1f)
         {
             timeOfDay = 0f;
             dayCounted = false;
         }
 
-        // Позиция солнца (0–360 градусов)
-        float sunAngle = timeOfDay * 360f - 90f; // -90, чтобы старт был на рассвете
-        if (sun != null)
-            sun.transform.rotation = Quaternion.Euler(sunAngle, 220f, 0);
+        // Угол солнца
+        float sunAngle = timeOfDay * 360f - 90f;
 
-        // Цвет и интенсивность
+        // Поворот/цвет/интенсивность
         if (sun != null)
         {
+            sun.transform.rotation = Quaternion.Euler(sunAngle, 220f, 0);
             sun.color = sunColor.Evaluate(timeOfDay);
             sun.intensity = sunIntensity.Evaluate(timeOfDay);
         }
 
-        // Определение ночи
+        // День/ночь
         bool nowNight = sunAngle > 180f || sunAngle < 0f;
-
-        if (nowNight && !isNight)
+        if (nowNight != isNight)
         {
-            isNight = true;
-            Debug.Log("🌙 Наступила ночь");
-        }
-        else if (!nowNight && isNight)
-        {
-            isNight = false;
-            Debug.Log("☀ Наступил день");
+            isNight = nowNight;
+            Debug.Log(isNight ? "🌙 Наступила ночь" : "☀ Наступил день");
         }
 
-        // Счётчик дней (инкремент один раз за цикл дня, когда солнце уже над горизонтом)
-        if (!dayCounted && !nowNight && sunAngle > 0f)
+        // Считаем новый день один раз за цикл, только если аккумулятор стартовал игру
+        var battery = StationBatterySystem.Instance;
+        bool gameStarted = (battery != null && battery.GameStarted);
+
+        if (!dayCounted && !nowNight && sunAngle > 0f && gameStarted)
         {
-            if (_generator != null && _generator.gameStarted)
-            {
-                currentDay++;
-                dayCounted = true;
-                Debug.Log($"📆 Наступил {currentDay}-й день");
-                OnNewDay?.Invoke();
-                Debug.Log("📢 OnNewDay событие отправлено");
-            }
+            currentDay++;
+            dayCounted = true;
+            Debug.Log($"📆 Наступил {currentDay}-й день");
+            OnNewDay?.Invoke();
         }
     }
 }

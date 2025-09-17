@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// Спавнер пауков. Работает только ночью и только если StationBatterySystem.Instance.GameStarted == true.
+/// </summary>
 public class SpiderSpawner_NavMesh : MonoBehaviour
 {
     [Header("Ссылки")]
     public DayNightCycle dayNight;
     public WaveConfig waveConfig;
-    public GeneratorSystem generator;
 
     [Header("Зона спавна")]
     public float spawnRadius = 15f;
@@ -32,40 +34,40 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
             dayNight.OnNewDay -= ResetSpawner;
     }
 
-    /// <summary>
-    /// При наступлении нового дня теперь мы не удаляем пауков.
-    /// Сбрасываются только счётчики спавна, чтобы новая ночь начиналась заново.
-    /// </summary>
     private void ResetSpawner()
     {
         spawnEventsDone = 0;
         currentSpiders = 0;
         nextSpawnTime = 0f;
         activeWave = null;
-        Debug.Log("🌅 Новый день — сброшены только счётчики (пауки остались на сцене)");
+        Debug.Log("🌅 Новый день — сброшены счётчики спавна пауков");
     }
 
-    void Update()
+    private void Update()
     {
-        if (dayNight == null || waveConfig == null || generator == null) return;
+        if (dayNight == null || waveConfig == null) return;
 
-        if (dayNight.isNight && generator.gameStarted)
+        // Смотрим ТОЛЬКО на аккумулятор
+        var battery = StationBatterySystem.Instance;
+        bool gameStarted = (battery != null && battery.GameStarted);
+
+        if (!gameStarted) return;               // игра ещё не стартовала аккумулятором
+        if (!dayNight.isNight) return;          // спавним только ночью
+
+        activeWave = waveConfig.GetWaveForDay(dayNight.currentDay, true);
+        if (activeWave == null) return;
+
+        if (Time.time >= nextSpawnTime &&
+            currentSpiders < activeWave.maxSpidersOnScene &&
+            spawnEventsDone < activeWave.spawnEvents)
         {
-            activeWave = waveConfig.GetWaveForDay(dayNight.currentDay, generator.gameStarted);
-            if (activeWave == null) return;
+            int count = Random.Range(activeWave.minSpidersPerSpawn, activeWave.maxSpidersPerSpawn + 1);
 
-            if (Time.time >= nextSpawnTime &&
-                currentSpiders < activeWave.maxSpidersOnScene &&
-                spawnEventsDone < activeWave.spawnEvents)
-            {
-                int count = Random.Range(activeWave.minSpidersPerSpawn, activeWave.maxSpidersPerSpawn + 1);
+            for (int i = 0; i < count && currentSpiders < activeWave.maxSpidersOnScene; i++)
+                SpawnSpider();
 
-                for (int i = 0; i < count && currentSpiders < activeWave.maxSpidersOnScene; i++)
-                    SpawnSpider();
-
-                spawnEventsDone++;
-                nextSpawnTime = Time.time + activeWave.spawnInterval;
-            }
+            spawnEventsDone++;
+            nextSpawnTime = Time.time + activeWave.spawnInterval;
         }
     }
 
@@ -94,18 +96,14 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         GameObject prefab = activeWave.spiderTypes[Random.Range(0, activeWave.spiderTypes.Length)];
         GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity);
 
-        // === Размер ===
         float scale = Random.Range(activeWave.minScale, activeWave.maxScale);
         go.transform.localScale = new Vector3(scale, scale, scale);
 
-        // === Скорость от размера ===
         float t = Mathf.InverseLerp(activeWave.minScale, activeWave.maxScale, scale);
-        float multiplier = Mathf.Lerp(1f + activeWave.sizeSpeedMultiplier,
-                                      1f - activeWave.sizeSpeedMultiplier,
-                                      t);
-        multiplier = Mathf.Clamp(multiplier, 0.5f, 2f);
+        float mult = Mathf.Lerp(1f + activeWave.sizeSpeedMultiplier, 1f - activeWave.sizeSpeedMultiplier, t);
+        mult = Mathf.Clamp(mult, 0.5f, 2f);
 
-        float finalSpeed = activeWave.baseSpeed * multiplier;
+        float finalSpeed = activeWave.baseSpeed * mult;
 
         var ai = go.GetComponent<SpiderAI_NavMesh>();
         if (ai != null)
@@ -115,7 +113,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         }
 
         currentSpiders++;
-        Debug.Log($"🕷 Spawned at {spawnPos} | Day={dayNight.currentDay} | Scale={scale:F2} | Mult={multiplier:F2} | Speed={finalSpeed:F2}");
+        Debug.Log($"🕷 Spawned | Day={dayNight.currentDay} | Scale={scale:F2} | Speed={finalSpeed:F2}");
     }
 
     public void SpiderDied()

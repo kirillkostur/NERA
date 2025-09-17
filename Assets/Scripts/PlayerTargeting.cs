@@ -140,7 +140,7 @@ public class PlayerTargeting : MonoBehaviour
 
     private void SetTarget(ITargetable target)
     {
-        // Отключаем эффект старой цели
+        // Отключаем подсветку старой цели
         if (currentTarget != null)
         {
             var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
@@ -150,7 +150,7 @@ public class PlayerTargeting : MonoBehaviour
 
         currentTarget = target;
 
-        // Включаем эффект новой цели
+        // Включаем подсветку новой цели
         if (currentTarget != null)
         {
             var newRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();

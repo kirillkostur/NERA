@@ -17,9 +17,9 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
     [Header("UI и эффекты")]
     [Tooltip("Индикатор состояния (горит, когда объект сломан)")]
-    public GameObject repairEffectMesh;
-    [Tooltip("Эффект подсветки при выборе цели игроком (Particle/Plane и т.д.)")]
-    public GameObject targetHighlightEffect;
+    public GameObject repairEffectMesh;           // КРАСНЫЙ индикатор проблемы
+    [Tooltip("Эффект подсветки при выборе цели игроком (зелёный таргет)")]
+    public GameObject targetHighlightEffect;      // ЗЕЛЁНАЯ подсветка (её включает/выключает PlayerTargeting)
     [Tooltip("Слайдер прогресса ремонта (опционально)")]
     public Slider progressBar;
 
@@ -73,7 +73,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
                 if (progressBar != null) progressBar.gameObject.SetActive(false);
                 if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
 
-                HideHighlight(); // при ремонте сразу убираем подсветку
+                HideHighlight(); // при завершении ремонта убираем подсветку
                 Debug.Log($"✅ {objectName} отремонтирован!");
                 OnRepaired?.Invoke(this);
             }
@@ -87,14 +87,15 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
             repairEffectMesh.SetActive(!isRepaired);
     }
 
-    /// <summary>Включить подсветку при выборе игроком.</summary>
+    /// <summary>Включить зелёную подсветку при выборе игроком.</summary>
     public void ShowHighlight()
     {
-        if (!isRepaired && targetHighlightEffect != null)
+        // Подсветку даём всегда по запросу PlayerTargeting — состояние ремонта не мешает таргету
+        if (targetHighlightEffect != null)
             targetHighlightEffect.SetActive(true);
     }
 
-    /// <summary>Выключить подсветку выбора.</summary>
+    /// <summary>Выключить зелёную подсветку выбора.</summary>
     public void HideHighlight()
     {
         if (targetHighlightEffect != null)
@@ -140,14 +141,22 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     // === Поломка ===
     public void BreakObject()
     {
+        if (!isRepaired) return;
+
         isRepaired = false;
         progress = 0f;
         UpdateRepairEffect();
-        HideHighlight(); // сбрасываем подсветку, если объект снова сломан
+        HideHighlight(); // сбрасываем зелёную подсветку; PlayerTargeting включит её заново при наведении
         Debug.Log($"❗ {objectName} снова сломан.");
     }
 
     // === ITargetable ===
     public Transform GetTransform() => transform;
-    public bool IsAlive() => !isRepaired;
+    public bool IsAlive() => !isRepaired; // объект «цель», пока он сломан
+
+    // === Вспомогательное: это использует PlayerTargeting напрямую ===
+    public void ToggleHighlight(bool on)
+    {
+        if (on) ShowHighlight(); else HideHighlight();
+    }
 }
