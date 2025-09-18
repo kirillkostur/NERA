@@ -6,32 +6,26 @@ public class SandStormController : MonoBehaviour
 {
     [Header("Настройки бури")]
     public bool autoLoop = true;
-    [Tooltip("Продолжительность бури в секундах.")]
     public float stormDuration = 20f;
-    [Tooltip("Диапазон кулдауна между бурями (сек.).")]
     public Vector2 cooldownRange = new Vector2(60f, 120f);
 
     [Header("Эффекты бури")]
-    [Tooltip("Список объектов (ParticleSystem или другие эффекты), которые включаются во время бури.")]
     public List<GameObject> stormEffects = new List<GameObject>();
-
     [Header("Солнечные панели")]
     public List<SolarPanelSystem> panelsToDirty = new List<SolarPanelSystem>();
 
+    public static bool StormActive { get; private set; } = false;
     private Coroutine loopRoutine;
 
     private void Awake()
     {
-        // ✅ Отключаем эффекты при старте сцены
         foreach (var obj in stormEffects)
-        {
             if (obj != null) obj.SetActive(false);
-        }
     }
 
     private void OnEnable()
     {
-        if (autoLoop) loopRoutine = StartCoroutine(Loop());
+        if (autoLoop) loopRoutine = StartCoroutine(StormLoop());
     }
 
     private void OnDisable()
@@ -39,16 +33,27 @@ public class SandStormController : MonoBehaviour
         if (loopRoutine != null) StopCoroutine(loopRoutine);
     }
 
+    private IEnumerator StormLoop()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(Random.Range(cooldownRange.x, cooldownRange.y));
+            StartStorm();
+            yield return new WaitForSeconds(stormDuration);
+            StopStorm();
+        }
+    }
+
     public void StartStorm()
     {
-        // ✅ Включаем эффекты
+        if (StormActive) return;
+        StormActive = true;
+
         foreach (var obj in stormEffects)
         {
             if (obj != null)
             {
                 obj.SetActive(true);
-
-                // Если это партикл — запускаем проигрывание
                 var fx = obj.GetComponent<ParticleSystem>();
                 if (fx != null)
                 {
@@ -58,20 +63,18 @@ public class SandStormController : MonoBehaviour
             }
         }
 
-        // Загрязняем панели
         foreach (var panel in panelsToDirty)
-        {
             if (panel != null)
                 StartCoroutine(panel.DirtyOverTime(stormDuration));
-        }
 
         Logger.Log("🌪 Буря началась!");
-        Invoke(nameof(StopStorm), stormDuration);
     }
 
     public void StopStorm()
     {
-        // ✅ Отключаем эффекты
+        if (!StormActive) return;
+        StormActive = false;
+
         foreach (var obj in stormEffects)
         {
             if (obj != null)
@@ -82,22 +85,10 @@ public class SandStormController : MonoBehaviour
                     fx.Stop();
                     fx.Clear();
                 }
-
                 obj.SetActive(false);
             }
         }
 
         Logger.Log("🌤 Буря закончилась.");
-    }
-
-    private IEnumerator Loop()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(Random.Range(cooldownRange.x, cooldownRange.y));
-            StartStorm();
-            yield return new WaitForSeconds(stormDuration);
-            StopStorm();
-        }
     }
 }

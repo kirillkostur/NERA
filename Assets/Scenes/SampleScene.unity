@@ -7054,7 +7054,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7653871fb430774694318134cf11266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chargePerSecondDay: 1
+  chargePerSecondDay: 2
   dayNight: {fileID: 376799913}
   repairAirEffects:
   - {fileID: 1712392656}

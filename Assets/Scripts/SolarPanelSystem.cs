@@ -13,12 +13,9 @@ public class SolarPanelSystem : MonoBehaviour
 
     [Header("Эффекты очистки")]
     public List<GameObject> repairAirEffects = new List<GameObject>();
-
-    [Tooltip("Время очистки панели (сек).")]
     public float cleaningDuration = 3f;
 
     [Header("Материалы загрязнения")]
-    [Tooltip("Меши панели. Каждому создаётся копия материала с параметром _DissolveStrength.")]
     public List<MeshRenderer> dirtMeshes = new List<MeshRenderer>();
 
     private static readonly int DissolveId = Shader.PropertyToID("_DissolveStrength");
@@ -33,7 +30,6 @@ public class SolarPanelSystem : MonoBehaviour
         if (repairable != null)
             repairable.OnRepaired += HandleRepaired;
 
-        // Создаём копии материалов
         dirtMaterials.Clear();
         foreach (var mr in dirtMeshes)
         {
@@ -46,9 +42,7 @@ public class SolarPanelSystem : MonoBehaviour
 
     private void Start()
     {
-        // ✅ Устанавливаем правильное состояние материалов при старте
         SetInitialMaterialState();
-
         if (StationBatterySystem.Instance == null)
             StartCoroutine(RegisterWhenReady());
     }
@@ -81,12 +75,10 @@ public class SolarPanelSystem : MonoBehaviour
 
     private void SetInitialMaterialState()
     {
-        float dissolveValue = (repairable != null && !repairable.isRepaired) ? 1f : 0f; // грязно, если не починена
+        float dissolveValue = (repairable != null && !repairable.isRepaired) ? 1f : 0f;
         foreach (var mat in dirtMaterials)
-        {
             if (mat != null && mat.HasProperty(DissolveId))
                 mat.SetFloat(DissolveId, dissolveValue);
-        }
     }
 
     public float GetCurrentOutput()
@@ -98,7 +90,6 @@ public class SolarPanelSystem : MonoBehaviour
 
     private bool IsFullyDirty()
     {
-        if (dirtMaterials.Count == 0) return false;
         foreach (var mat in dirtMaterials)
         {
             if (mat == null) continue;
@@ -124,6 +115,7 @@ public class SolarPanelSystem : MonoBehaviour
             StopCoroutine(cleaningRoutine);
             cleaningRoutine = null;
         }
+
         if (dirtyRoutine != null) StopCoroutine(dirtyRoutine);
         dirtyRoutine = StartCoroutine(DirtyLerpRoutine(duration, starts));
         yield return dirtyRoutine;
@@ -150,6 +142,7 @@ public class SolarPanelSystem : MonoBehaviour
             }
             yield return null;
         }
+
         foreach (var mat in dirtMaterials)
             if (mat != null && mat.HasProperty(DissolveId))
                 mat.SetFloat(DissolveId, 1f);
@@ -157,11 +150,18 @@ public class SolarPanelSystem : MonoBehaviour
 
     private void HandleRepaired(RepairableObject _)
     {
+        if (SandStormController.StormActive)
+        {
+            Logger.Log("🚫 Очистка невозможна во время бури!");
+            return;
+        }
+
         if (dirtyRoutine != null)
         {
             StopCoroutine(dirtyRoutine);
             dirtyRoutine = null;
         }
+
         if (cleaningRoutine != null) StopCoroutine(cleaningRoutine);
         cleaningRoutine = StartCoroutine(CleaningRoutine());
     }
@@ -194,6 +194,7 @@ public class SolarPanelSystem : MonoBehaviour
             }
             yield return null;
         }
+
         foreach (var mat in dirtMaterials)
             if (mat != null && mat.HasProperty(DissolveId))
                 mat.SetFloat(DissolveId, 0f);

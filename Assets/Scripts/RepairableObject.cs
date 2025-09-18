@@ -74,6 +74,20 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
     private void CompleteRepair()
     {
+        // 🚫 Если идёт буря и это солнечная панель — блокируем ремонт
+        var panel = GetComponent<SolarPanelSystem>();
+        if (panel != null && SandStormController.StormActive)
+        {
+            Logger.Log($"🚫 {objectName} нельзя отремонтировать во время бури!");
+            repairing = false;
+            progress = 0f;
+
+            if (progressBar != null) progressBar.gameObject.SetActive(false);
+            if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
+
+            return;
+        }
+
         isRepaired = true;
         repairing = false;
 
