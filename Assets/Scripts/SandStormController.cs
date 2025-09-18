@@ -14,11 +14,24 @@ public class SandStormController : MonoBehaviour
     [Header("Солнечные панели")]
     public List<SolarPanelSystem> panelsToDirty = new List<SolarPanelSystem>();
 
+    [Header("Цвет и интенсивность при буре (только днём)")]
+    public Gradient stormSunColor;          // Градиент цвета для шторма
+    public AnimationCurve stormSunIntensity;// Кривая интенсивности для шторма
+    public float transitionTime = 2f;       // Плавность перехода (сек)
+
     public static bool StormActive { get; private set; } = false;
+    public static SandStormController Instance;
+
+    [HideInInspector] public float StormBlend { get; private set; } = 0f;
+
     private Coroutine loopRoutine;
+    private float stormElapsed = 0f;
+    private float stormProgress = 0f;
 
     private void Awake()
     {
+        Instance = this;
+
         foreach (var obj in stormEffects)
             if (obj != null) obj.SetActive(false);
     }
@@ -90,5 +103,31 @@ public class SandStormController : MonoBehaviour
         }
 
         Logger.Log("🌤 Буря закончилась.");
+    }
+
+    private void Update()
+    {
+        if (StormActive)
+        {
+            stormElapsed += Time.deltaTime;
+            stormProgress = Mathf.Clamp01(stormElapsed / stormDuration);
+            StormBlend = Mathf.MoveTowards(StormBlend, 1f, Time.deltaTime / transitionTime);
+        }
+        else
+        {
+            stormElapsed = 0f;
+            stormProgress = 0f;
+            StormBlend = Mathf.MoveTowards(StormBlend, 0f, Time.deltaTime / transitionTime);
+        }
+    }
+
+    public Color GetStormColor()
+    {
+        return stormSunColor.Evaluate(stormProgress);
+    }
+
+    public float GetStormIntensity()
+    {
+        return stormSunIntensity.Evaluate(stormProgress);
     }
 }

@@ -43,33 +43,48 @@ public class SolarPanelSystem : MonoBehaviour
     private void Start()
     {
         SetInitialMaterialState();
-        if (StationBatterySystem.Instance == null)
-            StartCoroutine(RegisterWhenReady());
     }
 
-    private void OnEnable() => TryRegister();
+    private void OnEnable()
+    {
+        StartCoroutine(RegisterWhenReady());
+    }
 
     private void OnDisable()
     {
         if (StationBatterySystem.Instance != null)
             StationBatterySystem.Instance.UnregisterPanel(this);
+
+        // На всякий случай выключаем VFX при выключении объекта
+        SafeStopCleaningFX();
     }
 
     private void OnDestroy()
     {
         if (repairable != null)
             repairable.OnRepaired -= HandleRepaired;
+
+        // На всякий случай выключаем VFX при уничтожении
+        SafeStopCleaningFX();
     }
 
-    private void TryRegister()
+    private void Update()
     {
-        if (StationBatterySystem.Instance != null)
-            StationBatterySystem.Instance.RegisterPanel(this);
+        // Если во время очистки началась буря — немедленно прерываем очистку и гасим VFX,
+        // чтобы не зависали «воздушные струи».
+        if (SandStormController.StormActive && cleaningRoutine != null)
+        {
+            StopCoroutine(cleaningRoutine);
+            cleaningRoutine = null;
+            SafeStopCleaningFX();
+        }
     }
 
     private IEnumerator RegisterWhenReady()
     {
-        while (StationBatterySystem.Instance == null) yield return null;
+        while (StationBatterySystem.Instance == null)
+            yield return null;
+
         StationBatterySystem.Instance.RegisterPanel(this);
     }
 
@@ -81,8 +96,13 @@ public class SolarPanelSystem : MonoBehaviour
                 mat.SetFloat(DissolveId, dissolveValue);
     }
 
+    /// <summary>
+    /// Возвращает текущую мощность панели.
+    /// Во время бури зарядка сразу прекращается.
+    /// </summary>
     public float GetCurrentOutput()
     {
+        if (SandStormController.StormActive) return 0f;
         if (repairable == null || !repairable.isRepaired) return 0f;
         if (dayNight == null || dayNight.isNight) return 0f;
         return chargePerSecondDay;
@@ -110,10 +130,13 @@ public class SolarPanelSystem : MonoBehaviour
             starts[i] = (mat != null && mat.HasProperty(DissolveId)) ? mat.GetFloat(DissolveId) : 0f;
         }
 
+        // Если шла очистка — останавливаем и ГАСИМ VFX немедленно,
+        // чтобы не зависали эффекты при старте бури.
         if (cleaningRoutine != null)
         {
             StopCoroutine(cleaningRoutine);
             cleaningRoutine = null;
+            SafeStopCleaningFX();
         }
 
         if (dirtyRoutine != null) StopCoroutine(dirtyRoutine);
@@ -156,6 +179,9 @@ public class SolarPanelSystem : MonoBehaviour
             return;
         }
 
+        if (StationBatterySystem.Instance != null)
+            StationBatterySystem.Instance.RegisterPanel(this);
+
         if (dirtyRoutine != null)
         {
             StopCoroutine(dirtyRoutine);
@@ -168,8 +194,7 @@ public class SolarPanelSystem : MonoBehaviour
 
     private IEnumerator CleaningRoutine()
     {
-        foreach (var effect in repairAirEffects)
-            if (effect != null) effect.SetActive(true);
+        SetRepairEffectsActive(true);
 
         var starts = new float[dirtMaterials.Count];
         for (int i = 0; i < dirtMaterials.Count; i++)
@@ -199,9 +224,23 @@ public class SolarPanelSystem : MonoBehaviour
             if (mat != null && mat.HasProperty(DissolveId))
                 mat.SetFloat(DissolveId, 0f);
 
-        foreach (var effect in repairAirEffects)
-            if (effect != null) effect.SetActive(false);
-
+        SetRepairEffectsActive(false);
         cleaningRoutine = null;
+    }
+
+    // =======================
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // =======================
+
+    private void SetRepairEffectsActive(bool active)
+    {
+        foreach (var effect in repairAirEffects)
+            if (effect != null) effect.SetActive(active);
+    }
+
+    private void SafeStopCleaningFX()
+    {
+        // Гасим VFX и сбрасываем ссылку на корутину очистки (если она была)
+        SetRepairEffectsActive(false);
     }
 }

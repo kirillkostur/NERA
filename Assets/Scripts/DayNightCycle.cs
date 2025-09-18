@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Цикл дня/ночи. Дни начинают считаться только после первого старта аккумулятора:
-/// StationBatterySystem.Instance.GameStarted == true.
-/// </summary>
 public class DayNightCycle : MonoBehaviour
 {
     [Header("Настройки дня/ночи")]
@@ -27,12 +23,11 @@ public class DayNightCycle : MonoBehaviour
 
     private bool dayCounted = false;
 
-    /// <summary>Событие наступления нового дня.</summary>
     public event Action OnNewDay;
 
     private void Update()
     {
-        // Инкремент времени
+        // Инкремент времени суток
         timeOfDay += Time.deltaTime / dayDuration;
         if (timeOfDay >= 1f)
         {
@@ -43,15 +38,33 @@ public class DayNightCycle : MonoBehaviour
         // Угол солнца
         float sunAngle = timeOfDay * 360f - 90f;
 
-        // Поворот/цвет/интенсивность
+        // Управление светом
         if (sun != null)
         {
             sun.transform.rotation = Quaternion.Euler(sunAngle, 220f, 0);
-            sun.color = sunColor.Evaluate(timeOfDay);
-            sun.intensity = sunIntensity.Evaluate(timeOfDay);
+
+            // Базовый цвет и интенсивность от дня/ночи
+            Color baseColor = sunColor.Evaluate(timeOfDay);
+            float baseIntensity = sunIntensity.Evaluate(timeOfDay);
+
+            // Если буря активна днём — подмешиваем цвет и интенсивность
+            if (SandStormController.Instance != null && SandStormController.StormActive && !isNight)
+            {
+                Color stormColor = SandStormController.Instance.GetStormColor();
+                float stormIntensity = SandStormController.Instance.GetStormIntensity();
+                float blend = SandStormController.Instance.StormBlend;
+
+                sun.color = Color.Lerp(baseColor, stormColor, blend);
+                sun.intensity = Mathf.Lerp(baseIntensity, stormIntensity, blend);
+            }
+            else
+            {
+                sun.color = baseColor;
+                sun.intensity = baseIntensity;
+            }
         }
 
-        // День/ночь
+        // Определение ночи
         bool nowNight = sunAngle > 180f || sunAngle < 0f;
         if (nowNight != isNight)
         {
@@ -59,7 +72,7 @@ public class DayNightCycle : MonoBehaviour
             Logger.Log(isNight ? "🌙 Наступила ночь" : "☀ Наступил день");
         }
 
-        // Считаем новый день один раз за цикл, только если аккумулятор стартовал игру
+        // Счётчик дней
         var battery = StationBatterySystem.Instance;
         bool gameStarted = (battery != null && battery.GameStarted);
 
