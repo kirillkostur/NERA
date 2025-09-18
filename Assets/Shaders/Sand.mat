@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-1779233218324504226
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 9
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -7,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Shader Graphs_DissolveShader
+  m_Name: Sand
   m_Shader: {fileID: -6465566751694194690, guid: 17b981b1fa952a94eb274c749c18c1dc, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -60,34 +73,21 @@ Material:
     m_Floats:
     - _Brightness: 1
     - _Contrast: 1
-    - _ContrastEM: 0.1
-    - _DissolveStrength: 0
-    - _EMStrength: 2
-    - _MetalStrenght: 0.1
+    - _ContrastEM: -0.51
+    - _DissolveStrength: 1
+    - _EMStrength: 0.1
+    - _MetalStrenght: 0.18
     - _NoiseScale: 35
     - _NormalStrength: 0
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Saturation: 1
-    - _Smoothness: 0.5
+    - _Smoothness: 0.4
     - _SpeedDissolve: 0.5
     - _UVScale: 1
     - _UseTexture: 0
     m_Colors:
-    - _BaseColorTint: {r: 0.8207547, g: 0.34621853, b: 0, a: 1}
-    - _EMColorTint: {r: 0.745283, g: 0.2431181, b: 0.12304199, a: 0.50980395}
+    - _BaseColorTint: {r: 0.8509804, g: 0.17303936, b: 0, a: 1}
+    - _EMColorTint: {r: 0.972549, g: 0.3850603, b: 0.16078427, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &2382677797840552811
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  version: 9

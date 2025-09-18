@@ -1,20 +1,33 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SandStormController : MonoBehaviour
 {
     [Header("Настройки бури")]
     public bool autoLoop = true;
+    [Tooltip("Продолжительность бури в секундах.")]
     public float stormDuration = 20f;
+    [Tooltip("Диапазон кулдауна между бурями (сек.).")]
     public Vector2 cooldownRange = new Vector2(60f, 120f);
 
-    [Header("Эффекты")]
-    public ParticleSystem stormFx;
+    [Header("Эффекты бури")]
+    [Tooltip("Список объектов (ParticleSystem или другие эффекты), которые включаются во время бури.")]
+    public List<GameObject> stormEffects = new List<GameObject>();
 
-    [Header("Цели (панели)")]
-    public SolarPanelSystem[] panelsToBreak;
+    [Header("Солнечные панели")]
+    public List<SolarPanelSystem> panelsToDirty = new List<SolarPanelSystem>();
 
     private Coroutine loopRoutine;
+
+    private void Awake()
+    {
+        // ✅ Отключаем эффекты при старте сцены
+        foreach (var obj in stormEffects)
+        {
+            if (obj != null) obj.SetActive(false);
+        }
+    }
 
     private void OnEnable()
     {
@@ -28,22 +41,52 @@ public class SandStormController : MonoBehaviour
 
     public void StartStorm()
     {
-        if (stormFx != null) stormFx.Play();
-
-        // Ломаем все панели. Игрок должен их "почистить"/починить.
-        foreach (var p in panelsToBreak)
+        // ✅ Включаем эффекты
+        foreach (var obj in stormEffects)
         {
-            var r = p != null ? p.GetComponent<RepairableObject>() : null;
-            if (r != null) r.BreakObject();
+            if (obj != null)
+            {
+                obj.SetActive(true);
+
+                // Если это партикл — запускаем проигрывание
+                var fx = obj.GetComponent<ParticleSystem>();
+                if (fx != null)
+                {
+                    fx.Clear();
+                    fx.Play();
+                }
+            }
         }
 
-        Logger.Log("🌪 Буря началась! Панели повреждены.");
+        // Загрязняем панели
+        foreach (var panel in panelsToDirty)
+        {
+            if (panel != null)
+                StartCoroutine(panel.DirtyOverTime(stormDuration));
+        }
+
+        Logger.Log("🌪 Буря началась!");
         Invoke(nameof(StopStorm), stormDuration);
     }
 
     public void StopStorm()
     {
-        if (stormFx != null) stormFx.Stop();
+        // ✅ Отключаем эффекты
+        foreach (var obj in stormEffects)
+        {
+            if (obj != null)
+            {
+                var fx = obj.GetComponent<ParticleSystem>();
+                if (fx != null)
+                {
+                    fx.Stop();
+                    fx.Clear();
+                }
+
+                obj.SetActive(false);
+            }
+        }
+
         Logger.Log("🌤 Буря закончилась.");
     }
 
