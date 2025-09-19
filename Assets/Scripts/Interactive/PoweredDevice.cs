@@ -95,18 +95,36 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
                 UpdateActiveState();
         }
 
-        // Загрязнение во время бури
-        if (isOutdoor && SandStormController.StormActive && dirtyRoutine == null && !isCurrentlyDirty)
+        // 🔹 Загрязнение только для объектов на улице
+        if (isOutdoor)
         {
-            // Начинаем постепенное загрязнение по длительности бури
-            float stormDuration = SandStormController.Instance != null ? SandStormController.Instance.stormDuration : 5f;
-            dirtyRoutine = StartCoroutine(DirtyOverTime(stormDuration));
+            if (SandStormController.StormActive && dirtyRoutine == null && !isCurrentlyDirty)
+            {
+                // Начинаем постепенное загрязнение по длительности бури
+                float stormDuration = SandStormController.Instance != null
+                    ? SandStormController.Instance.stormDuration
+                    : 5f;
+                dirtyRoutine = StartCoroutine(DirtyOverTime(stormDuration));
+            }
+        }
+        else
+        {
+            // Если объект внутри помещения, то буря на него не влияет
+            // Проверим: если он был помечен грязным из-за предыдущего состояния — сбросим
+            if (!SandStormController.StormActive && isCurrentlyDirty)
+            {
+                isCurrentlyDirty = false;
+                wasDirty = false;
+                if (dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
+                    dirtMaterialInstance.SetFloat(DissolveId, 0f);
+            }
         }
     }
 
+
     private void OnDeviceRepaired(RepairableObject _)
     {
-        if (SandStormController.StormActive)
+        if (isOutdoor && SandStormController.StormActive)
         {
             Logger.Log("🚫 Ремонт невозможен во время бури!");
             if (repairable != null) repairable.BreakObject();

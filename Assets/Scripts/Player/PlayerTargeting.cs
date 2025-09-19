@@ -188,14 +188,35 @@ public class PlayerTargeting : MonoBehaviour
     {
         if (currentTarget != null)
         {
-            var oldSpider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
+            // Проверяем, что объект ещё существует
+            Transform targetTransform = null;
+            try
+            {
+                targetTransform = currentTarget.GetTransform();
+            }
+            catch (MissingReferenceException)
+            {
+                currentTarget = null;
+                return;
+            }
+
+            if (targetTransform == null)
+            {
+                currentTarget = null;
+                return;
+            }
+
+            // Безопасно работаем с подсветкой
+            var oldSpider = targetTransform.GetComponent<SpiderAI_NavMesh>();
             if (oldSpider != null && oldSpider.targetHighlightEffect != null)
                 oldSpider.targetHighlightEffect.SetActive(false);
 
-            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            var oldRepairable = targetTransform.GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
         }
+
         currentTarget = null;
     }
+
 }

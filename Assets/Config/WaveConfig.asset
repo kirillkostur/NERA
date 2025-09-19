@@ -16,10 +16,10 @@ MonoBehaviour:
   - day: 1
     useSpawnPoints: 0
     maxSpidersOnScene: 7
-    spawnEvents: 1
+    spawnEvents: 2
     spawnInterval: 5
-    minSpidersPerSpawn: 1
-    maxSpidersPerSpawn: 1
+    minSpidersPerSpawn: 2
+    maxSpidersPerSpawn: 5
     baseSpeed: 5
     minScale: 0.6
     maxScale: 1.3
@@ -35,10 +35,10 @@ MonoBehaviour:
   - day: 2
     useSpawnPoints: 0
     maxSpidersOnScene: 7
-    spawnEvents: 1
+    spawnEvents: 2
     spawnInterval: 5
-    minSpidersPerSpawn: 1
-    maxSpidersPerSpawn: 1
+    minSpidersPerSpawn: 4
+    maxSpidersPerSpawn: 6
     baseSpeed: 5
     minScale: 0.6
     maxScale: 1.3
