@@ -28,6 +28,12 @@ public class WaveConfig : ScriptableObject
         public int mediumSpiderHP = 50;
         public int largeSpiderHP = 100;
 
+        [Header("Урон пауков")]
+        public int smallSpiderDamage = 5;
+        public int mediumSpiderDamage = 10;
+        public int largeSpiderDamage = 20;
+
+
         [Header("Префабы пауков")]
         public GameObject[] spiderTypes;
     }

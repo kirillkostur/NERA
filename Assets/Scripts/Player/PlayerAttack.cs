@@ -40,6 +40,11 @@ public class PlayerAttack : MonoBehaviour
         }
     }
 
+    public void ResetAttackTrigger()
+    {
+        animator.ResetTrigger("Attack");
+    }
+
     /// <summary>
     /// Этот метод вызывается АНИМАЦИОННЫМ СОБЫТИЕМ на ударном кадре.
     /// </summary>

@@ -1,10 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-/// <summary>
-/// Управление выбором ремонтируемых объектов и взаимодействием с ними.
-/// Также теперь подсвечивает пауков при выборе.
-/// </summary>
 public class PlayerTargeting : MonoBehaviour
 {
     [Header("Настройки таргета")]
@@ -30,42 +26,55 @@ public class PlayerTargeting : MonoBehaviour
     private const int MaxColliders = 20;
     private readonly Collider[] hitBuffer = new Collider[MaxColliders];
 
+    private bool blockTargeting = false;  // запрещает новые назначения только до ресета
+
+    public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.GetTransform() : null;
+
+    private void OnEnable()
+    {
+        // снимаем блок при новом включении (например, после респауна)
+        blockTargeting = false;
+    }
+
     private void Start()
     {
         controller = GetComponent<PlayerController>();
         StartCoroutine(SearchRoutine());
     }
 
+    private void OnDisable() { ClearTargetInternal(); }
+    private void OnDestroy() { ClearTargetInternal(); }
+
     private void Update()
     {
-        bool isMoving = controller != null && controller.IsMoving();
+        if (blockTargeting) return;
 
+        bool isMoving = controller != null && controller.IsMoving();
         if (isMoving)
         {
             if (moveStartTime < 0f) moveStartTime = Time.time;
             if (currentTarget != null && Time.time - moveStartTime >= moveClearDelay)
             {
                 CancelInteraction();
-                ClearTarget();
+                ClearTargetInternal();
             }
-            return;
         }
         else moveStartTime = -1f;
 
         if (currentTarget != null)
         {
             if (!currentTarget.IsAlive() ||
-                Vector3.Distance(transform.position, currentTarget.GetTransform().position) > targetSearchRadius + forgetDistanceExtra)
+                Vector3.Distance(transform.position, currentTarget.GetTransform().position) >
+                targetSearchRadius + forgetDistanceExtra)
             {
                 CancelInteraction();
-                ClearTarget();
+                ClearTargetInternal();
             }
         }
 
         if (currentTarget != null)
         {
             RotateTowardsTarget();
-
             float dist = Vector3.Distance(transform.position, currentTarget.GetTransform().position);
             if (dist <= interactRange)
             {
@@ -88,7 +97,7 @@ public class PlayerTargeting : MonoBehaviour
         WaitForSeconds wait = new WaitForSeconds(searchInterval);
         while (true)
         {
-            if (currentTarget == null) FindNewTarget();
+            if (!blockTargeting && currentTarget == null) FindNewTarget();
             yield return wait;
         }
     }
@@ -142,53 +151,51 @@ public class PlayerTargeting : MonoBehaviour
 
     private void SetTarget(ITargetable target)
     {
-        // Отключаем подсветку старой цели
+        if (blockTargeting) return;
+
         if (currentTarget != null)
         {
-            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
-            if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
-                oldRepairable.targetHighlightEffect.SetActive(false);
-
             var oldSpider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
             if (oldSpider != null && oldSpider.targetHighlightEffect != null)
                 oldSpider.targetHighlightEffect.SetActive(false);
+
+            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
+                oldRepairable.targetHighlightEffect.SetActive(false);
         }
 
         currentTarget = target;
 
-        // Включаем подсветку новой цели
         if (currentTarget != null)
         {
-            var newRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
-            if (newRepairable != null && newRepairable.targetHighlightEffect != null)
-                newRepairable.targetHighlightEffect.SetActive(true);
-
             var spider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
             if (spider != null && spider.targetHighlightEffect != null)
                 spider.targetHighlightEffect.SetActive(true);
+
+            var repairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            if (repairable != null && repairable.targetHighlightEffect != null)
+                repairable.targetHighlightEffect.SetActive(true);
         }
     }
 
     public void ClearTarget()
     {
+        blockTargeting = true; // блок до следующего включения
+        ClearTargetInternal();
+    }
+
+    private void ClearTargetInternal()
+    {
         if (currentTarget != null)
         {
+            var oldSpider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
+            if (oldSpider != null && oldSpider.targetHighlightEffect != null)
+                oldSpider.targetHighlightEffect.SetActive(false);
+
             var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
-
-            var spider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
-            if (spider != null && spider.targetHighlightEffect != null)
-                spider.targetHighlightEffect.SetActive(false);
         }
         currentTarget = null;
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, targetSearchRadius);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, interactRange);
     }
 }

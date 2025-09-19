@@ -13,6 +13,10 @@ public class PlayerController : MonoBehaviour
 
     public Transform _cameraTransform;
 
+    // 👉 Добавленные поля
+    private PlayerAttack _attack;
+    private bool _wasMoving;
+
     private void Start()
     {
         _chController = GetComponent<CharacterController>();
@@ -20,6 +24,9 @@ public class PlayerController : MonoBehaviour
 
         if (_cameraTransform == null && Camera.main != null)
             _cameraTransform = Camera.main.transform;
+
+        // 👉 Инициализируем ссылку на PlayerAttack
+        _attack = GetComponent<PlayerAttack>();
     }
 
     private void Update()
@@ -44,7 +51,15 @@ public class PlayerController : MonoBehaviour
         _moveVector.Normalize();
         _moveVector *= _speedMove;
 
-        _chAnimator.SetBool("Move", _moveVector.magnitude > 0);
+        bool isMoving = _moveVector.magnitude > 0;
+        _chAnimator.SetBool("Move", isMoving);
+
+        // 👉 Если начали движение — сбрасываем триггер атаки
+        if (isMoving && !_wasMoving && _attack != null)
+        {
+            _attack.ResetAttackTrigger();
+        }
+        _wasMoving = isMoving;
 
         if (_moveVector.sqrMagnitude > 0.01f)
         {

@@ -13,6 +13,11 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     public float rotationSpeed = 120f;
     public GameObject targetHighlightEffect; // назначь меш/эффект в инспекторе
 
+    [Header("Атака")]
+    public float attackCooldown = 1.5f;
+    private float nextAttackTime;
+    [HideInInspector] public WaveConfig waveConfig;
+    [HideInInspector] public int waveIndex;
 
     private NavMeshAgent agent;
     private float nextUpdateTime;
@@ -35,7 +40,6 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     {
         if (agent == null)
             agent = GetComponent<NavMeshAgent>();
-
         if (agent == null) return;
 
         agent.speed = moveSpeed;
@@ -47,7 +51,26 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
 
     void Update()
     {
-        if (isDead || target == null) return;
+        if (isDead) return;
+
+        // --- защита от преследования мёртвого игрока ---
+        if (target != null)
+        {
+            var ph = target.GetComponent<PlayerHealth>();
+            var cc = target.GetComponent<CharacterController>();
+            bool playerDeadOrDisabled = (ph != null && ph.IsDead) || (cc != null && !cc.enabled);
+
+            if (playerDeadOrDisabled)
+            {
+                if (agent != null && agent.hasPath) agent.ResetPath();
+                agent.updateRotation = true;
+                if (targetHighlightEffect != null) targetHighlightEffect.SetActive(false);
+                target = null;                 // перестаём таргетить игрока
+                return;
+            }
+        }
+
+        if (target == null) return;
 
         float distance = Vector3.Distance(transform.position, target.position);
 
@@ -67,6 +90,31 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
                 if (agent.hasPath) agent.ResetPath();
                 agent.updateRotation = false;
                 LookAtTarget();
+
+                // атака
+                if (Time.time >= nextAttackTime)
+                {
+                    var health = target.GetComponent<PlayerHealth>();
+                    if (health != null && !health.IsDead)
+                    {
+                        WaveConfig.WaveData waveData =
+                            (waveConfig != null && waveIndex >= 0 && waveConfig.waves.Length > waveIndex)
+                            ? waveConfig.waves[waveIndex]
+                            : null;
+
+                        int damage = 5;
+                        float scale = transform.localScale.x;
+                        if (waveData != null)
+                        {
+                            if (scale < 0.8f) damage = waveData.smallSpiderDamage;
+                            else if (scale < 1.1f) damage = waveData.mediumSpiderDamage;
+                            else damage = waveData.largeSpiderDamage;
+                        }
+
+                        health.TakeDamage(damage);
+                        nextAttackTime = Time.time + attackCooldown;
+                    }
+                }
             }
         }
         else
@@ -86,18 +134,22 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
         }
     }
 
-    // === Реализация ITargetable ===
+    // === ITargetable ===
     public Transform GetTransform() => transform;
-
     public bool IsAlive() => !isDead;
 
-    // Вызвать этот метод при смерти паука
     public void Die()
     {
         isDead = true;
         if (agent != null) agent.ResetPath();
-        // Здесь можно добавить анимацию смерти или уничтожение
+        if (targetHighlightEffect != null) targetHighlightEffect.SetActive(false);
     }
+    private void OnDisable()
+    {
+        if (targetHighlightEffect != null)
+            targetHighlightEffect.SetActive(false);
+    }
+
 
     private void OnDrawGizmosSelected()
     {

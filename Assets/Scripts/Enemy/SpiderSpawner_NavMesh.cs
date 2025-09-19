@@ -107,23 +107,28 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         GameObject prefab = activeWave.spiderTypes[Random.Range(0, activeWave.spiderTypes.Length)];
         GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity);
 
+        // Масштаб паука
         float scale = Random.Range(activeWave.minScale, activeWave.maxScale);
         go.transform.localScale = new Vector3(scale, scale, scale);
 
+        // Рассчёт скорости с учётом размера
         float t = Mathf.InverseLerp(activeWave.minScale, activeWave.maxScale, scale);
         float mult = Mathf.Lerp(1f + activeWave.sizeSpeedMultiplier, 1f - activeWave.sizeSpeedMultiplier, t);
         mult = Mathf.Clamp(mult, 0.5f, 2f);
 
         float finalSpeed = activeWave.baseSpeed * mult;
 
+        // Настройка AI
         var ai = go.GetComponent<SpiderAI_NavMesh>();
         if (ai != null)
         {
             ai.moveSpeed = finalSpeed;
             ai.ApplySettings();
+            ai.waveConfig = waveConfig;        // 👈 передаём конфиг
+            ai.waveIndex = activeWaveIndex;    // 👈 передаём индекс волны
         }
 
-        // Назначаем WaveConfig и индекс для здоровья паука
+        // Настройка здоровья
         var health = go.GetComponent<SpiderHealth>();
         if (health != null)
         {
@@ -134,6 +139,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         currentSpiders++;
         Logger.Log($"🕷 Spawned | Day={dayNight.currentDay} | Scale={scale:F2} | Speed={finalSpeed:F2}");
     }
+
 
     public void SpiderDied()
     {

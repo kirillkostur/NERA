@@ -60,6 +60,12 @@ public class WaveConfigEditor : Editor
             EditorGUILayout.PropertyField(wave.FindPropertyRelative("largeSpiderHP"), new GUIContent("HP больших пауков"));
 
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Урон пауков", EditorStyles.boldLabel); // 👈 Новая секция
+            EditorGUILayout.PropertyField(wave.FindPropertyRelative("smallSpiderDamage"), new GUIContent("Урон маленьких пауков"));
+            EditorGUILayout.PropertyField(wave.FindPropertyRelative("mediumSpiderDamage"), new GUIContent("Урон средних пауков"));
+            EditorGUILayout.PropertyField(wave.FindPropertyRelative("largeSpiderDamage"), new GUIContent("Урон больших пауков"));
+
+            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(wave.FindPropertyRelative("spiderTypes"), new GUIContent("Префабы пауков"), true);
 
             EditorGUILayout.EndVertical();

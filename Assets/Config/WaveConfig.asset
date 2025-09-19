@@ -16,10 +16,10 @@ MonoBehaviour:
   - day: 1
     useSpawnPoints: 0
     maxSpidersOnScene: 7
-    spawnEvents: 2
+    spawnEvents: 1
     spawnInterval: 5
-    minSpidersPerSpawn: 2
-    maxSpidersPerSpawn: 4
+    minSpidersPerSpawn: 1
+    maxSpidersPerSpawn: 1
     baseSpeed: 5
     minScale: 0.6
     maxScale: 1.3
@@ -27,15 +27,18 @@ MonoBehaviour:
     smallSpiderHP: 10
     mediumSpiderHP: 30
     largeSpiderHP: 50
+    smallSpiderDamage: 5
+    mediumSpiderDamage: 10
+    largeSpiderDamage: 20
     spiderTypes:
     - {fileID: 8038372237852052043, guid: 6de4ea5bce5b26d459d7573fba0d41c8, type: 3}
   - day: 2
     useSpawnPoints: 0
-    maxSpidersOnScene: 5
-    spawnEvents: 2
+    maxSpidersOnScene: 7
+    spawnEvents: 1
     spawnInterval: 5
-    minSpidersPerSpawn: 2
-    maxSpidersPerSpawn: 3
+    minSpidersPerSpawn: 1
+    maxSpidersPerSpawn: 1
     baseSpeed: 5
     minScale: 0.6
     maxScale: 1.3
@@ -43,21 +46,8 @@ MonoBehaviour:
     smallSpiderHP: 10
     mediumSpiderHP: 30
     largeSpiderHP: 50
+    smallSpiderDamage: 5
+    mediumSpiderDamage: 10
+    largeSpiderDamage: 20
     spiderTypes:
-    - {fileID: 8038372237852052043, guid: 207956e3fc943b543a25a722e38b0ec7, type: 3}
-  - day: 3
-    useSpawnPoints: 0
-    maxSpidersOnScene: 4
-    spawnEvents: 2
-    spawnInterval: 5
-    minSpidersPerSpawn: 3
-    maxSpidersPerSpawn: 4
-    baseSpeed: 5
-    minScale: 0.6
-    maxScale: 1.3
-    sizeSpeedMultiplier: 0.2
-    smallSpiderHP: 10
-    mediumSpiderHP: 30
-    largeSpiderHP: 50
-    spiderTypes:
-    - {fileID: 8038372237852052043, guid: 79bc43c8c9e9f334cb24e91313a3f5ee, type: 3}
+    - {fileID: 8038372237852052043, guid: 228842f08d64b6c44b68797c4e50cb3e, type: 3}

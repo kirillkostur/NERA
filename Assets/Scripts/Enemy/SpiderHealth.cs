@@ -4,7 +4,10 @@ using UnityEngine;
 public class SpiderHealth : MonoBehaviour
 {
     [Header("Эффекты")]
-    public GameObject deathEffect;   // Эффект при смерти
+    public GameObject deathEffect;         // Эффект при смерти
+    public GameObject hitEffectPrefab;     // 👈 Эффект при попадании
+    public Transform hitPoint;             // 👈 Точка появления эффекта попадания
+
     [HideInInspector] public WaveConfig waveConfig; // Назначается спавнером
     [HideInInspector] public int waveIndex;         // Назначается спавнером
 
@@ -34,6 +37,15 @@ public class SpiderHealth : MonoBehaviour
         if (currentHP <= 0) return;
 
         currentHP -= amount;
+
+        // 👇 Создаём эффект попадания
+        if (hitEffectPrefab != null)
+        {
+            Vector3 spawnPos = hitPoint != null ? hitPoint.position : transform.position;
+            GameObject fx = Instantiate(hitEffectPrefab, spawnPos, Quaternion.identity);
+            Destroy(fx, 1.5f); // Уничтожаем эффект попадания
+        }
+
         if (currentHP <= 0)
         {
             Die();
