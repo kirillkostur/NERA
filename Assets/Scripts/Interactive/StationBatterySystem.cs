@@ -126,18 +126,16 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
 
             if (!gameStarted)
             {
-                gameStarted = true; // ← именно этот флаг увидят DayNightCycle/спавнер
+                gameStarted = true;
                 Logger.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
             }
             else
             {
                 Logger.Log("🔧 Аккумулятор снова запущен.");
             }
-            // питание включится в Update на следующем кадре (если хватит заряда)
         }
         else
         {
-            // Заряда мало — запуск неудачен: оставляем «сломанным», сбрасываем визуал.
             Logger.Log($"⚠ Недостаточно заряда (< {minPercentToSupply}%) для запуска аккумулятора.");
             if (dayNight != null && dayNight.isNight)
                 Logger.Log("ℹ Сейчас ночь — панели не заряжают. Дождитесь рассвета.");
@@ -145,9 +143,11 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
                 Logger.Log("ℹ Зарядка не идёт. Проверь солнечные панели (возможно, их повредила буря).");
 
             repairable.BreakObject();
+            if (repairable != null) repairable.ShowHighlight(); // оставляем подсветку
             isRepaired = false;
         }
     }
+
 
     private float GetPanelsOutputNow()
     {

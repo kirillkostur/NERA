@@ -127,7 +127,11 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (isOutdoor && SandStormController.StormActive)
         {
             Logger.Log("🚫 Ремонт невозможен во время бури!");
-            if (repairable != null) repairable.BreakObject();
+            if (repairable != null)
+            {
+                repairable.BreakObject();
+                repairable.ShowHighlight(); // оставляем подсветку
+            }
             return;
         }
 
@@ -138,6 +142,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         {
             Logger.Log("⚠ Невозможно запустить — нет питания");
             BreakDevice();
+            if (repairable != null) repairable.ShowHighlight(); // оставляем подсветку
             return;
         }
 
@@ -157,6 +162,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
 
         isCurrentlyDirty = false;
     }
+
 
     public void OnPowerChanged(bool available)
     {
