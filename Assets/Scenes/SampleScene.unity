@@ -175,8 +175,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   battery: {fileID: 121352098}
   consumptionPerSecond: 0.2
-  requiresRepairToRun: 1
-  autoActivateOnPower: 0
+  requiresRepairToRun: 0
+  autoActivateOnPower: 1
   onlyActivateAtNight: 0
   isOutdoor: 0
   dirtMesh: {fileID: 1835039499}
