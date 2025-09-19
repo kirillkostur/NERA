@@ -462,6 +462,7 @@ GameObject:
   - component: {fileID: 265548259717836720}
   - component: {fileID: 7014349958348373223}
   - component: {fileID: 1560046750235210006}
+  - component: {fileID: 4574686095373196875}
   - component: {fileID: 453094759342051032}
   m_Layer: 0
   m_Name: Player
@@ -579,10 +580,26 @@ MonoBehaviour:
   targetMask:
     serializedVersion: 2
     m_Bits: 192
+  searchInterval: 0.15
   rotationSpeed: 300
   moveClearDelay: 0.2
   forgetDistanceExtra: 1
   interactRange: 1.8
+--- !u!114 &4574686095373196875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2374765484365290543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181ac1aa0135628409d914aa492ef2a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 10
+  attackCooldown: 0.3
+  attackTrigger: Attack
 --- !u!195 &453094759342051032
 NavMeshAgent:
   m_ObjectHideFlags: 0

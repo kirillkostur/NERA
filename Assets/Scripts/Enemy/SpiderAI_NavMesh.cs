@@ -11,6 +11,8 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     public float detectionRadius = 50f;
     public float updateRate = 0.2f;
     public float rotationSpeed = 120f;
+    public GameObject targetHighlightEffect; // назначь меш/эффект в инспекторе
+
 
     private NavMeshAgent agent;
     private float nextUpdateTime;

@@ -3,14 +3,14 @@ using System.Collections;
 
 /// <summary>
 /// Управление выбором ремонтируемых объектов и взаимодействием с ними.
-/// Оптимизирован для мобильных: поиск целей выполняется раз в searchInterval секунд.
+/// Также теперь подсвечивает пауков при выборе.
 /// </summary>
 public class PlayerTargeting : MonoBehaviour
 {
     [Header("Настройки таргета")]
     public float targetSearchRadius = 8f;
     public LayerMask targetMask;
-    public float searchInterval = 0.15f; // 🔧 Интервал поиска (сек)
+    public float searchInterval = 0.15f;
 
     [Header("Поворот")]
     public float rotationSpeed = 120f;
@@ -40,7 +40,6 @@ public class PlayerTargeting : MonoBehaviour
     {
         bool isMoving = controller != null && controller.IsMoving();
 
-        // Сбрасываем таргет при движении
         if (isMoving)
         {
             if (moveStartTime < 0f) moveStartTime = Time.time;
@@ -51,12 +50,8 @@ public class PlayerTargeting : MonoBehaviour
             }
             return;
         }
-        else
-        {
-            moveStartTime = -1f;
-        }
+        else moveStartTime = -1f;
 
-        // Проверяем актуальность таргета
         if (currentTarget != null)
         {
             if (!currentTarget.IsAlive() ||
@@ -67,7 +62,6 @@ public class PlayerTargeting : MonoBehaviour
             }
         }
 
-        // Взаимодействие с текущей целью
         if (currentTarget != null)
         {
             RotateTowardsTarget();
@@ -84,20 +78,11 @@ public class PlayerTargeting : MonoBehaviour
                 else if (Input.GetKeyUp(KeyCode.E) || !Input.GetKey(KeyCode.E))
                     CancelInteraction();
             }
-            else
-            {
-                CancelInteraction();
-            }
+            else CancelInteraction();
         }
-        else
-        {
-            CancelInteraction();
-        }
+        else CancelInteraction();
     }
 
-    /// <summary>
-    /// Короутина поиска новых целей через заданный интервал.
-    /// </summary>
     private IEnumerator SearchRoutine()
     {
         WaitForSeconds wait = new WaitForSeconds(searchInterval);
@@ -152,7 +137,6 @@ public class PlayerTargeting : MonoBehaviour
                 }
             }
         }
-
         SetTarget(closest);
     }
 
@@ -164,6 +148,10 @@ public class PlayerTargeting : MonoBehaviour
             var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
+
+            var oldSpider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
+            if (oldSpider != null && oldSpider.targetHighlightEffect != null)
+                oldSpider.targetHighlightEffect.SetActive(false);
         }
 
         currentTarget = target;
@@ -174,6 +162,10 @@ public class PlayerTargeting : MonoBehaviour
             var newRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (newRepairable != null && newRepairable.targetHighlightEffect != null)
                 newRepairable.targetHighlightEffect.SetActive(true);
+
+            var spider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
+            if (spider != null && spider.targetHighlightEffect != null)
+                spider.targetHighlightEffect.SetActive(true);
         }
     }
 
@@ -184,6 +176,10 @@ public class PlayerTargeting : MonoBehaviour
             var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
+
+            var spider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
+            if (spider != null && spider.targetHighlightEffect != null)
+                spider.targetHighlightEffect.SetActive(false);
         }
         currentTarget = null;
     }
