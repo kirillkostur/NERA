@@ -15,27 +15,17 @@ MonoBehaviour:
   waves:
   - day: 1
     useSpawnPoints: 0
-    maxSpidersOnScene: 10
-    spawnEvents: 3
-    spawnInterval: 10
-    minSpidersPerSpawn: 4
-    maxSpidersPerSpawn: 6
+    maxSpidersOnScene: 15
+    spawnEvents: 2
+    spawnInterval: 5
+    minSpidersPerSpawn: 5
+    maxSpidersPerSpawn: 10
     baseSpeed: 5
     minScale: 0.6
     maxScale: 1.3
     sizeSpeedMultiplier: 0.2
+    smallSpiderHP: 10
+    mediumSpiderHP: 30
+    largeSpiderHP: 50
     spiderTypes:
     - {fileID: 8038372237852052043, guid: 6de4ea5bce5b26d459d7573fba0d41c8, type: 3}
-  - day: 2
-    useSpawnPoints: 0
-    maxSpidersOnScene: 3
-    spawnEvents: 3
-    spawnInterval: 10
-    minSpidersPerSpawn: 4
-    maxSpidersPerSpawn: 6
-    baseSpeed: 5
-    minScale: 0.6
-    maxScale: 1.3
-    sizeSpeedMultiplier: 0.2
-    spiderTypes:
-    - {fileID: 8038372237852052043, guid: 32bbbf327fbc00b42b4c6800bd253853, type: 3}

@@ -452,7 +452,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoLoop: 1
-  stormDuration: 6
+  stormDuration: 20
   cooldownRange: {x: 20, y: 20}
   stormEffects:
   - {fileID: 441897037}
@@ -531,7 +531,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  transitionTime: 1
+  transitionTime: 5
 --- !u!4 &114858225
 Transform:
   m_ObjectHideFlags: 0
@@ -594,7 +594,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayNight: {fileID: 376799913}
-  startCharge: 100
+  startCharge: 57.5
   minPercentToSupply: 30
   isRepaired: 0
   gameStarted: 0
@@ -1442,7 +1442,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sun: {fileID: 410087040}
-  dayDuration: 30
+  dayDuration: 20
   sunColor:
     serializedVersion: 2
     key0: {r: 0.17782128, g: 0.1989854, b: 0.33962262, a: 0.9647059}
@@ -1822,7 +1822,7 @@ Transform:
   m_GameObject: {fileID: 441897037}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 24.83, y: 3.53, z: -2.6}
+  m_LocalPosition: {x: 15.82, y: 3.53, z: -2.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13133,6 +13133,37 @@ Transform:
   - {fileID: 904603330}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1316972123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1316972124}
+  m_Layer: 6
+  m_Name: firePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1316972124
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1316972123}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.044932723, y: 0.08911201, z: 0.4443055}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 322590113044770418}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1412586296
 GameObject:
   m_ObjectHideFlags: 0
@@ -18711,7 +18742,6 @@ MonoBehaviour:
   onlyActivateAtNight: 1
   isOutdoor: 0
   dirtMesh: {fileID: 0}
-  stormDirtyTime: 2
   repairAirEffects: []
   cleaningDuration: 2
   enableOnActive:
@@ -24004,7 +24034,7 @@ Transform:
   m_GameObject: {fileID: 864350043936954550}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -6.602133, y: -0.00000011920929, z: -0.384467}
+  m_LocalPosition: {x: -1.66, y: -0.00000011920929, z: -4.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -24074,7 +24104,8 @@ Transform:
   m_LocalPosition: {x: 0.000000023981567, y: 0.38637817, z: -0.0000000029193454}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1316972124}
   m_Father: {fileID: 50974894661616140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &530615172098041711
@@ -24215,6 +24246,7 @@ GameObject:
   - component: {fileID: 3970700360997916076}
   - component: {fileID: 3970700360997916075}
   - component: {fileID: 3970700360997916074}
+  - component: {fileID: 3970700360997916077}
   m_Layer: 6
   m_Name: Turret (1)
   m_TagString: Untagged
@@ -24804,7 +24836,6 @@ MonoBehaviour:
   onlyActivateAtNight: 0
   isOutdoor: 1
   dirtMesh: {fileID: 1891813962}
-  stormDirtyTime: 4
   repairAirEffects:
   - {fileID: 2022876255}
   cleaningDuration: 4
@@ -24851,6 +24882,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.90984786, y: 0.7891165, z: 0.90984786}
   m_Center: {x: 0.000000029802322, y: 0.39455825, z: -0.000000029802322}
+--- !u!114 &3970700360997916077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 864350043936954550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 853ceac544357e9468c4299aee7ab242, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotatingPart: {fileID: 322590113044770418}
+  rotationSpeed: 5
+  attackRange: 30
+  fireRate: 1
+  damage: 10
+  shotEffectPrefab: {fileID: 4469073642878634309, guid: b2e3b285d62c86d48b78a81bbd8a306b, type: 3}
+  firePoint: {fileID: 1316972124}
+  attackConsumption: 0.8
 --- !u!33 &4067783179398207004
 MeshFilter:
   m_ObjectHideFlags: 0

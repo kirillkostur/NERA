@@ -21,6 +21,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
     private int currentSpiders;
     private int spawnEventsDone;
     private WaveConfig.WaveData activeWave;
+    private int activeWaveIndex = -1;
 
     private void OnEnable()
     {
@@ -40,6 +41,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         currentSpiders = 0;
         nextSpawnTime = 0f;
         activeWave = null;
+        activeWaveIndex = -1;
         Logger.Log("🌅 Новый день — сброшены счётчики спавна пауков");
     }
 
@@ -47,15 +49,24 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
     {
         if (dayNight == null || waveConfig == null) return;
 
-        // Смотрим ТОЛЬКО на аккумулятор
         var battery = StationBatterySystem.Instance;
         bool gameStarted = (battery != null && battery.GameStarted);
 
-        if (!gameStarted) return;               // игра ещё не стартовала аккумулятором
-        if (!dayNight.isNight) return;          // спавним только ночью
+        if (!gameStarted) return;      // игра ещё не стартовала
+        if (!dayNight.isNight) return; // спавним только ночью
 
         activeWave = waveConfig.GetWaveForDay(dayNight.currentDay, true);
         if (activeWave == null) return;
+
+        // Находим индекс активной волны
+        for (int i = 0; i < waveConfig.waves.Length; i++)
+        {
+            if (waveConfig.waves[i] == activeWave)
+            {
+                activeWaveIndex = i;
+                break;
+            }
+        }
 
         if (Time.time >= nextSpawnTime &&
             currentSpiders < activeWave.maxSpidersOnScene &&
@@ -77,7 +88,7 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
 
         Vector3 spawnPos = transform.position;
 
-        if (activeWave.useSpawnPoints && (spawnPoints != null && spawnPoints.Length > 0))
+        if (activeWave.useSpawnPoints && spawnPoints != null && spawnPoints.Length > 0)
         {
             Transform p = spawnPoints[Random.Range(0, spawnPoints.Length)];
             spawnPos = p.position;
@@ -110,6 +121,14 @@ public class SpiderSpawner_NavMesh : MonoBehaviour
         {
             ai.moveSpeed = finalSpeed;
             ai.ApplySettings();
+        }
+
+        // Назначаем WaveConfig и индекс для здоровья паука
+        var health = go.GetComponent<SpiderHealth>();
+        if (health != null)
+        {
+            health.waveConfig = waveConfig;
+            health.waveIndex = activeWaveIndex;
         }
 
         currentSpiders++;

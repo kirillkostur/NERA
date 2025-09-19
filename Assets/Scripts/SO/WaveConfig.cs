@@ -7,7 +7,7 @@ public class WaveConfig : ScriptableObject
     public class WaveData
     {
         [Header("Основные настройки волны")]
-        public int day; // В какой день активна волна
+        public int day;
         public bool useSpawnPoints = false;
 
         [Header("Контроль количества")]
@@ -22,6 +22,11 @@ public class WaveConfig : ScriptableObject
         public float minScale = 0.6f;
         public float maxScale = 1.3f;
         public float sizeSpeedMultiplier = 0.3f;
+
+        [Header("Здоровье пауков")]
+        public int smallSpiderHP = 20;
+        public int mediumSpiderHP = 50;
+        public int largeSpiderHP = 100;
 
         [Header("Префабы пауков")]
         public GameObject[] spiderTypes;
@@ -40,5 +45,13 @@ public class WaveConfig : ScriptableObject
                 selected = wave;
         }
         return selected;
+    }
+
+    public int GetHealthByScale(float scale, WaveData wave)
+    {
+        if (wave == null) return 20;
+        if (scale < 0.8f) return wave.smallSpiderHP;
+        if (scale < 1.1f) return wave.mediumSpiderHP;
+        return wave.largeSpiderHP;
     }
 }

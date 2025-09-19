@@ -15,18 +15,20 @@ public class SandStormController : MonoBehaviour
     public List<SolarPanelSystem> panelsToDirty = new List<SolarPanelSystem>();
 
     [Header("Цвет и интенсивность при буре (только днём)")]
-    public Gradient stormSunColor;          // Градиент цвета для шторма
-    public AnimationCurve stormSunIntensity;// Кривая интенсивности для шторма
-    public float transitionTime = 2f;       // Плавность перехода (сек)
+    public Gradient stormSunColor;
+    public AnimationCurve stormSunIntensity;
+    public float transitionTime = 2f; // Плавность переходов
 
-    public static bool StormActive { get; private set; } = false;
+    public static bool StormActive { get; private set; }
     public static SandStormController Instance;
 
     [HideInInspector] public float StormBlend { get; private set; } = 0f;
 
     private Coroutine loopRoutine;
-    private float stormElapsed = 0f;
-    private float stormProgress = 0f;
+    private Coroutine fadeOutRoutine;
+
+    private readonly List<ParticleSystem> allStormPS = new List<ParticleSystem>();
+    private readonly List<float> defaultRates = new List<float>();
 
     private void Awake()
     {
@@ -34,6 +36,8 @@ public class SandStormController : MonoBehaviour
 
         foreach (var obj in stormEffects)
             if (obj != null) obj.SetActive(false);
+
+        CacheStormParticleSystems();
     }
 
     private void OnEnable()
@@ -44,6 +48,7 @@ public class SandStormController : MonoBehaviour
     private void OnDisable()
     {
         if (loopRoutine != null) StopCoroutine(loopRoutine);
+        if (fadeOutRoutine != null) StopCoroutine(fadeOutRoutine);
     }
 
     private IEnumerator StormLoop()
@@ -64,18 +69,31 @@ public class SandStormController : MonoBehaviour
 
         GameEvents.RaiseStormStarted();
 
-        foreach (var obj in stormEffects)
+        if (fadeOutRoutine != null)
         {
-            if (obj != null)
-            {
-                obj.SetActive(true);
-                var fx = obj.GetComponent<ParticleSystem>();
-                if (fx != null)
-                {
-                    fx.Clear();
-                    fx.Play();
-                }
-            }
+            StopCoroutine(fadeOutRoutine);
+            fadeOutRoutine = null;
+        }
+
+        // Повторно кэшируем после fade-out, чтобы восстановить значения rateOverTime
+        CacheStormParticleSystems();
+
+        foreach (var obj in stormEffects)
+            if (obj != null) obj.SetActive(true);
+
+        for (int i = 0; i < allStormPS.Count; i++)
+        {
+            var ps = allStormPS[i];
+            if (ps == null) continue;
+
+            var emission = ps.emission;
+            float baseRate = (i < defaultRates.Count && defaultRates[i] > 0f)
+                ? defaultRates[i]
+                : 20f; // Запасное значение, если вдруг не сохранилось
+
+            SetRate(ref emission, baseRate);
+            ps.Clear();
+            ps.Play();
         }
 
         foreach (var panel in panelsToDirty)
@@ -92,46 +110,121 @@ public class SandStormController : MonoBehaviour
 
         GameEvents.RaiseStormEnded();
 
-        foreach (var obj in stormEffects)
-        {
-            if (obj != null)
-            {
-                var fx = obj.GetComponent<ParticleSystem>();
-                if (fx != null)
-                {
-                    fx.Stop();
-                    fx.Clear();
-                }
-                obj.SetActive(false);
-            }
-        }
-
-        Logger.Log("🌤 Буря закончилась.");
+        if (fadeOutRoutine != null) StopCoroutine(fadeOutRoutine);
+        fadeOutRoutine = StartCoroutine(FadeOutAllStormParticles());
     }
 
     private void Update()
     {
-        if (StormActive)
+        StormBlend = Mathf.MoveTowards(StormBlend, StormActive ? 1f : 0f, Time.deltaTime / transitionTime);
+    }
+
+    public Color GetStormColor() => stormSunColor.Evaluate(StormBlend);
+    public float GetStormIntensity() => stormSunIntensity.Evaluate(StormBlend);
+
+    private void CacheStormParticleSystems()
+    {
+        allStormPS.Clear();
+        defaultRates.Clear();
+
+        foreach (var obj in stormEffects)
         {
-            stormElapsed += Time.deltaTime;
-            stormProgress = Mathf.Clamp01(stormElapsed / stormDuration);
-            StormBlend = Mathf.MoveTowards(StormBlend, 1f, Time.deltaTime / transitionTime);
-        }
-        else
-        {
-            stormElapsed = 0f;
-            stormProgress = 0f;
-            StormBlend = Mathf.MoveTowards(StormBlend, 0f, Time.deltaTime / transitionTime);
+            if (obj == null) continue;
+
+            var pss = obj.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (var ps in pss)
+            {
+                allStormPS.Add(ps);
+                var emission = ps.emission;
+                defaultRates.Add(GetRate(emission));
+            }
         }
     }
 
-    public Color GetStormColor()
+    private IEnumerator FadeOutAllStormParticles()
     {
-        return stormSunColor.Evaluate(stormProgress);
+        // Сохраняем текущие скорости испускания
+        var startRates = new float[allStormPS.Count];
+        for (int i = 0; i < allStormPS.Count; i++)
+        {
+            var ps = allStormPS[i];
+            if (ps == null) continue;
+            var emission = ps.emission;
+            startRates[i] = GetRate(emission);
+        }
+
+        float elapsed = 0f;
+        while (elapsed < transitionTime)
+        {
+            if (StormActive) yield break; // Если буря возобновилась — прерываем fade-out
+
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / transitionTime);
+
+            for (int i = 0; i < allStormPS.Count; i++)
+            {
+                var ps = allStormPS[i];
+                if (ps == null) continue;
+
+                var emission = ps.emission;
+                float newRate = Mathf.Lerp(startRates[i], 0f, t);
+                SetRate(ref emission, newRate);
+            }
+
+            yield return null;
+        }
+
+        // Останавливаем эмиссию, но не очищаем сразу — ждём затухания
+        for (int i = 0; i < allStormPS.Count; i++)
+        {
+            var ps = allStormPS[i];
+            if (ps == null) continue;
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        // Ждём, пока все частицы исчезнут
+        bool particlesAlive = true;
+        while (particlesAlive)
+        {
+            particlesAlive = false;
+            foreach (var ps in allStormPS)
+            {
+                if (ps != null && ps.IsAlive(true))
+                {
+                    particlesAlive = true;
+                    break;
+                }
+            }
+            yield return null;
+        }
+
+        foreach (var obj in stormEffects)
+            if (obj != null) obj.SetActive(false);
+
+        // Пересохраняем базовые значения после fade-out
+        CacheStormParticleSystems();
+
+        fadeOutRoutine = null;
     }
 
-    public float GetStormIntensity()
+    private static float GetRate(ParticleSystem.EmissionModule emission)
     {
-        return stormSunIntensity.Evaluate(stormProgress);
+        var curve = emission.rateOverTime;
+        switch (curve.mode)
+        {
+            case ParticleSystemCurveMode.Constant: return curve.constant;
+            case ParticleSystemCurveMode.TwoConstants: return curve.constantMax;
+            case ParticleSystemCurveMode.Curve: return curve.Evaluate(0f);
+            case ParticleSystemCurveMode.TwoCurves: return curve.Evaluate(0f);
+            default: return 0f;
+        }
+    }
+
+    private static void SetRate(ref ParticleSystem.EmissionModule emission, float value)
+    {
+        var curve = emission.rateOverTime;
+        curve.mode = ParticleSystemCurveMode.Constant;
+        curve.constant = Mathf.Max(0f, value);
+        emission.rateOverTime = curve;
     }
 }

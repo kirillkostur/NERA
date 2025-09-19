@@ -16,7 +16,6 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     [Header("Поведение на улице")]
     public bool isOutdoor = false;
     public MeshRenderer dirtMesh;
-    public float stormDirtyTime = 2f;
 
     [Header("Очистка")]
     public List<GameObject> repairAirEffects = new List<GameObject>();
@@ -30,8 +29,8 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     private bool manuallyEnabled = false;
     private bool initialized = false;
 
-    private bool wasDirty = false;          // объект стал грязным в бурю
-    private bool isCurrentlyDirty = false;  // состояние грязи сейчас
+    private bool wasDirty = false;          // объект был грязным
+    private bool isCurrentlyDirty = false;  // состояние грязи
     private RepairableObject repairable;
     private DayNightCycle dayNight;
     private Material dirtMaterialInstance;
@@ -87,7 +86,6 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
 
     private void Update()
     {
-        // Ночной режим
         if (onlyActivateAtNight && dayNight != null && initialized)
         {
             if (!dayNight.isNight && isActive)
@@ -97,18 +95,17 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
                 UpdateActiveState();
         }
 
-        // Загрязнение во время бури — даже если уже сломан
+        // Загрязнение во время бури
         if (isOutdoor && SandStormController.StormActive && dirtyRoutine == null && !isCurrentlyDirty)
         {
-            SetActive(false);
-            BreakDevice();
-            dirtyRoutine = StartCoroutine(DirtyOverTime(stormDirtyTime));
+            // Начинаем постепенное загрязнение по длительности бури
+            float stormDuration = SandStormController.Instance != null ? SandStormController.Instance.stormDuration : 5f;
+            dirtyRoutine = StartCoroutine(DirtyOverTime(stormDuration));
         }
     }
 
     private void OnDeviceRepaired(RepairableObject _)
     {
-        // Во время бури ремонт не проходит, не ставим флаг "починен"
         if (SandStormController.StormActive)
         {
             Logger.Log("🚫 Ремонт невозможен во время бури!");
@@ -116,10 +113,9 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
             return;
         }
 
-        bool shouldPlayFX = wasDirty; // эффект только если объект был грязным
+        bool shouldPlayFX = wasDirty;
         wasDirty = false;
 
-        // Нет питания — не запускаем
         if (battery == null || !battery.GameStarted || !battery.HasPower)
         {
             Logger.Log("⚠ Невозможно запустить — нет питания");
@@ -127,11 +123,9 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
             return;
         }
 
-        // Включаем устройство (если удовлетворяет условиям)
         manuallyEnabled = true;
         UpdateActiveState();
 
-        // Плавная очистка грязи (никаких мгновенных SetFloat(0) тут!)
         if (shouldPlayFX && dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
         {
             if (cleaningRoutine != null) StopCoroutine(cleaningRoutine);
@@ -139,12 +133,10 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         }
         else
         {
-            // Если не было грязи — убедимся, что параметр чистый
             if (dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
                 dirtMaterialInstance.SetFloat(DissolveId, 0f);
         }
 
-        // После успешного ремонта устройство считается не-грязным
         isCurrentlyDirty = false;
     }
 
@@ -186,7 +178,6 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (isActive == value && initialized) return;
 
         isActive = value;
-
         foreach (var obj in enableOnActive)
             if (obj != null) obj.SetActive(isActive);
     }
@@ -205,9 +196,8 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         isCurrentlyDirty = true;
 
         float elapsed = 0f;
-        float start = 0f;
-        if (dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
-            start = dirtMaterialInstance.GetFloat(DissolveId);
+        float start = dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId)
+            ? dirtMaterialInstance.GetFloat(DissolveId) : 0f;
 
         while (elapsed < duration)
         {
@@ -227,21 +217,16 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
 
     private IEnumerator CleaningRoutine()
     {
-        // Не запускаем очистку, если внезапно началась буря
-        if (SandStormController.StormActive)
-            yield break;
+        if (SandStormController.StormActive) yield break;
 
         SetRepairEffectsActive(true);
 
         float elapsed = 0f;
-        float start = 1f;
-        if (dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
-            start = dirtMaterialInstance.GetFloat(DissolveId);
+        float start = dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId)
+            ? dirtMaterialInstance.GetFloat(DissolveId) : 1f;
 
-        // Плавно от текущего значения к 0 за cleaningDuration
         while (elapsed < cleaningDuration)
         {
-            // Если во время очистки началась буря — прекращаем, ничего не дотираем
             if (SandStormController.StormActive)
             {
                 SetRepairEffectsActive(false);

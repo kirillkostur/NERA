@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: 2565759039116812259}
   - component: {fileID: 1119942695470935404}
   - component: {fileID: 6698832652218082740}
+  - component: {fileID: 5243519060053595054}
   m_Layer: 7
   m_Name: Spider
-  m_TagString: Untagged
+  m_TagString: Spider
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -122,9 +123,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 783bb629ba965a84781a8c0cd92a6e0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _target: {fileID: 0}
+  target: {fileID: 0}
   moveSpeed: 3.5
   stoppingDistance: 1
   detectionRadius: 150
   updateRate: 0.2
   rotationSpeed: 120
+--- !u!114 &5243519060053595054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8038372237852052043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e88edf58bee3134786460124d065f2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deathEffect: {fileID: 768437406313339296, guid: ead1d576dcf12c64a9eacf35633e0ff8, type: 3}
+  waveConfig: {fileID: 11400000, guid: 5094da30f234dfe4b9abac1ed71d294c, type: 2}
+  waveIndex: 0
