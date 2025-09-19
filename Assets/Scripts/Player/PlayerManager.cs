@@ -50,7 +50,7 @@ public class PlayerManager : MonoBehaviour
         var controller = GetComponent<CharacterController>();
         if (controller != null) controller.enabled = false;
 
-        gameObject.layer = LayerMask.NameToLayer("IgnoreRaycast");
+        gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
     }
 
 
