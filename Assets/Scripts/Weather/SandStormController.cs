@@ -62,6 +62,8 @@ public class SandStormController : MonoBehaviour
         if (StormActive) return;
         StormActive = true;
 
+        GameEvents.RaiseStormStarted();
+
         foreach (var obj in stormEffects)
         {
             if (obj != null)
@@ -87,6 +89,8 @@ public class SandStormController : MonoBehaviour
     {
         if (!StormActive) return;
         StormActive = false;
+
+        GameEvents.RaiseStormEnded();
 
         foreach (var obj in stormEffects)
         {

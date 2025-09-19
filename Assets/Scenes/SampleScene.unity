@@ -431,6 +431,7 @@ GameObject:
   m_Component:
   - component: {fileID: 114858225}
   - component: {fileID: 114858224}
+  - component: {fileID: 114858226}
   m_Layer: 0
   m_Name: SandStormController
   m_TagString: Untagged
@@ -452,7 +453,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoLoop: 1
   stormDuration: 6
-  cooldownRange: {x: 20, y: 50}
+  cooldownRange: {x: 20, y: 20}
   stormEffects:
   - {fileID: 441897037}
   panelsToDirty:
@@ -547,6 +548,18 @@ Transform:
   - {fileID: 441897038}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114858226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 114858223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 984bc3c575222294ea7814c095f9cacf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &121352097
 GameObject:
   m_ObjectHideFlags: 0
@@ -604,7 +617,7 @@ MonoBehaviour:
   isRepaired: 0
   instantInteract: 0
   maxInteractDistance: 2
-  repairEffectMesh: {fileID: 102644048}
+  icon: {fileID: 102644048}
   targetHighlightEffect: {fileID: 68688873}
   progressBar: {fileID: 1110795021}
 --- !u!65 &121352100
@@ -1429,7 +1442,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sun: {fileID: 410087040}
-  dayDuration: 60
+  dayDuration: 30
   sunColor:
     serializedVersion: 2
     key0: {r: 0.17782128, g: 0.1989854, b: 0.33962262, a: 0.9647059}
@@ -1616,6 +1629,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 390359907}
   m_CullTransparentMesh: 1
+--- !u!1 &408259070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 408259072}
+  - component: {fileID: 408259071}
+  m_Layer: 0
+  m_Name: WeatherManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &408259071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408259070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c0b395955d76364faa84ad3628e2750, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  initialEffect: {fileID: 114858224}
+--- !u!4 &408259072
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408259070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -7313,7 +7371,7 @@ MonoBehaviour:
   isRepaired: 0
   instantInteract: 0
   maxInteractDistance: 2
-  repairEffectMesh: {fileID: 1830115605}
+  icon: {fileID: 1830115605}
   targetHighlightEffect: {fileID: 80832384}
   progressBar: {fileID: 148169290}
 --- !u!65 &1048479991
@@ -12978,7 +13036,7 @@ MonoBehaviour:
   isRepaired: 0
   instantInteract: 0
   maxInteractDistance: 2
-  repairEffectMesh: {fileID: 1063718286}
+  icon: {fileID: 1063718286}
   targetHighlightEffect: {fileID: 1722817348}
   progressBar: {fileID: 1126789999}
 --- !u!65 &1290312082
@@ -23947,7 +24005,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -6.602133, y: -0.00000011920929, z: -0.384467}
-  m_LocalScale: {x: 2.3793736, y: 2.3793736, z: 2.3793736}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 322590113044770418}
@@ -24769,7 +24827,7 @@ MonoBehaviour:
   isRepaired: 0
   instantInteract: 0
   maxInteractDistance: 2
-  repairEffectMesh: {fileID: 1728184233}
+  icon: {fileID: 1728184233}
   targetHighlightEffect: {fileID: 156636706}
   progressBar: {fileID: 1695540375}
 --- !u!65 &3970700360997916076
@@ -25610,3 +25668,4 @@ SceneRoots:
   - {fileID: 94548990}
   - {fileID: 114858225}
   - {fileID: 50974894661616140}
+  - {fileID: 408259072}

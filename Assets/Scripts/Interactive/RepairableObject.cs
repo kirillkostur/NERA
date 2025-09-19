@@ -20,7 +20,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     public float maxInteractDistance = 4f;
 
     [Header("UI и эффекты")]
-    public GameObject repairEffectMesh;     // Красная иконка проблем
+    public GameObject icon;     // Красная иконка проблем
     public GameObject targetHighlightEffect; // Зелёный таргет
     public Slider progressBar;
 
@@ -101,8 +101,8 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
     private void UpdateRepairEffect()
     {
-        if (repairEffectMesh != null)
-            repairEffectMesh.SetActive(!isRepaired);
+        if (icon != null)
+            icon.SetActive(!isRepaired);
     }
 
     public void ShowHighlight()

@@ -84,4 +84,26 @@ public class DayNightCycle : MonoBehaviour
             OnNewDay?.Invoke();
         }
     }
+    private void OnEnable()
+    {
+        GameEvents.StormStarted += OnStormStarted;
+        GameEvents.StormEnded += OnStormEnded;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.StormStarted -= OnStormStarted;
+        GameEvents.StormEnded -= OnStormEnded;
+    }
+    private void OnStormStarted()
+    {
+        Debug.Log("🌪 [DayNightCycle] Буря началась — событие получено");
+    }
+
+    private void OnStormEnded()
+    {
+        Debug.Log("🌤 [DayNightCycle] Буря закончилась — событие получено");
+    }
+
+
 }
