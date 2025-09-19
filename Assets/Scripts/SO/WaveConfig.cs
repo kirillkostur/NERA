@@ -34,17 +34,39 @@ public class WaveConfig : ScriptableObject
 
     public WaveData[] waves;
 
+    /// <summary>
+    /// Возвращает конфигурацию волны для текущего дня.
+    /// Если точного совпадения нет, берёт последнюю доступную волну, 
+    /// у которой day <= currentDay.
+    /// </summary>
     public WaveData GetWaveForDay(int currentDay, bool gameStarted)
     {
-        if (!gameStarted) return null;
+        if (!gameStarted || waves == null || waves.Length == 0)
+            return null;
 
-        WaveData selected = null;
+        WaveData exactMatch = null;
+        WaveData fallback = null;
+
         foreach (var wave in waves)
         {
-            if (currentDay == wave.day)
-                selected = wave;
+            // Точное совпадение
+            if (wave.day == currentDay)
+                exactMatch = wave;
+
+            // Запоминаем ближайший день, который меньше или равен текущему
+            if (wave.day <= currentDay)
+            {
+                if (fallback == null || wave.day > fallback.day)
+                    fallback = wave;
+            }
         }
-        return selected;
+
+        // Если есть точное совпадение — возвращаем его
+        if (exactMatch != null)
+            return exactMatch;
+
+        // Иначе возвращаем последнюю подходящую волну
+        return fallback;
     }
 
     public int GetHealthByScale(float scale, WaveData wave)
