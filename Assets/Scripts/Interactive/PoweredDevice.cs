@@ -24,13 +24,16 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     [Header("Что включать/выключать при работе")]
     public GameObject[] enableOnActive;
 
-    private bool hasPower = false;
+    [Header("Особые режимы")]
+    public bool isLifeSupport = false;
+
+    private bool gridHasPower = false;   // состояние «сети» от StationBatterySystem (HasPower)
     private bool isActive = false;
     private bool manuallyEnabled = false;
     private bool initialized = false;
 
-    private bool wasDirty = false;          // объект был грязным
-    private bool isCurrentlyDirty = false;  // состояние грязи
+    private bool wasDirty = false;
+    private bool isCurrentlyDirty = false;
     private RepairableObject repairable;
     private DayNightCycle dayNight;
     private Material dirtMaterialInstance;
@@ -71,7 +74,12 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     private void OnEnable()
     {
         if (battery == null) battery = StationBatterySystem.Instance;
-        if (battery != null) battery.RegisterConsumer(this);
+        if (battery != null)
+        {
+            battery.RegisterConsumer(this);
+            battery.OnChargeChanged += OnBatteryChargeChanged; // слушаем 0% для LifeSupport
+            OnPowerChanged(battery.HasPower);
+        }
 
         SetActive(false);
         initialized = true;
@@ -79,7 +87,11 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
 
     private void OnDisable()
     {
-        if (battery != null) battery.UnregisterConsumer(this);
+        if (battery != null)
+        {
+            battery.UnregisterConsumer(this);
+            battery.OnChargeChanged -= OnBatteryChargeChanged;
+        }
         SetActive(false);
         StopCleaningFX();
     }
@@ -91,62 +103,86 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
             if (!dayNight.isNight && isActive)
                 SetActive(false);
 
-            if (dayNight.isNight && hasPower)
+            if (dayNight.isNight)
                 UpdateActiveState();
         }
 
-        // 🔹 Загрязнение только для объектов на улице
+        // Загрязнение/поломка бурей только для уличных объектов
         if (isOutdoor)
         {
             if (SandStormController.StormActive && dirtyRoutine == null && !isCurrentlyDirty)
             {
-                // Начинаем постепенное загрязнение по длительности бури
                 float stormDuration = SandStormController.Instance != null
                     ? SandStormController.Instance.stormDuration
                     : 5f;
                 dirtyRoutine = StartCoroutine(DirtyOverTime(stormDuration));
             }
         }
-        else
-        {
-            // Если объект внутри помещения, то буря на него не влияет
-            // Проверим: если он был помечен грязным из-за предыдущего состояния — сбросим
-            if (!SandStormController.StormActive && isCurrentlyDirty)
-            {
-                isCurrentlyDirty = false;
-                wasDirty = false;
-                if (dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
-                    dirtMaterialInstance.SetFloat(DissolveId, 0f);
-            }
-        }
     }
 
+    // === IPowerConsumer ===
+    public void OnPowerChanged(bool availableFromGrid)
+    {
+        gridHasPower = availableFromGrid;
+
+        // Обычные устройства ломаются при падении сети (<30%)
+        if (!isLifeSupport && !gridHasPower)
+        {
+            BreakDevice();
+        }
+
+        if (!initialized) return;
+        UpdateActiveState();
+    }
+
+    public float GetConsumptionPerSecond() => isActive ? consumptionPerSecond : 0f;
+    public bool IsConsuming() => isActive;
+
+    private void OnBatteryChargeChanged(float percent)
+    {
+        // LifeSupport выключается и «ломается» при 0%
+        if (isLifeSupport && percent <= 0f)
+        {
+            BreakDevice();
+            SetActive(false);
+        }
+        UpdateActiveState();
+    }
 
     private void OnDeviceRepaired(RepairableObject _)
     {
+        // ✅ ВАЖНОЕ ИЗМЕНЕНИЕ:
+        // Буря блокирует ремонт ТОЛЬКО для уличных объектов. Внутренние (isOutdoor == false) игнорируют бурю.
         if (isOutdoor && SandStormController.StormActive)
         {
-            Logger.Log("🚫 Ремонт невозможен во время бури!");
-            if (repairable != null)
-            {
-                repairable.BreakObject();
-                repairable.ShowHighlight(); // оставляем подсветку
-            }
+            Logger.Log("🚫 Ремонт невозможен во время бури (объект на улице)!");
+            BreakDevice();
+            if (repairable != null) repairable.ShowHighlight();
+            return;
+        }
+
+        // LifeSupport нельзя чинить при полностью разряженной батарее
+        if (isLifeSupport && battery != null && battery.ChargePercent <= 0f)
+        {
+            Logger.Log("🚫 Батарея разряжена до 0% — ремонт жизненно важного устройства невозможен.");
+            BreakDevice();
+            if (repairable != null) repairable.ShowHighlight();
+            return;
+        }
+
+        // Обычные устройства чинятся только при реально поданном питании
+        if (!isLifeSupport && (battery == null || !battery.GameStarted || !battery.HasPower))
+        {
+            Logger.Log("⚠ Сначала запустите батарею, чтобы починить устройство.");
+            BreakDevice();
+            if (repairable != null) repairable.ShowHighlight();
             return;
         }
 
         bool shouldPlayFX = wasDirty;
         wasDirty = false;
 
-        if (battery == null || !battery.GameStarted || !battery.HasPower)
-        {
-            Logger.Log("⚠ Невозможно запустить — нет питания");
-            BreakDevice();
-            if (repairable != null) repairable.ShowHighlight(); // оставляем подсветку
-            return;
-        }
-
-        manuallyEnabled = true;
+        manuallyEnabled = true; // игрок «включил» устройство ремонтом
         UpdateActiveState();
 
         if (shouldPlayFX && dirtMaterialInstance != null && dirtMaterialInstance.HasProperty(DissolveId))
@@ -163,32 +199,21 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         isCurrentlyDirty = false;
     }
 
-
-    public void OnPowerChanged(bool available)
-    {
-        hasPower = available;
-
-        if (!initialized) return;
-
-        if (!hasPower)
-        {
-            manuallyEnabled = false;
-            SetActive(false);
-            BreakDevice();
-        }
-
-        UpdateActiveState();
-    }
-
-    public float GetConsumptionPerSecond() => isActive ? consumptionPerSecond : 0f;
-    public bool IsConsuming() => isActive;
-
     private void UpdateActiveState()
     {
-        bool repairedOk = !requiresRepairToRun || (repairable != null && repairable.isRepaired && manuallyEnabled);
-        bool shouldBeActive = hasPower && repairedOk;
+        // Источник энергии:
+        // - обычные устройства: только «сеть» (HasPower)
+        // - LifeSupport: любой заряд > 0%
+        bool energyAvailable = isLifeSupport
+            ? (battery != null && battery.ChargePercent > 0f)
+            : gridHasPower;
 
-        if (hasPower && autoActivateOnPower && !requiresRepairToRun)
+        // Требование ремонта:
+        bool repairedOk = !requiresRepairToRun || (repairable != null && repairable.isRepaired && manuallyEnabled);
+
+        bool shouldBeActive = energyAvailable && repairedOk;
+
+        if (energyAvailable && autoActivateOnPower && !requiresRepairToRun)
             shouldBeActive = true;
 
         if (onlyActivateAtNight && dayNight != null)
@@ -212,6 +237,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         {
             repairable.BreakObject();
         }
+        manuallyEnabled = false;
         SetActive(false);
     }
 

@@ -8,6 +8,8 @@ using UnityEngine;
 /// - Логика ремонта/поломки отделена от RepairableObject: у аккумулятора свои булы isRepaired/gameStarted.
 /// - Зарядка днём от исправных панелей; подача питания, если isRepaired && gameStarted && charge ≥ threshold.
 /// - При падении ниже порога питание выключается и аккумулятор «ломается» (чтобы игрок мог перезапускать).
+/// - Дополнительно: устройства с флагом LifeSupport продолжают потреблять заряд даже при отключённой «сети»,
+///   и принудительно выключаются/ломаются при достижении 0%.
 /// </summary>
 [RequireComponent(typeof(RepairableObject))]
 public class StationBatterySystem : MonoBehaviour, IGameStartProvider
@@ -41,6 +43,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
     private RepairableObject repairable;
     private readonly List<IPowerConsumer> consumers = new();
     private readonly List<SolarPanelSystem> panels = new();
+    private float lastChargePercent = 0f;
 
     private void Awake()
     {
@@ -55,6 +58,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
         }
 
         chargePercent = Mathf.Clamp(startCharge, 0, 100);
+        lastChargePercent = chargePercent;
     }
 
     private void OnDestroy()
@@ -73,19 +77,33 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
                 genPerSec += panels[i].GetCurrentOutput();
         }
 
-        // === потребление, если реально подаём питание ===
+        // === потребление ===
+        // Обычные устройства потребляют только когда сеть реально подаёт питание (hasPower == true).
+        // LifeSupport-потребители расходуют всегда, если они активны.
         float consPerSec = 0f;
-        if (hasPower)
+        for (int i = 0; i < consumers.Count; i++)
         {
-            for (int i = 0; i < consumers.Count; i++)
-                if (consumers[i].IsConsuming())
-                    consPerSec += consumers[i].GetConsumptionPerSecond();
+            var c = consumers[i];
+            if (c == null) continue;
+
+            var pd = c as PoweredDevice; // единственный текущий тип потребителя
+
+            if (pd != null && pd.isLifeSupport)
+            {
+                if (pd.IsConsuming())
+                    consPerSec += pd.GetConsumptionPerSecond();
+            }
+            else
+            {
+                if (hasPower && c.IsConsuming())
+                    consPerSec += c.GetConsumptionPerSecond();
+            }
         }
 
         float delta = (genPerSec - consPerSec) * Time.deltaTime;
         SetCharge(chargePercent + delta);
 
-        // === решаем, подаём ли питание ===
+        // === решаем, подаём ли питание в «сеть» ===
         bool canSupply = isRepaired && gameStarted && chargePercent >= minPercentToSupply;
         if (canSupply != hasPower)
         {
@@ -102,6 +120,19 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             if (wasPower && !hasPower && isRepaired)
                 BreakBattery(); // даст интерактив игроку
         }
+
+        // === реакция на 0% заряда (важно для LifeSupport) ===
+        if (lastChargePercent > 0f && chargePercent <= 0f)
+        {
+            // Батарея «умерла»: ломаем её (если не сломана) и даём потребителям знать, что энергии больше нет
+            if (isRepaired) BreakBattery();
+
+            // Дополнительно дёрнем потребителей — пусть пересчитают состояние
+            for (int i = 0; i < consumers.Count; i++)
+                if (consumers[i] != null) consumers[i].OnPowerChanged(false);
+        }
+
+        lastChargePercent = chargePercent;
     }
 
     private void SetCharge(float newPercent)
@@ -118,7 +149,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
     /// </summary>
     private void OnBatteryRepairedByPlayer(RepairableObject _)
     {
-        // Разрешаем «успех ремонта» только если заряда достаточно.
+        // Разрешаем «успех ремонта» только если заряда достаточно для подачи питания.
         if (chargePercent >= minPercentToSupply)
         {
             isRepaired = true;
@@ -148,7 +179,6 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
         }
     }
 
-
     private float GetPanelsOutputNow()
     {
         float s = 0f;
@@ -170,7 +200,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
         if (!consumers.Contains(c))
         {
             consumers.Add(c);
-            c.OnPowerChanged(hasPower);
+            c.OnPowerChanged(hasPower); // сообщаем текущее состояние «сети»
         }
     }
     public void UnregisterConsumer(IPowerConsumer c) => consumers.Remove(c);
