@@ -61,6 +61,10 @@ public class SpiderHealth : MonoBehaviour
         }
 
         spiderAI.Die();
+
+        // 👇 ДОБАВЛЕНО: уведомим систему квестов
+        GameEvents.RaiseSpiderKilled(this);
+
         Destroy(gameObject, 0.2f);
     }
 }

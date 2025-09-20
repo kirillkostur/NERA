@@ -101,6 +101,9 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         HideHighlight();
         Logger.Log($"✅ {objectName} отремонтирован!");
         OnRepaired?.Invoke(this);
+
+        // 👇 ДОБАВЛЕНО: уведомим систему квестов
+        GameEvents.RaiseObjectRepaired(this);
     }
 
     private void UpdateRepairEffect()

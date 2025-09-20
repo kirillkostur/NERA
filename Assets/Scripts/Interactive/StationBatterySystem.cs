@@ -119,7 +119,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
                 c.OnPowerChanged(hasPower);
 
             OnPowerStateChanged?.Invoke(hasPower);
-            alerts?.ShowAlert(hasPower ? "Питание подано" : "Питание отключено");
+            alerts?.ShowAlert(hasPower ? "Питание подано" : "Питание отключено", true);
             Logger.Log(hasPower ? "🔌 Питание подано" : "🚫 Питание отключено");
 
             // если была реальная просадка питания — «ломаем» аккумулятор для ручного рестарта
@@ -165,11 +165,17 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             {
                 gameStarted = true;
                 Logger.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
+
+                // 👇 ДОБАВЛЕНО: событие запуска батареи (важно для квеста)
+                GameEvents.RaiseBatteryStarted();
             }
             else
             {
                 alerts?.ShowAlert("Аккумулятор снова запущен.");
                 Logger.Log("🔧 Аккумулятор снова запущен.");
+
+                // 👇 ДОБАВЛЕНО: можно считать и перезапуски (квест на запуск всё равно выполнится один раз)
+                GameEvents.RaiseBatteryStarted();
             }
         }
         else
