@@ -26,6 +26,7 @@ public class SandStormController : MonoBehaviour
 
     private Coroutine loopRoutine;
     private Coroutine fadeOutRoutine;
+    private AlertManager alerts;
 
     private readonly List<ParticleSystem> allStormPS = new List<ParticleSystem>();
     private readonly List<float> defaultRates = new List<float>();
@@ -38,6 +39,10 @@ public class SandStormController : MonoBehaviour
             if (obj != null) obj.SetActive(false);
 
         CacheStormParticleSystems();
+    }
+    private void Start()
+    {
+        alerts = FindFirstObjectByType<AlertManager>();
     }
 
     private void OnEnable()
@@ -100,6 +105,7 @@ public class SandStormController : MonoBehaviour
             if (panel != null)
                 StartCoroutine(panel.DirtyOverTime(stormDuration));
 
+        alerts?.ShowAlert("Буря началась! Срочно укройтесь!", true);
         Logger.Log("🌪 Буря началась!");
     }
 

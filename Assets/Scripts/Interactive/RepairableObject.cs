@@ -32,10 +32,13 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
     private float progress = 0f;
     private bool repairing = false;
 
+    private AlertManager alerts;
+
     private void Start()
     {
         UpdateRepairEffect();
         HideHighlight();
+        alerts = FindFirstObjectByType<AlertManager>();
 
         if (progressBar != null)
         {
@@ -78,6 +81,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         var panel = GetComponent<SolarPanelSystem>();
         if (panel != null && SandStormController.StormActive)
         {
+            alerts?.ShowAlert("Система очистки панелей не работает во время бури!");
             Logger.Log($"🚫 {objectName} нельзя отремонтировать во время бури!");
             repairing = false;
             progress = 0f;
@@ -169,6 +173,7 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         progress = 0f;
         UpdateRepairEffect();
         HideHighlight();
+        alerts?.ShowAlert("Буря повредила панель, включите систему очистки!");
         Logger.Log($"❗ {objectName} снова сломан.");
     }
 

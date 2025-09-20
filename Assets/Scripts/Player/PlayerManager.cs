@@ -36,10 +36,6 @@ public class PlayerManager : MonoBehaviour
             if (repairable != null)
                 repairable.CancelInteract();
 
-            var spider = lastTarget.GetComponent<SpiderAI_NavMesh>();
-            if (spider != null && spider.targetHighlightEffect != null)
-                spider.targetHighlightEffect.SetActive(false);
-
             if (repairable != null && repairable.targetHighlightEffect != null)
                 repairable.targetHighlightEffect.SetActive(false);
         }
@@ -63,11 +59,6 @@ public class PlayerManager : MonoBehaviour
         var spiders = FindObjectsOfType<SpiderAI_NavMesh>();
         var reps    = FindObjectsOfType<RepairableObject>();
 #endif
-        foreach (var s in spiders)
-        {
-            if (s != null && s.targetHighlightEffect != null)
-                s.targetHighlightEffect.SetActive(false);
-        }
         foreach (var r in reps)
         {
             if (r != null && r.targetHighlightEffect != null)

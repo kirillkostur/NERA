@@ -245,11 +245,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 0}
   moveSpeed: 3.5
-  stoppingDistance: 1.5
+  stoppingDistance: 1.2
   detectionRadius: 150
   updateRate: 0.2
   rotationSpeed: 120
-  targetHighlightEffect: {fileID: 707630774663459592}
+  attackCooldown: 1.5
+  waveConfig: {fileID: 0}
+  waveIndex: 0
 --- !u!114 &5243519060053595054
 MonoBehaviour:
   m_ObjectHideFlags: 0

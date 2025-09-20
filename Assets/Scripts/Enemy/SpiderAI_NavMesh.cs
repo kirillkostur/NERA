@@ -11,7 +11,6 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     public float detectionRadius = 50f;
     public float updateRate = 0.2f;
     public float rotationSpeed = 120f;
-    public GameObject targetHighlightEffect; // назначь меш/эффект в инспекторе
 
     [Header("Атака")]
     public float attackCooldown = 1.5f;
@@ -53,7 +52,6 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     {
         if (isDead) return;
 
-        // --- защита от преследования мёртвого игрока ---
         if (target != null)
         {
             var ph = target.GetComponent<PlayerHealth>();
@@ -64,8 +62,7 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
             {
                 if (agent != null && agent.hasPath) agent.ResetPath();
                 agent.updateRotation = true;
-                if (targetHighlightEffect != null) targetHighlightEffect.SetActive(false);
-                target = null;                 // перестаём таргетить игрока
+                target = null;
                 return;
             }
         }
@@ -91,7 +88,6 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
                 agent.updateRotation = false;
                 LookAtTarget();
 
-                // атака
                 if (Time.time >= nextAttackTime)
                 {
                     var health = target.GetComponent<PlayerHealth>();
@@ -142,14 +138,12 @@ public class SpiderAI_NavMesh : MonoBehaviour, ITargetable
     {
         isDead = true;
         if (agent != null) agent.ResetPath();
-        if (targetHighlightEffect != null) targetHighlightEffect.SetActive(false);
-    }
-    private void OnDisable()
-    {
-        if (targetHighlightEffect != null)
-            targetHighlightEffect.SetActive(false);
     }
 
+    private void OnDisable()
+    {
+        // Подсветка убрана, больше ничего не делаем
+    }
 
     private void OnDrawGizmosSelected()
     {

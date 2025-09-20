@@ -10,8 +10,8 @@ public class PlayerHealth : MonoBehaviour
 
     public bool IsDead { get; private set; }
 
-    private int currentArmor;
-    private int currentHealth;
+    [HideInInspector] public int currentArmor;
+    [HideInInspector] public int currentHealth;
     private Animator animator;
 
     void Awake()

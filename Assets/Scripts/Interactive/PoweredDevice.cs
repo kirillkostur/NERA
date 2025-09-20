@@ -40,6 +40,8 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
     private Coroutine dirtyRoutine;
     private Coroutine cleaningRoutine;
 
+    private AlertManager alerts;
+
     private static readonly int DissolveId = Shader.PropertyToID("_DissolveStrength");
 
     private void Awake()
@@ -94,6 +96,11 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         }
         SetActive(false);
         StopCleaningFX();
+    }
+
+    private void Start()
+    {
+        alerts = FindFirstObjectByType<AlertManager>();
     }
 
     private void Update()
@@ -156,6 +163,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (isOutdoor && SandStormController.StormActive)
         {
             Logger.Log("🚫 Ремонт невозможен во время бури (объект на улице)!");
+            alerts?.ShowAlert("Ремонт невозможен во время бури (объект на улице)!");
             BreakDevice();
             if (repairable != null) repairable.ShowHighlight();
             return;
@@ -165,6 +173,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (isLifeSupport && battery != null && battery.ChargePercent <= 0f)
         {
             Logger.Log("🚫 Батарея разряжена до 0% — ремонт жизненно важного устройства невозможен.");
+            alerts?.ShowAlert("Батарея разряжена до 0%", true);
             BreakDevice();
             if (repairable != null) repairable.ShowHighlight();
             return;
@@ -174,6 +183,7 @@ public class PoweredDevice : MonoBehaviour, IPowerConsumer
         if (!isLifeSupport && (battery == null || !battery.GameStarted || !battery.HasPower))
         {
             Logger.Log("⚠ Сначала запустите батарею, чтобы починить устройство.");
+            alerts?.ShowAlert("Сначала запустите батарею, чтобы починить устройство.");
             BreakDevice();
             if (repairable != null) repairable.ShowHighlight();
             return;

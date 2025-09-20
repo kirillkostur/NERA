@@ -26,15 +26,11 @@ public class PlayerTargeting : MonoBehaviour
     private const int MaxColliders = 20;
     private readonly Collider[] hitBuffer = new Collider[MaxColliders];
 
-    private bool blockTargeting = false;  // запрещает новые назначения только до ресета
+    private bool blockTargeting = false;
 
     public Transform CurrentTargetTransform => currentTarget != null ? currentTarget.GetTransform() : null;
 
-    private void OnEnable()
-    {
-        // снимаем блок при новом включении (например, после респауна)
-        blockTargeting = false;
-    }
+    private void OnEnable() { blockTargeting = false; }
 
     private void Start()
     {
@@ -155,10 +151,6 @@ public class PlayerTargeting : MonoBehaviour
 
         if (currentTarget != null)
         {
-            var oldSpider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
-            if (oldSpider != null && oldSpider.targetHighlightEffect != null)
-                oldSpider.targetHighlightEffect.SetActive(false);
-
             var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
@@ -168,10 +160,6 @@ public class PlayerTargeting : MonoBehaviour
 
         if (currentTarget != null)
         {
-            var spider = currentTarget.GetTransform().GetComponent<SpiderAI_NavMesh>();
-            if (spider != null && spider.targetHighlightEffect != null)
-                spider.targetHighlightEffect.SetActive(true);
-
             var repairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
             if (repairable != null && repairable.targetHighlightEffect != null)
                 repairable.targetHighlightEffect.SetActive(true);
@@ -180,7 +168,7 @@ public class PlayerTargeting : MonoBehaviour
 
     public void ClearTarget()
     {
-        blockTargeting = true; // блок до следующего включения
+        blockTargeting = true;
         ClearTargetInternal();
     }
 
@@ -188,12 +176,8 @@ public class PlayerTargeting : MonoBehaviour
     {
         if (currentTarget != null)
         {
-            // Проверяем, что объект ещё существует
             Transform targetTransform = null;
-            try
-            {
-                targetTransform = currentTarget.GetTransform();
-            }
+            try { targetTransform = currentTarget.GetTransform(); }
             catch (MissingReferenceException)
             {
                 currentTarget = null;
@@ -206,11 +190,6 @@ public class PlayerTargeting : MonoBehaviour
                 return;
             }
 
-            // Безопасно работаем с подсветкой
-            var oldSpider = targetTransform.GetComponent<SpiderAI_NavMesh>();
-            if (oldSpider != null && oldSpider.targetHighlightEffect != null)
-                oldSpider.targetHighlightEffect.SetActive(false);
-
             var oldRepairable = targetTransform.GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
@@ -218,5 +197,4 @@ public class PlayerTargeting : MonoBehaviour
 
         currentTarget = null;
     }
-
 }

@@ -30,6 +30,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
     [Header("Диагностика (readonly)")]
     [SerializeField, Range(0, 100)] private float chargePercent;
     [SerializeField] private bool hasPower = false;
+    private AlertManager alerts;
 
     // IGameStartProvider
     public bool GameStarted => gameStarted;
@@ -67,6 +68,10 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
         if (repairable != null) repairable.OnRepaired -= OnBatteryRepairedByPlayer;
     }
 
+    private void Start()
+    {
+        alerts = FindFirstObjectByType<AlertManager>();
+    }
     private void Update()
     {
         // === генерация днём от исправных панелей ===
@@ -114,6 +119,7 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
                 c.OnPowerChanged(hasPower);
 
             OnPowerStateChanged?.Invoke(hasPower);
+            alerts?.ShowAlert(hasPower ? "Питание подано" : "Питание отключено");
             Logger.Log(hasPower ? "🔌 Питание подано" : "🚫 Питание отключено");
 
             // если была реальная просадка питания — «ломаем» аккумулятор для ручного рестарта
@@ -162,16 +168,24 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             }
             else
             {
+                alerts?.ShowAlert("Аккумулятор снова запущен.");
                 Logger.Log("🔧 Аккумулятор снова запущен.");
             }
         }
         else
         {
+            alerts?.ShowAlert("Недостаточно заряда для запуска аккумулятора.");
             Logger.Log($"⚠ Недостаточно заряда (< {minPercentToSupply}%) для запуска аккумулятора.");
             if (dayNight != null && dayNight.isNight)
+            {
+                alerts?.ShowAlert("Сейчас ночь — панели не заряжают. Дождитесь рассвета.");
                 Logger.Log("ℹ Сейчас ночь — панели не заряжают. Дождитесь рассвета.");
+            }
             else if (GetPanelsOutputNow() <= 0.01f)
+            {
+                alerts?.ShowAlert("Зарядка не идёт. Проверь солнечные панели (возможно, их повредила буря).");
                 Logger.Log("ℹ Зарядка не идёт. Проверь солнечные панели (возможно, их повредила буря).");
+            }
 
             repairable.BreakObject();
             if (repairable != null) repairable.ShowHighlight(); // оставляем подсветку
