@@ -12,11 +12,16 @@ public class TurretController : MonoBehaviour
     public GameObject shotEffectPrefab;  // Эффект выстрела
     public Transform firePoint;          // Точка выстрела
     public float attackConsumption = 2f; // Доп. потребление батареи при атаке
+    public LayerMask spiderMask;         // Слой пауков (задать в инспекторе)
 
     private PoweredDevice poweredDevice;
     private Transform currentTarget;
     private float nextFireTime;
     private float baseConsumption;
+
+    // Буфер для поиска целей
+    private const int MaxHits = 32;
+    private readonly Collider[] hits = new Collider[MaxHits];
 
     private void Awake()
     {
@@ -32,7 +37,11 @@ public class TurretController : MonoBehaviour
             return;
         }
 
-        FindTarget();
+        // Ищем новую цель, если текущая недействительна
+        if (currentTarget == null || !IsTargetValid(currentTarget))
+        {
+            FindTarget();
+        }
 
         if (currentTarget != null)
         {
@@ -52,21 +61,36 @@ public class TurretController : MonoBehaviour
 
     private void FindTarget()
     {
-        GameObject[] spiders = GameObject.FindGameObjectsWithTag("Spider");
+        int count = Physics.OverlapSphereNonAlloc(transform.position, attackRange, hits, spiderMask);
         float closestDist = Mathf.Infinity;
         Transform closestTarget = null;
 
-        foreach (var spider in spiders)
+        for (int i = 0; i < count; i++)
         {
-            float dist = Vector3.Distance(transform.position, spider.transform.position);
-            if (dist < attackRange && dist < closestDist)
+            var t = hits[i].transform;
+            if (t == null) continue;
+
+            var health = t.GetComponent<SpiderHealth>();
+            if (health == null || !t.gameObject.activeInHierarchy) continue;
+
+            float dist = Vector3.Distance(transform.position, t.position);
+            if (dist < closestDist)
             {
                 closestDist = dist;
-                closestTarget = spider.transform;
+                closestTarget = t;
             }
         }
 
         currentTarget = closestTarget;
+    }
+
+    private bool IsTargetValid(Transform target)
+    {
+        if (target == null) return false;
+        var health = target.GetComponent<SpiderHealth>();
+        if (health == null || !target.gameObject.activeInHierarchy) return false;
+
+        return Vector3.Distance(transform.position, target.position) <= attackRange * 1.2f;
     }
 
     private void RotateTowardsTarget()
@@ -75,7 +99,7 @@ public class TurretController : MonoBehaviour
 
         Vector3 dir = currentTarget.position - rotatingPart.position;
         dir.y = 0f;
-        if (dir == Vector3.zero) return;
+        if (dir.sqrMagnitude < 0.001f) return;
 
         Quaternion targetRot = Quaternion.LookRotation(dir);
         rotatingPart.rotation = Quaternion.Slerp(rotatingPart.rotation, targetRot, rotationSpeed * Time.deltaTime);
@@ -90,7 +114,7 @@ public class TurretController : MonoBehaviour
             if (shotEffectPrefab != null && firePoint != null)
             {
                 GameObject fx = Instantiate(shotEffectPrefab, firePoint.position, firePoint.rotation);
-                Destroy(fx, 2f); // удаляем эффект выстрела
+                Destroy(fx, 2f);
             }
 
             poweredDevice.consumptionPerSecond = baseConsumption + attackConsumption;
