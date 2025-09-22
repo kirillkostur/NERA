@@ -6,15 +6,38 @@ using UnityEngine.UI;
 public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
     [Header("UI")]
-    public Image icon;         // дочерний Image для предмета (НЕ фон)
-    public TMP_Text countText; // счётчик
+    public Image icon;
+    public TMP_Text countText;
 
-    public int SlotIndex { get; private set; }
+    public int SlotIndex { get; private set; } = -1;
 
-    public void Bind(int index)
+    private LootableObject lootSource;
+    private InventoryItem lootItem;
+    private int lootCount;
+    public bool isLootSlot = false;
+
+    public void BindInventorySlot(int index)
     {
         SlotIndex = index;
+        isLootSlot = false;
+        lootSource = null;
         SetEmptyVisual();
+    }
+
+    public void BindLootSlot(LootableObject source, InventoryItem item, int count)
+    {
+        SlotIndex = -1;
+        isLootSlot = true;
+        lootSource = source;
+        lootItem = item;
+        lootCount = count;
+
+        icon.enabled = true;
+        icon.sprite = item.icon;
+
+        bool showCount = count > 1;
+        countText.enabled = showCount;
+        countText.text = showCount ? count.ToString() : "";
     }
 
     public void SetSlot(InventorySlot data)
@@ -28,14 +51,6 @@ public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         icon.enabled = true;
         icon.sprite = data.item.icon;
 
-        // растягиваем под слот
-        var rt = icon.rectTransform;
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-
-        // показывать цифру, если количество > 1 (или всегда, если хочешь)
         bool showCount = data.count > 1;
         countText.enabled = showCount;
         countText.text = showCount ? data.count.ToString() : "";
@@ -48,18 +63,24 @@ public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         countText.text = "";
     }
 
-    // === Drag & Drop ===
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (isLootSlot)
+        {
+            if (lootItem == null || lootCount <= 0) return;
+            icon.enabled = false;
+            countText.enabled = false;
+            DragItem.Instance.StartDrag(this, lootItem.icon);
+            return;
+        }
+
         var inv = PlayerInventory.Instance;
         if (inv == null || !inv.IsValidIndex(SlotIndex)) return;
         var slot = inv.Slots[SlotIndex];
         if (slot.IsEmpty) return;
 
-        // визуально «вынимаем» предмет
         icon.enabled = false;
         countText.enabled = false;
-
         DragItem.Instance.StartDrag(this, slot.item.icon);
     }
 
@@ -71,7 +92,14 @@ public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // если бросили не на слот — восстановим визуал из данных
+        if (isLootSlot)
+        {
+            icon.enabled = true;
+            countText.enabled = lootCount > 1;
+            DragItem.Instance.EndDrag();
+            return;
+        }
+
         if (DragItem.Instance.IsDragging && DragItem.Instance.Origin == this)
             SetSlot(PlayerInventory.Instance.Slots[SlotIndex]);
 
@@ -80,15 +108,50 @@ public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     public void OnDrop(PointerEventData eventData)
     {
+        // Перетаскивание из лута в инвентарь
+        if (DragItem.Instance.IsDragging &&
+            DragItem.Instance.Origin != null &&
+            DragItem.Instance.Origin.isLootSlot &&
+            !isLootSlot)
+        {
+            var from = DragItem.Instance.Origin;
+            int added = PlayerInventory.Instance.AddItem(from.lootItem, from.lootCount);
+            int leftover = from.lootCount - added;
+
+            if (leftover > 0)
+                from.lootSource.ReturnItem(from.lootItem, leftover);
+            else
+                from.lootSource.RemoveItem(from.lootItem, from.lootCount);
+
+            HUDLootUI.Instance.RefreshIfCurrent(from.lootSource);
+            HUDInventoryUI.Instance.Refresh();
+            DragItem.Instance.EndDrag();
+            return;
+        }
+
+        // Перетаскивание из инвентаря обратно в инвентарь
+        if (isLootSlot)
+        {
+            if (DragItem.Instance.IsDragging &&
+                DragItem.Instance.Origin != null &&
+                !DragItem.Instance.Origin.isLootSlot)
+            {
+                var origin = DragItem.Instance.Origin;
+                origin.SetSlot(PlayerInventory.Instance.Slots[origin.SlotIndex]);
+            }
+
+            DragItem.Instance.EndDrag();
+            return;
+        }
+
         if (!DragItem.Instance.IsDragging) return;
 
-        var from = DragItem.Instance.Origin;
-        if (from == this) return;
+        var fromSlot = DragItem.Instance.Origin;
+        if (fromSlot == this) return;
 
-        PlayerInventory.Instance.MoveOrSwap(from.SlotIndex, SlotIndex);
+        PlayerInventory.Instance.MoveOrSwap(fromSlot.SlotIndex, SlotIndex);
 
-        // обновляем оба слота ТЕКУЩИМИ данными
-        from.SetSlot(PlayerInventory.Instance.Slots[from.SlotIndex]);
+        fromSlot.SetSlot(PlayerInventory.Instance.Slots[fromSlot.SlotIndex]);
         SetSlot(PlayerInventory.Instance.Slots[SlotIndex]);
 
         DragItem.Instance.EndDrag();

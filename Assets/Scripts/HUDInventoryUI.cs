@@ -52,7 +52,7 @@ public class HUDInventoryUI : MonoBehaviour
         {
             var go = Instantiate(slotPrefab, slotsParent);
             var ui = go.GetComponent<SlotUI>();
-            ui.Bind(i);
+            ui.BindInventorySlot(i);
             spawnedSlots.Add(ui);
         }
     }

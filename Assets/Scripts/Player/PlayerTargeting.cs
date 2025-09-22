@@ -149,18 +149,30 @@ public class PlayerTargeting : MonoBehaviour
     {
         if (blockTargeting) return;
 
+        // выключаем подсветку у прошлого
         if (currentTarget != null)
         {
-            var oldRepairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            var oldTr = currentTarget.GetTransform();
+
+            var oldLoot = oldTr.GetComponent<LootableObject>();
+            if (oldLoot != null) oldLoot.ToggleHighlight(false);
+
+            var oldRepairable = oldTr.GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
                 oldRepairable.targetHighlightEffect.SetActive(false);
         }
 
         currentTarget = target;
 
+        // включаем подсветку у нового
         if (currentTarget != null)
         {
-            var repairable = currentTarget.GetTransform().GetComponent<RepairableObject>();
+            var tr = currentTarget.GetTransform();
+
+            var loot = tr.GetComponent<LootableObject>();
+            if (loot != null) loot.ToggleHighlight(true);
+
+            var repairable = tr.GetComponent<RepairableObject>();
             if (repairable != null && repairable.targetHighlightEffect != null)
                 repairable.targetHighlightEffect.SetActive(true);
         }
@@ -189,6 +201,9 @@ public class PlayerTargeting : MonoBehaviour
                 currentTarget = null;
                 return;
             }
+
+            var oldLoot = targetTransform.GetComponent<LootableObject>();
+            if (oldLoot != null) oldLoot.ToggleHighlight(false);
 
             var oldRepairable = targetTransform.GetComponent<RepairableObject>();
             if (oldRepairable != null && oldRepairable.targetHighlightEffect != null)
