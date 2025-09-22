@@ -6,25 +6,32 @@ public class UpgradeConfig : ScriptableObject
     [System.Serializable]
     public class RequirementSlot
     {
-        public InventoryItem item;
-        [Min(1)] public int requiredCount = 1;
-        public Sprite placeholderIcon;
+        public InventoryItem item;              // предмет, который требуется
+        [Min(1)] public int requiredCount = 1;  // сколько нужно
+        public Sprite placeholderIcon;          // иконка-подсказка (полупрозрачная)
+    }
+
+    [System.Serializable]
+    public class LevelRequirement
+    {
+        [Header("Слоты для перехода на следующий уровень")]
+        public RequirementSlot[] slots;
     }
 
     [System.Serializable]
     public class Entry
     {
-        [Header("Имя и иконка")]
+        [Header("Имя и иконка объекта")]
         public string displayName;
         public Sprite displayIcon;
 
-        [Header("ID объекта для апгрейда (совпадает с ObjectLevelSwitch.upgradeID)")]
+        [Header("ID объекта (совпадает с ObjectLevelSwitch.upgradeID)")]
         public string targetID;
 
-        [Header("Требования")]
-        public RequirementSlot[] slots;
+        [Header("Требования для каждого уровня (индекс = текущий уровень)")]
+        public LevelRequirement[] levelRequirements;
     }
 
-    [Header("Список объектов для апгрейда")]
+    [Header("Список объектов, доступных для апгрейда")]
     public Entry[] entries;
 }

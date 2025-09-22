@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class ObjectLevelSwitch : MonoBehaviour
 {
-    [Header("Уникальный ID для апгрейда (должен совпадать с конфигом)")]
+    [Header("Уникальный ID для связывания с UpgradeConfig")]
     public string upgradeID;
 
-    [Header("Дочерние уровни турели (каждый со своей логикой)")]
-    public GameObject[] turretLevels;
+    [Header("Список уровней апгрейда (0 = базовый, далее повышенные)")]
+    public GameObject[] levels;
 
     [Header("Эффект апгрейда")]
     public GameObject upgradeEffectPrefab;
@@ -14,30 +14,24 @@ public class ObjectLevelSwitch : MonoBehaviour
     [Tooltip("Текущий активный уровень (0 = базовый)")]
     public int currentLevel = 0;
 
+    /// <summary> true, если достигнут максимальный уровень </summary>
+    public bool IsMaxLevel => currentLevel >= levels.Length - 1;
+
     private void Start()
     {
         ApplyLevel(currentLevel, false);
     }
 
-    public void UpgradeToNext()
-    {
-        int nextLevel = Mathf.Min(currentLevel + 1, turretLevels.Length - 1);
-        if (nextLevel != currentLevel)
-        {
-            ApplyLevel(nextLevel, true);
-        }
-    }
-
+    /// <summary>Применяет уровень, включает нужный объект, выключает остальные</summary>
     public void ApplyLevel(int level, bool playEffect = true)
     {
-        if (turretLevels == null || turretLevels.Length == 0) return;
+        if (levels == null || levels.Length == 0) return;
+        level = Mathf.Clamp(level, 0, levels.Length - 1);
 
-        level = Mathf.Clamp(level, 0, turretLevels.Length - 1);
-
-        for (int i = 0; i < turretLevels.Length; i++)
+        for (int i = 0; i < levels.Length; i++)
         {
-            if (turretLevels[i] != null)
-                turretLevels[i].SetActive(i == level);
+            if (levels[i] != null)
+                levels[i].SetActive(i == level);
         }
 
         if (playEffect && upgradeEffectPrefab != null)
@@ -46,14 +40,23 @@ public class ObjectLevelSwitch : MonoBehaviour
             float duration = 2f;
             ParticleSystem ps = fx.GetComponent<ParticleSystem>();
             if (ps != null)
-            {
                 duration = ps.main.duration + ps.main.startLifetime.constantMax;
-            }
             Destroy(fx, duration);
         }
 
         currentLevel = level;
-        Debug.Log($"🔧 Турель {upgradeID} переключена на уровень {currentLevel + 1}");
+        Debug.Log($"🔧 {upgradeID} теперь уровень {currentLevel + 1}");
+    }
+
+    /// <summary>Повышает уровень на 1, если не достигнут максимум</summary>
+    public void UpgradeToNext()
+    {
+        if (IsMaxLevel)
+        {
+            Debug.Log($"🔧 {upgradeID}: максимальный уровень достигнут");
+            return;
+        }
+        ApplyLevel(currentLevel + 1, true);
     }
 
     public void ResetToLevel(int level = 0)

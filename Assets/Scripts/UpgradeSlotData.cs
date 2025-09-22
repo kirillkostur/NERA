@@ -14,4 +14,9 @@ public class UpgradeSlotData
         if (config == null || amount <= 0) return;
         currentCount = Mathf.Min(config.requiredCount, currentCount + amount);
     }
+
+    public void Reset()
+    {
+        currentCount = 0;
+    }
 }

@@ -8,22 +8,19 @@ public class HUDUpgradeUI : MonoBehaviour
     public static HUDUpgradeUI Instance { get; private set; }
 
     [Header("Панель окна апгрейда")]
-    public GameObject panel;            // корневая панель (ON/OFF)
+    public GameObject panel;
 
-    [Header("Контейнер секций и префаб секции")]
-    public Transform entriesParent;     // сюда будут добавляться секции (VerticalLayoutGroup)
-    public UpgradeEntryUI entryPrefab;  // префаб одного блока: имя + иконка + его слоты
+    [Header("Контейнер и префаб секции")]
+    public Transform entriesParent;
+    public UpgradeEntryUI entryPrefab;
 
-    [Header("Кнопка 'Прокачать' (общая на окно)")]
+    [Header("Кнопка 'Прокачать'")]
     public Button upgradeButton;
 
-    [Header("Хинт/подсказка")]
+    [Header("Подсказка/хинт")]
     public TMP_Text hintText;
 
-    // текущее отображаемое описание
     private UpgradeConfig currentConfig;
-
-    // рантайм состояние по всем секциям
     private readonly List<UpgradeEntryData> entriesData = new();
     private readonly List<UpgradeEntryUI> entriesUI = new();
 
@@ -32,7 +29,7 @@ public class HUDUpgradeUI : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        if (panel != null) panel.SetActive(false);
+        if (panel) panel.SetActive(false);
 
         if (upgradeButton != null)
         {
@@ -44,7 +41,6 @@ public class HUDUpgradeUI : MonoBehaviour
         if (hintText != null) hintText.gameObject.SetActive(false);
     }
 
-    /// <summary>Кнопка HUD вызывает Toggle с нужным конфигом</summary>
     public void Toggle(UpgradeConfig cfg)
     {
         if (!IsOpen) Show(cfg);
@@ -56,16 +52,21 @@ public class HUDUpgradeUI : MonoBehaviour
     {
         panel.SetActive(true);
 
-        // если другой конфиг — перестроим
-        if (currentConfig != cfg) { ClearAll(); Build(cfg); }
-        else RefreshAll();
+        if (currentConfig != cfg)
+        {
+            ClearAll();
+            Build(cfg);
+        }
+        else
+        {
+            RefreshAll();
+        }
 
         RefreshButtonState();
     }
 
     public void Hide()
     {
-        // прогресс НЕ очищаем, чтобы не пропадали вложенные вещи
         if (panel != null) panel.SetActive(false);
     }
 
@@ -76,26 +77,37 @@ public class HUDUpgradeUI : MonoBehaviour
 
         foreach (var e in currentConfig.entries)
         {
-            // собрать рантайм-данные секции
-            var ed = new UpgradeEntryData { config = e };
-            if (e.slots != null)
-                foreach (var req in e.slots) ed.slots.Add(new UpgradeSlotData { config = req, currentCount = 0 });
+            var targets = FindObjectsByType<ObjectLevelSwitch>(FindObjectsSortMode.None);
+            var target = System.Array.Find(targets, t => t.upgradeID == e.targetID);
 
-            entriesData.Add(ed);
+            if (target != null && target.IsMaxLevel)
+                continue;
 
-            // создать UI секции
+            int currentLevel = target != null ? target.currentLevel : 0;
+            int nextIndex = currentLevel < e.levelRequirements.Length ? currentLevel : -1;
+            if (nextIndex == -1) continue;
+
+            var reqSlots = e.levelRequirements[nextIndex].slots;
+            if (reqSlots == null || reqSlots.Length == 0) continue;
+
+            var entryData = new UpgradeEntryData { config = e, levelIndex = nextIndex };
+            foreach (var req in reqSlots)
+                entryData.slots.Add(new UpgradeSlotData { config = req, currentCount = 0 });
+
+            entriesData.Add(entryData);
+
             var ui = Instantiate(entryPrefab, entriesParent);
-            ui.Setup(ed, this);
+            ui.Setup(entryData, this);
             entriesUI.Add(ui);
         }
     }
 
-    private void ClearAll()
+    private void ClearAll(bool keepConfig = false)
     {
         foreach (Transform c in entriesParent) Destroy(c.gameObject);
         entriesData.Clear();
         entriesUI.Clear();
-        currentConfig = null;
+        if (!keepConfig) currentConfig = null;
     }
 
     private void RefreshAll()
@@ -103,7 +115,6 @@ public class HUDUpgradeUI : MonoBehaviour
         foreach (var ui in entriesUI) ui.Refresh();
     }
 
-    /// <summary>Кнопка включается, если ХОТЯ БЫ ОДНА секция готова</summary>
     public void RefreshButtonState()
     {
         bool anyReady = false;
@@ -136,30 +147,30 @@ public class HUDUpgradeUI : MonoBehaviour
             return;
         }
 
-        // Новый метод поиска объектов на сцене
-        var allTargets = FindObjectsByType<ObjectLevelSwitch>(FindObjectsSortMode.None);
+        var targets = FindObjectsByType<ObjectLevelSwitch>(FindObjectsSortMode.None);
         ObjectLevelSwitch target = null;
-        foreach (var t in allTargets)
-        {
-            if (t.upgradeID == ready.config.targetID)
-            {
-                target = t;
-                break;
-            }
-        }
+        foreach (var t in targets)
+            if (t.upgradeID == ready.config.targetID) { target = t; break; }
 
         if (target != null)
         {
+            if (target.IsMaxLevel)
+            {
+                ShowHint("Максимальный уровень достигнут");
+                return;
+            }
+
             target.UpgradeToNext();
             ShowHint($"Апгрейд: {ready.config.displayName}");
-            ready.ResetProgress();
+
+            // Пересобираем список для нового уровня, не сбрасывая currentConfig
+            ClearAll(true);
+            Build(currentConfig);
             RefreshButtonState();
         }
         else
         {
-            ShowHint($"Цель с ID {ready.config.targetID} не найдена");
+            ShowHint($"Цель {ready.config.targetID} не найдена");
         }
     }
-
-
 }

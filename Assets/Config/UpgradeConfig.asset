@@ -16,20 +16,39 @@ MonoBehaviour:
   - displayName: "\u0422\u0443\u0440\u0435\u043B\u044C"
     displayIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
     targetID: 1
-    slots:
-    - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
-      requiredCount: 2
-      placeholderIcon: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}
-    - item: {fileID: 11400000, guid: 7556dd7436ceb534ab90f85577bcbf21, type: 2}
-      requiredCount: 2
-      placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+    levelRequirements:
+    - slots:
+      - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
+        requiredCount: 4
+        placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+      - item: {fileID: 11400000, guid: e63f3741c65e1b94ca698437d9a84a2c, type: 2}
+        requiredCount: 5
+        placeholderIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
+    - slots:
+      - item: {fileID: 11400000, guid: 7556dd7436ceb534ab90f85577bcbf21, type: 2}
+        requiredCount: 5
+        placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+      - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
+        requiredCount: 3
+        placeholderIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
+      - item: {fileID: 11400000, guid: e63f3741c65e1b94ca698437d9a84a2c, type: 2}
+        requiredCount: 8
+        placeholderIcon: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}
   - displayName: "\u0422\u0443\u0440\u0435\u043B\u044C2"
-    displayIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
+    displayIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
     targetID: 2
-    slots:
-    - item: {fileID: 11400000, guid: e63f3741c65e1b94ca698437d9a84a2c, type: 2}
-      requiredCount: 2
-      placeholderIcon: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}
-    - item: {fileID: 11400000, guid: 7556dd7436ceb534ab90f85577bcbf21, type: 2}
-      requiredCount: 2
-      placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+    levelRequirements:
+    - slots:
+      - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
+        requiredCount: 2
+        placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+      - item: {fileID: 11400000, guid: e63f3741c65e1b94ca698437d9a84a2c, type: 2}
+        requiredCount: 4
+        placeholderIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
+    - slots:
+      - item: {fileID: 11400000, guid: 7556dd7436ceb534ab90f85577bcbf21, type: 2}
+        requiredCount: 6
+        placeholderIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
+      - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
+        requiredCount: 7
+        placeholderIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}

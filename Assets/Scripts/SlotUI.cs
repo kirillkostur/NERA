@@ -17,8 +17,8 @@ public class SlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public bool isLootSlot = false;
 
     // 👉 Новое: режим апгрейда
-    public UpgradeSlotData upgradeData;
-    public HUDUpgradeUI upgradeParent;
+    [HideInInspector] public UpgradeSlotData upgradeData;
+    [HideInInspector] public HUDUpgradeUI upgradeParent;
 
     public void BindInventorySlot(int index)
     {

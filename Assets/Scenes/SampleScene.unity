@@ -1287,7 +1287,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &114858224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1644,7 +1644,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &122574050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2176,7 +2176,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &173483484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18739,10 +18739,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   upgradeID: 
-  turretLevels:
-  - {fileID: 1040429663}
-  - {fileID: 1348945273}
-  - {fileID: 122574046}
+  levels: []
   upgradeEffectPrefab: {fileID: 768437406313339296, guid: ead1d576dcf12c64a9eacf35633e0ff8, type: 3}
   currentLevel: 0
 --- !u!1 &452630384
@@ -18828,7 +18825,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &452630388
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19795,7 +19792,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &517356965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19966,7 +19963,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panel: {fileID: 1251922375}
   entriesParent: {fileID: 2046201148}
-  entryPrefab: {fileID: 1113674655890828727, guid: 1e43fedc1ce3f2645bed4852996c16b4, type: 3}
+  entryPrefab: {fileID: 4191663937733215307, guid: 1e43fedc1ce3f2645bed4852996c16b4, type: 3}
   upgradeButton: {fileID: 136353107}
   hintText: {fileID: 0}
 --- !u!1 &520173389
@@ -28729,7 +28726,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &1063834951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35238,10 +35235,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   upgradeID: 
-  turretLevels:
-  - {fileID: 1294191277}
-  - {fileID: 2102950634}
-  - {fileID: 452630384}
+  levels: []
   upgradeEffectPrefab: {fileID: 768437406313339296, guid: ead1d576dcf12c64a9eacf35633e0ff8, type: 3}
   currentLevel: 0
 --- !u!1 &1236547661
@@ -41867,7 +41861,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &1348945277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -64072,7 +64066,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   upgradeID: 2
-  turretLevels:
+  levels:
   - {fileID: 2029791355}
   - {fileID: 1063834947}
   - {fileID: 517356961}
@@ -77107,7 +77101,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -20, y: 200}
+  m_AnchoredPosition: {x: -250, y: 200}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2046201149
@@ -77611,7 +77605,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &2102950638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -78646,7 +78640,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!33 &628783266940448560
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -87628,7 +87622,7 @@ MonoBehaviour:
   attackConsumption: 0.8
   spiderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!114 &5290933823180683291
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -94750,7 +94744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   upgradeID: 1
-  turretLevels:
+  levels:
   - {fileID: 8055650903784854709}
   - {fileID: 1700905555378870888}
   - {fileID: 7182207799714044187}

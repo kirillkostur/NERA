@@ -9,7 +9,7 @@ public class UpgradeEntryUI : MonoBehaviour
     public TMP_Text nameText;
     public Image icon;
     public Transform slotsParent;
-    public SlotUI slotPrefab;   // 👉 Теперь используем SlotUI вместо UpgradeSlotUI
+    public SlotUI slotPrefab;
 
     private UpgradeEntryData data;
     private HUDUpgradeUI parent;
@@ -29,11 +29,19 @@ public class UpgradeEntryUI : MonoBehaviour
             icon.enabled = data.config.displayIcon != null;
         }
 
-        // создаём слоты для требований
+        BuildSlots();
+    }
+
+    private void BuildSlots()
+    {
+        foreach (Transform child in slotsParent)
+            Destroy(child.gameObject);
+        spawnedSlots.Clear();
+
         foreach (var s in data.slots)
         {
-            var ui = Instantiate(slotPrefab, slotsParent);
-            ui.BindUpgradeSlot(s, parent);  // 👉 теперь связываем через SlotUI.BindUpgradeSlot
+            var ui = Object.Instantiate(slotPrefab, slotsParent);
+            ui.BindUpgradeSlot(s, parent);
             spawnedSlots.Add(ui);
         }
     }
@@ -42,8 +50,6 @@ public class UpgradeEntryUI : MonoBehaviour
     {
         foreach (var s in spawnedSlots)
         {
-            // SlotUI обновляет внешний вид апгрейдного слота через BindUpgradeSlot
-            // поэтому просто переназначим, чтобы вызвать RefreshUpgrade()
             if (s.upgradeData != null)
                 s.BindUpgradeSlot(s.upgradeData, parent);
         }
