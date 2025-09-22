@@ -1,3 +1,4 @@
+// PlayerInventory.cs  — ПОЛНАЯ ВЕРСИЯ С ДОБАВЛЕННЫМ RemoveFromSlot
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -41,7 +42,6 @@ public class PlayerInventory : MonoBehaviour
 
     private static int StackLimit(InventorySlot a, InventorySlot b, InventoryItem incoming = null)
     {
-        // если вдруг maxStack отличается у ассетов с одним ID — берём максимальный
         int ma = a?.item != null ? a.item.maxStack : (incoming != null ? incoming.maxStack : 0);
         int mb = b?.item != null ? b.item.maxStack : (incoming != null ? incoming.maxStack : 0);
         return Mathf.Max(ma, mb);
@@ -53,7 +53,7 @@ public class PlayerInventory : MonoBehaviour
         if (item == null || amount <= 0) return 0;
         int remaining = amount;
 
-        // 1) доливаем в уже существующие стеки с таким же ID
+        // 1) доливаем в уже существующие стеки
         for (int i = 0; i < slots.Count && remaining > 0; i++)
         {
             var s = slots[i];
@@ -94,6 +94,22 @@ public class PlayerInventory : MonoBehaviour
         OnChanged?.Invoke();
     }
 
+    // НОВОЕ: частично списать из КОНКРЕТНОГО слота (для Drag&Drop в окно апгрейда)
+    // Возвращает, сколько реально списано.
+    public int RemoveFromSlot(int index, int amount)
+    {
+        if (!IsValidIndex(index) || amount <= 0) return 0;
+        var s = slots[index];
+        if (s.IsEmpty) return 0;
+
+        int take = Mathf.Min(amount, s.count);
+        s.count -= take;
+        if (s.count <= 0) s.Clear();
+        if (take > 0) OnChanged?.Invoke();
+        return take;
+    }
+
+
     // Переместить/слить/свап (стак по ID)
     public void MoveOrSwap(int from, int to)
     {
@@ -104,7 +120,6 @@ public class PlayerInventory : MonoBehaviour
         var b = slots[to];
         if (a.IsEmpty) return;
 
-        // целевой пуст — просто перенос
         if (b.IsEmpty)
         {
             slots[to] = a;
@@ -113,7 +128,6 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
 
-        // одинаковые ID — стакаем
         if (SameItem(a.item, b.item))
         {
             int maxStack = StackLimit(a, b);
@@ -121,20 +135,19 @@ public class PlayerInventory : MonoBehaviour
 
             if (total <= maxStack)
             {
-                b.count = total;   // всё ушло в to
+                b.count = total;
                 a.Clear();
             }
             else
             {
                 b.count = maxStack;
-                a.count = total - maxStack; // остаток остаётся в from
+                a.count = total - maxStack;
             }
 
             OnChanged?.Invoke();
             return;
         }
 
-        // разные ID — обычный своп
         (slots[to], slots[from]) = (slots[from], slots[to]);
         OnChanged?.Invoke();
     }
