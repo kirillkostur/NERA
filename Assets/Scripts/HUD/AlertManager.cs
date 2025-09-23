@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 public class AlertManager : MonoBehaviour
 {
+    public static AlertManager Instance;
+
     [Header("UI Elements")]
     public TMP_Text alertText;         // Текст уведомления
     public CanvasGroup canvasGroup;    // CanvasGroup для fade
@@ -19,6 +21,15 @@ public class AlertManager : MonoBehaviour
 
     private void Awake()
     {
+        // Singleton
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         if (canvasGroup != null) canvasGroup.alpha = 0f;
         if (alertText != null) alertText.text = "";
     }
@@ -26,16 +37,16 @@ public class AlertManager : MonoBehaviour
     /// <summary>
     /// Добавить уведомление в очередь.
     /// </summary>
-    /// <param name="message">Текст уведомления</param>
-    /// <param name="critical">Если true — сообщение критическое и встаёт в начало очереди</param>
     public void ShowAlert(string message, bool critical = false)
     {
+        if (Instance == null) return; // объект уже уничтожен
+
         if (critical)
             alertQueue.AddFirst((message, true));
         else
             alertQueue.AddLast((message, false));
 
-        if (!isDisplaying)
+        if (!isDisplaying && gameObject != null)
             StartCoroutine(ProcessQueue());
     }
 
@@ -47,7 +58,9 @@ public class AlertManager : MonoBehaviour
         {
             var entry = alertQueue.First.Value;
             alertQueue.RemoveFirst();
-            yield return StartCoroutine(DisplayAlert(entry.message, entry.critical));
+
+            if (this != null) // проверка что объект не уничтожен
+                yield return StartCoroutine(DisplayAlert(entry.message, entry.critical));
         }
 
         isDisplaying = false;
