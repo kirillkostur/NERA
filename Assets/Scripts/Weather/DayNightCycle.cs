@@ -86,14 +86,14 @@ public class DayNightCycle : MonoBehaviour
     }
     private void OnEnable()
     {
-        GameEvents.StormStarted += OnStormStarted;
-        GameEvents.StormEnded += OnStormEnded;
+        GameEvents.RaiseQuestEvent("storm_started", 1);
+        GameEvents.RaiseQuestEvent("storm_ended", 1);
     }
 
     private void OnDisable()
     {
-        GameEvents.StormStarted -= OnStormStarted;
-        GameEvents.StormEnded -= OnStormEnded;
+        GameEvents.RaiseQuestEvent("storm_started", 1);
+        GameEvents.RaiseQuestEvent("storm_ended", 1);
     }
     private void OnStormStarted()
     {

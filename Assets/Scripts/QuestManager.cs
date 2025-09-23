@@ -1,156 +1,138 @@
-using UnityEngine;
-using TMPro;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class QuestManager : MonoBehaviour
 {
-    [Header("Конфиг")]
-    public QuestsConfig config;
+    [SerializeField] private List<QuestAsset> quests;
 
-    [Header("HUD / UI")]
-    public RectTransform content;        // Контейнер ScrollView/Content
-    public GameObject questItemPrefab;   // Префаб TMP_Text
-
-    private readonly Dictionary<string, int> progress = new();          // questID -> текущий счёт
-    private readonly Dictionary<string, TMP_Text> questUI = new();      // questID -> UI элемент
+    private readonly Dictionary<string, QuestProgress> active = new();
     private readonly HashSet<string> completed = new();
 
-    private int currentQuestIndex = 0;
-    private string currentQuestID;
+    public static event System.Action OnQuestsUpdated;
 
     private void OnEnable()
     {
-        GameEvents.BatteryStarted += OnBatteryStarted;
-        GameEvents.ObjectRepaired += OnObjectRepaired;
-        GameEvents.SpiderKilled += OnSpiderKilled;
+        GameEvents.OnQuestEvent += HandleQuestEvent;
     }
 
     private void OnDisable()
     {
-        GameEvents.BatteryStarted -= OnBatteryStarted;
-        GameEvents.ObjectRepaired -= OnObjectRepaired;
-        GameEvents.SpiderKilled -= OnSpiderKilled;
+        GameEvents.OnQuestEvent -= HandleQuestEvent;
     }
 
     private void Start()
     {
-        ActivateNextQuest();
+        // автозапуск квестов
+        foreach (var quest in quests)
+        {
+            if (quest != null && quest.StartOnSceneLoad && CanStartQuest(quest))
+                StartQuest(quest);
+        }
+
+        NotifyUpdate();
     }
 
-    private void ActivateNextQuest()
+    public IEnumerable<QuestProgress> GetActiveQuests() => active.Values;
+
+    private bool CanStartQuest(QuestAsset quest)
     {
-        // Проверяем, есть ли ещё квесты
-        if (config == null || config.quests == null || currentQuestIndex >= config.quests.Length)
+        if (quest == null) return false;
+        if (completed.Contains(quest.QuestID) || active.ContainsKey(quest.QuestID)) return false;
+
+        if (quest.Prerequisites != null)
         {
-            currentQuestID = null;
-            return;
+            foreach (var pre in quest.Prerequisites)
+                if (!completed.Contains(pre)) return false;
         }
-
-        var quest = config.quests[currentQuestIndex];
-        if (quest == null)
-        {
-            currentQuestIndex++;
-            ActivateNextQuest();
-            return;
-        }
-
-        currentQuestID = quest.questID;
-        progress[currentQuestID] = 0;
-
-        // Создаём UI для нового квеста
-        var item = Instantiate(questItemPrefab, content);
-        var text = item.GetComponent<TMP_Text>();
-        if (text == null) text = item.AddComponent<TextMeshProUGUI>();
-        questUI[currentQuestID] = text;
-
-        UpdateUI(currentQuestID);
+        return true;
     }
 
-    private void CompleteQuest(string questID)
+    private void StartQuest(QuestAsset quest)
     {
-        if (completed.Contains(questID)) return;
-        completed.Add(questID);
-
-        // Удаляем из UI
-        if (questUI.TryGetValue(questID, out var txt))
-        {
-            Destroy(txt.gameObject);
-            questUI.Remove(questID);
-        }
-
-        // Переходим к следующему
-        currentQuestIndex++;
-        ActivateNextQuest();
-    }
-
-    private void IncrementProgress(string questID, int amount)
-    {
-        if (string.IsNullOrEmpty(questID) || !progress.ContainsKey(questID)) return;
-
-        progress[questID] = Mathf.Clamp(progress[questID] + amount, 0, GetQuest(questID).requiredCount);
-
-        if (progress[questID] >= GetQuest(questID).requiredCount)
-        {
-            CompleteQuest(questID);
-        }
-        else
-        {
-            UpdateUI(questID);
-        }
-    }
-
-    private QuestData GetQuest(string questID)
-    {
-        foreach (var q in config.quests)
-        {
-            if (q != null && q.questID == questID) return q;
-        }
-        return null;
-    }
-
-    private void UpdateUI(string questID)
-    {
-        if (!questUI.TryGetValue(questID, out var text)) return;
-
-        var quest = GetQuest(questID);
         if (quest == null) return;
+        if (active.ContainsKey(quest.QuestID) || completed.Contains(quest.QuestID)) return;
 
-        int cur = progress.TryGetValue(questID, out var p) ? p : 0;
-        int req = Mathf.Max(1, quest.requiredCount);
+        var progress = new QuestProgress(quest);
+        active[quest.QuestID] = progress;
 
-        text.text = $"• {quest.questName} <size=80%><color=#CCCCCC>({cur}/{req})</color></size>";
+        GameEvents.RaiseQuestStarted(quest);
+        Debug.Log($"[QUEST] Запущен: {quest.Title}");
     }
 
-    // === Обработчики событий ===
-    private void OnBatteryStarted()
+    public void StartQuestById(string questId)
     {
-        if (currentQuestID == null) return;
-        var quest = GetQuest(currentQuestID);
-        if (quest != null && quest.conditionType == QuestConditionType.BatteryStarted)
+        var quest = quests.Find(q => q.QuestID == questId);
+        if (quest != null && CanStartQuest(quest))
         {
-            IncrementProgress(currentQuestID, 1);
+            StartQuest(quest);
+            NotifyUpdate();
         }
     }
 
-    private void OnObjectRepaired(RepairableObject obj)
+    private void CompleteQuest(string questId)
     {
-        if (currentQuestID == null || obj == null) return;
-        var quest = GetQuest(currentQuestID);
-        if (quest != null &&
-            quest.conditionType == QuestConditionType.ObjectRepairedByName &&
-            quest.targetObjectName == obj.objectName)
+        if (!active.ContainsKey(questId)) return;
+
+        var quest = active[questId].Asset;
+        active.Remove(questId);
+        completed.Add(questId);
+
+        Debug.Log($"[QUEST] Завершён: {quest.Title}");
+        GameEvents.RaiseQuestCompleted(quest);
+
+        // после завершения — попробуем автостарт залежащих
+        AutoStartDependentQuests(questId);
+    }
+
+    private void AutoStartDependentQuests(string justCompletedId)
+    {
+        foreach (var q in quests)
         {
-            IncrementProgress(currentQuestID, 1);
+            if (q == null) continue;
+            if (active.ContainsKey(q.QuestID) || completed.Contains(q.QuestID)) continue;
+
+            if (q.Prerequisites != null && q.Prerequisites.Count > 0)
+            {
+                bool allDone = true;
+                foreach (var pre in q.Prerequisites)
+                    if (!completed.Contains(pre)) { allDone = false; break; }
+
+                if (allDone && CanStartQuest(q))
+                    StartQuest(q);
+            }
         }
     }
 
-    private void OnSpiderKilled(SpiderHealth _)
+    private void HandleQuestEvent(string eventId, int amount)
     {
-        if (currentQuestID == null) return;
-        var quest = GetQuest(currentQuestID);
-        if (quest != null && quest.conditionType == QuestConditionType.SpidersKilled)
+        bool anyChange = false;
+        List<string> completedNow = new();
+
+        foreach (var kv in active)
         {
-            IncrementProgress(currentQuestID, 1);
+            var progress = kv.Value;
+            // UpdateProgress возвращает true, если изменился хоть один Objective
+            if (progress.UpdateProgress(eventId, amount))
+            {
+                anyChange = true;
+                if (progress.IsComplete)
+                    completedNow.Add(progress.Asset.QuestID);
+            }
+        }
+
+        // обновляем HUD сразу при любом изменении, не дожидаясь завершения
+        if (anyChange) NotifyUpdate();
+
+        // закрываем квесты
+        if (completedNow.Count > 0)
+        {
+            foreach (var id in completedNow)
+                CompleteQuest(id);
+
+            // после автозапуска зависимых тоже обновим HUD
+            NotifyUpdate();
         }
     }
+
+    private void NotifyUpdate() => OnQuestsUpdated?.Invoke();
 }

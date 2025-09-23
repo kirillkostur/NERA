@@ -23,6 +23,7 @@ public class SolarPanelSystem : MonoBehaviour
     private RepairableObject repairable;
     private Coroutine cleaningRoutine;
     private Coroutine dirtyRoutine;
+    private AlertManager alerts;
 
     private void Awake()
     {
@@ -43,6 +44,7 @@ public class SolarPanelSystem : MonoBehaviour
     private void Start()
     {
         SetInitialMaterialState();
+        alerts = FindFirstObjectByType<AlertManager>();
     }
 
     private void OnEnable()

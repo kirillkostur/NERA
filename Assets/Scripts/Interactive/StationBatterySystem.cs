@@ -122,9 +122,11 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             alerts?.ShowAlert(hasPower ? "Питание подано" : "Питание отключено", true);
             Logger.Log(hasPower ? "🔌 Питание подано" : "🚫 Питание отключено");
 
+
             // если была реальная просадка питания — «ломаем» аккумулятор для ручного рестарта
             if (wasPower && !hasPower && isRepaired)
                 BreakBattery(); // даст интерактив игроку
+
         }
 
         // === реакция на 0% заряда (важно для LifeSupport) ===
@@ -153,6 +155,10 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
     /// Игрок закончил ремонт (удерживал E) на аккумуляторе.
     /// Здесь решаем: это первый запуск игры или обычный рестарт.
     /// </summary>
+    /// <summary>
+    /// Игрок закончил ремонт (удерживал E) на аккумуляторе.
+    /// Здесь решаем: это первый запуск игры или обычный рестарт.
+    /// </summary>
     private void OnBatteryRepairedByPlayer(RepairableObject _)
     {
         // Разрешаем «успех ремонта» только если заряда достаточно для подачи питания.
@@ -161,21 +167,21 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             isRepaired = true;
             repairable.isRepaired = true;
 
+            // Получаем ID для квестов
+            var ident = GetComponent<Identifiable>();
+            string id = ident != null ? ident.Id : gameObject.name;
+
             if (!gameStarted)
             {
                 gameStarted = true;
                 Logger.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
-
-                // 👇 ДОБАВЛЕНО: событие запуска батареи (важно для квеста)
-                GameEvents.RaiseBatteryStarted();
+                GameEvents.RaiseQuestEvent(id, 1); // <== шлём ID из Identifiable
             }
             else
             {
                 alerts?.ShowAlert("Аккумулятор снова запущен.");
                 Logger.Log("🔧 Аккумулятор снова запущен.");
-
-                // 👇 ДОБАВЛЕНО: можно считать и перезапуски (квест на запуск всё равно выполнится один раз)
-                GameEvents.RaiseBatteryStarted();
+                GameEvents.RaiseQuestEvent(id, 1); // <== тот же вызов
             }
         }
         else

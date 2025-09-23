@@ -82,7 +82,18 @@ public class PlayerInventory : MonoBehaviour
             }
         }
 
-        if (raiseEvent && amount != remaining) OnChanged?.Invoke();
+        if (raiseEvent && amount != remaining)
+        {
+            OnChanged?.Invoke();
+
+            // 👉 Сообщаем квестовой системе, что предмет добавлен
+            int added = amount - remaining;
+            if (item != null && added > 0)
+            {
+                GameEvents.RaiseQuestEvent(item.ID.ToString(), added);
+            }
+        }
+
         return amount - remaining;
     }
 

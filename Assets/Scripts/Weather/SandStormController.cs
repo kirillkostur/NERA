@@ -72,7 +72,7 @@ public class SandStormController : MonoBehaviour
         if (StormActive) return;
         StormActive = true;
 
-        GameEvents.RaiseStormStarted();
+        GameEvents.RaiseQuestEvent("storm_started", 1);
 
         if (fadeOutRoutine != null)
         {
@@ -114,7 +114,7 @@ public class SandStormController : MonoBehaviour
         if (!StormActive) return;
         StormActive = false;
 
-        GameEvents.RaiseStormEnded();
+        GameEvents.RaiseQuestEvent("storm_ended", 1);
 
         if (fadeOutRoutine != null) StopCoroutine(fadeOutRoutine);
         fadeOutRoutine = StartCoroutine(FadeOutAllStormParticles());

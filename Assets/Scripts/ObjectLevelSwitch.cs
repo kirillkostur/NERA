@@ -51,12 +51,14 @@ public class ObjectLevelSwitch : MonoBehaviour
     /// <summary>Повышает уровень на 1, если не достигнут максимум</summary>
     public void UpgradeToNext()
     {
-        if (IsMaxLevel)
-        {
-            Debug.Log($"🔧 {upgradeID}: максимальный уровень достигнут");
-            return;
-        }
+        if (IsMaxLevel) return;
         ApplyLevel(currentLevel + 1, true);
+
+        // currentLevel уже обновлён -> отдаём новый уровень
+        var ident = GetComponent<Identifiable>();
+        string id = ident != null ? ident.Id : upgradeID;
+
+        GameEvents.RaiseQuestEvent(id, 1);
     }
 
     public void ResetToLevel(int level = 0)

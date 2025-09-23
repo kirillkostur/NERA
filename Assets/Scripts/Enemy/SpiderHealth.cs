@@ -5,8 +5,8 @@ public class SpiderHealth : MonoBehaviour
 {
     [Header("Эффекты")]
     public GameObject deathEffect;         // Эффект при смерти
-    public GameObject hitEffectPrefab;     // 👈 Эффект при попадании
-    public Transform hitPoint;             // 👈 Точка появления эффекта попадания
+    public GameObject hitEffectPrefab;     // Эффект при попадании
+    public Transform hitPoint;             // Точка появления эффекта попадания
 
     [HideInInspector] public WaveConfig waveConfig; // Назначается спавнером
     [HideInInspector] public int waveIndex;         // Назначается спавнером
@@ -38,12 +38,12 @@ public class SpiderHealth : MonoBehaviour
 
         currentHP -= amount;
 
-        // 👇 Создаём эффект попадания
+        // Эффект попадания
         if (hitEffectPrefab != null)
         {
             Vector3 spawnPos = hitPoint != null ? hitPoint.position : transform.position;
             GameObject fx = Instantiate(hitEffectPrefab, spawnPos, Quaternion.identity);
-            Destroy(fx, 1.5f); // Уничтожаем эффект попадания
+            Destroy(fx, 1.5f);
         }
 
         if (currentHP <= 0)
@@ -57,13 +57,15 @@ public class SpiderHealth : MonoBehaviour
         if (deathEffect != null)
         {
             GameObject fx = Instantiate(deathEffect, transform.position, Quaternion.identity);
-            Destroy(fx, 3f); // удаляем эффект смерти
+            Destroy(fx, 3f);
         }
 
         spiderAI.Die();
 
-        // 👇 ДОБАВЛЕНО: уведомим систему квестов
-        GameEvents.RaiseSpiderKilled(this);
+        // ✅ Отправляем событие через Identifiable
+        var ident = GetComponent<Identifiable>();
+        string id = ident != null ? ident.Id : "spider_killed";
+        GameEvents.RaiseQuestEvent(id, 1);
 
         Destroy(gameObject, 0.2f);
     }

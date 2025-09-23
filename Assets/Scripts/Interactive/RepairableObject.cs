@@ -102,9 +102,13 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         Logger.Log($"✅ {objectName} отремонтирован!");
         OnRepaired?.Invoke(this);
 
-        // 👇 ДОБАВЛЕНО: уведомим систему квестов
-        GameEvents.RaiseObjectRepaired(this);
+        // ✅ Теперь событие идёт через Identifiable
+        var ident = GetComponent<Identifiable>();
+        string id = ident != null ? ident.Id : gameObject.name;
+        GameEvents.RaiseQuestEvent(id, 1);
     }
+
+
 
     private void UpdateRepairEffect()
     {
@@ -131,8 +135,6 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
         interactor = player;
         interactorAnimator = player.GetComponent<Animator>();
-
-        // ❌ Эффекты солнечной панели больше не запускаем здесь
 
         if (instantInteract)
         {
@@ -176,7 +178,6 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
         progress = 0f;
         UpdateRepairEffect();
         HideHighlight();
-        alerts?.ShowAlert("Буря повредила панель, включите систему очистки!");
         Logger.Log($"❗ {objectName} снова сломан.");
     }
 

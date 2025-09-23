@@ -1078,6 +1078,7 @@ GameObject:
   m_Component:
   - component: {fileID: 94548990}
   - component: {fileID: 94548989}
+  - component: {fileID: 94548991}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1112,6 +1113,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &94548991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 94548988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0178e34b8059b7842a3702feabce9f81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  quests:
+  - {fileID: 11400000, guid: 6601deb64dd2fdd49b52af0134733214, type: 2}
+  - {fileID: 11400000, guid: e5036bd4bab33094e98a44aa91a4c9c9, type: 2}
+  - {fileID: 11400000, guid: 583157e6f1945be4dab13e720828b55b, type: 2}
 --- !u!1 &100024311
 GameObject:
   m_ObjectHideFlags: 0
@@ -1287,7 +1304,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &114858224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1423,6 +1440,7 @@ GameObject:
   - component: {fileID: 121352100}
   - component: {fileID: 121352099}
   - component: {fileID: 121352098}
+  - component: {fileID: 121352104}
   m_Layer: 6
   m_Name: 'StationBatterySystem '
   m_TagString: Untagged
@@ -1461,7 +1479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectName: 'StationBatterySystem '
+  objectName: StationBatterySystem
   repairTime: 3
   isRepaired: 0
   instantInteract: 0
@@ -1561,6 +1579,19 @@ Transform:
   - {fileID: 1275102620}
   m_Father: {fileID: 460625504}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &121352104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121352097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: station_battery
 --- !u!1 &122574046
 GameObject:
   m_ObjectHideFlags: 0
@@ -2176,7 +2207,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &173483484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19143,9 +19174,9 @@ RectTransform:
   - {fileID: 1628926334}
   m_Father: {fileID: 689266130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 50, y: -50}
   m_SizeDelta: {x: 355.7, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &478314569
@@ -21016,12 +21047,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 689266129}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0178e34b8059b7842a3702feabce9f81, type: 3}
+  m_Script: {fileID: 11500000, guid: 4b08707b6496bf542b03ae7bede22ce9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: cb57c43b917b23b489fe2c545f357fe9, type: 2}
-  content: {fileID: 2132941660}
-  questItemPrefab: {fileID: 7463874501785745610, guid: 946eb13de1d8c314b90d93afc5115ae9, type: 3}
+  questManager: {fileID: 94548991}
+  text: {fileID: 885460747}
 --- !u!1 &707808668
 GameObject:
   m_ObjectHideFlags: 0
@@ -22211,6 +22241,142 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &885460745
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 885460746}
+  - component: {fileID: 885460748}
+  - component: {fileID: 885460747}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &885460746
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885460745}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2132941660}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 160, y: -25}
+  m_SizeDelta: {x: 320, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &885460747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885460745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: New Text New Text New Text New Text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &885460748
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885460745}
+  m_CullTransparentMesh: 1
 --- !u!1 &893325323
 GameObject:
   m_ObjectHideFlags: 0
@@ -28058,6 +28224,7 @@ GameObject:
   - component: {fileID: 1040429668}
   - component: {fileID: 1040429667}
   - component: {fileID: 1040429666}
+  - component: {fileID: 1040429672}
   - component: {fileID: 1040429665}
   m_Layer: 6
   m_Name: Turret_LVL1
@@ -28164,7 +28331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectName: "\u0422\u0443\u0440\u0435\u043B\u044C"
+  objectName: Turret_LVL1
   repairTime: 3
   isRepaired: 0
   instantInteract: 0
@@ -28246,6 +28413,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1040429663}
   m_Mesh: {fileID: -4684232478718763241, guid: f7f7883969f3cf741ab57eaf1397889a, type: 3}
+--- !u!114 &1040429672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040429663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: start_turret
 --- !u!1 &1048479988
 GameObject:
   m_ObjectHideFlags: 0
@@ -40959,6 +41139,7 @@ GameObject:
   - component: {fileID: 1294191282}
   - component: {fileID: 1294191281}
   - component: {fileID: 1294191280}
+  - component: {fileID: 1294191286}
   - component: {fileID: 1294191279}
   m_Layer: 6
   m_Name: Turret_LVL1
@@ -41065,7 +41246,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectName: "\u0422\u0443\u0440\u0435\u043B\u044C"
+  objectName: Turret_LVL1
   repairTime: 3
   isRepaired: 0
   instantInteract: 0
@@ -41147,6 +41328,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1294191277}
   m_Mesh: {fileID: -4684232478718763241, guid: f7f7883969f3cf741ab57eaf1397889a, type: 3}
+--- !u!114 &1294191286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1294191277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: start_turret
 --- !u!1 &1303677355
 GameObject:
   m_ObjectHideFlags: 0
@@ -63962,10 +64156,10 @@ RectTransform:
   - {fileID: 2132941660}
   m_Father: {fileID: 478314568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -17, y: 0}
+  m_SizeDelta: {x: 339, y: 200}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1628926335
 MonoBehaviour:
@@ -70328,51 +70522,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1848065435
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1848065437}
-  - component: {fileID: 1848065436}
-  m_Layer: 0
-  m_Name: TurretUpgradeInput
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1848065436
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1848065435}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ddf8f48f16c8bb4a8d318ac9d35a998, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  turretSwitcher: {fileID: 7874677029715876046}
---- !u!4 &1848065437
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1848065435}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1849038191
 GameObject:
   m_ObjectHideFlags: 0
@@ -76672,6 +76821,7 @@ GameObject:
   - component: {fileID: 2029791360}
   - component: {fileID: 2029791359}
   - component: {fileID: 2029791358}
+  - component: {fileID: 2029791364}
   - component: {fileID: 2029791357}
   m_Layer: 6
   m_Name: Turret_LVL1
@@ -76765,7 +76915,7 @@ MonoBehaviour:
   cleaningDuration: 4
   enableOnActive:
   - {fileID: 53691162}
-  isLifeSupport: 0
+  isLifeSupport: 1
 --- !u!114 &2029791360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76778,7 +76928,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectName: "\u0422\u0443\u0440\u0435\u043B\u044C"
+  objectName: Turret_LVL1
   repairTime: 3
   isRepaired: 0
   instantInteract: 0
@@ -76860,6 +77010,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2029791355}
   m_Mesh: {fileID: -4684232478718763241, guid: f7f7883969f3cf741ab57eaf1397889a, type: 3}
+--- !u!114 &2029791364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029791355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: start_turret
 --- !u!1 &2030789461
 GameObject:
   m_ObjectHideFlags: 0
@@ -77829,13 +77992,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 885460746}
   m_Father: {fileID: 1628926334}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -169.49898, y: 99.9997}
+  m_SizeDelta: {x: 338, y: 50}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2132941661
 MonoBehaviour:
@@ -85846,6 +86010,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5812817650821669598}
   - component: {fileID: 7874677029715876046}
+  - component: {fileID: 7874677029715876047}
   m_Layer: 0
   m_Name: TurretBase
   m_TagString: Untagged
@@ -87469,7 +87634,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectName: "\u0422\u0443\u0440\u0435\u043B\u044C"
+  objectName: Turret_LVL1
   repairTime: 3
   isRepaired: 0
   instantInteract: 0
@@ -94750,6 +94915,19 @@ MonoBehaviour:
   - {fileID: 7182207799714044187}
   upgradeEffectPrefab: {fileID: 768437406313339296, guid: ead1d576dcf12c64a9eacf35633e0ff8, type: 3}
   currentLevel: 0
+--- !u!114 &7874677029715876047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3510843115354435646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: upgrade_turret
 --- !u!222 &7892923461795768589
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -94846,6 +95024,7 @@ GameObject:
   - component: {fileID: 5267557655635491718}
   - component: {fileID: 8309709368995776185}
   - component: {fileID: 7836165568318101979}
+  - component: {fileID: 8309709368995776186}
   - component: {fileID: 8058055956905252142}
   m_Layer: 6
   m_Name: Turret_LVL1
@@ -95086,7 +95265,20 @@ MonoBehaviour:
   cleaningDuration: 4
   enableOnActive:
   - {fileID: 2430256898049657758}
-  isLifeSupport: 0
+  isLifeSupport: 1
+--- !u!114 &8309709368995776186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8055650903784854709}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff2988d7f90184d8301d34b5ae0300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uniqueID: start_turret
 --- !u!4 &8340160320190813595
 Transform:
   m_ObjectHideFlags: 0
@@ -100598,7 +100790,6 @@ SceneRoots:
   - {fileID: 173483485}
   - {fileID: 1841379165}
   - {fileID: 94548990}
-  - {fileID: 1848065437}
   - {fileID: 732694762}
   - {fileID: 1003471949}
   - {fileID: 460625504}

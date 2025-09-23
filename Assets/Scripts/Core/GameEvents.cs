@@ -1,24 +1,30 @@
 using System;
+using UnityEngine;
 
 public static class GameEvents
 {
-    // 🌪 Буря (как было)
-    public static event Action StormStarted;
-    public static event Action StormEnded;
+    // Универсальное событие для квестов
+    public static event Action<string, int> OnQuestEvent;
 
-    public static void RaiseStormStarted() => StormStarted?.Invoke();
-    public static void RaiseStormEnded() => StormEnded?.Invoke();
+    public static void RaiseQuestEvent(string eventId, int amount = 1)
+    {
+        Debug.Log($"[GameEvents] QuestEvent: {eventId} (+{amount})");
+        OnQuestEvent?.Invoke(eventId, amount);
+    }
 
-    // ✅ Квестовые события
-    // Запуск аккумулятора (первый запуск или перезапуск — не важно)
-    public static event Action BatteryStarted;
-    public static void RaiseBatteryStarted() => BatteryStarted?.Invoke();
+    // Когда квест стартует
+    public static event Action<QuestAsset> OnQuestStarted;
+    public static void RaiseQuestStarted(QuestAsset quest)
+    {
+        Debug.Log($"[GameEvents] QuestStarted: {quest.QuestID}");
+        OnQuestStarted?.Invoke(quest);
+    }
 
-    // Любой успешный ремонт RepairableObject
-    public static event Action<RepairableObject> ObjectRepaired;
-    public static void RaiseObjectRepaired(RepairableObject obj) => ObjectRepaired?.Invoke(obj);
-
-    // Убит паук
-    public static event Action<SpiderHealth> SpiderKilled;
-    public static void RaiseSpiderKilled(SpiderHealth spider) => SpiderKilled?.Invoke(spider);
+    // Когда квест завершён
+    public static event Action<QuestAsset> OnQuestCompleted;
+    public static void RaiseQuestCompleted(QuestAsset quest)
+    {
+        Debug.Log($"[GameEvents] QuestCompleted: {quest.QuestID}");
+        OnQuestCompleted?.Invoke(quest);
+    }
 }
