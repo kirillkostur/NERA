@@ -94,6 +94,10 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
         targetHighlight?.SetActive(true);
 
         HUDLootUI.Instance?.ShowLoot(this, true);
+
+        var ident = GetComponent<Identifiable>();
+        string id = ident != null ? ident.Id : gameObject.name;
+        GameEvents.RaiseQuestEvent(id, 1);
     }
 
     public void TakeAll()
@@ -128,6 +132,10 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
             HUDLootUI.Instance?.HideLootIfCurrent(this);
             icon?.SetActive(false);
             targetHighlight?.SetActive(false);
+
+            var ident = GetComponent<Identifiable>();
+            string id = ident != null ? ident.Id : gameObject.name;
+            GameEvents.RaiseQuestEvent(id, 1);
         }
         else
         {
