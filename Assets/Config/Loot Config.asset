@@ -15,3 +15,5 @@ MonoBehaviour:
   lootItems:
   - item: {fileID: 11400000, guid: ebb0963bcc3c2854cbe0cb631b03d9bb, type: 2}
     count: 2
+  - item: {fileID: 11400000, guid: e63f3741c65e1b94ca698437d9a84a2c, type: 2}
+    count: 2

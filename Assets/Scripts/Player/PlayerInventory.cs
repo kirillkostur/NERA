@@ -90,7 +90,7 @@ public class PlayerInventory : MonoBehaviour
             int added = amount - remaining;
             if (item != null && added > 0)
             {
-                GameEvents.RaiseQuestEvent(item.ID.ToString(), added);
+                GameEvents.RaiseQuestEvent(new QuestEventData(QuestEventType.CollectItem, item.ID.ToString(), added));
             }
         }
 

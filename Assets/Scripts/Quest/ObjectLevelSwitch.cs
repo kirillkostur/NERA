@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Identifiable))]
 public class ObjectLevelSwitch : MonoBehaviour
 {
     [Header("Уникальный ID для связывания с UpgradeConfig")]
@@ -56,9 +57,11 @@ public class ObjectLevelSwitch : MonoBehaviour
 
         // currentLevel уже обновлён -> отдаём новый уровень
         var ident = GetComponent<Identifiable>();
-        string id = ident != null ? ident.Id : upgradeID;
-
-        GameEvents.RaiseQuestEvent(id, 1);
+        GameEvents.RaiseQuestEvent(new QuestEventData(
+            QuestEventType.UpgradeObj,
+            ident.Id,
+            currentLevel
+        ));
     }
 
     public void ResetToLevel(int level = 0)

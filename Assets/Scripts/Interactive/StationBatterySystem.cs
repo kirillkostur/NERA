@@ -12,6 +12,7 @@ using UnityEngine;
 ///   и принудительно выключаются/ломаются при достижении 0%.
 /// </summary>
 [RequireComponent(typeof(RepairableObject))]
+[RequireComponent(typeof(Identifiable))]
 public class StationBatterySystem : MonoBehaviour, IGameStartProvider
 {
     public static StationBatterySystem Instance;
@@ -175,13 +176,13 @@ public class StationBatterySystem : MonoBehaviour, IGameStartProvider
             {
                 gameStarted = true;
                 Logger.Log("🔋 Аккумулятор впервые активирован — игра начнётся с ближайшего рассвета.");
-                GameEvents.RaiseQuestEvent(id, 1); // <== шлём ID из Identifiable
+                GameEvents.RaiseQuestEvent(new QuestEventData(QuestEventType.StartBattery, id, 1));
             }
             else
             {
                 alerts?.ShowAlert("Аккумулятор снова запущен.");
                 Logger.Log("🔧 Аккумулятор снова запущен.");
-                GameEvents.RaiseQuestEvent(id, 1); // <== тот же вызов
+                GameEvents.RaiseQuestEvent(new QuestEventData(QuestEventType.StartBattery, id, 1));
             }
         }
         else

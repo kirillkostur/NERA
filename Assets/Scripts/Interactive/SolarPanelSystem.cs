@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(RepairableObject))]
+[RequireComponent(typeof(Identifiable))]
 public class SolarPanelSystem : MonoBehaviour
 {
     [Header("Производство")]
@@ -192,6 +193,14 @@ public class SolarPanelSystem : MonoBehaviour
 
         if (cleaningRoutine != null) StopCoroutine(cleaningRoutine);
         cleaningRoutine = StartCoroutine(CleaningRoutine());
+
+        // 🔔 Квестовое событие: панель почищена
+        var ident = GetComponent<Identifiable>();
+        GameEvents.RaiseQuestEvent(new QuestEventData(
+            QuestEventType.CleanSolarPanel,
+            ident.Id,
+            1
+        ));
     }
 
     private IEnumerator CleaningRoutine()

@@ -2,10 +2,11 @@ public enum QuestEventType
 {
     CollectItem,
     LootObj,
-    LootItemAddCollect,
+    LootItemFromContainer,
     RepairObject,
-    UpgradeTurret,
+    UpgradeObj,
     StartBattery,
+    CleanSolarPanel,
     KillSpider,
     StormStarted,
     StormEnded

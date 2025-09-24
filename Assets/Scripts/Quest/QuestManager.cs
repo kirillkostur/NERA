@@ -12,17 +12,16 @@ public class QuestManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnQuestEvent += HandleQuestEvent;
+        GameEvents.OnQuestEventData += HandleQuestEvent; // 👈 слушаем новый ивент
     }
 
     private void OnDisable()
     {
-        GameEvents.OnQuestEvent -= HandleQuestEvent;
+        GameEvents.OnQuestEventData -= HandleQuestEvent;
     }
 
     private void Start()
     {
-        // автозапуск квестов
         foreach (var quest in quests)
         {
             if (quest != null && quest.StartOnSceneLoad && CanStartQuest(quest))
@@ -59,16 +58,6 @@ public class QuestManager : MonoBehaviour
         Debug.Log($"[QUEST] Запущен: {quest.Title}");
     }
 
-    public void StartQuestById(string questId)
-    {
-        var quest = quests.Find(q => q.QuestID == questId);
-        if (quest != null && CanStartQuest(quest))
-        {
-            StartQuest(quest);
-            NotifyUpdate();
-        }
-    }
-
     private void CompleteQuest(string questId)
     {
         if (!active.ContainsKey(questId)) return;
@@ -80,7 +69,6 @@ public class QuestManager : MonoBehaviour
         Debug.Log($"[QUEST] Завершён: {quest.Title}");
         GameEvents.RaiseQuestCompleted(quest);
 
-        // после завершения — попробуем автостарт залежащих
         AutoStartDependentQuests(questId);
     }
 
@@ -103,7 +91,7 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    private void HandleQuestEvent(string eventId, int amount)
+    private void HandleQuestEvent(QuestEventData data) // 👈 теперь типобезопасно
     {
         bool anyChange = false;
         List<string> completedNow = new();
@@ -111,8 +99,7 @@ public class QuestManager : MonoBehaviour
         foreach (var kv in active)
         {
             var progress = kv.Value;
-            // UpdateProgress возвращает true, если изменился хоть один Objective
-            if (progress.UpdateProgress(eventId, amount))
+            if (progress.UpdateProgress(data))
             {
                 anyChange = true;
                 if (progress.IsComplete)
@@ -120,16 +107,13 @@ public class QuestManager : MonoBehaviour
             }
         }
 
-        // обновляем HUD сразу при любом изменении, не дожидаясь завершения
         if (anyChange) NotifyUpdate();
 
-        // закрываем квесты
         if (completedNow.Count > 0)
         {
             foreach (var id in completedNow)
                 CompleteQuest(id);
 
-            // после автозапуска зависимых тоже обновим HUD
             NotifyUpdate();
         }
     }

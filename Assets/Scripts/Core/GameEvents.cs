@@ -1,30 +1,21 @@
 using System;
-using UnityEngine;
 
 public static class GameEvents
 {
-    // Универсальное событие для квестов
-    public static event Action<string, int> OnQuestEvent;
+    public static event Action<QuestEventData> OnQuestEventData;
 
-    public static void RaiseQuestEvent(string eventId, int amount = 1)
+    public static void RaiseQuestEvent(QuestEventData data)
     {
-        Debug.Log($"[GameEvents] QuestEvent: {eventId} (+{amount})");
-        OnQuestEvent?.Invoke(eventId, amount);
+        OnQuestEventData?.Invoke(data);
     }
 
-    // Когда квест стартует
-    public static event Action<QuestAsset> OnQuestStarted;
-    public static void RaiseQuestStarted(QuestAsset quest)
+    // Для удобства оставляем старый метод как обёртку
+    public static void RaiseQuestEvent(string id, int amount)
     {
-        Debug.Log($"[GameEvents] QuestStarted: {quest.QuestID}");
-        OnQuestStarted?.Invoke(quest);
+        var data = new QuestEventData(QuestEventType.CollectItem, id, amount);
+        RaiseQuestEvent(data);
     }
 
-    // Когда квест завершён
-    public static event Action<QuestAsset> OnQuestCompleted;
-    public static void RaiseQuestCompleted(QuestAsset quest)
-    {
-        Debug.Log($"[GameEvents] QuestCompleted: {quest.QuestID}");
-        OnQuestCompleted?.Invoke(quest);
-    }
+    public static void RaiseQuestStarted(QuestAsset quest) { /* ... */ }
+    public static void RaiseQuestCompleted(QuestAsset quest) { /* ... */ }
 }

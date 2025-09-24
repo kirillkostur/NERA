@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Identifiable))]
 public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPreviewProvider
 {
     public LootConfig lootConfig;
@@ -94,10 +95,6 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
         targetHighlight?.SetActive(true);
 
         HUDLootUI.Instance?.ShowLoot(this, true);
-
-        var ident = GetComponent<Identifiable>();
-        string id = ident != null ? ident.Id : gameObject.name;
-        GameEvents.RaiseQuestEvent(id, 1);
     }
 
     public void TakeAll()
@@ -135,7 +132,7 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
 
             var ident = GetComponent<Identifiable>();
             string id = ident != null ? ident.Id : gameObject.name;
-            GameEvents.RaiseQuestEvent(id, 1);
+            GameEvents.RaiseQuestEvent(new QuestEventData(QuestEventType.LootItemFromContainer, id, 1));
         }
         else
         {
@@ -153,6 +150,7 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
                 c.count -= amount;
                 if (c.count < 0) c.count = 0;
                 break;
+
             }
         }
 
@@ -165,6 +163,10 @@ public class LootableObject : MonoBehaviour, ITargetable, IInteractable, ILootPr
             icon?.SetActive(false);
             targetHighlight?.SetActive(false);
             HUDLootUI.Instance?.HideLootIfCurrent(this);
+
+            var ident = GetComponent<Identifiable>();
+            string id = ident != null ? ident.Id : gameObject.name;
+            GameEvents.RaiseQuestEvent(new QuestEventData(QuestEventType.LootItemFromContainer, id, 1));
         }
     }
 

@@ -104,8 +104,14 @@ public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
 
         // ✅ Теперь событие идёт через Identifiable
         var ident = GetComponent<Identifiable>();
-        string id = ident != null ? ident.Id : gameObject.name;
-        GameEvents.RaiseQuestEvent(id, 1);
+        if (ident != null)
+        {
+            GameEvents.RaiseQuestEvent(new QuestEventData(
+                QuestEventType.RepairObject,
+                ident.Id,
+                1
+            ));
+        }
     }
 
 

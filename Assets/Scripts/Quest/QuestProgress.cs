@@ -1,19 +1,18 @@
 using System.Collections.Generic;
 
+[System.Serializable]
 public class QuestProgress
 {
-    public QuestAsset Asset { get; private set; }
-    public List<QuestObjective> Objectives { get; private set; }
+    public string QuestID;
+    public QuestAsset Asset;   // 👈 ссылка на сам квест-ассет
+    public List<QuestObjective> Objectives = new List<QuestObjective>();
 
     public bool IsComplete
     {
         get
         {
             foreach (var obj in Objectives)
-            {
-                if (!obj.IsComplete)
-                    return false;
-            }
+                if (!obj.IsComplete) return false;
             return true;
         }
     }
@@ -21,28 +20,33 @@ public class QuestProgress
     public QuestProgress(QuestAsset asset)
     {
         Asset = asset;
-        // копия целей для отслеживания прогресса
+        QuestID = asset.QuestID;
+
+        // Копируем цели из ассета в прогресс
         Objectives = new List<QuestObjective>();
         foreach (var obj in asset.Objectives)
         {
-            var copy = new QuestObjective
+            Objectives.Add(new QuestObjective
             {
                 Type = obj.Type,
-                TargetID = obj.TargetID,
+                TargetId = obj.TargetId,
                 TargetValue = obj.TargetValue,
                 DisplayText = obj.DisplayText,
                 CurrentValue = 0
-            };
-            Objectives.Add(copy);
+            });
         }
     }
 
-    public bool UpdateProgress(string eventId, int amount)
+    /// <summary>
+    /// Обновляет прогресс по событию.
+    /// Возвращает true, если что-то изменилось.
+    /// </summary>
+    public bool UpdateProgress(QuestEventData data)
     {
         bool changed = false;
         foreach (var obj in Objectives)
         {
-            if (obj.UpdateProgress(eventId, amount))
+            if (obj.UpdateProgress(data))
                 changed = true;
         }
         return changed;
