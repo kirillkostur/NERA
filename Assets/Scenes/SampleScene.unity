@@ -241,20 +241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2d41f63c0138b40bc09a568a155df3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lootConfig: {fileID: 11400000, guid: 16ee073c2b52fde48a2638c5d0526a53, type: 2}
-  icon: {fileID: 1101978919}
-  targetHighlight: {fileID: 954586641}
-  progressBar: {fileID: 435987701}
-  lootTime: 2
-  maxInteractDistance: 2
-  lootedCompletely: 0
-  looting: 0
-  wasSearchedOnce: 0
-  lootPanelOpen: 0
-  progress: 0
-  interactor: {fileID: 0}
-  animator: {fileID: 0}
-  alerts: {fileID: 0}
 --- !u!65 &7831854
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -902,6 +888,7 @@ GameObject:
   - component: {fileID: 121352100}
   - component: {fileID: 121352099}
   - component: {fileID: 121352098}
+  - component: {fileID: 121352105}
   - component: {fileID: 121352104}
   m_Layer: 6
   m_Name: 'StationBatterySystem '
@@ -941,8 +928,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
-  canInteract: 1
   objectId: repairable_object
   isRepaired: 0
   brokenIcon: {fileID: 0}
@@ -1052,6 +1037,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: station_battery
+--- !u!114 &121352105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121352097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
+  canInteract: 1
 --- !u!1 &135414311
 GameObject:
   m_ObjectHideFlags: 0
@@ -7253,20 +7252,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2d41f63c0138b40bc09a568a155df3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lootConfig: {fileID: 11400000, guid: 16ee073c2b52fde48a2638c5d0526a53, type: 2}
-  icon: {fileID: 1333488889}
-  targetHighlight: {fileID: 484445659}
-  progressBar: {fileID: 1782213}
-  lootTime: 2
-  maxInteractDistance: 2
-  lootedCompletely: 0
-  looting: 0
-  wasSearchedOnce: 0
-  lootPanelOpen: 0
-  progress: 0
-  interactor: {fileID: 0}
-  animator: {fileID: 0}
-  alerts: {fileID: 0}
 --- !u!65 &463333371
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7845,12 +7830,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3751ecbbc477cd4aaf83cb0ac631c23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panel: {fileID: 1251922375}
-  entriesParent: {fileID: 2046201148}
-  entryPrefab: {fileID: 4191663937733215307, guid: 1e43fedc1ce3f2645bed4852996c16b4, type: 3}
-  upgradeButton: {fileID: 136353107}
-  hintText: {fileID: 0}
-  currentConfig: {fileID: 0}
 --- !u!1 &536854647
 GameObject:
   m_ObjectHideFlags: 0
@@ -7900,11 +7879,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69108362c1ce5e64cbf1af5e69dff6c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panel: {fileID: 675001148}
-  slotsParent: {fileID: 655523091}
-  slotPrefab: {fileID: 3657662457915607085, guid: 655495b53d176a64db0007309f8f57ec, type: 3}
-  takeAllButton: {fileID: 936201362}
-  _current: {fileID: 0}
 --- !u!1 &538799625
 GameObject:
   m_ObjectHideFlags: 0
@@ -9805,6 +9779,7 @@ GameObject:
   - component: {fileID: 1048479991}
   - component: {fileID: 1048479990}
   - component: {fileID: 1048479989}
+  - component: {fileID: 1048479996}
   - component: {fileID: 1048479995}
   m_Layer: 6
   m_Name: 'SolarPanelSystem '
@@ -9844,8 +9819,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
-  canInteract: 1
   objectId: repairable_object
   isRepaired: 0
   brokenIcon: {fileID: 0}
@@ -9957,6 +9930,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: object_id
+--- !u!114 &1048479996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048479988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
+  canInteract: 1
 --- !u!1 &1054635358
 GameObject:
   m_ObjectHideFlags: 0
@@ -10266,10 +10253,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37fd941dec1da464d9e9c95cd591843d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryPanel: {fileID: 1054635358}
-  backpackButton: {fileID: 2096192628}
-  slotsParent: {fileID: 1866339217}
-  slotPrefab: {fileID: 8819214804522885524, guid: 655495b53d176a64db0007309f8f57ec, type: 3}
 --- !u!1 &1110795020
 GameObject:
   m_ObjectHideFlags: 0
@@ -16428,8 +16411,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
-  canInteract: 1
   objectId: repairable_object
   isRepaired: 0
   brokenIcon: {fileID: 0}
@@ -23622,6 +23603,7 @@ GameObject:
   - component: {fileID: 1861172182}
   - component: {fileID: 1861172181}
   - component: {fileID: 1861172180}
+  - component: {fileID: 1861172185}
   m_Layer: 6
   m_Name: IP_Pickup
   m_TagString: Untagged
@@ -23638,25 +23620,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1861172179}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8028774c5b097634eb52b961c3830706, type: 3}
+  m_Script: {fileID: 11500000, guid: ce40b6757c1e90142935d3af7cb2a519, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: 788b8781f54219a4cb5b9f0757417fd5, type: 2}
-  canInteract: 1
-  interactOnlyOnce: 0
-  onInteractionStarted:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  onInteractionCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  onInteractionCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  wasInteracted: 0
+  itemId: item_id
 --- !u!65 &1861172181
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -23746,6 +23713,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1861172185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861172179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preset: {fileID: 11400000, guid: a459edd6be6afc3488a52c1cf764bc44, type: 2}
+  canInteract: 1
 --- !u!1 &1866339216
 GameObject:
   m_ObjectHideFlags: 0
@@ -24116,10 +24097,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7ea81bbe9ed79f40b8aaf207e04fed8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvas: {fileID: 178488367}
-  dragIcon: {fileID: 1939011381}
-  <IsDragging>k__BackingField: 0
-  <Origin>k__BackingField: {fileID: 0}
 --- !u!114 &1939011381
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25151,8 +25128,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
-  canInteract: 1
   objectId: repairable_object
   isRepaired: 0
   brokenIcon: {fileID: 0}
@@ -25463,20 +25438,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 853ceac544357e9468c4299aee7ab242, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotatingPart: {fileID: 741140033261508171}
-  rotationSpeed: 5
-  attackRange: 30
-  fireRate: 3
-  damage: 20
-  shotEffectPrefab: {fileID: 4469073642878634309, guid: b2e3b285d62c86d48b78a81bbd8a306b, type: 3}
-  firePoint: {fileID: 8980572288161405387}
-  attackConsumption: 0.8
-  spiderMask:
-    m_Bits: 128
-  poweredDevice: {fileID: 0}
-  currentTarget: {fileID: 0}
-  nextFireTime: 0
-  baseConsumption: 0
 --- !u!33 &628783266940448560
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -33794,8 +33755,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 0}
-  canInteract: 1
   objectId: repairable_object
   isRepaired: 0
   brokenIcon: {fileID: 0}
@@ -34242,10 +34201,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8c5b5cd6d374f93ca0a878368bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: 7c018689cad0b654887ccd1b2338edce, type: 2}
-  canInteract: 1
   objectId: repairable_object
-  isRepaired: 1
+  isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
 --- !u!137 &5269302140069513423
@@ -34383,20 +34340,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 853ceac544357e9468c4299aee7ab242, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotatingPart: {fileID: 805790789818988017}
-  rotationSpeed: 5
-  attackRange: 20
-  fireRate: 2
-  damage: 15
-  shotEffectPrefab: {fileID: 4469073642878634309, guid: b2e3b285d62c86d48b78a81bbd8a306b, type: 3}
-  firePoint: {fileID: 7597933454938195855}
-  attackConsumption: 0.8
-  spiderMask:
-    m_Bits: 128
-  poweredDevice: {fileID: 0}
-  currentTarget: {fileID: 0}
-  nextFireTime: 0
-  baseConsumption: 0
 --- !u!114 &5290933823180683291
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41624,11 +41567,11 @@ GameObject:
   - component: {fileID: 6120609761460234382}
   - component: {fileID: 7239994205576592712}
   - component: {fileID: 4408086766652423916}
-  - component: {fileID: 8309709368995776187}
   - component: {fileID: 54091780488577613}
   - component: {fileID: 5267557655635491718}
   - component: {fileID: 8309709368995776185}
   - component: {fileID: 8309709368995776186}
+  - component: {fileID: 8309709368995776187}
   - component: {fileID: 8058055956905252142}
   m_Layer: 6
   m_Name: Turret_LVL1
@@ -41877,13 +41820,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8055650903784854709}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 327df64702f798a49845132b00634764, type: 3}
+  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: 7c018689cad0b654887ccd1b2338edce, type: 2}
+  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
   canInteract: 1
-  containerId: container_id
-  searchOnlyOnce: 1
 --- !u!4 &8340160320190813595
 Transform:
   m_ObjectHideFlags: 0
@@ -46726,8 +46667,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cameraTransform: {fileID: 0}
   animator: {fileID: 0}
-  interactionDistance: 3
-  interactionRadius: 0.25
+  interactionDistance: 1
+  interactionHeight: 1
   interactionMask:
     serializedVersion: 2
     m_Bits: 64

@@ -9,7 +9,7 @@ public class PlayerInteraction : MonoBehaviour
 
     [Header("Detection")]
     [SerializeField] private float interactionDistance = 3f;
-    [SerializeField] private float interactionRadius = 0.25f;
+    [SerializeField] private float interactionHeight = 1f;
     [SerializeField] private LayerMask interactionMask;
 
     [Header("Input")]
@@ -20,8 +20,8 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] private bool interruptWhenTargetLost = true;
     [SerializeField] private float maxDistanceDuringInteraction = 3.5f;
 
-    private InteractableBase currentInteractable;
-    private InteractableBase activeInteractable;
+    private Interactable currentInteractable;
+    private Interactable activeInteractable;
     private Coroutine interactionRoutine;
     private bool isInteracting;
 
@@ -32,7 +32,7 @@ public class PlayerInteraction : MonoBehaviour
     private static readonly int AnimatorPush = Animator.StringToHash("InteractPush");
     private static readonly int AnimatorUse = Animator.StringToHash("InteractUse");
 
-    public InteractableBase CurrentInteractable => currentInteractable;
+    public Interactable CurrentInteractable => currentInteractable;
     public bool IsInteracting => isInteracting;
 
     private void Awake()
@@ -59,42 +59,89 @@ public class PlayerInteraction : MonoBehaviour
     {
         currentInteractable = null;
 
-        if (cameraTransform == null)
-            return;
+        Vector3 origin = transform.position + Vector3.up * interactionHeight;
 
-        Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+        Collider[] hits = Physics.OverlapSphere(
+            origin,
+            interactionDistance,
+            interactionMask,
+            QueryTriggerInteraction.Ignore
+        );
 
-        if (!Physics.SphereCast(
-                ray,
-                interactionRadius,
-                out RaycastHit hit,
-                interactionDistance,
-                interactionMask,
-                QueryTriggerInteraction.Ignore))
+        float bestScore = float.MinValue;
+        Interactable bestInteractable = null;
+
+        Vector3 lookDirection = GetLookDirection();
+
+        for (int i = 0; i < hits.Length; i++)
         {
-            return;
+            if (!hits[i].TryGetComponent(out Interactable interactable))
+                continue;
+
+            if (!interactable.CanInteract)
+                continue;
+
+            Vector3 directionToTarget = interactable.transform.position - transform.position;
+            directionToTarget.y = 0f;
+
+            float distance = directionToTarget.magnitude;
+
+            if (distance < 0.01f)
+                distance = 0.01f;
+
+            Vector3 normalizedDirection = directionToTarget.normalized;
+
+            float lookScore = Vector3.Dot(lookDirection, normalizedDirection);
+            float distanceScore = 1f / distance;
+
+            float score = lookScore + distanceScore;
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestInteractable = interactable;
+            }
         }
 
-        if (!hit.collider.TryGetComponent(out InteractableBase interactable))
-            return;
+        currentInteractable = bestInteractable;
+    }
 
-        if (!interactable.CanInteract)
-            return;
+    private Vector3 GetLookDirection()
+    {
+        if (cameraTransform != null)
+        {
+            Vector3 cameraForward = cameraTransform.forward;
+            cameraForward.y = 0f;
 
-        currentInteractable = interactable;
+            if (cameraForward.sqrMagnitude > 0.01f)
+                return cameraForward.normalized;
+        }
+
+        return transform.forward;
     }
 
     private void TryInteract()
     {
         if (currentInteractable == null)
+        {
+            Debug.Log("No interactable object nearby.");
             return;
+        }
+
+        if (currentInteractable.Preset == null)
+        {
+            Debug.LogWarning($"Interactable has no preset: {currentInteractable.name}");
+            return;
+        }
+
+        Debug.Log($"Interact with: {currentInteractable.name}");
 
         interactionRoutine = StartCoroutine(
             InteractionRoutine(currentInteractable, currentInteractable.Preset)
         );
     }
 
-    private IEnumerator InteractionRoutine(InteractableBase interactable, InteractionPreset preset)
+    private IEnumerator InteractionRoutine(Interactable interactable, InteractionPreset preset)
     {
         isInteracting = true;
         activeInteractable = interactable;
@@ -104,7 +151,7 @@ public class PlayerInteraction : MonoBehaviour
 
         PlayAnimation(preset.AnimationType);
 
-        interactable.OnInteractionStarted(this);
+        interactable.StartInteraction(this);
 
         if (preset.Duration > 0f)
         {
@@ -123,11 +170,11 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
 
-        interactable.OnInteractionCompleted(this);
+        interactable.CompleteInteraction(this);
         FinishInteraction();
     }
 
-    private bool ShouldInterrupt(InteractableBase interactable)
+    private bool ShouldInterrupt(Interactable interactable)
     {
         if (interruptOnMoveInput && HasMoveInput())
             return true;
@@ -146,7 +193,7 @@ public class PlayerInteraction : MonoBehaviour
         return Mathf.Abs(horizontal) > 0.01f || Mathf.Abs(vertical) > 0.01f;
     }
 
-    private bool IsTargetStillValid(InteractableBase interactable)
+    private bool IsTargetStillValid(Interactable interactable)
     {
         if (interactable == null)
             return false;
@@ -213,7 +260,7 @@ public class PlayerInteraction : MonoBehaviour
             StopCoroutine(interactionRoutine);
 
         if (activeInteractable != null)
-            activeInteractable.OnInteractionCancelled(this);
+            activeInteractable.CancelInteraction(this);
 
         FinishInteraction();
     }
@@ -226,5 +273,13 @@ public class PlayerInteraction : MonoBehaviour
         isInteracting = false;
         activeInteractable = null;
         interactionRoutine = null;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 origin = transform.position + Vector3.up * interactionHeight;
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(origin, interactionDistance);
     }
 }

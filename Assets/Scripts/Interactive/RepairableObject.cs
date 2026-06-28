@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class RepairableObject : InteractableBase
+public class RepairableObject : MonoBehaviour, IInteractionHandler
 {
     [Header("Repair")]
     [SerializeField] private string objectId = "repairable_object";
@@ -20,38 +20,49 @@ public class RepairableObject : InteractableBase
 
     public bool IsRepaired => isRepaired;
 
+    private Interactable interactable;
+
     private void Awake()
     {
+        interactable = GetComponent<Interactable>();
         UpdateVisualState();
 
         if (isRepaired)
+        {
             HideHighlight();
+
+            if (interactable != null)
+                interactable.SetCanInteract(false);
+        }
         else
+        {
             ShowHighlight();
+
+            if (interactable != null)
+                interactable.SetCanInteract(true);
+        }
     }
 
-    public override void OnInteractionStarted(PlayerInteraction player)
+    public void OnInteractionStarted(PlayerInteraction player)
     {
         if (isRepaired)
             return;
 
         OnRepairStarted?.Invoke(this);
-
         Debug.Log($"Repair started: {objectId}");
     }
 
-    public override void OnInteractionCompleted(PlayerInteraction player)
+    public void OnInteractionCompleted(PlayerInteraction player)
     {
         CompleteRepair();
     }
 
-    public override void OnInteractionCancelled(PlayerInteraction player)
+    public void OnInteractionCancelled(PlayerInteraction player)
     {
         if (isRepaired)
             return;
 
         OnRepairCancelled?.Invoke(this);
-
         Debug.Log($"Repair cancelled: {objectId}");
     }
 
@@ -64,10 +75,11 @@ public class RepairableObject : InteractableBase
 
         UpdateVisualState();
         HideHighlight();
-        SetCanInteract(false);
+
+        if (interactable != null)
+            interactable.SetCanInteract(false);
 
         OnRepaired?.Invoke(this);
-
         Debug.Log($"Repair completed: {objectId}");
     }
 
@@ -77,10 +89,14 @@ public class RepairableObject : InteractableBase
 
         UpdateVisualState();
         ShowHighlight();
-        SetCanInteract(true);
+
+        if (interactable != null)
+        {
+            interactable.SetCanInteract(true);
+            interactable.ResetInteraction();
+        }
 
         OnBroken?.Invoke(this);
-
         Debug.Log($"Object broken: {objectId}");
     }
 
