@@ -1,101 +1,281 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    public float _speedMove;
-    public float _jumpPower;
+    [Header("References")]
+    [SerializeField] private Transform cameraTransform;
+    [SerializeField] private Animator animator;
 
-    private float _gravityForce;
-    private Vector3 _moveVector;
+    [Header("Movement")]
+    [SerializeField] private float walkSpeed = 3.5f;
+    [SerializeField] private float sprintSpeed = 6f;
+    [SerializeField] private float crouchSpeed = 1.8f;
+    [SerializeField] private float rotationSpeed = 12f;
 
-    private CharacterController _chController;
-    private Animator _chAnimator;
+    [Header("Jump & Gravity")]
+    [SerializeField] private float jumpHeight = 1.5f;
+    [SerializeField] private float gravity = -35f;
+    [SerializeField] private float groundedGravity = -5f;
+    [SerializeField] private float groundedGraceTime = 0.12f;
 
-    public Transform _cameraTransform;
+    [Header("Crouch")]
+    [SerializeField] private float crouchHeight = 1.1f;
+    [SerializeField] private float crouchSmooth = 12f;
 
-    // 👉 Добавленные поля
-    private PlayerAttack _attack;
-    private bool _wasMoving;
+    [Header("Stamina")]
+    [SerializeField] private float maxStamina = 5f;
+    [SerializeField] private float staminaDrainRate = 1f;
+    [SerializeField] private float staminaRecoveryRate = 1.5f;
+    [SerializeField] private float minStaminaToSprint = 0.2f;
 
-    private void Start()
+    private CharacterController characterController;
+
+    private float standingHeight;
+    private float verticalVelocity;
+    private float currentStamina;
+    private float lastGroundedTime;
+
+    private bool isGrounded;
+    private bool isMoving;
+    private bool isSprinting;
+    private bool isCrouching;
+
+    private static readonly int AnimatorMoveSpeed = Animator.StringToHash("MoveSpeed");
+    private static readonly int AnimatorCrouchMoveSpeed = Animator.StringToHash("CrouchMoveSpeed");
+    private static readonly int AnimatorCrouch = Animator.StringToHash("Crouch");
+    private static readonly int AnimatorGrounded = Animator.StringToHash("Grounded");
+    private static readonly int AnimatorJump = Animator.StringToHash("Jump");
+
+    public float CurrentStamina => currentStamina;
+    public float MaxStamina => maxStamina;
+
+    public bool IsGrounded => isGrounded;
+    public bool IsMoving => isMoving;
+    public bool IsSprinting => isSprinting;
+    public bool IsCrouching => isCrouching;
+
+    private void Awake()
     {
-        _chController = GetComponent<CharacterController>();
-        _chAnimator = GetComponent<Animator>();
+        characterController = GetComponent<CharacterController>();
 
-        if (_cameraTransform == null && Camera.main != null)
-            _cameraTransform = Camera.main.transform;
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
 
-        // 👉 Инициализируем ссылку на PlayerAttack
-        _attack = GetComponent<PlayerAttack>();
+        if (cameraTransform == null && Camera.main != null)
+            cameraTransform = Camera.main.transform;
+
+        standingHeight = characterController.height;
+        currentStamina = maxStamina;
     }
 
     private void Update()
     {
-        CharacterMove();
+        UpdateGroundedBeforeMove();
+        UpdateCrouch();
+        UpdateJumpAndGravity();
+        Move();
+        UpdateStamina();
+        UpdateAnimator();
     }
 
-    private void CharacterMove()
+    private void UpdateGroundedBeforeMove()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        isGrounded = characterController.isGrounded;
 
-        Vector3 _camForward = _cameraTransform.forward;
-        _camForward.y = 0;
-        _camForward.Normalize();
-
-        Vector3 _camRight = _cameraTransform.right;
-        _camRight.y = 0;
-        _camRight.Normalize();
-
-        _moveVector = _camForward * v + _camRight * h;
-        _moveVector.Normalize();
-        _moveVector *= _speedMove;
-
-        bool isMoving = _moveVector.magnitude > 0;
-        _chAnimator.SetBool("Move", isMoving);
-
-        // 👉 Если начали движение — сбрасываем триггер атаки
-        if (isMoving && !_wasMoving && _attack != null)
+        if (isGrounded)
         {
-            _attack.ResetAttackTrigger();
+            lastGroundedTime = Time.time;
+
+            if (verticalVelocity < 0f)
+                verticalVelocity = groundedGravity;
         }
-        _wasMoving = isMoving;
+    }
 
-        if (_moveVector.sqrMagnitude > 0.01f)
+    private void UpdateCrouch()
+    {
+        isCrouching = Input.GetKey(KeyCode.LeftControl);
+
+        float targetHeight = isCrouching ? crouchHeight : standingHeight;
+
+        characterController.height = Mathf.Lerp(
+            characterController.height,
+            targetHeight,
+            crouchSmooth * Time.deltaTime
+        );
+
+        Vector3 center = characterController.center;
+        center.y = characterController.height * 0.5f;
+        characterController.center = center;
+    }
+
+    private void UpdateJumpAndGravity()
+    {
+        bool canJump = isGrounded || Time.time - lastGroundedTime <= groundedGraceTime;
+
+        if (Input.GetKeyDown(KeyCode.Space) && canJump && !isCrouching)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(_moveVector);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            isGrounded = false;
+            lastGroundedTime = -999f;
+
+            if (animator != null)
+                animator.SetTrigger(AnimatorJump);
         }
 
-        _gravityForce += Physics.gravity.y * Time.deltaTime;
-        _moveVector.y = _gravityForce;
-
-        _chController.Move(_moveVector * Time.deltaTime);
-
-        if (_chController.isGrounded) _gravityForce = -0.5f;
+        verticalVelocity += gravity * Time.deltaTime;
     }
 
-    // ВАЖНО: считаем движение только по горизонтали (XZ), чтобы гравитация не считалась «движением»
-    public bool IsMoving()
+    private void Move()
     {
-        Vector3 horizontal = _moveVector;
-        horizontal.y = 0f;
-        return horizontal.sqrMagnitude > 0.01f;
-    }
+        Vector3 input = new Vector3(
+            Input.GetAxisRaw("Horizontal"),
+            0f,
+            Input.GetAxisRaw("Vertical")
+        ).normalized;
 
-    private void GamingGravity()
-    {
-        if (!_chController.isGrounded)
+        isMoving = input.sqrMagnitude > 0.01f;
+        isSprinting = CanSprint();
+
+        Vector3 moveDirection = Vector3.zero;
+
+        if (isMoving)
         {
-            _gravityForce -= 20f * Time.deltaTime;
+            moveDirection = GetCameraRelativeDirection(input);
+            RotateToDirection(moveDirection);
+        }
+
+        Vector3 velocity = moveDirection * GetCurrentSpeed();
+        velocity.y = verticalVelocity;
+
+        CollisionFlags collisionFlags = characterController.Move(velocity * Time.deltaTime);
+
+        bool hitGround = (collisionFlags & CollisionFlags.Below) != 0;
+
+        if (hitGround)
+        {
+            isGrounded = true;
+            lastGroundedTime = Time.time;
+
+            if (verticalVelocity < 0f)
+                verticalVelocity = groundedGravity;
         }
         else
         {
-            _gravityForce = -1f;
+            isGrounded = false;
         }
-        if (Input.GetKeyDown(KeyCode.Space) && _chController.isGrounded)
+    }
+
+    private bool CanSprint()
+    {
+        return Input.GetKey(KeyCode.LeftShift)
+            && isMoving
+            && !isCrouching
+            && currentStamina > minStaminaToSprint;
+    }
+
+    private void UpdateStamina()
+    {
+        if (isSprinting)
         {
-            _gravityForce = _jumpPower;
+            currentStamina -= staminaDrainRate * Time.deltaTime;
+            currentStamina = Mathf.Max(currentStamina, 0f);
+            return;
         }
+
+        currentStamina += staminaRecoveryRate * Time.deltaTime;
+        currentStamina = Mathf.Min(currentStamina, maxStamina);
+    }
+
+    private float GetCurrentSpeed()
+    {
+        if (isCrouching)
+            return crouchSpeed;
+
+        if (isSprinting)
+            return sprintSpeed;
+
+        return walkSpeed;
+    }
+
+    private Vector3 GetCameraRelativeDirection(Vector3 input)
+    {
+        Vector3 direction = GetCameraForward() * input.z + GetCameraRight() * input.x;
+        direction.y = 0f;
+
+        return direction.normalized;
+    }
+
+    private Vector3 GetCameraForward()
+    {
+        if (cameraTransform == null)
+            return transform.forward;
+
+        Vector3 forward = cameraTransform.forward;
+        forward.y = 0f;
+
+        return forward.sqrMagnitude > 0.01f
+            ? forward.normalized
+            : transform.forward;
+    }
+
+    private Vector3 GetCameraRight()
+    {
+        if (cameraTransform == null)
+            return transform.right;
+
+        Vector3 right = cameraTransform.right;
+        right.y = 0f;
+
+        return right.sqrMagnitude > 0.01f
+            ? right.normalized
+            : transform.right;
+    }
+
+    private void RotateToDirection(Vector3 direction)
+    {
+        if (direction.sqrMagnitude < 0.01f)
+            return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
+    }
+
+    private void UpdateAnimator()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetBool(AnimatorCrouch, isCrouching);
+        animator.SetBool(AnimatorGrounded, isGrounded);
+
+        animator.SetFloat(AnimatorMoveSpeed, GetNormalMoveSpeed(), 0.1f, Time.deltaTime);
+        animator.SetFloat(AnimatorCrouchMoveSpeed, GetCrouchMoveSpeed(), 0.1f, Time.deltaTime);
+    }
+
+    private float GetNormalMoveSpeed()
+    {
+        if (isCrouching || !isMoving)
+            return 0f;
+
+        return isSprinting ? 1f : 0.6f;
+    }
+
+    private float GetCrouchMoveSpeed()
+    {
+        if (!isCrouching || !isMoving)
+            return 0f;
+
+        return 1f;
+    }
+
+    public void SetCameraTransform(Transform newCameraTransform)
+    {
+        cameraTransform = newCameraTransform;
     }
 }

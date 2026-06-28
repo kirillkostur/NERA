@@ -1,198 +1,112 @@
+using System;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Collider))]
-public class RepairableObject : MonoBehaviour, ITargetable, IInteractable
+public class RepairableObject : InteractableBase
 {
-    [Header("Основные настройки")]
-    public string objectName = "Генератор";
-    [Tooltip("Время ремонта (сек.)")]
-    public float repairTime = 3f;
-    [Tooltip("Починен ли объект в начале игры")]
+    [Header("Repair")]
+    [SerializeField] private string objectId = "repairable_object";
+
+    [Header("State")]
     public bool isRepaired = false;
 
-    [Header("Режим взаимодействия")]
-    [Tooltip("Если включено — ремонт происходит мгновенно без анимации и прогресс-бара")]
-    public bool instantInteract = false;
+    [Header("Visual")]
+    [SerializeField] private GameObject brokenIcon;
+    [SerializeField] private GameObject highlightEffect;
 
-    [Header("Дистанция взаимодействия")]
-    [Tooltip("Макс. дистанция, на которой ремонт не прервётся")]
-    public float maxInteractDistance = 4f;
+    public event Action<RepairableObject> OnRepairStarted;
+    public event Action<RepairableObject> OnRepaired;
+    public event Action<RepairableObject> OnRepairCancelled;
+    public event Action<RepairableObject> OnBroken;
 
-    [Header("UI и эффекты")]
-    public GameObject icon;     // Красная иконка проблем
-    public GameObject targetHighlightEffect; // Зелёный таргет
-    public Slider progressBar;
+    public bool IsRepaired => isRepaired;
 
-    public delegate void RepairEvent(RepairableObject obj);
-    public event RepairEvent OnRepaired;
-
-    private GameObject interactor;
-    private Animator interactorAnimator;
-    private float progress = 0f;
-    private bool repairing = false;
-
-    private AlertManager alerts;
-
-    private void Start()
+    private void Awake()
     {
-        UpdateRepairEffect();
-        HideHighlight();
-        alerts = FindFirstObjectByType<AlertManager>();
+        UpdateVisualState();
 
-        if (progressBar != null)
-        {
-            progressBar.minValue = 0f;
-            progressBar.maxValue = 1f;
-            progressBar.value = 0f;
-            progressBar.gameObject.SetActive(false);
-        }
+        if (isRepaired)
+            HideHighlight();
+        else
+            ShowHighlight();
     }
 
-    private void Update()
+    public override void OnInteractionStarted(PlayerInteraction player)
     {
-        UpdateRepairEffect();
-
-        if (repairing && !isRepaired && !instantInteract)
-        {
-            if (interactor == null || Vector3.Distance(interactor.transform.position, transform.position) > maxInteractDistance)
-            {
-                CancelInteract();
-                return;
-            }
-
-            progress += Time.deltaTime / repairTime;
-            if (progressBar != null)
-            {
-                if (!progressBar.gameObject.activeSelf) progressBar.gameObject.SetActive(true);
-                progressBar.value = progress;
-            }
-
-            if (progress >= 1f)
-            {
-                CompleteRepair();
-            }
-        }
-    }
-
-    private void CompleteRepair()
-    {
-        // 🚫 Если идёт буря и это солнечная панель — блокируем ремонт
-        var panel = GetComponent<SolarPanelSystem>();
-        if (panel != null && SandStormController.StormActive)
-        {
-            alerts?.ShowAlert("Система очистки панелей не работает во время бури!");
-            Logger.Log($"🚫 {objectName} нельзя отремонтировать во время бури!");
-            repairing = false;
-            progress = 0f;
-
-            if (progressBar != null) progressBar.gameObject.SetActive(false);
-            if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
-
+        if (isRepaired)
             return;
-        }
+
+        OnRepairStarted?.Invoke(this);
+
+        Debug.Log($"Repair started: {objectId}");
+    }
+
+    public override void OnInteractionCompleted(PlayerInteraction player)
+    {
+        CompleteRepair();
+    }
+
+    public override void OnInteractionCancelled(PlayerInteraction player)
+    {
+        if (isRepaired)
+            return;
+
+        OnRepairCancelled?.Invoke(this);
+
+        Debug.Log($"Repair cancelled: {objectId}");
+    }
+
+    public void CompleteRepair()
+    {
+        if (isRepaired)
+            return;
 
         isRepaired = true;
-        repairing = false;
 
-        if (progressBar != null) progressBar.gameObject.SetActive(false);
-        if (interactorAnimator != null) interactorAnimator.SetBool("Repair", false);
-
+        UpdateVisualState();
         HideHighlight();
-        Logger.Log($"✅ {objectName} отремонтирован!");
+        SetCanInteract(false);
+
         OnRepaired?.Invoke(this);
 
-        // ✅ Теперь событие идёт через Identifiable
-        var ident = GetComponent<Identifiable>();
-        if (ident != null)
-        {
-            GameEvents.RaiseQuestEvent(new QuestEventData(
-                QuestEventType.RepairObject,
-                ident.Id,
-                1
-            ));
-        }
-    }
-
-
-
-    private void UpdateRepairEffect()
-    {
-        if (icon != null)
-            icon.SetActive(!isRepaired);
-    }
-
-    public void ShowHighlight()
-    {
-        if (targetHighlightEffect != null)
-            targetHighlightEffect.SetActive(true);
-    }
-
-    public void HideHighlight()
-    {
-        if (targetHighlightEffect != null)
-            targetHighlightEffect.SetActive(false);
-    }
-
-    // === Взаимодействие ===
-    public void StartInteract(GameObject player)
-    {
-        if (isRepaired) return;
-
-        interactor = player;
-        interactorAnimator = player.GetComponent<Animator>();
-
-        if (instantInteract)
-        {
-            CompleteRepair();
-            return;
-        }
-
-        repairing = true;
-        Logger.Log($"🔧 Начат ремонт: {objectName}");
-
-        if (interactorAnimator != null)
-            interactorAnimator.SetBool("Repair", true);
-    }
-
-    public void HoldInteract() { /* Ремонт продолжается в Update */ }
-
-    public void CancelInteract()
-    {
-        if (!repairing || instantInteract) return;
-
-        repairing = false;
-        progress = 0f;
-
-        if (progressBar != null)
-        {
-            progressBar.value = 0f;
-            progressBar.gameObject.SetActive(false);
-        }
-
-        if (interactorAnimator != null)
-            interactorAnimator.SetBool("Repair", false);
-
-        Logger.Log($"⛔ Ремонт {objectName} отменён");
+        Debug.Log($"Repair completed: {objectId}");
     }
 
     public void BreakObject()
     {
-        if (!isRepaired) return;
-
         isRepaired = false;
-        progress = 0f;
-        UpdateRepairEffect();
-        HideHighlight();
-        Logger.Log($"❗ {objectName} снова сломан.");
+
+        UpdateVisualState();
+        ShowHighlight();
+        SetCanInteract(true);
+
+        OnBroken?.Invoke(this);
+
+        Debug.Log($"Object broken: {objectId}");
     }
 
-    // === ITargetable ===
-    public Transform GetTransform() => transform;
-    public bool IsAlive() => !isRepaired;
-
-    public void ToggleHighlight(bool on)
+    public void ShowHighlight()
     {
-        if (on) ShowHighlight(); else HideHighlight();
+        if (highlightEffect != null)
+            highlightEffect.SetActive(true);
+    }
+
+    public void HideHighlight()
+    {
+        if (highlightEffect != null)
+            highlightEffect.SetActive(false);
+    }
+
+    public void SetHighlight(bool value)
+    {
+        if (value)
+            ShowHighlight();
+        else
+            HideHighlight();
+    }
+
+    private void UpdateVisualState()
+    {
+        if (brokenIcon != null)
+            brokenIcon.SetActive(!isRepaired);
     }
 }

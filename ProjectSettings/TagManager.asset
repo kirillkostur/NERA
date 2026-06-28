@@ -16,8 +16,8 @@ TagManager:
   - Interactable
   - Enemy
   - Minimap
-  - 
-  - 
+  - Wall
+  - Ground
   - 
   - 
   - 
