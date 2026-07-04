@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Boot/Boot.unity
+    guid: 25780f45106d2364b8608b1605ddc67f
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Station/Player_Station.unity
+    guid: 967ce8479e4d4354c831499d0633f28d
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expeditions/Expedition_01.unity
+    guid: d753564efe059ee43a9d56ec0301c496
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

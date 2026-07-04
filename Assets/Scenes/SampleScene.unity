@@ -238,9 +238,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 7831852}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d2d41f63c0138b40bc09a568a155df3, type: 3}
+  m_Script: {fileID: 11500000, guid: a6fb40d4de91c7542abd253b4248b1d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  containerId: container_id
+  prompt: Search
+  searchDuration: 3
+  searchOnlyOnce: 1
 --- !u!65 &7831854
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -888,7 +892,6 @@ GameObject:
   - component: {fileID: 121352100}
   - component: {fileID: 121352099}
   - component: {fileID: 121352098}
-  - component: {fileID: 121352105}
   - component: {fileID: 121352104}
   m_Layer: 6
   m_Name: 'StationBatterySystem '
@@ -929,6 +932,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -1037,20 +1042,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: station_battery
---- !u!114 &121352105
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121352097}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
-  canInteract: 1
 --- !u!1 &135414311
 GameObject:
   m_ObjectHideFlags: 0
@@ -9779,8 +9770,8 @@ GameObject:
   - component: {fileID: 1048479991}
   - component: {fileID: 1048479990}
   - component: {fileID: 1048479989}
-  - component: {fileID: 1048479996}
   - component: {fileID: 1048479995}
+  - component: {fileID: 1048479996}
   m_Layer: 6
   m_Name: 'SolarPanelSystem '
   m_TagString: Untagged
@@ -9820,6 +9811,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -9939,11 +9932,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1048479988}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e4e923e558392542bd8e039d9ff9541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
-  canInteract: 1
+  id: object_id
 --- !u!1 &1054635358
 GameObject:
   m_ObjectHideFlags: 0
@@ -16373,6 +16365,7 @@ GameObject:
   - component: {fileID: 1290312081}
   - component: {fileID: 1290312080}
   - component: {fileID: 1290312086}
+  - component: {fileID: 1290312087}
   m_Layer: 6
   m_Name: SolarPanelSystem_2
   m_TagString: Untagged
@@ -16412,6 +16405,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -16522,6 +16517,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: object_id
+--- !u!114 &1290312087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290312079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e4e923e558392542bd8e039d9ff9541, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: object_id
 --- !u!1 &1333488889
 GameObject:
   m_ObjectHideFlags: 0
@@ -23602,8 +23610,8 @@ GameObject:
   - component: {fileID: 1861172183}
   - component: {fileID: 1861172182}
   - component: {fileID: 1861172181}
-  - component: {fileID: 1861172180}
   - component: {fileID: 1861172185}
+  - component: {fileID: 1861172180}
   m_Layer: 6
   m_Name: IP_Pickup
   m_TagString: Untagged
@@ -23624,6 +23632,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemId: item_id
+  prompt: Pick up
 --- !u!65 &1861172181
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -23722,11 +23731,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1861172179}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e4e923e558392542bd8e039d9ff9541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: a459edd6be6afc3488a52c1cf764bc44, type: 2}
-  canInteract: 1
+  id: object_id
 --- !u!1 &1866339216
 GameObject:
   m_ObjectHideFlags: 0
@@ -25129,6 +25137,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -33756,6 +33766,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -34202,6 +34214,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: repairable_object
+  prompt: Repair
+  repairDuration: 3
   isRepaired: 0
   brokenIcon: {fileID: 0}
   highlightEffect: {fileID: 0}
@@ -41820,11 +41834,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8055650903784854709}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: edd9c28d4723c864d8a3a96a2150d908, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e4e923e558392542bd8e039d9ff9541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preset: {fileID: 11400000, guid: d2583b606caba114d8c0303379feaa5c, type: 2}
-  canInteract: 1
+  id: object_id
 --- !u!4 &8340160320190813595
 Transform:
   m_ObjectHideFlags: 0

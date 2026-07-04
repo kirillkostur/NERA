@@ -4,22 +4,25 @@
 TagManager:
   serializedVersion: 3
   tags:
+  - Interactable
+  - Item
+  - Station
+  - ExpeditionExit
   - Spider
-  - Room
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
   - Interactable
+  - Item
   - Enemy
-  - Minimap
   - Wall
   - Ground
-  - 
-  - 
+  - Environment
+  - Trigger
   - 
   - 
   - 
