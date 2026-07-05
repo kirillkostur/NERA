@@ -152,16 +152,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
+  autoFindPlayerOnStart: 1
+  autoFindPlayerIfMissing: 1
   height: 1.8
   positionSmooth: 10
   rotationSmooth: 50
   mouseSensitivity: 1.2
-  minPitch: -20
+  minPitch: -30
   maxPitch: 70
   lockCursor: 1
-  distance: 4
+  distance: 3
   minDistance: 2
-  maxDistance: 6
+  maxDistance: 4
   distanceTransitionSpeed: 6
   zoomSpeed: 1
   collisionMask:

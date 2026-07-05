@@ -1839,7 +1839,10 @@ GameObject:
   - component: {fileID: 8316549550204424031}
   - component: {fileID: 2547915180912284071}
   - component: {fileID: 3305560443079062310}
+  - component: {fileID: 3313322978475016968}
   - component: {fileID: 6905031743195232354}
+  - component: {fileID: 2437460804212274873}
+  - component: {fileID: 6454727307389856543}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -1939,6 +1942,19 @@ MonoBehaviour:
   staminaDrainRate: 1
   staminaRecoveryRate: 1
   minStaminaToSprint: 0.2
+--- !u!114 &3313322978475016968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e702b750614f2e42833890f3c0f8db1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxBackpackSlots: 5
 --- !u!114 &6905031743195232354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1951,6 +1967,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2791573dbeba934580f6cb8adbe16b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2437460804212274873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b60bf280ff9c294eb23a46169383cb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerCamera: {fileID: 0}
+  autoFindCamera: 1
+  interactionRadius: 1.2
+  maxInteractionDistance: 2.4
+  maxViewAngle: 70
+  interactionMask:
+    serializedVersion: 2
+    m_Bits: 64
+  angleWeight: 1.5
+  distanceWeight: 1
+  interactKey: 101
+  showDebug: 1
+  logCurrentInteractable: 1
+--- !u!114 &6454727307389856543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d77a864c928ce9846837f160390b3865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  promptUI: {fileID: 0}
+  pressKeyLabel: E
+  holdKeyLabel: Hold E
 --- !u!1 &4851945772030200154
 GameObject:
   m_ObjectHideFlags: 0

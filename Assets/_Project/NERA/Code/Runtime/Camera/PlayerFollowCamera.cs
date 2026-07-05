@@ -18,6 +18,9 @@ public class PlayerFollowCamera : MonoBehaviour
     [SerializeField] private float maxPitch = 70f;
     [SerializeField] private bool lockCursor = true;
 
+    [Header("UI Lock")]
+    [SerializeField] private bool disableCameraInputWhenTerminalOpen = true;
+
     [Header("Distance")]
     [SerializeField] private float distance = 5f;
     [SerializeField] private float minDistance = 2.5f;
@@ -54,11 +57,7 @@ public class PlayerFollowCamera : MonoBehaviour
         if (autoFindPlayerOnStart)
             TryFindPlayerTarget();
 
-        if (lockCursor)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        ApplyGameplayCursorState();
     }
 
     private void LateUpdate()
@@ -69,10 +68,33 @@ public class PlayerFollowCamera : MonoBehaviour
         if (target == null)
             return;
 
-        ReadMouseInput();
-        ReadZoomInput();
+        bool isTerminalOpen = IsTerminalOpen();
+
+        if (!isTerminalOpen || !disableCameraInputWhenTerminalOpen)
+        {
+            ReadMouseInput();
+            ReadZoomInput();
+        }
+
         UpdateDistance();
         UpdateCamera();
+    }
+
+    private bool IsTerminalOpen()
+    {
+        return TerminalUI.Instance != null && TerminalUI.Instance.IsOpen;
+    }
+
+    private void ApplyGameplayCursorState()
+    {
+        if (!lockCursor)
+            return;
+
+        if (IsTerminalOpen())
+            return;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void InitializeCamera()
@@ -97,9 +119,7 @@ public class PlayerFollowCamera : MonoBehaviour
         Transform foundTarget = null;
 
         if (PersistentPlayer.Instance != null)
-        {
             foundTarget = PersistentPlayer.Instance.transform;
-        }
 
         if (foundTarget == null)
         {
