@@ -1,0 +1,5 @@
+﻿<Solution>
+  <Project Path="Unity.AI.Navigation.Samples.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Unity.AI.Navigation.Samples.Initialization.Editor.csproj" />
+</Solution>

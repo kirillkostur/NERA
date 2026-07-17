@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 8153632412800325603}
   - component: {fileID: 3249872491013048574}
   - component: {fileID: 3270965548377865109}
-  - component: {fileID: 8263271439821680320}
   m_Layer: 0
   m_Name: Player_Camera
   m_TagString: MainCamera
@@ -161,6 +160,7 @@ MonoBehaviour:
   minPitch: -30
   maxPitch: 70
   lockCursor: 1
+  disableCameraInputWhenTerminalOpen: 1
   distance: 3
   minDistance: 2
   maxDistance: 4
@@ -174,15 +174,3 @@ MonoBehaviour:
   minCollisionDistance: 0.6
   collisionSmoothIn: 5
   collisionSmoothOut: 1
---- !u!114 &8263271439821680320
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3117405237579423125}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 364852c0439b29640b40fd3aba17d35e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

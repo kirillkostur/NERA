@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "RedShadowOfMars.sln"
+    "dotnet.defaultSolution": "NERA.slnx"
 }
