@@ -1839,6 +1839,9 @@ GameObject:
   - component: {fileID: 8316549550204424031}
   - component: {fileID: 2547915180912284071}
   - component: {fileID: 3305560443079062310}
+  - component: {fileID: 9190595912918087885}
+  - component: {fileID: 73737831525809830}
+  - component: {fileID: 6965456474858397808}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -1854,7 +1857,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4815869735499398949}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1938,6 +1941,51 @@ MonoBehaviour:
   staminaDrainRate: 1
   staminaRecoveryRate: 1
   minStaminaToSprint: 0.2
+--- !u!114 &9190595912918087885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 011093f185c3cda40b9da033c63ff632, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionCamera: {fileID: 0}
+  interactionDistance: 2.5
+  raycastMask:
+    serializedVersion: 2
+    m_Bits: 8187
+  triggerInteraction: 2
+  interactionKey: 101
+--- !u!114 &73737831525809830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df2167e267dea646b9ca6f32c70ceda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  items: []
+--- !u!114 &6965456474858397808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a2957570f7198a43ace289c70378d1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
 --- !u!1 &4851945772030200154
 GameObject:
   m_ObjectHideFlags: 0

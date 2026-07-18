@@ -46,6 +46,7 @@ public class PlayerFollowCamera : MonoBehaviour
     private float defaultMinDistance;
     private float defaultMaxDistance;
     private float defaultDistance;
+    private bool inputEnabled = true;
 
     private void Start()
     {
@@ -65,8 +66,11 @@ public class PlayerFollowCamera : MonoBehaviour
         if (target == null)
             return;
 
-        ReadMouseInput();
-        ReadZoomInput();
+        if (inputEnabled)
+        {
+            ReadMouseInput();
+            ReadZoomInput();
+        }
 
         UpdateDistance();
         UpdateCamera();
@@ -298,5 +302,10 @@ public class PlayerFollowCamera : MonoBehaviour
     public float GetCurrentDistance()
     {
         return currentDistance;
+    }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        inputEnabled = enabled;
     }
 }

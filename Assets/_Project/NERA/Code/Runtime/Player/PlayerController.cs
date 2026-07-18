@@ -40,6 +40,7 @@ public class PlayerController : MonoBehaviour
     private bool isMoving;
     private bool isSprinting;
     private bool isCrouching;
+    private bool inputEnabled = true;
 
     private static readonly int AnimatorMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int AnimatorCrouchMoveSpeed = Animator.StringToHash("CrouchMoveSpeed");
@@ -71,12 +72,41 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (!inputEnabled)
+        {
+            UpdateWhileInputDisabled();
+            return;
+        }
+
         UpdateGroundedBeforeMove();
         UpdateCrouch();
         UpdateJumpAndGravity();
         Move();
         UpdateStamina();
         UpdateAnimator();
+    }
+
+    private void UpdateWhileInputDisabled()
+    {
+        UpdateGroundedBeforeMove();
+
+        if (!isGrounded)
+            verticalVelocity += gravity * Time.deltaTime;
+
+        CollisionFlags collisionFlags = characterController.Move(
+            Vector3.up * verticalVelocity * Time.deltaTime
+        );
+
+        if ((collisionFlags & CollisionFlags.Below) != 0)
+        {
+            isGrounded = true;
+            verticalVelocity = groundedGravity;
+        }
+
+        isMoving = false;
+        isSprinting = false;
+        isCrouching = false;
+        ApplyIdleAnimatorParameters();
     }
 
     private void UpdateGroundedBeforeMove()
@@ -277,5 +307,36 @@ public class PlayerController : MonoBehaviour
     public void SetCameraTransform(Transform newCameraTransform)
     {
         cameraTransform = newCameraTransform;
+    }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        if (inputEnabled == enabled)
+            return;
+
+        inputEnabled = enabled;
+
+        if (!inputEnabled)
+        {
+            isMoving = false;
+            isSprinting = false;
+            isCrouching = false;
+            ApplyIdleAnimatorParameters();
+
+            if (animator != null)
+                animator.CrossFadeInFixedTime("MoveSpeed", 0.1f);
+        }
+    }
+
+    private void ApplyIdleAnimatorParameters()
+    {
+        if (animator == null)
+            return;
+
+        animator.ResetTrigger(AnimatorJump);
+        animator.SetBool(AnimatorCrouch, false);
+        animator.SetBool(AnimatorGrounded, true);
+        animator.SetFloat(AnimatorMoveSpeed, 0f);
+        animator.SetFloat(AnimatorCrouchMoveSpeed, 0f);
     }
 }

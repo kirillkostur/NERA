@@ -6,9 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
     path: Assets/_Project/NERA/Scenes/Boot/Boot.unity
     guid: 25780f45106d2364b8608b1605ddc67f
   - enabled: 1
