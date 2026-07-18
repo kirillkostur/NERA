@@ -1,33 +1,34 @@
 using UnityEngine;
 
+[DisallowMultipleComponent]
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
+public sealed class PlayerController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private Animator animator;
 
     [Header("Movement")]
-    [SerializeField] private float walkSpeed = 3.5f;
-    [SerializeField] private float sprintSpeed = 6f;
-    [SerializeField] private float crouchSpeed = 1.8f;
-    [SerializeField] private float rotationSpeed = 12f;
+    [SerializeField, Min(0f)] private float walkSpeed = 3.5f;
+    [SerializeField, Min(0f)] private float sprintSpeed = 6f;
+    [SerializeField, Min(0f)] private float crouchSpeed = 1.8f;
+    [SerializeField, Min(0f)] private float rotationSpeed = 12f;
 
     [Header("Jump & Gravity")]
-    [SerializeField] private float jumpHeight = 1.5f;
+    [SerializeField, Min(0f)] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -35f;
     [SerializeField] private float groundedGravity = -5f;
-    [SerializeField] private float groundedGraceTime = 0.12f;
+    [SerializeField, Min(0f)] private float groundedGraceTime = 0.12f;
 
     [Header("Crouch")]
-    [SerializeField] private float crouchHeight = 1.1f;
-    [SerializeField] private float crouchSmooth = 12f;
+    [SerializeField, Min(0.1f)] private float crouchHeight = 1.1f;
+    [SerializeField, Min(0f)] private float crouchSmooth = 12f;
 
     [Header("Stamina")]
-    [SerializeField] private float maxStamina = 5f;
-    [SerializeField] private float staminaDrainRate = 1f;
-    [SerializeField] private float staminaRecoveryRate = 1.5f;
-    [SerializeField] private float minStaminaToSprint = 0.2f;
+    [SerializeField, Min(0.1f)] private float maxStamina = 5f;
+    [SerializeField, Min(0f)] private float staminaDrainRate = 1f;
+    [SerializeField, Min(0f)] private float staminaRecoveryRate = 1.5f;
+    [SerializeField, Min(0f)] private float minStaminaToSprint = 0.2f;
 
     private CharacterController characterController;
 
@@ -41,6 +42,7 @@ public class PlayerController : MonoBehaviour
     private bool isSprinting;
     private bool isCrouching;
     private bool inputEnabled = true;
+    private bool isDead;
 
     private static readonly int AnimatorMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int AnimatorCrouchMoveSpeed = Animator.StringToHash("CrouchMoveSpeed");
@@ -50,11 +52,13 @@ public class PlayerController : MonoBehaviour
 
     public float CurrentStamina => currentStamina;
     public float MaxStamina => maxStamina;
-
     public bool IsGrounded => isGrounded;
     public bool IsMoving => isMoving;
     public bool IsSprinting => isSprinting;
     public bool IsCrouching => isCrouching;
+    public bool IsDead => isDead;
+    public Animator Animator => animator;
+    public CharacterController CharacterController => characterController;
 
     private void Awake()
     {
@@ -72,6 +76,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead)
+            return;
+
         if (!inputEnabled)
         {
             UpdateWhileInputDisabled();
@@ -88,14 +95,16 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateWhileInputDisabled()
     {
+        if (characterController == null || !characterController.enabled)
+            return;
+
         UpdateGroundedBeforeMove();
 
         if (!isGrounded)
             verticalVelocity += gravity * Time.deltaTime;
 
         CollisionFlags collisionFlags = characterController.Move(
-            Vector3.up * verticalVelocity * Time.deltaTime
-        );
+            Vector3.up * verticalVelocity * Time.deltaTime);
 
         if ((collisionFlags & CollisionFlags.Below) != 0)
         {
@@ -113,26 +122,24 @@ public class PlayerController : MonoBehaviour
     {
         isGrounded = characterController.isGrounded;
 
-        if (isGrounded)
-        {
-            lastGroundedTime = Time.time;
+        if (!isGrounded)
+            return;
 
-            if (verticalVelocity < 0f)
-                verticalVelocity = groundedGravity;
-        }
+        lastGroundedTime = Time.time;
+
+        if (verticalVelocity < 0f)
+            verticalVelocity = groundedGravity;
     }
 
     private void UpdateCrouch()
     {
         isCrouching = Input.GetKey(KeyCode.LeftControl);
-
         float targetHeight = isCrouching ? crouchHeight : standingHeight;
 
         characterController.height = Mathf.Lerp(
             characterController.height,
             targetHeight,
-            crouchSmooth * Time.deltaTime
-        );
+            crouchSmooth * Time.deltaTime);
 
         Vector3 center = characterController.center;
         center.y = characterController.height * 0.5f;
@@ -147,7 +154,7 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             isGrounded = false;
-            lastGroundedTime = -999f;
+            lastGroundedTime = float.NegativeInfinity;
 
             if (animator != null)
                 animator.SetTrigger(AnimatorJump);
@@ -161,8 +168,7 @@ public class PlayerController : MonoBehaviour
         Vector3 input = new Vector3(
             Input.GetAxisRaw("Horizontal"),
             0f,
-            Input.GetAxisRaw("Vertical")
-        ).normalized;
+            Input.GetAxisRaw("Vertical")).normalized;
 
         isMoving = input.sqrMagnitude > 0.01f;
         isSprinting = CanSprint();
@@ -179,7 +185,6 @@ public class PlayerController : MonoBehaviour
         velocity.y = verticalVelocity;
 
         CollisionFlags collisionFlags = characterController.Move(velocity * Time.deltaTime);
-
         bool hitGround = (collisionFlags & CollisionFlags.Below) != 0;
 
         if (hitGround)
@@ -208,13 +213,15 @@ public class PlayerController : MonoBehaviour
     {
         if (isSprinting)
         {
-            currentStamina -= staminaDrainRate * Time.deltaTime;
-            currentStamina = Mathf.Max(currentStamina, 0f);
+            currentStamina = Mathf.Max(
+                0f,
+                currentStamina - staminaDrainRate * Time.deltaTime);
             return;
         }
 
-        currentStamina += staminaRecoveryRate * Time.deltaTime;
-        currentStamina = Mathf.Min(currentStamina, maxStamina);
+        currentStamina = Mathf.Min(
+            maxStamina,
+            currentStamina + staminaRecoveryRate * Time.deltaTime);
     }
 
     private float GetCurrentSpeed()
@@ -222,17 +229,13 @@ public class PlayerController : MonoBehaviour
         if (isCrouching)
             return crouchSpeed;
 
-        if (isSprinting)
-            return sprintSpeed;
-
-        return walkSpeed;
+        return isSprinting ? sprintSpeed : walkSpeed;
     }
 
     private Vector3 GetCameraRelativeDirection(Vector3 input)
     {
         Vector3 direction = GetCameraForward() * input.z + GetCameraRight() * input.x;
         direction.y = 0f;
-
         return direction.normalized;
     }
 
@@ -268,12 +271,10 @@ public class PlayerController : MonoBehaviour
             return;
 
         Quaternion targetRotation = Quaternion.LookRotation(direction);
-
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRotation,
-            rotationSpeed * Time.deltaTime
-        );
+            rotationSpeed * Time.deltaTime);
     }
 
     private void UpdateAnimator()
@@ -283,7 +284,6 @@ public class PlayerController : MonoBehaviour
 
         animator.SetBool(AnimatorCrouch, isCrouching);
         animator.SetBool(AnimatorGrounded, isGrounded);
-
         animator.SetFloat(AnimatorMoveSpeed, GetNormalMoveSpeed(), 0.1f, Time.deltaTime);
         animator.SetFloat(AnimatorCrouchMoveSpeed, GetCrouchMoveSpeed(), 0.1f, Time.deltaTime);
     }
@@ -298,10 +298,7 @@ public class PlayerController : MonoBehaviour
 
     private float GetCrouchMoveSpeed()
     {
-        if (!isCrouching || !isMoving)
-            return 0f;
-
-        return 1f;
+        return isCrouching && isMoving ? 1f : 0f;
     }
 
     public void SetCameraTransform(Transform newCameraTransform)
@@ -311,21 +308,37 @@ public class PlayerController : MonoBehaviour
 
     public void SetInputEnabled(bool enabled)
     {
-        if (inputEnabled == enabled)
+        if (isDead)
             return;
 
         inputEnabled = enabled;
 
-        if (!inputEnabled)
-        {
-            isMoving = false;
-            isSprinting = false;
-            isCrouching = false;
-            ApplyIdleAnimatorParameters();
+        if (inputEnabled)
+            return;
 
-            if (animator != null)
-                animator.CrossFadeInFixedTime("MoveSpeed", 0.1f);
-        }
+        ResetMovementState();
+        ApplyIdleAnimatorParameters();
+    }
+
+    public void HandleDeath()
+    {
+        if (isDead)
+            return;
+
+        isDead = true;
+        inputEnabled = false;
+        verticalVelocity = 0f;
+        ResetMovementState();
+
+        if (characterController != null)
+            characterController.enabled = false;
+    }
+
+    private void ResetMovementState()
+    {
+        isMoving = false;
+        isSprinting = false;
+        isCrouching = false;
     }
 
     private void ApplyIdleAnimatorParameters()
@@ -338,5 +351,12 @@ public class PlayerController : MonoBehaviour
         animator.SetBool(AnimatorGrounded, true);
         animator.SetFloat(AnimatorMoveSpeed, 0f);
         animator.SetFloat(AnimatorCrouchMoveSpeed, 0f);
+    }
+
+    private void OnValidate()
+    {
+        maxStamina = Mathf.Max(0.1f, maxStamina);
+        minStaminaToSprint = Mathf.Clamp(minStaminaToSprint, 0f, maxStamina);
+        crouchHeight = Mathf.Max(0.1f, crouchHeight);
     }
 }

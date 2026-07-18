@@ -30,6 +30,7 @@ namespace NERA.Enemies
         [SerializeField] private Color energyColor = new Color(0.1f, 0.65f, 1f);
 
         private Transform target;
+        private PlayerHealth targetHealth;
         private State state;
         private float currentHealth;
         private float nextAttackTime;
@@ -61,8 +62,9 @@ namespace NERA.Enemies
             Hover();
             AcquireTarget();
 
-            if (target == null)
+            if (!HasLivingTarget())
             {
+                ClearTarget();
                 state = State.Idle;
                 return;
             }
@@ -70,7 +72,7 @@ namespace NERA.Enemies
             float distance = Vector3.Distance(transform.position, target.position);
             if (distance > detectionRadius)
             {
-                target = null;
+                ClearTarget();
                 state = State.Idle;
                 return;
             }
@@ -105,15 +107,50 @@ namespace NERA.Enemies
 
         private void AcquireTarget()
         {
-            if (target != null)
+            if (HasLivingTarget())
                 return;
 
+            ClearTarget();
+
             GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null &&
-                Vector3.Distance(transform.position, player.transform.position) <= detectionRadius)
-            {
-                target = player.transform;
-            }
+            if (player == null)
+                return;
+
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth == null)
+                playerHealth = player.GetComponentInParent<PlayerHealth>();
+
+            if (playerHealth == null || !playerHealth.IsAlive)
+                return;
+
+            if (Vector3.Distance(transform.position, player.transform.position) > detectionRadius)
+                return;
+
+            target = player.transform;
+            targetHealth = playerHealth;
+            targetHealth.Died += HandleTargetDied;
+        }
+
+        private bool HasLivingTarget()
+        {
+            return target != null &&
+                   targetHealth != null &&
+                   targetHealth.IsAlive;
+        }
+
+        private void HandleTargetDied()
+        {
+            ClearTarget();
+            state = State.Idle;
+        }
+
+        private void ClearTarget()
+        {
+            if (targetHealth != null)
+                targetHealth.Died -= HandleTargetDied;
+
+            target = null;
+            targetHealth = null;
         }
 
         private void PursueTarget()
@@ -129,6 +166,13 @@ namespace NERA.Enemies
 
         private void TryAttack()
         {
+            if (!HasLivingTarget())
+            {
+                ClearTarget();
+                state = State.Idle;
+                return;
+            }
+
             if (Time.time < nextAttackTime)
                 return;
 
@@ -201,8 +245,15 @@ namespace NERA.Enemies
                 dropRenderer.material.color = energyColor;
         }
 
+        private void OnDisable()
+        {
+            ClearTarget();
+        }
+
         private void OnDestroy()
         {
+            ClearTarget();
+
             if (runtimeMaterial != null)
                 Destroy(runtimeMaterial);
         }
