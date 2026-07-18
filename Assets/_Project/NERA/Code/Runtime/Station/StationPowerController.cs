@@ -1,4 +1,5 @@
 using System;
+using NERA.Energy;
 using UnityEngine;
 
 namespace NERA.Station
@@ -26,18 +27,45 @@ namespace NERA.Station
             State = initialState;
         }
 
+        private void Start()
+        {
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy == null)
+                return;
+
+            energy.StateChanged += HandleEnergyStateChanged;
+            SyncFromEnergy(energy);
+        }
+
         public bool RestorePower()
         {
             if (IsPowered)
                 return false;
 
-            SetState(StationPowerState.Online);
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                energy.SetGridEnabled(true);
+                SyncFromEnergy(energy);
+            }
+            else
+            {
+                SetState(StationPowerState.Online);
+            }
+
+            if (!IsPowered)
+                return false;
+
             Debug.Log("StationPowerController: Station power restored.", this);
             return true;
         }
 
         public void SetState(StationPowerState newState)
         {
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+                energy.SetGridEnabled(newState == StationPowerState.Online);
+
             if (State == newState)
                 return;
 
@@ -45,8 +73,33 @@ namespace NERA.Station
             StateChanged?.Invoke(State);
         }
 
+        private void HandleEnergyStateChanged(EnergyState _)
+        {
+            SyncFromEnergy(EnergySystemController.Instance);
+        }
+
+        private void SyncFromEnergy(EnergySystemController energy)
+        {
+            if (energy == null)
+                return;
+
+            StationPowerState target =
+                energy.HasUsablePower
+                    ? StationPowerState.Online
+                    : StationPowerState.Offline;
+
+            if (State == target)
+                return;
+
+            State = target;
+            StateChanged?.Invoke(State);
+        }
+
         private void OnDestroy()
         {
+            if (EnergySystemController.Instance != null)
+                EnergySystemController.Instance.StateChanged -= HandleEnergyStateChanged;
+
             if (Instance == this)
                 Instance = null;
         }

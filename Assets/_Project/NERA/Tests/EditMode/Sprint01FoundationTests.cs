@@ -6,8 +6,12 @@ using UnityEngine;
 using NeraInteractionMode = NERA.Interaction.InteractionMode;
 using NERA.Drone;
 using NERA.Combat;
+using NERA.Energy;
 using NERA.Enemies;
 using NERA.Expeditions;
+using NERA.Inventory;
+using NERA.Items;
+using NERA.Research;
 using NERA.Station;
 
 namespace NERA.Tests
@@ -90,6 +94,127 @@ namespace NERA.Tests
         }
     }
 
+    public sealed class StationEnergySystemTests
+    {
+        private GameObject root;
+        private StationEnvironmentController environment;
+        private EnergySystemController energy;
+
+        [SetUp]
+        public void SetUp()
+        {
+            ClearSingleton(typeof(StationEnvironmentController));
+            ClearSingleton(typeof(EnergySystemController));
+            root = new GameObject("Test_EnergySystem");
+            environment = root.AddComponent<StationEnvironmentController>();
+            energy = root.AddComponent<EnergySystemController>();
+            SetSingleton(typeof(StationEnvironmentController), environment);
+            SetSingleton(typeof(EnergySystemController), energy);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(root);
+            ClearSingleton(typeof(StationEnvironmentController));
+            ClearSingleton(typeof(EnergySystemController));
+        }
+
+        [Test]
+        public void MultipleBatteriesShareCapacityAndInitialCharge()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RegisterBattery("battery_02", 1000f, 1000f);
+
+            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(2000f));
+        }
+
+        [Test]
+        public void ReloadingStationDoesNotDuplicateBatteryOrSolarPanel()
+        {
+            energy.RegisterBattery("station/battery_01", 1000f, 1000f);
+            energy.RegisterSolarPanel("station/panel_01", 1f, 0f);
+
+            energy.RegisterBattery("station/battery_01", 1000f, 1000f);
+            energy.RegisterSolarPanel("station/panel_01", 1f, 0f);
+
+            environment.SetTime(12f);
+            environment.SetWeather(StationWeather.Clear);
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+            Assert.That(
+                energy.CurrentGeneration,
+                Is.EqualTo(energy.Config.ClearDayGeneration)
+            );
+        }
+
+        [Test]
+        public void SolarPanelGeneratesByDayButNotAtNight()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 0f);
+            energy.RegisterSolarPanel("panel_01", 1f, 0f);
+            environment.SetWeather(StationWeather.Clear);
+
+            environment.SetTime(12f);
+            energy.AdvanceSimulation(1f);
+            Assert.That(
+                energy.CurrentGeneration,
+                Is.EqualTo(energy.Config.ClearDayGeneration)
+            );
+
+            environment.SetTime(0f);
+            energy.AdvanceSimulation(1f);
+            Assert.That(energy.CurrentGeneration, Is.Zero);
+        }
+
+        [Test]
+        public void EmergencyReserveDisconnectsNonEssentialConsumers()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RegisterConsumer("laboratory", 4f, true);
+            energy.SetConsumerActive("laboratory", true);
+            energy.RestoreState(200f, true);
+            energy.AdvanceSimulation(0.1f);
+
+            Assert.That(energy.State, Is.EqualTo(EnergyState.Emergency));
+            Assert.That(energy.IsConsumerPowered("laboratory"), Is.False);
+            Assert.That(energy.CurrentConsumption, Is.Zero);
+        }
+
+        [Test]
+        public void LaboratoryCannotReceivePowerBeforeGridStarts()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RegisterConsumer("laboratory", 4f, true);
+
+            Assert.That(energy.CanPowerConsumer("laboratory"), Is.False);
+
+            energy.SetGridEnabled(true);
+
+            Assert.That(energy.CanPowerConsumer("laboratory"), Is.True);
+        }
+
+        private static void ClearSingleton(System.Type controllerType)
+        {
+            SetSingleton(controllerType, null);
+        }
+
+        private static void SetSingleton(
+            System.Type controllerType,
+            object value
+        )
+        {
+            PropertyInfo instanceProperty = controllerType.GetProperty(
+                "Instance",
+                BindingFlags.Static | BindingFlags.Public
+            );
+            MethodInfo setter = instanceProperty?.GetSetMethod(true);
+            setter?.Invoke(null, new[] { value });
+        }
+    }
+
     public sealed class Sprint03DroneStateTests
     {
         private GameObject root;
@@ -146,14 +271,10 @@ namespace NERA.Tests
         [Test]
         public void DroneScanDiscoversConfiguredLocation()
         {
-            SerializedObject droneObject = new SerializedObject(drone);
-            droneObject.FindProperty("scanLocation").objectReferenceValue = location;
-            droneObject.ApplyModifiedPropertiesWithoutUndo();
-
             power.RestorePower();
             drone.RefreshAvailability();
 
-            Assert.That(drone.LaunchScan(), Is.True);
+            Assert.That(drone.LaunchScan(location), Is.True);
             Assert.That(drone.State, Is.EqualTo(DroneState.Scanning));
 
             drone.AdvanceScan(1f);
@@ -206,6 +327,240 @@ namespace NERA.Tests
             Assert.That(controller, Is.InstanceOf<IDamageable>());
             Assert.That(controller.IsAlive, Is.True);
             Object.DestroyImmediate(enemy);
+        }
+    }
+
+    public sealed class Sprint05InventoryTests
+    {
+        private GameObject root;
+        private PlayerInventory inventory;
+        private readonly System.Collections.Generic.List<ItemData> createdItems = new System.Collections.Generic.List<ItemData>();
+
+        [SetUp]
+        public void SetUp()
+        {
+            root = new GameObject("Test_PlayerInventory");
+            inventory = root.AddComponent<PlayerInventory>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            foreach (ItemData item in createdItems)
+                Object.DestroyImmediate(item);
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void ItemsRouteToTheirDedicatedSlotGroups()
+        {
+            ItemData engineering = CreateItem("engineering", ItemType.EngineeringPart);
+            ItemData sample = CreateItem("sample", ItemType.ResearchSample);
+            ItemData equipment = CreateItem("equipment", ItemType.Equipment);
+            ItemData anomaly = CreateItem("anomaly", ItemType.Anomaly);
+
+            Assert.That(inventory.AddItem(engineering), Is.True);
+            Assert.That(inventory.AddItem(sample), Is.True);
+            Assert.That(inventory.AddItem(equipment), Is.True);
+            Assert.That(inventory.AddItem(anomaly), Is.True);
+
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 0), Is.EqualTo(engineering));
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 1), Is.EqualTo(sample));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment));
+            Assert.That(inventory.GetItem(InventorySlotGroup.Anomaly, 0), Is.EqualTo(anomaly));
+        }
+
+        [Test]
+        public void EqualItemsOccupySeparateBackpackSlots()
+        {
+            ItemData first = CreateItem("same_part", ItemType.EngineeringPart);
+            ItemData second = CreateItem("same_part", ItemType.EngineeringPart);
+
+            Assert.That(inventory.AddItem(first), Is.True);
+            Assert.That(inventory.AddItem(second), Is.True);
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 0), Is.EqualTo(first));
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 1), Is.EqualTo(second));
+            Assert.That(inventory.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void BackpackCapacityComesFromInventoryConfig()
+        {
+            InventoryConfig config = ScriptableObject.CreateInstance<InventoryConfig>();
+            SerializedObject serialized = new SerializedObject(config);
+            serialized.FindProperty("backpackCapacity").intValue = 8;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            inventory.Configure(config);
+
+            Assert.That(inventory.BackpackCapacity, Is.EqualTo(8));
+            Assert.That(inventory.BackpackSlots.Count, Is.EqualTo(8));
+
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void BackpackCapacityIsLimitedToAuthoredSpawnPoints()
+        {
+            InventoryConfig config = ScriptableObject.CreateInstance<InventoryConfig>();
+            SerializedObject serialized = new SerializedObject(config);
+            serialized.FindProperty("backpackCapacity").intValue = 20;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            inventory.Configure(config);
+
+            Assert.That(
+                inventory.BackpackCapacity,
+                Is.EqualTo(InventoryConfig.MaxBackpackCapacity)
+            );
+            Assert.That(
+                inventory.BackpackSlots.Count,
+                Is.EqualTo(InventoryConfig.MaxBackpackCapacity)
+            );
+
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void StructuredRestorePreservesEmptySlotPositions()
+        {
+            ItemData first = CreateItem("first", ItemType.EngineeringPart);
+            ItemData third = CreateItem("third", ItemType.EngineeringPart);
+            ItemData[] backpack =
+            {
+                first,
+                null,
+                third,
+                null,
+                null
+            };
+
+            inventory.RestoreSlots(
+                backpack,
+                new ItemData[PlayerInventory.AnomalyCapacity],
+                new ItemData[PlayerInventory.QuickAccessCapacity]
+            );
+
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 0),
+                Is.EqualTo(first)
+            );
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 1),
+                Is.Null
+            );
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 2),
+                Is.EqualTo(third)
+            );
+        }
+
+        [Test]
+        public void RemovingSelectedSlotDoesNotRemoveEqualItemFromAnotherSlot()
+        {
+            ItemData first = CreateItem("same_part", ItemType.EngineeringPart);
+            ItemData second = CreateItem("same_part", ItemType.EngineeringPart);
+            inventory.AddItem(first);
+            inventory.AddItem(second);
+
+            Assert.That(
+                inventory.RemoveItemAt(
+                    InventorySlotGroup.Backpack,
+                    1,
+                    out ItemData removed
+                ),
+                Is.True
+            );
+            Assert.That(removed, Is.EqualTo(second));
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 0),
+                Is.EqualTo(first)
+            );
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 1),
+                Is.Null
+            );
+        }
+
+        private ItemData CreateItem(string id, ItemType type)
+        {
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+            SerializedObject serialized = new SerializedObject(item);
+            serialized.FindProperty("itemId").stringValue = id;
+            serialized.FindProperty("displayName").stringValue = id;
+            serialized.FindProperty("itemType").enumValueIndex = (int)type;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            createdItems.Add(item);
+            return item;
+        }
+    }
+
+    public sealed class Sprint05LaboratoryTests
+    {
+        private GameObject systems;
+        private GameObject player;
+        private StationPowerController power;
+        private ResearchController research;
+        private PlayerInventory inventory;
+        private ResearchDefinition definition;
+        private ItemData sample;
+
+        [SetUp]
+        public void SetUp()
+        {
+            systems = new GameObject("Test_ResearchSystems");
+            power = systems.AddComponent<StationPowerController>();
+            research = systems.AddComponent<ResearchController>();
+            research.SetPowerSource(power);
+
+            player = new GameObject("Test_ResearchPlayer");
+            inventory = player.AddComponent<PlayerInventory>();
+
+            definition = ScriptableObject.CreateInstance<ResearchDefinition>();
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            serializedDefinition.FindProperty("researchId").stringValue = "test_sample_research";
+            serializedDefinition.FindProperty("displayName").stringValue = "Test Sample";
+            serializedDefinition.FindProperty("analysisDuration").floatValue = 2f;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+
+            sample = ScriptableObject.CreateInstance<ItemData>();
+            SerializedObject serializedItem = new SerializedObject(sample);
+            serializedItem.FindProperty("itemId").stringValue = "test_sample";
+            serializedItem.FindProperty("displayName").stringValue = "Test Sample";
+            serializedItem.FindProperty("itemType").enumValueIndex = (int)ItemType.ResearchSample;
+            serializedItem.FindProperty("researchDefinition").objectReferenceValue = definition;
+            serializedItem.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(sample);
+            Object.DestroyImmediate(definition);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(systems);
+        }
+
+        [Test]
+        public void AnalyzedSampleRemainsInLabAndCannotBeScannedAgain()
+        {
+            power.RestorePower();
+            Assert.That(inventory.AddItem(sample), Is.True, "Sample should enter backpack.");
+            Assert.That(research.LoadItem(sample, inventory), Is.True, "Sample should enter laboratory slot.");
+            Assert.That(research.StartAnalysis(), Is.True, "Powered laboratory should start scanning.");
+
+            research.AdvanceAnalysis(2f);
+
+            Assert.That(research.State, Is.EqualTo(ResearchController.ResearchState.Complete));
+            Assert.That(research.LoadedItem, Is.EqualTo(sample));
+            Assert.That(research.IsAnalyzed(sample), Is.True);
+
+            Assert.That(research.RetrieveLoadedItem(), Is.True, "Analyzed sample should return to backpack.");
+            Assert.That(inventory.Contains(sample.ItemId), Is.True);
+
+            Assert.That(research.LoadItem(sample, inventory), Is.True, "Analyzed sample should still be loadable for inspection.");
+            Assert.That(research.State, Is.EqualTo(ResearchController.ResearchState.Complete));
+            Assert.That(research.StartAnalysis(), Is.False);
         }
     }
 }

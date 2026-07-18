@@ -65,7 +65,7 @@ Status: `PARTIAL`
 - TODO: replace the Blue IO placeholder mesh with the authored mesh + VFX prefab.
 - TODO: final combat feedback, audio, balancing and player-facing health/objective HUD.
 
-## Sprint 05 - Research, Library and Translation
+## Sprint 05 - Research and Library
 
 Status: `TODO`
 
@@ -73,7 +73,6 @@ Status: `TODO`
 - TODO: Memory Core analysis flow.
 - TODO: library entry IDs, unlock state and controller.
 - TODO: Library UI entry selection.
-- TODO: translation level and controller.
 - TODO: post-research objective hint.
 
 ## Sprint 06 - Persistent State and Save
@@ -140,7 +139,7 @@ Status: `PARTIAL`
 2. Finish Sprint 02 build verification.
 3. Implement the missing Sprint 03 drone state flow.
 4. Complete Expedition 01 gameplay content from Sprint 04.
-5. Implement Sprint 05 Research, Library and Translation.
+5. Implement Sprint 05 Research and Library.
 6. Consolidate state and save in Sprint 06.
 7. Complete polish, QA and First Playable Lock.
 8. Return to the remaining Sprint 10 foundation.

@@ -1,5 +1,6 @@
 using System;
 using NERA.Expeditions;
+using NERA.Energy;
 using NERA.Station;
 using UnityEngine;
 
@@ -7,8 +8,9 @@ namespace NERA.Drone
 {
     public sealed class DroneScanController : MonoBehaviour
     {
+        private const string DroneChargerConsumerId = "drone_charger";
         [SerializeField, Min(0.1f)] private float fallbackScanDuration = 3f;
-        [SerializeField] private ExpeditionLocationData scanLocation;
+        private ExpeditionLocationData scanLocation;
 
         public static DroneScanController Instance { get; private set; }
 
@@ -26,10 +28,13 @@ namespace NERA.Drone
             scanLocation != null
                 ? scanLocation.DroneScanDuration
                 : fallbackScanDuration;
+        public float RechargeRemaining { get; private set; }
+        public bool IsCharging => RechargeRemaining > 0f;
 
         private float elapsedScanTime;
         private StationPowerController stationPower;
         private ExpeditionDiscoveryController discovery;
+        private EnergySystemController registeredEnergySystem;
 
         private void Awake()
         {
@@ -40,6 +45,8 @@ namespace NERA.Drone
             }
 
             Instance = this;
+
+            EnsureEnergyRegistration();
         }
 
         private void OnEnable()
@@ -50,12 +57,14 @@ namespace NERA.Drone
 
         private void Start()
         {
+            EnsureEnergyRegistration();
             RefreshAvailability();
         }
 
         private void Update()
         {
             AdvanceScan(Time.deltaTime);
+            AdvanceRecharge(Time.deltaTime);
         }
 
         public bool LaunchScan()
@@ -86,6 +95,7 @@ namespace NERA.Drone
             CacheDependencies();
 
             return State != DroneState.Scanning &&
+                !IsCharging &&
                 stationPower != null &&
                 stationPower.IsPowered &&
                 discovery != null &&
@@ -109,21 +119,43 @@ namespace NERA.Drone
                 CompleteScan();
         }
 
+        public void AdvanceRecharge(float deltaTime)
+        {
+            if (!IsCharging || deltaTime <= 0f)
+                return;
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                EnsureEnergyRegistration();
+                if (!energy.IsConsumerPowered(DroneChargerConsumerId))
+                    return;
+            }
+
+            RechargeRemaining = Mathf.Max(0f, RechargeRemaining - deltaTime);
+            if (RechargeRemaining <= 0f)
+            {
+                energy?.SetConsumerActive(DroneChargerConsumerId, false);
+                scanLocation = null;
+                elapsedScanTime = 0f;
+                bool isPowered =
+                    stationPower != null && stationPower.IsPowered;
+                SetState(isPowered ? DroneState.Ready : DroneState.Locked);
+            }
+        }
+
         public void RefreshAvailability()
         {
             CacheDependencies();
 
-            if (scanLocation != null &&
-                discovery != null &&
-                discovery.IsDiscovered(scanLocation))
+            if (State == DroneState.Scanning)
+                return;
+
+            if (IsCharging)
             {
-                elapsedScanTime = CurrentScanDuration;
                 SetState(DroneState.ScanComplete);
                 return;
             }
-
-            if (State == DroneState.Scanning)
-                return;
 
             bool isPowered = stationPower != null && stationPower.IsPowered;
             SetState(isPowered ? DroneState.Ready : DroneState.Locked);
@@ -137,6 +169,15 @@ namespace NERA.Drone
                 discovery.Discover(scanLocation);
 
             SetState(DroneState.ScanComplete);
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                EnsureEnergyRegistration();
+                RechargeRemaining = energy.Config.DroneRechargeDuration;
+                energy.SetConsumerActive(DroneChargerConsumerId, true);
+            }
+
             ScanCompleted?.Invoke(
                 new DroneScanResult(scanLocation, newlyDiscovered)
             );
@@ -150,6 +191,24 @@ namespace NERA.Drone
 
             if (discovery == null)
                 discovery = ExpeditionDiscoveryController.Instance;
+        }
+
+        private void EnsureEnergyRegistration()
+        {
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy == null || registeredEnergySystem == energy)
+                return;
+
+            energy.RegisterConsumer(
+                DroneChargerConsumerId,
+                energy.Config.DroneChargingConsumption,
+                true
+            );
+            energy.SetConsumerActive(
+                DroneChargerConsumerId,
+                IsCharging
+            );
+            registeredEnergySystem = energy;
         }
 
         private void Subscribe()
@@ -186,6 +245,10 @@ namespace NERA.Drone
         private void OnDestroy()
         {
             Unsubscribe();
+            EnergySystemController.Instance?.SetConsumerActive(
+                DroneChargerConsumerId,
+                false
+            );
 
             if (Instance == this)
                 Instance = null;

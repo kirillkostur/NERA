@@ -1,9 +1,11 @@
 using NERA.Interaction;
 using NERA.Core;
 using NERA.Drone;
+using NERA.Energy;
 using NERA.Expeditions;
 using NERA.Library;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -12,6 +14,7 @@ namespace NERA.Terminal
 {
     public sealed class TerminalUIScreen : MonoBehaviour
     {
+        private const string TerminalConsumerId = "central_terminal";
         [Header("View")]
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private Button exitButton;
@@ -22,12 +25,12 @@ namespace NERA.Terminal
         [SerializeField] private GameObject statusPanel;
         [SerializeField] private GameObject mapPanel;
         [SerializeField] private GameObject libraryPanel;
-        [SerializeField] private Text statusText;
-        [SerializeField] private Text mapText;
-        [SerializeField] private Text locationListText;
+        [SerializeField] private TMP_Text statusText;
+        [SerializeField] private TMP_Text mapText;
+        [SerializeField] private TMP_Text locationListText;
         [SerializeField] private Image mapPreview;
         [SerializeField] private Button[] mapSectorButtons = new Button[9];
-        [SerializeField] private Text libraryText;
+        [SerializeField] private TMP_Text libraryText;
         [SerializeField] private Image libraryIllustration;
 
         [Header("First Playable Location")]
@@ -68,6 +71,8 @@ namespace NERA.Terminal
             if (canvasGroup == null)
                 canvasGroup = GetComponent<CanvasGroup>();
 
+            CacheTextReferences();
+
             if (exitButton != null)
                 exitButton.onClick.AddListener(Close);
 
@@ -99,6 +104,17 @@ namespace NERA.Terminal
         private void Start()
         {
             SubscribeToDiscovery();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                energy.RegisterConsumer(
+                    TerminalConsumerId,
+                    energy.Config.TerminalConsumption,
+                    false
+                );
+                energy.SetConsumerActive(TerminalConsumerId, false);
+            }
         }
 
         private void Update()
@@ -111,6 +127,13 @@ namespace NERA.Terminal
 
             if (IsOpen && statusPanel != null && statusPanel.activeSelf)
                 RefreshStatusSection();
+
+            if (IsOpen &&
+                EnergySystemController.Instance != null &&
+                !EnergySystemController.Instance.IsConsumerPowered(TerminalConsumerId))
+            {
+                Close();
+            }
         }
 
         public void Open()
@@ -119,6 +142,23 @@ namespace NERA.Terminal
                 return;
 
             CachePlayerControllers();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                energy.RegisterConsumer(
+                    TerminalConsumerId,
+                    energy.Config.TerminalConsumption,
+                    false
+                );
+                energy.SetConsumerActive(TerminalConsumerId, true);
+                if (!energy.IsConsumerPowered(TerminalConsumerId))
+                {
+                    energy.SetConsumerActive(TerminalConsumerId, false);
+                    return;
+                }
+            }
+
             IsOpen = true;
 
             if (playerController != null)
@@ -142,6 +182,10 @@ namespace NERA.Terminal
                 return;
 
             IsOpen = false;
+            EnergySystemController.Instance?.SetConsumerActive(
+                TerminalConsumerId,
+                false
+            );
             SetVisible(false);
 
             if (playerController != null)
@@ -167,15 +211,25 @@ namespace NERA.Terminal
         {
             Station.StationPowerController power = Station.StationPowerController.Instance;
             string powerState = power != null && power.IsPowered ? "ONLINE" : "OFFLINE";
+            EnergySystemController energy = EnergySystemController.Instance;
             DroneScanController drone = DroneScanController.Instance;
             string droneState = drone != null ? drone.State.ToString().ToUpperInvariant() : "UNAVAILABLE";
 
             if (drone != null && drone.State == DroneState.Scanning)
                 droneState += $" {Mathf.RoundToInt(drone.ScanProgress * 100f)}%";
+            else if (drone != null && drone.IsCharging)
+                droneState =
+                    $"RECHARGING {Mathf.CeilToInt(drone.RechargeRemaining)}S";
 
             SetText(
                 statusText,
                 $"STATION STATUS\n\nPOWER GRID        {powerState}\n" +
+                (energy != null
+                    ? $"ENERGY            {energy.CurrentEnergy:0} / {energy.TotalCapacity:0}\n" +
+                      $"GENERATION        +{energy.CurrentGeneration:0.0} / SEC\n" +
+                      $"CONSUMPTION       -{energy.CurrentConsumption:0.0} / SEC\n" +
+                      $"GRID MODE         {energy.State.ToString().ToUpperInvariant()}\n"
+                    : string.Empty) +
                 "TERMINAL          OPERATIONAL\n" +
                 $"DRONE UPLINK      {droneState}\n" +
                 "EXPEDITION LINK   STANDBY"
@@ -287,6 +341,21 @@ namespace NERA.Terminal
                 return;
             }
 
+            if (drone != null && drone.IsCharging)
+            {
+                int seconds = Mathf.CeilToInt(drone.RechargeRemaining);
+                SetText(
+                    mapText,
+                    $"DRONE RECHARGING\n\nThe drone is preparing for its next survey.\nReady in approximately {seconds} seconds."
+                );
+                SetMapAction(
+                    true,
+                    $"RECHARGING {seconds}S",
+                    false
+                );
+                return;
+            }
+
             if (drone != null &&
                 drone.State == DroneState.Scanning &&
                 drone.ScanLocation == location)
@@ -328,15 +397,44 @@ namespace NERA.Terminal
         {
             ShowOnly(libraryPanel);
 
-            if (libraryEntries.Count == 0)
+            List<LibraryEntryData> availableEntries =
+                new List<LibraryEntryData>(libraryEntries);
+            availableEntries.AddRange(Resources.LoadAll<LibraryEntryData>("Library"));
+
+            availableEntries.RemoveAll(entry => entry == null);
+
+            if (availableEntries.Count == 0)
             {
                 SetText(libraryText, "LIBRARY\n\nNo entries available.");
                 SetLibraryIllustration(null);
                 return;
             }
 
-            LibraryEntryData entry = libraryEntries[0];
-            SetText(libraryText, $"{entry.Title}\n\n{entry.Body}");
+            LibraryController library = LibraryController.Instance;
+            LibraryEntryData entry = availableEntries.Find(
+                candidate => library != null &&
+                    candidate.EntryId == library.LastUnlockedEntryId
+            );
+
+            if (entry == null)
+            {
+                entry = availableEntries.Find(
+                    candidate => library == null || library.IsUnlocked(candidate)
+                );
+            }
+
+            if (entry == null)
+            {
+                SetText(libraryText, "LIBRARY\n\nNo recovered records have been analyzed.");
+                SetLibraryIllustration(null);
+                return;
+            }
+
+            SetText(
+                libraryText,
+                $"{entry.Title}\n\n" +
+                $"RESEARCH DATA\n{entry.Description}"
+            );
             SetLibraryIllustration(entry.Illustration);
         }
 
@@ -401,7 +499,7 @@ namespace NERA.Terminal
                 panel.SetActive(active);
         }
 
-        private static void SetText(Text target, string message)
+        private static void SetText(TMP_Text target, string message)
         {
             if (target != null)
                 target.text = message;
@@ -421,7 +519,7 @@ namespace NERA.Terminal
             travelButton.gameObject.SetActive(visible);
             travelButton.interactable = interactable;
 
-            Text buttonLabel = travelButton.GetComponentInChildren<Text>(true);
+            TMP_Text buttonLabel = travelButton.GetComponentInChildren<TMP_Text>(true);
 
             if (buttonLabel != null)
                 buttonLabel.text = label;
@@ -447,6 +545,36 @@ namespace NERA.Terminal
 
             if (followCamera == null)
                 followCamera = FindFirstObjectByType<PlayerFollowCamera>();
+        }
+
+        private void CacheTextReferences()
+        {
+            if (statusText == null && statusPanel != null)
+                statusText = FindTextByName(statusPanel.transform, "StatusText") ??
+                    statusPanel.GetComponentInChildren<TMP_Text>(true);
+
+            if (mapText == null && mapPanel != null)
+                mapText = FindTextByName(mapPanel.transform, "MapText") ??
+                    mapPanel.GetComponentInChildren<TMP_Text>(true);
+
+            if (locationListText == null && mapPanel != null)
+                locationListText = FindTextByName(mapPanel.transform, "LocationListText");
+
+            if (libraryText == null && libraryPanel != null)
+                libraryText = FindTextByName(libraryPanel.transform, "LibraryText") ??
+                    libraryPanel.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        private static TMP_Text FindTextByName(Transform root, string objectName)
+        {
+            TMP_Text[] texts = root.GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text text in texts)
+            {
+                if (text.name == objectName)
+                    return text;
+            }
+
+            return null;
         }
 
         private void SubscribeToDiscovery()
@@ -485,6 +613,10 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            EnergySystemController.Instance?.SetConsumerActive(
+                TerminalConsumerId,
+                false
+            );
             if (subscribedDiscovery != null)
                 subscribedDiscovery.LocationDiscovered -= HandleLocationDiscovered;
 

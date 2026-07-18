@@ -172,16 +172,28 @@ namespace NERA.Combat
                 if (body == null)
                     continue;
 
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-                body.useGravity = active;
-                body.detectCollisions = active;
-                body.isKinematic = !active;
-
                 if (active)
+                {
+                    body.isKinematic = false;
+                    body.linearVelocity = Vector3.zero;
+                    body.angularVelocity = Vector3.zero;
+                    body.useGravity = true;
+                    body.detectCollisions = true;
                     body.WakeUp();
+                }
                 else
+                {
+                    if (!body.isKinematic)
+                    {
+                        body.linearVelocity = Vector3.zero;
+                        body.angularVelocity = Vector3.zero;
+                    }
+
+                    body.useGravity = false;
+                    body.detectCollisions = false;
+                    body.isKinematic = true;
                     body.Sleep();
+                }
             }
 
             if (active)

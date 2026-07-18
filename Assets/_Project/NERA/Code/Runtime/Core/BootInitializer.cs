@@ -1,4 +1,8 @@
 using NERA.Interaction;
+using NERA.Expeditions;
+using NERA.Library;
+using NERA.Research;
+using NERA.Station;
 using NERA.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,7 +27,29 @@ namespace NERA.Core
 
             instance = this;
             DontDestroyOnLoad(gameObject);
+            ConnectPersistentServices();
             ConnectRuntimeReferences();
+        }
+
+        private void ConnectPersistentServices()
+        {
+            LibraryController library = GetComponent<LibraryController>();
+            ResearchController research = GetComponent<ResearchController>();
+            ExpeditionProgressController expeditionProgress =
+                GetComponent<ExpeditionProgressController>();
+
+            if (library == null ||
+                research == null ||
+                expeditionProgress == null)
+            {
+                Debug.LogError(
+                    "BootInitializer: RuntimeRoot is missing one or more persistent progression services.",
+                    this
+                );
+                return;
+            }
+
+            research.SetPowerSource(GetComponent<StationPowerController>());
         }
 
         private void Start()

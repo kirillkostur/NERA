@@ -63,6 +63,9 @@ public class PlayerFollowCamera : MonoBehaviour
         if (target == null && autoFindPlayerIfMissing)
             TryFindPlayerTarget();
 
+        if (inputEnabled)
+            ApplyGameplayCursorState();
+
         if (target == null)
             return;
 
@@ -307,5 +310,8 @@ public class PlayerFollowCamera : MonoBehaviour
     public void SetInputEnabled(bool enabled)
     {
         inputEnabled = enabled;
+
+        if (inputEnabled)
+            ApplyGameplayCursorState();
     }
 }

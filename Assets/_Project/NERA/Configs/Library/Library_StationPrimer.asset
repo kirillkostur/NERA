@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entryId: station_primer
   title: NERA STATION // OPERATIONS PRIMER
-  body: 'The station serves as the expedition hub.
+  description: 'The station serves as the expedition hub.
 
 
     Restore and maintain critical

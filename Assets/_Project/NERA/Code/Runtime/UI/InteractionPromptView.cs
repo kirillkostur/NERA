@@ -1,6 +1,6 @@
 using NERA.Interaction;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace NERA.UI
 {
@@ -11,13 +11,16 @@ namespace NERA.UI
 
         [Header("View")]
         [SerializeField] private CanvasGroup canvasGroup;
-        [SerializeField] private Text promptText;
+        [SerializeField] private TMP_Text promptText;
         [SerializeField] private string interactionKeyLabel = "E";
 
         private void Awake()
         {
             if (canvasGroup == null)
                 canvasGroup = GetComponent<CanvasGroup>();
+
+            if (promptText == null)
+                promptText = GetComponentInChildren<TMP_Text>(true);
         }
 
         private void OnEnable()

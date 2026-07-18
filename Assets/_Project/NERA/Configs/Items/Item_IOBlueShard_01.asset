@@ -10,10 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
-  m_Name: Item_TestAncientObject
+  m_Name: Item_IOBlueShard_01
   m_EditorClassIdentifier: 
-  itemId: item.test.ancient_object
-  displayName: Ancient Object
-  description: A dormant fragment of unknown technology recovered during a test expedition.
-  itemType: 1
-  icon: {fileID: 0}
+  itemId: io_blue_shard_01
+  displayName: Blue IO Shard
+  description: A condensed anomaly left by a Blue IO entity. It occupies a dedicated
+    anomaly slot.
+  itemType: 4
+  icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
+  worldPrefab: {fileID: 0}
+  equippedVisualPrefab: {fileID: 0}
+  researchDefinition: {fileID: 0}

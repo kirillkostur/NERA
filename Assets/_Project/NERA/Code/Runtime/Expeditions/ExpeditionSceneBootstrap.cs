@@ -10,8 +10,11 @@ namespace NERA.Expeditions
 
             if (progress == null)
             {
-                GameObject root = new GameObject("ExpeditionProgress");
-                progress = root.AddComponent<ExpeditionProgressController>();
+                Debug.LogError(
+                    "ExpeditionSceneBootstrap: ExpeditionProgressController is missing. Start through Boot.",
+                    this
+                );
+                return;
             }
 
             progress.MarkVisited();

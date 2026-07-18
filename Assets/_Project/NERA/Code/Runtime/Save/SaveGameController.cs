@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NERA.Expeditions;
+using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Station;
@@ -13,6 +14,7 @@ namespace NERA.Save
     {
         [SerializeField] private string fileName = "nera_save.json";
         [SerializeField] private List<ItemData> itemCatalog = new List<ItemData>();
+        [SerializeField, Min(0.05f)] private float autoSaveDelay = 0.25f;
 
         public static SaveGameController Instance { get; private set; }
         public static string DefaultSavePath =>
@@ -21,8 +23,11 @@ namespace NERA.Save
 
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
+        private EnergySystemController energySystem;
         private PlayerInventory inventory;
         private bool isLoading;
+        private bool autoSavePending;
+        private float autoSaveAt;
 
         private void Awake()
         {
@@ -42,11 +47,20 @@ namespace NERA.Save
             Subscribe();
         }
 
+        private void Update()
+        {
+            if (!autoSavePending || Time.unscaledTime < autoSaveAt)
+                return;
+
+            Save();
+        }
+
         public void Save()
         {
             if (isLoading)
                 return;
 
+            autoSavePending = false;
             CacheSystems();
             SaveGameData data = Capture();
             string json = JsonUtility.ToJson(data, true);
@@ -128,6 +142,13 @@ namespace NERA.Save
             if (stationPower != null)
                 data.stationPowerState = (int)stationPower.State;
 
+            if (energySystem != null)
+            {
+                data.energyStateInitialized = true;
+                data.stationEnergy = energySystem.CurrentEnergy;
+                data.energyGridEnabled = energySystem.GridEnabled;
+            }
+
             if (discovery != null)
                 data.discoveredLocationIds.AddRange(discovery.DiscoveredLocationIds);
 
@@ -138,6 +159,19 @@ namespace NERA.Save
                     if (item != null && !string.IsNullOrWhiteSpace(item.ItemId))
                         data.inventoryItemIds.Add(item.ItemId);
                 }
+
+                CaptureSlots(
+                    inventory.BackpackSlots,
+                    data.backpackSlotItemIds
+                );
+                CaptureSlots(
+                    inventory.AnomalySlots,
+                    data.anomalySlotItemIds
+                );
+                CaptureSlots(
+                    inventory.QuickAccessSlots,
+                    data.quickAccessSlotItemIds
+                );
             }
 
             return data;
@@ -145,6 +179,14 @@ namespace NERA.Save
 
         private void Apply(SaveGameData data)
         {
+            if (energySystem != null && data.energyStateInitialized)
+            {
+                energySystem.RestoreState(
+                    data.stationEnergy,
+                    data.energyGridEnabled
+                );
+            }
+
             if (stationPower != null &&
                 Enum.IsDefined(typeof(StationPowerState), data.stationPowerState))
             {
@@ -156,6 +198,16 @@ namespace NERA.Save
 
             if (inventory != null)
             {
+                if (HasStructuredInventory(data))
+                {
+                    inventory.RestoreSlots(
+                        ResolveSlots(data.backpackSlotItemIds),
+                        ResolveSlots(data.anomalySlotItemIds),
+                        ResolveSlots(data.quickAccessSlotItemIds)
+                    );
+                    return;
+                }
+
                 List<ItemData> restoredItems = new List<ItemData>();
 
                 foreach (string itemId in data.inventoryItemIds)
@@ -172,12 +224,62 @@ namespace NERA.Save
             }
         }
 
+        private static bool HasStructuredInventory(SaveGameData data)
+        {
+            return data.version >= 3 ||
+                (data.backpackSlotItemIds?.Count ?? 0) > 0 ||
+                (data.anomalySlotItemIds?.Count ?? 0) > 0 ||
+                (data.quickAccessSlotItemIds?.Count ?? 0) > 0;
+        }
+
+        private static void CaptureSlots(
+            IReadOnlyList<ItemData> source,
+            List<string> destination
+        )
+        {
+            foreach (ItemData item in source)
+            {
+                destination.Add(
+                    item != null && !string.IsNullOrWhiteSpace(item.ItemId)
+                        ? item.ItemId
+                        : string.Empty
+                );
+            }
+        }
+
+        private List<ItemData> ResolveSlots(IReadOnlyList<string> itemIds)
+        {
+            if (itemIds == null)
+                return new List<ItemData>();
+
+            List<ItemData> resolved = new List<ItemData>(itemIds.Count);
+
+            foreach (string itemId in itemIds)
+            {
+                if (string.IsNullOrWhiteSpace(itemId))
+                {
+                    resolved.Add(null);
+                    continue;
+                }
+
+                ItemData item = FindItem(itemId);
+                resolved.Add(item);
+
+                if (item == null)
+                    Debug.LogWarning($"SaveGame: Unknown item id '{itemId}'.", this);
+            }
+
+            return resolved;
+        }
+
         private void ResetProgress()
         {
             isLoading = true;
 
             if (stationPower != null)
                 stationPower.SetState(StationPowerState.Offline);
+
+            energySystem?.ResetForNewGame();
 
             if (discovery != null)
                 discovery.RestoreDiscovered(Array.Empty<string>());
@@ -210,6 +312,9 @@ namespace NERA.Save
             if (stationPower == null)
                 stationPower = GetComponent<StationPowerController>();
 
+            if (energySystem == null)
+                energySystem = GetComponent<EnergySystemController>();
+
             if (inventory == null)
                 inventory = GetComponentInChildren<PlayerInventory>(true);
         }
@@ -222,8 +327,11 @@ namespace NERA.Save
             if (stationPower != null)
                 stationPower.StateChanged += HandleStationPowerChanged;
 
+            if (energySystem != null)
+                energySystem.StateChanged += HandleEnergyStateChanged;
+
             if (inventory != null)
-                inventory.ItemAdded += HandleItemAdded;
+                inventory.InventoryChanged += HandleInventoryChanged;
         }
 
         private void Unsubscribe()
@@ -234,23 +342,40 @@ namespace NERA.Save
             if (stationPower != null)
                 stationPower.StateChanged -= HandleStationPowerChanged;
 
+            if (energySystem != null)
+                energySystem.StateChanged -= HandleEnergyStateChanged;
+
             if (inventory != null)
-                inventory.ItemAdded -= HandleItemAdded;
+                inventory.InventoryChanged -= HandleInventoryChanged;
         }
 
         private void HandleProgressChanged(string _)
         {
-            Save();
+            RequestAutoSave();
         }
 
         private void HandleStationPowerChanged(StationPowerState _)
         {
-            Save();
+            RequestAutoSave();
         }
 
-        private void HandleItemAdded(ItemData _)
+        private void HandleEnergyStateChanged(EnergyState _)
         {
-            Save();
+            RequestAutoSave();
+        }
+
+        private void HandleInventoryChanged()
+        {
+            RequestAutoSave();
+        }
+
+        private void RequestAutoSave()
+        {
+            if (isLoading)
+                return;
+
+            autoSavePending = true;
+            autoSaveAt = Time.unscaledTime + autoSaveDelay;
         }
 
         private void OnApplicationQuit()

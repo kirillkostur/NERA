@@ -1,7 +1,9 @@
 {
   "name": "NERA.Runtime",
   "rootNamespace": "NERA",
-  "references": [],
+  "references": [
+    "Unity.TextMeshPro"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

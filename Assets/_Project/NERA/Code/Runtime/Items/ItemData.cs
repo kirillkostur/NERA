@@ -1,4 +1,5 @@
 using UnityEngine;
+using NERA.Research;
 
 namespace NERA.Items
 {
@@ -17,11 +18,21 @@ namespace NERA.Items
         [SerializeField] private ItemType itemType;
         [SerializeField] private Sprite icon;
 
+        [Header("Prefabs")]
+        [SerializeField] private WorldItem worldPrefab;
+        [SerializeField] private GameObject equippedVisualPrefab;
+
+        [Header("Research")]
+        [SerializeField] private ResearchDefinition researchDefinition;
+
         public string ItemId => itemId;
         public string DisplayName => displayName;
         public string Description => description;
         public ItemType ItemType => itemType;
         public Sprite Icon => icon;
+        public WorldItem WorldPrefab => worldPrefab;
+        public GameObject EquippedVisualPrefab => equippedVisualPrefab;
+        public ResearchDefinition ResearchDefinition => researchDefinition;
 
         private void OnValidate()
         {

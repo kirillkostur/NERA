@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using NERA.Energy;
 using UnityEngine;
 
 namespace NERA.Station
 {
     public sealed class StationPowerVisualController : MonoBehaviour
     {
+        private const string LightingConsumerId = "station_lighting";
         [SerializeField] private Light[] poweredLights;
         [SerializeField] private Renderer[] poweredRenderers;
         [SerializeField] private Color offlineColor = new Color(0.08f, 0.09f, 0.1f);
@@ -12,6 +14,7 @@ namespace NERA.Station
 
         private readonly List<Material> runtimeMaterials = new List<Material>();
         private StationPowerController powerController;
+        private EnergySystemController energySystem;
 
         private void Awake()
         {
@@ -36,12 +39,26 @@ namespace NERA.Station
             }
 
             powerController.StateChanged += ApplyState;
+            energySystem = EnergySystemController.Instance;
+            if (energySystem != null)
+            {
+                energySystem.RegisterConsumer(
+                    LightingConsumerId,
+                    energySystem.Config.LightingConsumption,
+                    true
+                );
+                energySystem.SetConsumerActive(LightingConsumerId, true);
+                energySystem.EnergyChanged += ApplyEnergyState;
+            }
             ApplyState(powerController.State);
         }
 
         private void ApplyState(StationPowerState state)
         {
-            bool isPowered = state == StationPowerState.Online;
+            bool isPowered =
+                state == StationPowerState.Online &&
+                (energySystem == null ||
+                 energySystem.IsConsumerPowered(LightingConsumerId));
 
             foreach (Light poweredLight in poweredLights)
             {
@@ -58,10 +75,19 @@ namespace NERA.Station
             }
         }
 
+        private void ApplyEnergyState()
+        {
+            if (powerController != null)
+                ApplyState(powerController.State);
+        }
+
         private void OnDestroy()
         {
             if (powerController != null)
                 powerController.StateChanged -= ApplyState;
+
+            if (energySystem != null)
+                energySystem.EnergyChanged -= ApplyEnergyState;
 
             foreach (Material material in runtimeMaterials)
             {

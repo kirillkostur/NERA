@@ -6,6 +6,7 @@ namespace NERA.Items
         Artifact,
         ResearchSample,
         Equipment,
+        Anomaly,
         Consumable,
         KeyItem
     }

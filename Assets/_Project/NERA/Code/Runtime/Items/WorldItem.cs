@@ -12,6 +12,14 @@ namespace NERA.Items
 
         public ItemData ItemData => itemData;
 
+        public void Initialize(ItemData item)
+        {
+            itemData = item;
+            destroyAfterPickup = true;
+            SetActionText("Pick Up");
+            SetAvailable(item != null, item == null ? "Item data missing" : string.Empty);
+        }
+
         private void Reset()
         {
             SetActionText("Pick Up");

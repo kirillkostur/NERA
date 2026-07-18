@@ -1,0 +1,19 @@
+{
+  "name": "NERA.PlayModeTests",
+  "rootNamespace": "NERA.Tests",
+  "references": [
+    "NERA.Runtime",
+    "UnityEngine.TestRunner"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

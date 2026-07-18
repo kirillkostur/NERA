@@ -1,4 +1,6 @@
 using NERA.Interaction;
+using NERA.Inventory;
+using NERA.Items;
 using UnityEngine;
 
 namespace NERA.Expeditions
@@ -6,6 +8,7 @@ namespace NERA.Expeditions
     public sealed class ResearchObjectInteractable : BaseInteractable
     {
         [SerializeField, Min(0.1f)] private float inspectDuration = 2f;
+        [SerializeField] private ItemData researchItem;
 
         private void Awake()
         {
@@ -36,6 +39,17 @@ namespace NERA.Expeditions
                 return;
 
             progress.MarkResearchObjectCollected();
+
+            PlayerInventory inventory = interactor != null
+                ? interactor.GetComponent<PlayerInventory>()
+                : null;
+
+            if (inventory == null && interactor != null)
+                inventory = interactor.GetComponentInParent<PlayerInventory>();
+
+            if (inventory != null && researchItem != null)
+                inventory.AddItem(researchItem);
+
             base.CompleteInteraction(interactor);
             SetAvailable(false, "Memory Core secured");
             gameObject.SetActive(false);
