@@ -1,3 +1,4 @@
+using NERA.Antenna;
 using NERA.Interaction;
 using NERA.Expeditions;
 using NERA.Library;
@@ -35,11 +36,13 @@ namespace NERA.Core
         {
             LibraryController library = GetComponent<LibraryController>();
             ResearchController research = GetComponent<ResearchController>();
+            AntennaController antenna = GetComponent<AntennaController>();
             ExpeditionProgressController expeditionProgress =
                 GetComponent<ExpeditionProgressController>();
 
             if (library == null ||
                 research == null ||
+                antenna == null ||
                 expeditionProgress == null)
             {
                 Debug.LogError(
@@ -50,6 +53,7 @@ namespace NERA.Core
             }
 
             research.SetPowerSource(GetComponent<StationPowerController>());
+            research.SetLibrary(library);
         }
 
         private void Start()

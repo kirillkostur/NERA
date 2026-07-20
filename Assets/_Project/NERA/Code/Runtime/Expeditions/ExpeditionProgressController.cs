@@ -10,24 +10,21 @@ namespace NERA.Expeditions
         public event Action ProgressChanged;
 
         public bool Expedition01Visited { get; private set; }
-        public bool AncientRecord01Found { get; private set; }
-        public bool ResearchObject01Collected { get; private set; }
         public bool IOTrace01Seen { get; private set; }
+        public bool ResearchSampleCollected { get; private set; }
         public bool Expedition01Returned { get; private set; }
 
         public string CurrentObjective
         {
             get
             {
-                if (!AncientRecord01Found)
-                    return "Find and read the ancient record.";
-                if (!ResearchObject01Collected)
-                    return "Inspect the NERA Memory Core.";
                 if (!IOTrace01Seen)
-                    return "Approach the weak Blue IO carefully.";
+                    return "Find the weak Blue IO anomaly.";
+                if (!ResearchSampleCollected)
+                    return "Collect an anomaly sample.";
                 if (!Expedition01Returned)
                     return "Return to the station.";
-                return "Return to the terminal for analysis.";
+                return "Analyze the sample in the laboratory.";
             }
         }
 
@@ -40,7 +37,6 @@ namespace NERA.Expeditions
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         public void MarkVisited()
@@ -51,28 +47,20 @@ namespace NERA.Expeditions
             NotifyChanged("Expedition 01 entered.");
         }
 
-        public void MarkAncientRecordFound()
-        {
-            if (AncientRecord01Found)
-                return;
-            AncientRecord01Found = true;
-            NotifyChanged("Ancient record recovered.");
-        }
-
-        public void MarkResearchObjectCollected()
-        {
-            if (ResearchObject01Collected)
-                return;
-            ResearchObject01Collected = true;
-            NotifyChanged("NERA Memory Core secured.");
-        }
-
         public void MarkIOTraceSeen()
         {
             if (IOTrace01Seen)
                 return;
             IOTrace01Seen = true;
             NotifyChanged("Weak Blue IO encountered.");
+        }
+
+        public void MarkResearchSampleCollected(string sampleName)
+        {
+            if (ResearchSampleCollected)
+                return;
+            ResearchSampleCollected = true;
+            NotifyChanged($"{sampleName} collected.");
         }
 
         public void MarkReturned()

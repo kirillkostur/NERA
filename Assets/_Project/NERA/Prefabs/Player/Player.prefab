@@ -1843,6 +1843,7 @@ GameObject:
   - component: {fileID: 73737831525809830}
   - component: {fileID: 6965456474858397808}
   - component: {fileID: 191624338555571828}
+  - component: {fileID: 612488826577143951}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -2007,6 +2008,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentAnchor: {fileID: 0}
   fallbackAnchorName: mixamorig1:RightHand
+--- !u!114 &612488826577143951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4815869735499398949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be3b8c611e64f5a905e2f6ec6d8eb07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aimOrigin: {fileID: 0}
+  useMainCameraWhenAvailable: 1
 --- !u!1 &4851945772030200154
 GameObject:
   m_ObjectHideFlags: 0

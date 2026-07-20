@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bccafd4b60006c7428f579596fbb3a24, type: 3}
+  m_Name: Research_NERAMemoryCore_01
+  m_EditorClassIdentifier: 
+  researchId: research_nera_memory_core_01
+  displayName: NERA Memory Core
+  analysisDuration: 5
+  itemFate: 1
+  unlockedEntry: {fileID: 11400000, guid: d3a7bbc0d6d811a4dbcf31208cf8aabb, type: 2}

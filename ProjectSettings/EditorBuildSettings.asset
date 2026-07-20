@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/NERA/Scenes/Expeditions/Expedition_02.unity
     guid: 20af6763e9ad28741aee140805bbfc9a
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expeditions/UnknownSignal_01_FirstPlayable.unity
+    guid: 9cc9c69f4e3b41a8a5473f31f5657d2e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

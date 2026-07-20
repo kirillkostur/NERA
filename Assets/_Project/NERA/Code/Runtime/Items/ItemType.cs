@@ -4,7 +4,7 @@ namespace NERA.Items
     {
         EngineeringPart,
         Artifact,
-        ResearchSample,
+        Record,
         Equipment,
         Anomaly,
         Consumable,

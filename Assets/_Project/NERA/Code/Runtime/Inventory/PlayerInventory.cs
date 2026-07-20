@@ -15,20 +15,19 @@ namespace NERA.Inventory
     public sealed class PlayerInventory : MonoBehaviour
     {
         public const int AnomalyCapacity = 3;
-        public const int QuickAccessCapacity = 3;
+        public const int QuickAccessCapacity = 5;
+        public const int ActiveQuickAccessStartIndex = 1;
+        public const int ActiveQuickAccessCapacity = 3;
 
         [SerializeField] private InventoryConfig config;
         [SerializeField] private List<ItemData> backpackSlots =
             new List<ItemData>(InventoryConfig.DefaultBackpackCapacity);
         [SerializeField] private List<ItemData> anomalySlots = new List<ItemData>(AnomalyCapacity);
         [SerializeField] private List<ItemData> quickAccessSlots = new List<ItemData>(QuickAccessCapacity);
-        private int selectedQuickAccessIndex = -1;
 
         public event Action<ItemData> ItemAdded;
         public event Action<ItemData> ItemRemoved;
         public event Action InventoryChanged;
-        public event Action<ItemData> QuickAccessSelected;
-        public event Action<int, ItemData> QuickAccessSelectionChanged;
 
         public IEnumerable<ItemData> Items
         {
@@ -44,9 +43,6 @@ namespace NERA.Inventory
         public IReadOnlyList<ItemData> AnomalySlots => anomalySlots;
         public IReadOnlyList<ItemData> QuickAccessSlots => quickAccessSlots;
         public InventoryConfig Config => config;
-        public int SelectedQuickAccessIndex => selectedQuickAccessIndex;
-        public ItemData SelectedQuickAccessItem =>
-            GetItem(InventorySlotGroup.QuickAccess, selectedQuickAccessIndex);
         public int BackpackCapacity => config != null
             ? config.BackpackCapacity
             : InventoryConfig.DefaultBackpackCapacity;
@@ -86,11 +82,14 @@ namespace NERA.Inventory
             if (item == null)
                 return false;
 
-            List<ItemData> slots = GetSlotsFor(item.ItemType);
-            int emptySlot = FindEmptySlot(slots);
+            InventorySlotGroup group = GetSlotGroup(item.ItemType);
+            List<ItemData> slots = GetSlots(group);
+            int emptySlot = group == InventorySlotGroup.QuickAccess
+                ? FindEmptyQuickAccessSlot(slots)
+                : FindEmptySlot(slots);
             if (emptySlot < 0)
             {
-                Debug.Log($"PlayerInventory: No free {GetSlotGroup(item.ItemType)} slot for '{item.DisplayName}'.", this);
+                Debug.Log($"PlayerInventory: No free {group} slot for '{item.DisplayName}'.", this);
                 return false;
             }
 
@@ -99,7 +98,7 @@ namespace NERA.Inventory
             InventoryChanged?.Invoke();
 
             Debug.Log(
-                $"PlayerInventory: Added '{item.DisplayName}' to {GetSlotGroup(item.ItemType)} slot {emptySlot + 1}.",
+                $"PlayerInventory: Added '{item.DisplayName}' to {group} slot {emptySlot + 1}.",
                 this
             );
 
@@ -151,13 +150,6 @@ namespace NERA.Inventory
             removedItem = slots[index];
             slots[index] = null;
 
-            if (group == InventorySlotGroup.QuickAccess &&
-                selectedQuickAccessIndex == index)
-            {
-                selectedQuickAccessIndex = -1;
-                QuickAccessSelectionChanged?.Invoke(-1, null);
-            }
-
             ItemRemoved?.Invoke(removedItem);
             InventoryChanged?.Invoke();
 
@@ -171,7 +163,6 @@ namespace NERA.Inventory
 
         public void RestoreItems(IEnumerable<ItemData> restoredItems)
         {
-            ClearQuickAccessSelection();
             EnsureCapacity(backpackSlots, BackpackCapacity);
             EnsureCapacity(anomalySlots, AnomalyCapacity);
             EnsureCapacity(quickAccessSlots, QuickAccessCapacity);
@@ -194,7 +185,6 @@ namespace NERA.Inventory
             IReadOnlyList<ItemData> restoredQuickAccess
         )
         {
-            ClearQuickAccessSelection();
             RestoreSlotGroup(
                 backpackSlots,
                 restoredBackpack,
@@ -264,30 +254,92 @@ namespace NERA.Inventory
             return true;
         }
 
-        public bool SelectQuickAccess(int index)
+        public bool TryMoveItem(
+            InventorySlotGroup sourceGroup,
+            int sourceIndex,
+            InventorySlotGroup destinationGroup,
+            int destinationIndex
+        )
         {
-            if (index < 0 || index >= QuickAccessCapacity)
+            List<ItemData> sourceSlots = GetSlots(sourceGroup);
+            List<ItemData> destinationSlots = GetSlots(destinationGroup);
+
+            if (sourceIndex < 0 || sourceIndex >= sourceSlots.Count ||
+                destinationIndex < 0 || destinationIndex >= destinationSlots.Count ||
+                (sourceGroup == destinationGroup && sourceIndex == destinationIndex))
+            {
                 return false;
+            }
 
-            ItemData item = GetItem(InventorySlotGroup.QuickAccess, index);
-            selectedQuickAccessIndex = item != null ? index : -1;
+            ItemData sourceItem = sourceSlots[sourceIndex];
+            if (sourceItem == null ||
+                GetSlotGroup(sourceItem.ItemType) != destinationGroup)
+            {
+                return false;
+            }
 
-            QuickAccessSelected?.Invoke(item);
-            QuickAccessSelectionChanged?.Invoke(
-                selectedQuickAccessIndex,
-                item
-            );
-            return item != null;
+            ItemData destinationItem = destinationSlots[destinationIndex];
+            if (destinationItem != null &&
+                GetSlotGroup(destinationItem.ItemType) != sourceGroup)
+            {
+                return false;
+            }
+
+            sourceSlots[sourceIndex] = destinationItem;
+            destinationSlots[destinationIndex] = sourceItem;
+
+            InventoryChanged?.Invoke();
+            return true;
         }
 
-        public void ClearQuickAccessSelection()
+        public bool TrySetItemAt(
+            InventorySlotGroup group,
+            int index,
+            ItemData item
+        )
         {
-            if (selectedQuickAccessIndex < 0)
-                return;
+            if (item == null || GetSlotGroup(item.ItemType) != group)
+                return false;
 
-            selectedQuickAccessIndex = -1;
-            QuickAccessSelected?.Invoke(null);
-            QuickAccessSelectionChanged?.Invoke(-1, null);
+            List<ItemData> slots = GetSlots(group);
+            if (index < 0 || index >= slots.Count)
+                return false;
+
+            slots[index] = item;
+            ItemAdded?.Invoke(item);
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryReplaceItemAt(
+            InventorySlotGroup group,
+            int index,
+            ItemData newItem,
+            out ItemData replacedItem
+        )
+        {
+            replacedItem = null;
+            if (newItem == null || GetSlotGroup(newItem.ItemType) != group)
+                return false;
+
+            List<ItemData> slots = GetSlots(group);
+            if (index < 0 || index >= slots.Count)
+                return false;
+
+            replacedItem = slots[index];
+            slots[index] = newItem;
+
+            ItemAdded?.Invoke(newItem);
+            if (replacedItem != null)
+                ItemRemoved?.Invoke(replacedItem);
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        public static bool IsActiveQuickAccessSlot(int index)
+        {
+            return index >= ActiveQuickAccessStartIndex &&
+                   index < ActiveQuickAccessStartIndex + ActiveQuickAccessCapacity;
         }
 
         private static void EnsureCapacity(List<ItemData> slots, int capacity)
@@ -335,9 +387,25 @@ namespace NERA.Inventory
             return -1;
         }
 
-        private List<ItemData> GetSlotsFor(ItemType itemType)
+        private static int FindEmptyQuickAccessSlot(List<ItemData> slots)
         {
-            return GetSlots(GetSlotGroup(itemType));
+            int activeEnd = Mathf.Min(
+                ActiveQuickAccessStartIndex + ActiveQuickAccessCapacity,
+                slots.Count
+            );
+            for (int i = ActiveQuickAccessStartIndex; i < activeEnd; i++)
+            {
+                if (slots[i] == null)
+                    return i;
+            }
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (!IsActiveQuickAccessSlot(i) && slots[i] == null)
+                    return i;
+            }
+
+            return -1;
         }
 
         private List<ItemData> GetSlots(InventorySlotGroup group)

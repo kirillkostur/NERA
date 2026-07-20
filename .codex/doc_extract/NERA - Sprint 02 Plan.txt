@@ -1,0 +1,580 @@
+NERA — Sprint 02 Plan
+Station Power + Terminal Placeholder
+1. Назначение Sprint 02
+Sprint 02 нужен, чтобы впервые собрать рабочую станционную часть core loop.
+После Sprint 02 игрок должен понимать:
+“Я на сломанной станции. Я могу восстановить питание. После этого открывается терминал, и через него игра двигается дальше.”
+Это ещё не полноценный терминал, не карта и не дрон. Это технический и геймплейный фундамент для них.
+2. Главная цель спринта
+Цель
+Сделать первый рабочий сценарий на станции:
+игрок появляется на станции;
+терминал выключен;
+рядом есть объект питания;
+игрок взаимодействует с объектом питания;
+питание станции включается;
+меняется состояние станции;
+терминал становится доступен;
+игрок может открыть placeholder Terminal UI;
+в терминале видит placeholder-действие “Launch Drone”;
+действие пока не запускает полноценного дрона, но может показать debug-сообщение или открыть заглушку следующего шага.
+3. Почему это важно
+Sprint 01 проверяет:
+ходьбу;
+камеру;
+взаимодействие;
+смену сцен;
+pickup;
+технический билд.
+Sprint 02 проверяет уже игровую причинно-следственную цепочку:
+сломанная станция
+→ взаимодействие
+→ изменение состояния мира
+→ открытие новой функции
+→ доступ к терминалу
+Это первая настоящая основа NERA.
+4. Sprint 02 Scope
+4.1. Что входит в Sprint 02
+В Sprint 02 входит:
+Station Power State;
+объект питания на станции;
+состояние “станция без энергии”;
+состояние “станция с энергией”;
+блокировка терминала без питания;
+разблокировка терминала после включения питания;
+placeholder Terminal UI;
+placeholder Terminal navigation;
+debug action “Launch Drone”;
+сохранение состояния в рамках текущей игровой сессии;
+минимальный visual feedback;
+минимальный audio placeholder, если быстро;
+технический тестовый билд.
+4.2. Что НЕ входит в Sprint 02
+В Sprint 02 не входит:
+полноценная карта;
+полноценный дрон;
+открытие Expedition 01 через карту;
+research system;
+library system;
+translation system;
+save/load на диск;
+полноценный UI style;
+финальный art pass станции;
+полноценный звук;
+VFX pass;
+IO;
+анимации ремонта;
+катсцены;
+сложные туториалы.
+5. Игровой сценарий Sprint 02
+5.1. Начальное состояние
+Когда игрок запускает сцену Station_FirstPlayable, станция находится в состоянии:
+StationPowerState = Offline
+Игрок видит:
+тусклое освещение;
+неактивный терминал;
+объект питания / power core / fuse box;
+interaction prompt у объекта питания;
+interaction prompt у терминала, но терминал сообщает, что нет питания.
+5.2. Взаимодействие с терминалом до питания
+Если игрок подходит к терминалу до восстановления питания, он может получить prompt:
+[E] Use Terminal
+После нажатия:
+Terminal Offline
+Restore station power first.
+Терминал не открывает полноценный UI.
+5.3. Взаимодействие с источником питания
+Игрок подходит к объекту питания.
+Prompt:
+Hold [E] Restore Power
+После успешного удержания:
+Station power restored.
+Состояние меняется:
+StationPowerState = Online
+5.4. Состояние станции после включения питания
+После включения питания:
+включается свет;
+терминал становится активным;
+на терминале появляется экран / glow / emissive;
+prompt терминала меняется;
+игрок может открыть Terminal UI.
+Минимально допустимо для Sprint 02:
+включить 1–3 light object;
+включить emissive material на терминале;
+вывести debug text;
+открыть placeholder UI.
+5.5. Открытие терминала
+Когда питание включено:
+Prompt:
+[E] Open Terminal
+После нажатия открывается fullscreen UI:
+NERA Station Terminal
+Внутри видны placeholder-разделы:
+Status
+Map
+Drone
+Library
+Research
+Translation
+Exit
+На Sprint 02 интерактивным должен быть только минимальный раздел:
+Drone → Launch Drone
+5.6. Placeholder Launch Drone
+При нажатии на “Launch Drone” пока не нужно запускать полноценного дрона.
+Достаточно одного из вариантов:
+Вариант А — debug message
+Drone launch requested.
+Expedition discovery system not implemented yet.
+Вариант B — placeholder screen
+Drone System
+Status: Available
+Action: Launch Drone
+Result: Expedition 01 placeholder discovered.
+Вариант C — сразу записать debug-состояние
+Expedition_01_Unlocked = true
+Для Sprint 02 лучше выбрать Вариант B + debug-состояние, потому что это подготовит Sprint 03.
+6. Основные системы Sprint 02
+6.1. Station Power System
+Назначение
+Хранит текущее состояние питания станции.
+Минимальные состояния
+Offline
+Online
+Возможные будущие состояния
+Damaged
+Partial
+Online
+Overloaded
+Shutdown
+Но для First Playable пока нужны только:
+Offline
+Online
+6.2. Station Power Controller
+Назначение
+Главный контроллер питания станции в сцене.
+Он должен:
+знать текущее состояние питания;
+принимать команду восстановления питания;
+уведомлять другие объекты о смене состояния;
+включать / выключать связанные объекты;
+давать другим системам простой способ проверить, есть ли питание.
+6.3. Power Restore Interaction
+Назначение
+Объект, с которым игрок взаимодействует, чтобы включить станцию.
+Это может быть:
+power core;
+fuse box;
+broken generator;
+dirty power module;
+emergency switch.
+Для First Playable лучше использовать простой объект:
+Station Power Core
+6.4. Terminal Access Controller
+Назначение
+Проверяет, можно ли открыть терминал.
+Правило:
+если StationPowerState = Offline → терминал не открывается
+если StationPowerState = Online → терминал открывается
+6.5. Terminal Placeholder UI
+Назначение
+Временный fullscreen UI, который показывает структуру будущего терминала.
+Он не обязан быть красивым.
+Главное:
+открывается;
+закрывается;
+блокирует управление игроком;
+показывает разделы;
+имеет одну рабочую кнопку;
+готов к расширению в следующих спринтах.
+7. Правила реализации
+7.1. Общие правила
+Делать простую, расширяемую реализацию.
+Не строить финальную архитектуру на 20 систем сразу.
+Сейчас важнее:
+работает → понятно → можно расширить
+а не:
+идеально → сложно → долго
+7.2. Station Power Rules
+Делать
+хранить состояние питания в одном месте;
+использовать enum для состояния;
+уведомлять подписчиков через event;
+давать публичное read-only свойство IsPowered;
+делать простую ручную настройку через Inspector.
+Не делать
+не размазывать состояние питания по разным объектам;
+не проверять питание через поиск объектов в сцене;
+не завязывать терминал напрямую на конкретный power core;
+не делать сложную систему электричества;
+не делать распределение энергии по комнатам;
+не делать power grid.
+7.3. Terminal Rules
+Делать
+терминал должен проверять питание перед открытием;
+UI терминала должен открываться fullscreen;
+терминал должен закрываться по кнопке Esc или Back;
+управление игроком должно отключаться, пока терминал открыт;
+курсор мыши должен включаться в Terminal UI.
+Не делать
+не делать финальный дизайн терминала;
+не делать полноценную карту;
+не делать сложную навигацию;
+не делать research/library/translation внутри Sprint 02;
+не смешивать terminal logic и station power logic.
+7.4. Interaction Rules
+Делать
+использовать уже созданную систему Interaction из Sprint 01;
+Power Restore должен быть hold interaction;
+Terminal Open должен быть press interaction;
+prompt должен меняться в зависимости от состояния.
+Не делать
+не писать отдельный interaction system только для питания;
+не использовать hardcoded input внутри каждого объекта;
+не делать ремонт через отдельную механику.
+8. Предлагаемые классы
+8.1. Runtime/Station
+Папка:
+Assets/_Project/NERA/Code/Runtime/Station
+Классы:
+StationPowerState.cs
+StationPowerController.cs
+StationPowerConsumer.cs
+StationPowerVisualController.cs
+PowerRestoreInteractable.cs
+8.2. Runtime/Terminal
+Папка:
+Assets/_Project/NERA/Code/Runtime/Terminal
+Классы:
+TerminalAccessController.cs
+TerminalUIScreen.cs
+TerminalSectionButton.cs
+TerminalDebugActions.cs
+8.3. Runtime/UI
+Папка:
+Assets/_Project/NERA/Code/Runtime/UI
+Классы:
+UIScreenBase.cs
+UIInputModeController.cs
+Если это слишком много для Sprint 02, можно временно оставить только:
+TerminalUIScreen.cs
+Но лучше сразу отделить хотя бы input mode.
+9. Prefabs Sprint 02
+9.1. Station Power Core Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/Station/StationPowerCore.prefab
+Содержит:
+mesh placeholder;
+collider;
+interactable component;
+optional glow object;
+optional sound placeholder;
+reference на StationPowerController.
+9.2. Station Terminal Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/Station/StationTerminal.prefab
+Содержит:
+mesh placeholder;
+collider;
+interactable component;
+TerminalAccessController;
+visual states:
+Offline;
+Online.
+9.3. Terminal UI Prefab
+Путь:
+Assets/_Project/NERA/UI/Prefabs/Terminal/TerminalUI.prefab
+Содержит:
+fullscreen root;
+title;
+status text;
+section list;
+content panel;
+close button;
+button Launch Drone.
+10. Scene Setup
+10.1. Station_FirstPlayable
+Сцена:
+Assets/_Project/NERA/Scenes/Station/Station_FirstPlayable.unity
+В сцене должны быть:
+Player_Start
+Player
+Main Camera
+StationPowerController
+StationPowerCore
+StationTerminal
+TerminalUICanvas
+SceneTransition_ToExpedition
+Lighting_Offline
+Lighting_Online
+10.2. Иерархия сцены
+Рекомендуемая структура:
+Station_FirstPlayable
+├── _Scene
+│   ├── SceneBootstrap
+│   ├── StationPowerController
+│   └── SceneTransitionController
+│
+├── Player
+│   ├── PlayerCharacter
+│   └── CameraRig
+│
+├── Environment
+│   ├── Blockout
+│   ├── Props
+│   └── StationDevices
+│
+├── Gameplay
+│   ├── StationPowerCore
+│   ├── StationTerminal
+│   └── ExpeditionExit
+│
+├── Lighting
+│   ├── OfflineLights
+│   └── OnlineLights
+│
+├── UI
+│   ├── InteractionPromptCanvas
+│   └── TerminalCanvas
+│
+└── Debug
+└── DebugObjects
+11. Состояния станции
+11.1. Offline
+Состояние по умолчанию.
+StationPowerState = Offline
+Активно:
+слабый аварийный свет;
+power core interactable;
+terminal locked;
+terminal offline prompt;
+переход в экспедицию можно оставить доступным для debug, но не считать частью финального flow.
+Неактивно:
+terminal UI;
+drone action;
+online lights;
+station systems.
+11.2. Online
+Состояние после восстановления питания.
+StationPowerState = Online
+Активно:
+normal station lights;
+terminal screen;
+terminal prompt;
+terminal UI;
+drone placeholder action.
+Неактивно:
+restore power interaction;
+offline-only feedback;
+offline terminal message.
+12. UI терминала
+12.1. Структура placeholder UI
+NERA STATION TERMINAL
+Status: Online
+[Status]
+[Map]
+[Drone]
+[Library]
+[Research]
+[Translation]
+Content:
+Drone System
+Status: Available
+[Launch Drone]
+[Exit]
+12.2. Заблокированные разделы
+Разделы можно показать, но пометить как недоступные:
+Map — Not implemented
+Library — Not implemented
+Research — Not implemented
+Translation — Not implemented
+Это полезно, потому что сразу показывает будущую структуру игры.
+12.3. Правило для Sprint 02
+UI должен быть функциональным, но не финальным.
+Допустимо:
+обычный Unity UI;
+серые панели;
+стандартные кнопки;
+placeholder шрифты;
+debug text.
+Не нужно:
+анимации UI;
+финальная графика;
+красивые иконки;
+сложные переходы между вкладками.
+13. Input Rules
+13.1. Gameplay Mode
+Когда терминал закрыт:
+Player movement = enabled
+Camera control = enabled
+Cursor = hidden
+Cursor lock = locked
+Gameplay input = enabled
+UI input = disabled / limited
+13.2. Terminal Mode
+Когда терминал открыт:
+Player movement = disabled
+Camera control = disabled
+Cursor = visible
+Cursor lock = unlocked
+Gameplay input = disabled
+UI input = enabled
+13.3. Exit Terminal
+Терминал закрывается через:
+Esc
+Close Button
+Back action
+После закрытия:
+Player movement = enabled
+Camera control = enabled
+Cursor = hidden
+Cursor lock = locked
+14. Debug правила
+14.1. Debug допустим в Sprint 02
+Можно использовать:
+Debug.Log
+On-screen debug text
+placeholder buttons
+temporary inspector references
+manual scene references
+14.2. Debug нельзя оставлять бесконтрольно
+Каждый debug-элемент должен быть очевидно временным.
+Например:
+TerminalDebugActions.cs
+Debug_Expedition01Unlocked
+Debug_LaunchDronePlaceholder
+15. Критерии готовности Sprint 02
+Sprint 02 считается готовым, если:
+15.1. Station Power
+сцена стартует с выключенной станцией;
+есть объект питания;
+игрок может подойти к объекту;
+появляется hold prompt;
+после удержания питание включается;
+состояние станции меняется;
+повторно включить питание нельзя или не нужно.
+15.2. Terminal
+до включения питания терминал не открывается;
+терминал показывает сообщение, что нужно восстановить питание;
+после включения питания терминал открывается;
+терминал открывается fullscreen;
+терминал закрывается;
+при открытом терминале игрок не двигается;
+после закрытия терминала управление возвращается.
+15.3. UI
+UI терминала виден;
+есть список основных разделов;
+есть placeholder Drone section;
+есть button Launch Drone;
+нажатие Launch Drone даёт понятный debug result.
+15.4. Technical
+нет ошибок в Console;
+сцена запускается напрямую;
+билд собирается;
+билд запускается;
+игрок может пройти сценарий без Editor-only действий.
+16. Sprint 02 Tasks
+16.1. Station Power
+TASK-S02-001 — Create StationPowerState enum
+TASK-S02-002 — Create StationPowerController
+TASK-S02-003 — Add default Offline state
+TASK-S02-004 — Add RestorePower method
+TASK-S02-005 — Add OnPowerStateChanged event
+TASK-S02-006 — Add IsPowered property
+16.2. Power Core Interaction
+TASK-S02-007 — Create StationPowerCore placeholder prefab
+TASK-S02-008 — Add collider and interaction area
+TASK-S02-009 — Connect Hold Interaction to RestorePower
+TASK-S02-010 — Add prompt text: Hold [E] Restore Power
+TASK-S02-011 — Disable interaction after power restored
+16.3. Station Visual State
+TASK-S02-012 — Create OfflineLights group
+TASK-S02-013 — Create OnlineLights group
+TASK-S02-014 — Switch lighting groups after power restore
+TASK-S02-015 — Add terminal offline visual
+TASK-S02-016 — Add terminal online visual
+16.4. Terminal Access
+TASK-S02-017 — Create TerminalAccessController
+TASK-S02-018 — Add terminal interaction collider
+TASK-S02-019 — If Offline, show offline message
+TASK-S02-020 — If Online, open Terminal UI
+TASK-S02-021 — Add prompt text: [E] Open Terminal
+16.5. Terminal UI
+TASK-S02-022 — Create Terminal UI Canvas
+TASK-S02-023 — Create Terminal UI prefab
+TASK-S02-024 — Add fullscreen root panel
+TASK-S02-025 — Add section buttons
+TASK-S02-026 — Add Drone placeholder section
+TASK-S02-027 — Add Launch Drone button
+TASK-S02-028 — Add Close button
+TASK-S02-029 — Add Esc close support
+16.6. Input Mode
+TASK-S02-030 — Disable player movement while terminal is open
+TASK-S02-031 — Disable camera control while terminal is open
+TASK-S02-032 — Show cursor while terminal is open
+TASK-S02-033 — Restore gameplay input after closing terminal
+16.7. Debug Drone Placeholder
+TASK-S02-034 — Add Launch Drone debug action
+TASK-S02-035 — Show message: Expedition 01 discovery not implemented
+TASK-S02-036 — Optionally set Debug_Expedition01Unlocked = true
+16.8. Build
+TASK-S02-037 — Clean Console errors
+TASK-S02-038 — Create standalone build
+TASK-S02-039 — Test full Sprint 02 flow in build
+TASK-S02-040 — Write short result notes
+17. Рекомендуемый порядок выполнения
+День 1–2
+StationPowerState
+StationPowerController
+PowerCore interaction
+Offline → Online transition
+День 3–4
+TerminalAccessController
+Terminal locked/unlocked logic
+Basic Terminal UI open/close
+День 5–6
+Input mode switch
+Cursor handling
+Player control lock
+Terminal close flow
+День 7–8
+Drone placeholder section
+Launch Drone debug action
+Station visual state switch
+День 9–10
+Cleanup
+Testing
+Standalone build
+Bug fixes
+Sprint notes
+18. Риски Sprint 02
+18.1. Риск: уйти в сложный UI
+Проблема:
+Можно потратить много времени на красивый терминал.
+Решение:
+UI должен быть серым, простым, техническим.
+Главная цель — logic flow.
+18.2. Риск: начать делать полноценного дрона
+Проблема:
+Drone system может раздуть Sprint 02.
+Решение:
+В Sprint 02 только placeholder.
+Настоящий дрон — Sprint 03.
+18.3. Риск: усложнить power system
+Проблема:
+Можно начать делать генераторы, кабели, предохранители, комнаты, нагрузку.
+Решение:
+В First Playable питание — это один boolean/enum state.
+18.4. Риск: забыть про build
+Проблема:
+В Editor всё работает, а в билде ломается input/cursor/UI.
+Решение:
+В конце Sprint 02 обязательно standalone build.
+19. Что должно появиться после Sprint 02
+После Sprint 02 у проекта будет первый полноценный кусок NERA loop:
+Station Offline
+→ Restore Power
+→ Terminal Online
+→ Open Terminal
+→ Drone Placeholder
+Это уже можно считать основой для следующего шага:
+Sprint 03 — Drone + Expedition Unlock

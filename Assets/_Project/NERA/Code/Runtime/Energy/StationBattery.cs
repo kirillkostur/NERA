@@ -27,26 +27,13 @@ namespace NERA.Energy
                 return;
 
             if (!energy.RegisterBattery(
-                    BuildHierarchyId(),
+                    StationEnergyDeviceId.Build(this, "battery"),
                     capacity,
                     initialCharge))
                 return;
 
             registered = true;
-        }
-
-        private string BuildHierarchyId()
-        {
-            string path = gameObject.scene.path;
-            Transform current = transform;
-
-            while (current != null)
-            {
-                path += $"/{current.name}[{current.GetSiblingIndex()}]";
-                current = current.parent;
-            }
-
-            return $"battery:{path}";
+            enabled = false;
         }
     }
 }

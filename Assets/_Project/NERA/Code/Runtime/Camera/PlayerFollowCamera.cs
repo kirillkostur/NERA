@@ -27,6 +27,12 @@ public class PlayerFollowCamera : MonoBehaviour
     [Header("Zoom")]
     [SerializeField] private float zoomSpeed = 1f;
 
+    [Header("Aim")]
+    [SerializeField] private KeyCode aimKey = KeyCode.Mouse1;
+    [SerializeField, Min(0.1f)] private float aimDistance = 2.2f;
+    [SerializeField] private Vector3 aimShoulderOffset = new Vector3(0.65f, -0.05f, 0.25f);
+    [SerializeField, Min(0f)] private float aimLookAhead = 8f;
+
     [Header("Collision")]
     [SerializeField] private LayerMask collisionMask;
     [SerializeField] private float collisionRadius = 0.25f;
@@ -47,6 +53,11 @@ public class PlayerFollowCamera : MonoBehaviour
     private float defaultMaxDistance;
     private float defaultDistance;
     private bool inputEnabled = true;
+    private bool isAiming;
+    private float aimWeight;
+
+    public bool IsAiming => isAiming && aimWeight > 0.5f;
+    public float Yaw => yaw;
 
     private void Start()
     {
@@ -73,8 +84,14 @@ public class PlayerFollowCamera : MonoBehaviour
         {
             ReadMouseInput();
             ReadZoomInput();
+            ReadAimInput();
+        }
+        else
+        {
+            isAiming = false;
         }
 
+        UpdateAimWeight();
         UpdateDistance();
         UpdateCamera();
     }
@@ -141,6 +158,9 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void ReadZoomInput()
     {
+        if (isAiming)
+            return;
+
         float scroll = Input.GetAxis("Mouse ScrollWheel");
 
         if (Mathf.Abs(scroll) < 0.001f)
@@ -150,11 +170,31 @@ public class PlayerFollowCamera : MonoBehaviour
         targetDistance = Mathf.Clamp(targetDistance, minDistance, maxDistance);
     }
 
+    private void ReadAimInput()
+    {
+        isAiming = Input.GetKey(aimKey);
+    }
+
+    private void UpdateAimWeight()
+    {
+        float targetAimWeight = isAiming ? 1f : 0f;
+
+        aimWeight = Mathf.MoveTowards(
+            aimWeight,
+            targetAimWeight,
+            distanceTransitionSpeed * Time.deltaTime
+        );
+    }
+
     private void UpdateDistance()
     {
+        float desiredDistance = isAiming
+            ? Mathf.Clamp(aimDistance, minDistance, maxDistance)
+            : targetDistance;
+
         distance = Mathf.MoveTowards(
             distance,
-            targetDistance,
+            desiredDistance,
             distanceTransitionSpeed * Time.deltaTime
         );
     }
@@ -163,7 +203,11 @@ public class PlayerFollowCamera : MonoBehaviour
     {
         Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
 
-        Vector3 lookPoint = target.position + Vector3.up * height;
+        Vector3 baseLookPoint = target.position + Vector3.up * height;
+        Vector3 shoulderOffset = rotation * aimShoulderOffset * aimWeight;
+        Vector3 lookPoint = baseLookPoint + shoulderOffset;
+        Vector3 aimLookPoint = baseLookPoint + rotation * Vector3.forward * aimLookAhead * aimWeight;
+        Vector3 rotationLookPoint = Vector3.Lerp(baseLookPoint, aimLookPoint, aimWeight);
         Vector3 cameraDirection = rotation * Vector3.back;
 
         float availableDistance = GetAvailableDistance(lookPoint, cameraDirection);
@@ -186,7 +230,7 @@ public class PlayerFollowCamera : MonoBehaviour
             positionSmooth * Time.deltaTime
         );
 
-        Quaternion desiredRotation = Quaternion.LookRotation(lookPoint - transform.position);
+        Quaternion desiredRotation = Quaternion.LookRotation(rotationLookPoint - transform.position);
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
@@ -313,5 +357,7 @@ public class PlayerFollowCamera : MonoBehaviour
 
         if (inputEnabled)
             ApplyGameplayCursorState();
+        else
+            isAiming = false;
     }
 }

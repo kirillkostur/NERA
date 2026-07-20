@@ -1,0 +1,673 @@
+NERA — Sprint 04 Plan
+Expedition 01 Gameplay Content
+1. Назначение Sprint 04
+Sprint 04 нужен, чтобы Expedition 01 перестала быть пустой сценой и стала первым настоящим игровым выездом игрока за пределы станции.
+После Sprint 03 игрок уже может:
+Station
+→ Restore Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+Sprint 04 добавляет содержимое Expedition 01:
+Arrive at Expedition 01
+→ Explore location
+→ Find ancient record
+→ Find research object
+→ Notice IO trace
+→ Collect / scan / inspect object
+→ Return to station
+2. Главная цель спринта
+Цель
+Сделать первый рабочий gameplay-сценарий Expedition 01.
+Игрок должен:
+попасть в Expedition_01_FirstPlayable;
+появиться в правильной стартовой точке;
+пройти короткий маршрут по локации;
+найти древнюю запись;
+прочитать / забрать запись;
+найти исследуемый объект;
+взаимодействовать с ним;
+увидеть след IO или слабую IO-сферу;
+получить понятный результат экспедиции;
+вернуться на станцию.
+3. Почему это важно
+До Sprint 04 игра проверяет в основном системы станции.
+Sprint 04 впервые проверяет главный смысл NERA:
+я вышел в неизвестность
+→ нашёл следы древней цивилизации
+→ получил новый вопрос
+→ вернулся на станцию с находкой
+Это первый спринт, где появляется настоящая эмоция проекта:
+я ближе к ответу
+4. Scope Sprint 04
+4.1. Что входит
+В Sprint 04 входит:
+blockout Expedition 01;
+стартовая точка игрока;
+короткий маршрут;
+ancient record interactable;
+research object interactable;
+IO trace placeholder;
+простая логика “объект найден”;
+простая логика “запись найдена”;
+return point на станцию;
+обновление runtime state после экспедиции;
+minimal visual readability;
+технический билд.
+4.2. Что НЕ входит
+В Sprint 04 не входит:
+полноценный art pass Expedition 01;
+финальное освещение;
+сложные puzzle mechanics;
+боевой encounter с IO;
+полноценный research UI;
+полноценная library;
+translation system;
+save/load на диск;
+катсцены;
+озвучка;
+сложные VFX;
+большая открытая локация;
+несколько путей прохождения.
+5. Основной игровой flow Expedition 01
+5.1. Вход в экспедицию
+После нажатия Travel в терминале загружается сцена:
+Expedition_01_FirstPlayable
+Игрок появляется в точке:
+Expedition01_PlayerStart
+Перед игроком должна быть читаемая локация:
+каменистая пустыня;
+вход в древний комплекс / заброшенный аванпост;
+видимый ориентир;
+короткий путь вперёд.
+5.2. Первая цель
+Игрок должен сразу понять направление.
+На Sprint 04 можно использовать placeholder objective text:
+Explore the detected structure.
+Или на русском для debug:
+Исследовать найденную структуру.
+5.3. Древняя запись
+Игрок находит древнюю запись.
+Prompt:
+[E] Read Ancient Record
+После взаимодействия:
+Ancient record found.
+Translation data added.
+На Sprint 04 это не обязано открывать полноценную Library или Translation.
+Достаточно runtime state:
+AncientRecord_01_Found = true
+5.4. Исследуемый объект
+Игрок находит объект древней цивилизации NERA.
+Prompt:
+Hold [E] Inspect Object
+После взаимодействия:
+Research object collected.
+Return to station for analysis.
+Runtime state:
+ResearchObject_01_Collected = true
+5.5. След IO
+Игрок встречает не полноценного врага, а след IO.
+Это может быть:
+энергетический след;
+слабая сфера;
+искажённый воздух;
+обгоревшая зона;
+пульсирующий VFX;
+предупреждающий звук.
+Prompt не обязателен.
+Главная задача:
+показать, что IO уже здесь или была здесь
+5.6. Возвращение на станцию
+После нахождения исследуемого объекта игрок должен иметь возможность вернуться.
+Варианты:
+Вариант А — return trigger
+[E] Return to Station
+Вариант B — interactable beacon
+[E] Use Return Beacon
+Вариант C — зона выхода
+Enter extraction zone → Load Station
+Для First Playable лучше:
+Return Beacon / Portal Exit
+Потому что это явно, понятно и легко тестировать.
+6. Expedition 01 Design Rules
+6.1. Размер локации
+Expedition 01 должна быть маленькой.
+Ориентир:
+3–5 минут прохождения
+Не нужно делать большую открытую карту.
+6.2. Структура маршрута
+Рекомендуемая структура:
+Arrival Point
+→ Approach Path
+→ Ancient Structure Entrance
+→ Record Area
+→ Research Object Area
+→ IO Trace Area
+→ Return Point
+6.3. Layout
+Простой layout:
+[Start]
+|
+v
+[Open Desert Path]
+|
+v
+[Ancient Entrance]
+|
++--> [Ancient Record]
+|
+v
+[Central Object]
+|
++--> [IO Trace]
+|
+v
+[Return Beacon]
+6.4. Игрок не должен заблудиться
+Для Sprint 04 важнее пройти flow, чем дать свободу.
+Делать:
+сильный силуэт цели;
+световой акцент на входе;
+читаемый путь;
+ограничители из камней;
+простой контраст;
+минимальное количество ответвлений.
+Не делать:
+лабиринт;
+большую пустыню;
+много одинаковых проходов;
+скрытые обязательные предметы;
+вертикальную навигацию без причины.
+7. Контент Expedition 01
+7.1. Древний комплекс
+Expedition 01 — это небольшой древний аванпост цивилизации NERA.
+Важно:
+сами существа NERA не показываются
+Их присутствие передаётся через:
+архитектуру;
+устройства;
+следы эксплуатации;
+механические элементы;
+органические формы;
+странные пропорции;
+энергетические линии.
+7.2. Древняя запись
+Запись должна дать первый намёк на язык NERA.
+Для Sprint 04 текст может быть placeholder.
+Пример:
+Unknown symbols detected.
+Partial pattern recognized.
+Или по-русски для разработки:
+Обнаружены неизвестные символы.
+Система распознала повторяющийся фрагмент.
+7.3. Исследуемый объект
+Объект должен выглядеть как что-то важное.
+Варианты:
+энергетический кристалл;
+повреждённый релейный узел;
+древний модуль памяти;
+часть механического протеза;
+органо-механический интерфейс;
+устройство питания аванпоста.
+Для First Playable лучше:
+NERA Memory Core
+Почему:
+звучит понятно;
+связано с библиотекой;
+связано с исследованием;
+может позже дать translation progress;
+визуально легко сделать как объект с glow.
+7.4. След IO
+След IO в Expedition 01 должен быть слабым.
+Это не бой.
+Это предупреждение:
+IO не просто угроза Земли.
+Она уже связана с NERA.
+Визуально:
+слабая синяя энергия;
+нестабильная сфера;
+след на поверхности;
+distortion / glow;
+лёгкий звук.
+Уровень опасности:
+IO Blue / Weak Trace
+8. Runtime States Sprint 04
+8.1. Минимальные состояния
+На Sprint 04 можно использовать runtime flags:
+Expedition01_Visited
+AncientRecord01_Found
+ResearchObject01_Collected
+IOTrace01_Seen
+Expedition01_Returned
+8.2. Что важно
+Эти состояния пока могут жить только в памяти.
+Save/load не нужен.
+Но они должны быть в одном месте, а не внутри UI.
+8.3. Где хранить
+Возможные классы:
+ExpeditionProgressController
+FirstPlayableProgressState
+GameSessionState
+Для текущего этапа лучше:
+GameSessionState
+Потому что First Playable уже начинает связывать станцию, терминал, экспедицию, research и library.
+9. Предлагаемые классы
+9.1. Runtime/Expeditions
+Папка:
+Assets/_Project/NERA/Code/Runtime/Expeditions
+Классы:
+ExpeditionProgressController.cs
+ExpeditionObjectiveController.cs
+ExpeditionReturnController.cs
+ExpeditionSceneBootstrap.cs
+9.2. Runtime/Interaction
+Расширить существующую систему:
+ReadableRecordInteractable.cs
+InspectableObjectInteractable.cs
+ReturnToStationInteractable.cs
+Если не хочется раздувать Interaction, можно положить их в:
+Runtime/Expeditions/Interactables
+9.3. Runtime/Core
+Добавить:
+GameSessionState.cs
+Минимальная задача:
+хранить runtime flags First Playable
+10. Prefabs Sprint 04
+10.1. Ancient Record Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/Expeditions/Expedition01/EXP01_AncientRecord.prefab
+Содержит:
+mesh placeholder;
+collider;
+interactable;
+simple glow marker;
+record id;
+found state handling.
+10.2. Research Object Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/Expeditions/Expedition01/EXP01_NERA_MemoryCore.prefab
+Содержит:
+mesh placeholder;
+collider;
+hold interactable;
+object id;
+collected state handling;
+optional VFX glow.
+10.3. IO Trace Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/IO/IO_Trace_Blue_Weak.prefab
+Содержит:
+simple mesh / particle placeholder;
+blue emission;
+trigger zone;
+optional warning message;
+optional sound placeholder.
+10.4. Return Beacon Prefab
+Путь:
+Assets/_Project/NERA/Prefabs/Expeditions/EXP_ReturnBeacon.prefab
+Содержит:
+mesh placeholder;
+collider;
+interactable;
+scene transition target;
+prompt text.
+11. Scene Setup
+11.1. Expedition_01_FirstPlayable
+Сцена:
+Assets/_Project/NERA/Scenes/Expeditions/Expedition_01_FirstPlayable.unity
+Должна содержать:
+Expedition01_PlayerStart
+ExpeditionSceneBootstrap
+Player
+CameraRig
+Environment_Blockout
+AncientRecord_01
+NERA_MemoryCore_01
+IO_Trace_Blue_Weak
+ReturnBeacon
+Lighting
+Fog
+Debug
+11.2. Рекомендуемая иерархия сцены
+Expedition_01_FirstPlayable
+├── _Scene
+│   ├── ExpeditionSceneBootstrap
+│   ├── ExpeditionObjectiveController
+│   └── SceneTransitionController
+│
+├── Player
+│   ├── PlayerCharacter
+│   └── CameraRig
+│
+├── Environment
+│   ├── Terrain_Blockout
+│   ├── Rocks_Blockout
+│   ├── AncientStructure_Blockout
+│   └── Boundaries
+│
+├── Gameplay
+│   ├── Interactables
+│   │   ├── AncientRecord_01
+│   │   ├── NERA_MemoryCore_01
+│   │   └── ReturnBeacon
+│   ├── IO
+│   │   └── IO_Trace_Blue_Weak
+│   └── Triggers
+│
+├── Lighting
+│   ├── DirectionalLight
+│   ├── BakedLights
+│   └── LocalHighlights
+│
+├── VFX
+│   ├── FogVolumes
+│   └── EnergyEffects
+│
+├── Audio
+│   └── Ambience
+│
+├── UI
+│   └── ObjectiveHint
+│
+└── Debug
+12. Objective Rules
+12.1. Objective text
+На Sprint 04 можно использовать простой objective hint.
+Пример последовательности:
+Explore the detected structure.
+Find the source of the signal.
+Inspect the ancient object.
+Return to station for analysis.
+12.2. Objective progression
+Минимальная логика:
+On Expedition Start:
+Explore the detected structure.
+On Ancient Record Found:
+Find the source of the signal.
+On Research Object Collected:
+Return to station for analysis.
+On Return Beacon Used:
+Load Station.
+12.3. Не делать quest system
+В Sprint 04 не нужна полноценная quest system.
+Нужно только:
+простое переключение objective text по событиям
+Quest system можно делать позже, когда станет ясно, сколько задач реально будет в игре.
+13. Interaction Rules
+13.1. Ancient Record
+Тип interaction:
+Press
+Prompt:
+[E] Read Ancient Record
+Результат:
+AncientRecord01_Found = true
+13.2. Research Object
+Тип interaction:
+Hold
+Prompt:
+Hold [E] Inspect Object
+Результат:
+ResearchObject01_Collected = true
+13.3. IO Trace
+Тип interaction:
+No required interaction
+Результат может быть через trigger:
+IOTrace01_Seen = true
+Debug message:
+Unstable IO energy detected.
+13.4. Return Beacon
+Тип interaction:
+Press
+Prompt:
+[E] Return to Station
+Результат:
+Load Station_FirstPlayable
+14. Visual Rules
+14.1. Expedition 01 style
+Expedition 01 должна выглядеть как:
+каменистая пустыня
++ древний органо-механический аванпост
++ слабые энергетические следы
+14.2. Что важно визуально
+Важнее всего:
+видимый силуэт комплекса;
+понятный путь;
+контраст между пустыней и древними объектами;
+glow на важных interactable;
+читаемый IO trace;
+атмосферный fog.
+14.3. Что не важно в Sprint 04
+Не важно:
+финальные модели;
+финальные материалы;
+детальный terrain;
+финальные VFX;
+сложные decals;
+большой dressing.
+15. Lighting Rules
+15.1. Освещение Sprint 04
+Можно использовать:
+один Directional Light;
+baked lighting для статичных объектов;
+1–3 local lights для важных объектов;
+fog;
+emissive материалы.
+15.2. LOW-friendly правило
+Не делать много real-time lights.
+Для First Playable:
+важные объекты подсвечивать аккуратно
+Не делать:
+10 dynamic lights вокруг каждого interactable
+16. IO Trace Rules
+16.1. IO в Sprint 04 — не враг
+В Sprint 04 IO не должна быть полноценным противником.
+Она должна быть:
+присутствием
+А не:
+боевой системой
+16.2. Что показывает IO Trace
+IO Trace должна дать игроку мысль:
+IO связана не только с Землёй.
+На NERA тоже есть её след.
+16.3. Цвет
+Используем:
+Blue = weak / low danger
+Yellow и Red не использовать в Sprint 04.
+17. Data Rules
+17.1. ID объектов
+Для важных объектов нужны стабильные ID:
+AncientRecord_01
+ResearchObject_01
+IOTrace_01
+17.2. Почему ID важны
+Даже без save/load ID нужны, чтобы позже не переделывать:
+library entries;
+research entries;
+translation entries;
+save data;
+analytics/debug;
+progression state.
+18. Sprint 04 Tasks
+18.1. Expedition Scene
+TASK-S04-001 — Prepare Expedition_01_FirstPlayable scene
+TASK-S04-002 — Add player spawn point
+TASK-S04-003 — Add basic blockout terrain
+TASK-S04-004 — Add ancient structure blockout
+TASK-S04-005 — Add simple path and boundaries
+TASK-S04-006 — Add return point location
+18.2. Expedition Flow
+TASK-S04-007 — Create ExpeditionSceneBootstrap
+TASK-S04-008 — Mark Expedition01_Visited on scene start
+TASK-S04-009 — Add simple objective text
+TASK-S04-010 — Update objective after key interactions
+18.3. Ancient Record
+TASK-S04-011 — Create Ancient Record placeholder mesh
+TASK-S04-012 — Create EXP01_AncientRecord prefab
+TASK-S04-013 — Add Press Interaction
+TASK-S04-014 — Add prompt: [E] Read Ancient Record
+TASK-S04-015 — Set AncientRecord01_Found after interaction
+TASK-S04-016 — Show debug message after reading
+18.4. Research Object
+TASK-S04-017 — Create NERA Memory Core placeholder mesh
+TASK-S04-018 — Create EXP01_NERA_MemoryCore prefab
+TASK-S04-019 — Add Hold Interaction
+TASK-S04-020 — Add prompt: Hold [E] Inspect Object
+TASK-S04-021 — Set ResearchObject01_Collected after interaction
+TASK-S04-022 — Show debug message: Return to station for analysis
+18.5. IO Trace
+TASK-S04-023 — Create IO_Trace_Blue_Weak prefab
+TASK-S04-024 — Add simple blue emission / VFX placeholder
+TASK-S04-025 — Add trigger zone
+TASK-S04-026 — Set IOTrace01_Seen when player enters trigger
+TASK-S04-027 — Show debug message: Unstable IO energy detected
+18.6. Return to Station
+TASK-S04-028 — Create EXP_ReturnBeacon prefab
+TASK-S04-029 — Add Press Interaction
+TASK-S04-030 — Add prompt: [E] Return to Station
+TASK-S04-031 — Load Station_FirstPlayable on interaction
+TASK-S04-032 — Confirm player spawns correctly on station return
+18.7. State
+TASK-S04-033 — Create GameSessionState
+TASK-S04-034 — Add Expedition01_Visited flag
+TASK-S04-035 — Add AncientRecord01_Found flag
+TASK-S04-036 — Add ResearchObject01_Collected flag
+TASK-S04-037 — Add IOTrace01_Seen flag
+TASK-S04-038 — Add Expedition01_Returned flag
+18.8. Build
+TASK-S04-039 — Clean Console errors
+TASK-S04-040 — Check both scenes in Build Settings
+TASK-S04-041 — Create standalone build
+TASK-S04-042 — Test full Station → Expedition → Station flow
+TASK-S04-043 — Write Sprint 04 result notes
+19. Рекомендуемый порядок выполнения
+День 1–2
+Expedition scene blockout
+Player start
+Main path
+Boundaries
+Return point
+День 3–4
+GameSessionState
+ExpeditionSceneBootstrap
+Objective text
+Ancient Record interaction
+День 5–6
+Research Object interaction
+IO Trace placeholder
+Runtime flags
+Debug messages
+День 7–8
+Return Beacon
+Station return
+Spawn check
+Full scene transition test
+День 9–10
+Lighting readability
+Cleanup
+Standalone build
+Bug fixing
+Sprint notes
+20. Критерии готовности Sprint 04
+Sprint 04 считается готовым, если:
+20.1. Expedition Scene
+сцена Expedition_01_FirstPlayable загружается;
+игрок появляется в правильной точке;
+есть читаемый маршрут;
+есть древний комплекс / аванпост;
+игрок не может легко выйти за пределы gameplay-зоны.
+20.2. Ancient Record
+запись можно найти;
+появляется prompt;
+interaction работает;
+после interaction ставится runtime flag;
+игрок получает понятный feedback.
+20.3. Research Object
+объект можно найти;
+появляется hold prompt;
+hold interaction работает;
+после interaction ставится runtime flag;
+игрок понимает, что нужно вернуться на станцию.
+20.4. IO Trace
+IO trace виден;
+игрок замечает его;
+trigger или proximity работает;
+ставится runtime flag;
+IO не превращается в полноценный бой.
+20.5. Return
+игрок может вернуться на станцию;
+сцена станции загружается;
+player spawn после возврата работает;
+состояние экспедиции не теряется в рамках текущей сессии.
+20.6. Technical
+нет ошибок в Console;
+нет Missing Scripts;
+нет Missing Prefabs;
+нет Missing Materials;
+билд собирается;
+полный flow работает в standalone build.
+21. Полный flow после Sprint 04
+После Sprint 04 игра должна проходиться так:
+Start on Station
+→ Restore Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Explore Ancient Outpost
+→ Read Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+Это уже полноценная первая экспедиция в минимальном виде.
+22. Что не исправлять в Sprint 04
+Не тратить время на:
+финальную красоту Expedition 01
+сложные материалы
+боёвку с IO
+полноценный research UI
+полноценную library
+translation levels
+save/load
+катсцены
+много разных предметов
+большую карту
+Главная цель Sprint 04:
+первая экспедиция должна работать как gameplay flow
+23. Риски Sprint 04
+23.1. Риск: начать делать красивую локацию
+Проблема:
+Можно потратить много времени на окружение, камни, материалы и свет.
+Решение:
+Сначала blockout и маршрут.
+Потом readable lighting.
+Art pass позже.
+23.2. Риск: сделать слишком большую Expedition 01
+Проблема:
+Большая локация потребует навигации, оптимизации, контента и времени.
+Решение:
+Expedition 01 = 3–5 минут.
+Один маршрут.
+Одна запись.
+Один объект.
+Один след IO.
+23.3. Риск: начать делать бой
+Проблема:
+IO может потянуть за собой AI, урон, смерть, баланс, анимации и UI.
+Решение:
+В Sprint 04 IO = след / присутствие.
+Бой не делаем.
+23.4. Риск: забыть про возврат
+Проблема:
+Игрок найдёт объект, но не будет понятного выхода.
+Решение:
+Return Beacon должен быть частью обязательного flow.
+24. Главный результат Sprint 04
+После Sprint 04 у NERA впервые появляется рабочая связка:
+станция
+→ терминал
+→ дрон
+→ экспедиция
+→ находка
+→ возвращение
+Это уже основа First Playable.

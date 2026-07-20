@@ -1,5 +1,7 @@
 using NERA.Interaction;
 using NERA.Inventory;
+using NERA.Expeditions;
+using NERA.Library;
 using UnityEngine;
 
 namespace NERA.Items
@@ -59,6 +61,14 @@ namespace NERA.Items
 
             if (!inventory.AddItem(itemData))
                 return;
+
+            LibraryController.Instance?.RegisterKnownItem(itemData);
+            if (itemData.ResearchDefinition != null)
+            {
+                ExpeditionProgressController.Instance?.MarkResearchSampleCollected(
+                    itemData.DisplayName
+                );
+            }
 
             base.CompleteInteraction(interactor);
             SetAvailable(false, "Picked Up");

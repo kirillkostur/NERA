@@ -1,0 +1,656 @@
+NERA — Sprint 10 Plan
+Post-FP Cleanup + Milestone 02 Foundation
+1. Назначение Sprint 10
+Sprint 10 открывает Milestone 02.
+Его задача — не добавить Expedition 02 сразу, а подготовить проект к расширению.
+После First Playable у нас уже есть:
+Station
+Terminal
+Drone
+Expedition 01
+Research
+Library
+Translation
+Save Placeholder
+GameSessionState
+Но всё это было собрано под одну экспедицию и один короткий loop.
+Sprint 10 нужен, чтобы проект выдержал:
+Expedition 02
+? Point 01
+Antenna System
+Translation Partial
+несколько location states
+несколько research objects
+несколько library entries
+Главный принцип Sprint 10:
+перед расширением — укрепить фундамент
+2. Главная цель спринта
+Цель
+Подготовить техническую и структурную основу для Milestone 02.
+После Sprint 10 проект должен уметь:
+хранить несколько локаций через единый location state;
+различать типы локаций:
+Expedition;
+UnknownSignal / ?;
+хранить несколько research objects;
+хранить несколько library entries;
+отображать разные типы локаций в терминале;
+не держать прогресс в отдельных bool на каждую вещь;
+быть готовым к Expedition 02 и Antenna без переписывания всего.
+3. Почему это важно
+Если сразу начать делать Expedition 02, проект быстро получит плохую структуру:
+Expedition01_Visited
+Expedition02_Visited
+Expedition03_Visited
+QuestionPoint01_Visited
+QuestionPoint02_Visited
+Record01_Found
+Record02_Found
+Record03_Found
+ResearchObject01_Collected
+ResearchObject02_Collected
+...
+Это быстро станет неудобно поддерживать.
+Sprint 10 должен заменить подход:
+много отдельных bool
+на подход:
+единые ID + state collections
+4. Scope Sprint 10
+4.1. Что входит
+В Sprint 10 входит:
+разбор долгов после First Playable;
+cleanup must-fix из Post-FP Review;
+рефакторинг GameSessionState;
+добавление LocationId;
+добавление LocationType;
+добавление LocationState;
+добавление LocationConfig;
+подготовка CFG_Expedition_02;
+подготовка CFG_UnknownSignal_01;
+обновление Terminal Expeditions / Locations UI;
+подготовка Antenna placeholder state;
+обновление SaveData под новые collections;
+проверка, что First Playable не сломан.
+4.2. Что НЕ входит
+В Sprint 10 не входит:
+полноценная Expedition 02 сцена;
+gameplay Expedition 02;
+полноценная Antenna system;
+открытие ? Point 01;
+контент ? Point 01;
+Translation Partial;
+новые VFX;
+новые audio passes;
+финальная карта;
+полноценный inventory;
+новые IO mechanics.
+5. Главный результат Sprint 10
+После Sprint 10 проект должен быть готов к расширению:
+не одна Expedition 01, а система локаций
+не один research object, а система research states
+не набор bool, а масштабируемый session state
+6. Post-FP Cleanup
+6.1. Что проверить
+Перед расширением нужно пройтись по результатам Post-FP Review.
+Проверить:
+Must Fix
+Critical bugs
+Fragile systems
+Confusing UI states
+Debug leftovers
+State duplication
+Scene transition issues
+Save/load issues
+6.2. Что исправлять в Sprint 10
+Исправлять только то, что мешает Milestone 02.
+Примеры:
+GameSessionState слишком завязан на Expedition 01;
+Terminal UI хардкодит Expedition01;
+Research UI хардкодит NERA Memory Core 01;
+SaveData хранит только First Playable bool;
+Location list не поддерживает разные типы точек;
+UI не умеет показывать ?.
+6.3. Что не исправлять сейчас
+Не тратить время на:
+minor visual polish;
+финальные тексты;
+красоту UI;
+звук;
+VFX;
+мелкие clipping issues;
+некритичные typo;
+слабый placeholder art.
+7. Location System Foundation
+7.1. Зачем нужна Location System
+Milestone 02 добавляет разные типы точек:
+Expedition 01
+Expedition 02
+? Point 01
+Их нельзя хранить как разные отдельные кнопки в UI.
+Нужна единая система:
+LocationConfig
+LocationState
+LocationController
+TerminalLocationView
+7.2. LocationId
+Минимальный enum:
+public enum LocationId
+{
+Expedition01,
+Expedition02,
+UnknownSignal01
+}
+В будущем:
+public enum LocationId
+{
+Expedition01,
+Expedition02,
+Expedition03,
+Expedition04,
+Expedition05,
+Expedition06,
+Expedition07,
+Expedition08,
+Expedition09,
+Expedition10,
+UnknownSignal01,
+UnknownSignal02,
+UnknownSignal03
+}
+7.3. LocationType
+public enum LocationType
+{
+Expedition,
+UnknownSignal
+}
+Правило:
+Expedition = обычная экспедиция NERA
+UnknownSignal = ? точка / человеческий след / прошлые миссии
+7.4. LocationState
+public enum LocationState
+{
+Unknown,
+Discovered,
+Visited,
+Completed
+}
+Для First Playable и Milestone 02 достаточно:
+Unknown
+Discovered
+Visited
+Completed
+7.5. LocationConfig
+Минимальные поля:
+LocationId
+LocationType
+DisplayName
+ShortDescription
+SceneName
+DiscoverySource
+InitialState
+MapSymbol
+7.6. DiscoverySource
+public enum DiscoverySource
+{
+Drone,
+Antenna,
+Debug
+}
+Правило:
+Drone открывает Expedition.
+Antenna открывает UnknownSignal / ?.
+8. Location Configs Sprint 10
+8.1. CFG_Expedition_01
+Обновить существующий config:
+LocationId: Expedition01
+LocationType: Expedition
+DisplayName: Expedition 01 — Ancient Outpost
+SceneName: Expedition_01_FirstPlayable
+DiscoverySource: Drone
+MapSymbol: Expedition
+InitialState: Unknown
+8.2. CFG_Expedition_02
+Создать placeholder config:
+LocationId: Expedition02
+LocationType: Expedition
+DisplayName: Expedition 02 — Signal Array
+SceneName: Expedition_02_FirstPlayable
+DiscoverySource: Drone
+MapSymbol: Expedition
+InitialState: Unknown
+Сцена пока может не существовать, но config должен быть готов.
+8.3. CFG_UnknownSignal_01
+Создать placeholder config:
+LocationId: UnknownSignal01
+LocationType: UnknownSignal
+DisplayName: ?
+SceneName: UnknownSignal_01_FirstPlayable
+DiscoverySource: Antenna
+MapSymbol: QuestionMark
+InitialState: Unknown
+Важно:
+На карте и в терминале UnknownSignal показывается как ?
+пока игрок не исследует точку глубже
+9. Terminal Location UI
+9.1. До Sprint 10
+Плохой вариант:
+Expedition section manually shows Expedition 01 button.
+9.2. После Sprint 10
+Хороший вариант:
+Terminal получает список LocationConfig
+Terminal смотрит LocationState
+Terminal показывает discovered locations
+Terminal отображает тип через LocationType / MapSymbol
+9.3. UI раздел
+Лучше переименовать раздел:
+Expeditions
+в:
+Locations
+или оставить:
+Map / Locations
+Рекомендация для NERA:
+Map / Locations
+Потому что в будущем карта будет не просто списком экспедиций.
+9.4. Отображение типов
+Expedition
+[Expedition] Expedition 01 — Ancient Outpost
+Status: Completed
+UnknownSignal
+[?] Unknown Signal
+Status: Discovered
+После исследования ? можно раскрыть название:
+[?] Human Signal Fragment
+Status: Completed
+Но в Sprint 10 это только подготовка.
+10. GameSessionState Refactor
+10.1. Проблема
+First Playable мог хранить состояние так:
+bool Expedition01_Visited
+bool Expedition01_Returned
+bool AncientRecord01_Found
+bool ResearchObject01_Collected
+bool LibraryEntry_NERA_MemoryCore_Unlocked
+Это нормально для FP, но плохо для Milestone 02.
+10.2. Новый подход
+GameSessionState должен перейти к структуре:
+GameSessionState
+├── StationState
+├── DroneState
+├── AntennaState
+├── LocationStates
+├── ResearchStates
+├── LibraryState
+├── TranslationState
+└── ObjectiveState
+10.3. LocationStates
+Dictionary<LocationId, LocationState>
+Пример:
+Expedition01 = Completed
+Expedition02 = Unknown
+UnknownSignal01 = Unknown
+10.4. ResearchStates
+Dictionary<ResearchObjectId, ResearchObjectState>
+Пример:
+NERAMemoryCore01 = Analyzed
+NERASignalRelay02 = NotFound
+HumanSignalFragment01 = NotFound
+10.5. LibraryState
+HashSet<LibraryEntryId> UnlockedEntries
+10.6. TranslationState
+TranslationLevel AncientLanguageLevel
+В Sprint 10 не нужно делать Partial, но структура должна его поддерживать.
+11. Research Foundation
+11.1. Добавить будущие ID
+public enum ResearchObjectId
+{
+NERAMemoryCore01,
+NERASignalRelay02,
+HumanSignalFragment01
+}
+11.2. Состояния
+public enum ResearchObjectState
+{
+NotFound,
+Collected,
+Analyzed
+}
+11.3. Что сделать сейчас
+В Sprint 10 нужно:
+перевести NERA Memory Core 01 на новый ResearchStates;
+подготовить ID для будущих объектов;
+не добавлять сами объекты в сцены.
+12. Library Foundation
+12.1. Добавить будущие LibraryEntryId
+public enum LibraryEntryId
+{
+NERAMemoryCore,
+Expedition01AncientOutpost,
+AncientLanguageFirstSymbols,
+IOWeakTrace,
+Expedition02SignalArray,
+NERASignalRelay,
+IODistortion,
+AntennaCalibration,
+HumanSignal01,
+PreviousMissionFragment01,
+TranslationPartial
+}
+12.2. Что сделать сейчас
+В Sprint 10 нужно:
+убедиться, что Library работает через HashSet<LibraryEntryId>;
+убрать жёсткие bool под каждую запись;
+подготовить configs для будущих записей;
+не писать финальные тексты Milestone 02.
+13. Antenna Foundation
+13.1. Назначение
+В Sprint 10 антенна ещё не открывает ?.
+Но нужно подготовить state и терминал.
+13.2. AntennaState
+public enum AntennaState
+{
+Locked,
+Ready,
+Calibrating,
+SignalFound
+}
+13.3. Начальное состояние
+На старте Milestone 02:
+AntennaState = Locked
+После будущего research из Expedition 02:
+AntennaState = Ready
+В Sprint 10 можно только заложить enum и placeholder UI.
+13.4. Terminal Antenna Section
+Раздел можно добавить disabled:
+Antenna
+Status: Locked
+Signal calibration unavailable.
+Further research required.
+Это готовит игрока и UI к Sprint 12.
+14. SaveData Update
+14.1. Проблема
+SaveData First Playable мог быть слишком конкретным:
+expedition01Visited
+ancientRecord01Found
+researchObject01Analyzed
+14.2. Новый подход
+SaveData должен сохранять collections:
+LocationSaveData[]
+ResearchSaveData[]
+LibraryEntryId[]
+TranslationLevel
+AntennaState
+DroneState
+StationState
+14.3. Минимальная структура
+SaveData
+├── stationPowerState
+├── droneState
+├── antennaState
+├── locations
+├── researchObjects
+├── unlockedLibraryEntries
+├── ancientLanguageLevel
+└── currentObjective
+14.4. Правило
+Save должен сохранять данные, а не scene references.
+15. Compatibility With First Playable
+15.1. Главное правило
+После Sprint 10 First Playable flow должен всё ещё работать.
+Нельзя сломать:
+Station power
+Drone unlock Expedition 01
+Travel to Expedition 01
+Research Memory Core
+Library update
+Translation Fragmented
+Final hint
+15.2. Проверка
+После refactor обязательно пройти:
+Start
+→ Restore Power
+→ Launch Drone
+→ Expedition 01
+→ Return
+→ Research
+→ Library
+→ Translation
+Если после Sprint 10 First Playable не проходит — Sprint 10 не готов.
+16. Proposed Classes
+16.1. Runtime/Locations
+Новая папка:
+Assets/_Project/NERA/Code/Runtime/Locations
+Классы:
+LocationId.cs
+LocationType.cs
+LocationState.cs
+DiscoverySource.cs
+LocationConfig.cs
+LocationController.cs
+LocationSaveData.cs
+TerminalLocationView.cs
+16.2. Runtime/Core
+Расширить:
+GameSessionState.cs
+GameSession.cs
+ObjectiveController.cs
+16.3. Runtime/Save
+Расширить:
+SaveData.cs
+SaveDataMapper.cs
+SaveController.cs
+16.4. Runtime/Terminal
+Расширить:
+TerminalUIScreen.cs
+TerminalNavigationController.cs
+TerminalStatusView.cs
+TerminalAntennaView.cs
+17. Config Folder Updates
+17.1. Locations
+Создать папку:
+Assets/_Project/NERA/Configs/Locations
+Файлы:
+CFG_Location_Expedition_01
+CFG_Location_Expedition_02
+CFG_Location_UnknownSignal_01
+17.2. Research
+Папка:
+Assets/_Project/NERA/Configs/Research
+Подготовить placeholders:
+CFG_Research_NERA_MemoryCore_01
+CFG_Research_NERA_SignalRelay_02
+CFG_Research_HumanSignalFragment_01
+17.3. Library
+Папка:
+Assets/_Project/NERA/Configs/Library
+Подготовить placeholders:
+CFG_Library_Expedition02_SignalArray
+CFG_Library_NERA_SignalRelay
+CFG_Library_IO_Distortion
+CFG_Library_AntennaCalibration
+CFG_Library_HumanSignal_01
+CFG_Library_PreviousMissionFragment_01
+CFG_Library_Translation_Partial
+18. Terminal Status Update
+18.1. Status должен показывать Milestone 02 readiness
+После Sprint 10 Status section может показывать:
+Station: Online
+Drone: Ready / Scan Complete
+Known Locations: 1
+Antenna: Locked
+Language: Fragmented
+18.2. Почему это важно
+Игрок и разработчик должны видеть, что появились новые системные слои:
+Locations;
+Antenna;
+Translation progression.
+Но без добавления нового контента.
+19. Что делать / что не делать
+19.1. Делать
+убрать хардкод Expedition 01 из UI;
+добавить location configs;
+перевести progress на collections;
+подготовить Antenna state;
+обновить save data;
+проверить First Playable flow;
+оставить Expedition 02 и ? Point как placeholders.
+19.2. Не делать
+не строить Expedition 02;
+не делать антенну рабочей;
+не открывать ?;
+не писать финальные тексты;
+не делать финальную карту;
+не делать много UI polish;
+не добавлять новые gameplay mechanics.
+20. Sprint 10 Tasks
+20.1. Cleanup
+TASK-S10-001 — Review Post-FP must-fix list
+TASK-S10-002 — Fix only foundation-critical issues
+TASK-S10-003 — Remove obsolete FP-specific debug dependencies
+TASK-S10-004 — Confirm FP flow baseline before refactor
+20.2. Location Foundation
+TASK-S10-005 — Create LocationId enum
+TASK-S10-006 — Create LocationType enum
+TASK-S10-007 — Create LocationState enum
+TASK-S10-008 — Create DiscoverySource enum
+TASK-S10-009 — Create LocationConfig ScriptableObject
+TASK-S10-010 — Create LocationController
+TASK-S10-011 — Move Expedition 01 state into LocationStates
+20.3. Location Configs
+TASK-S10-012 — Create CFG_Location_Expedition_01
+TASK-S10-013 — Create CFG_Location_Expedition_02 placeholder
+TASK-S10-014 — Create CFG_Location_UnknownSignal_01 placeholder
+TASK-S10-015 — Assign Expedition 01 scene name
+TASK-S10-016 — Assign placeholder scene names for future locations
+20.4. Terminal Locations UI
+TASK-S10-017 — Rename Expeditions section to Map / Locations
+TASK-S10-018 — Display locations from configs
+TASK-S10-019 — Show only discovered locations by default
+TASK-S10-020 — Support Expedition type label
+TASK-S10-021 — Support ? / UnknownSignal symbol
+TASK-S10-022 — Keep Expedition 01 travel working
+20.5. Research Foundation
+TASK-S10-023 — Update ResearchObjectId enum
+TASK-S10-024 — Move Memory Core state into ResearchStates
+TASK-S10-025 — Prepare future research IDs
+TASK-S10-026 — Confirm Research UI still works for Memory Core 01
+20.6. Library Foundation
+TASK-S10-027 — Update LibraryEntryId enum
+TASK-S10-028 — Move Library state into unlocked entry collection
+TASK-S10-029 — Prepare future Library entry IDs
+TASK-S10-030 — Confirm Library UI still shows FP entries
+20.7. Antenna Foundation
+TASK-S10-031 — Create AntennaState enum
+TASK-S10-032 — Add AntennaState to GameSessionState
+TASK-S10-033 — Add Terminal Antenna placeholder section
+TASK-S10-034 — Show Antenna Locked state
+20.8. Save Update
+TASK-S10-035 — Update SaveData to collections
+TASK-S10-036 — Update SaveDataMapper
+TASK-S10-037 — Save LocationStates
+TASK-S10-038 — Save ResearchStates
+TASK-S10-039 — Save unlocked Library entries
+TASK-S10-040 — Save AntennaState
+TASK-S10-041 — Test Save/Load/Reset after refactor
+20.9. Validation
+TASK-S10-042 — Run full First Playable flow in Editor
+TASK-S10-043 — Run full First Playable flow in build
+TASK-S10-044 — Confirm Expedition 01 still unlocks via Drone
+TASK-S10-045 — Confirm Research/Library/Translation still work
+TASK-S10-046 — Confirm no new blocker bugs
+TASK-S10-047 — Write Sprint 10 result notes
+21. Рекомендуемый порядок выполнения
+День 1–2
+Post-FP must-fix review
+FP baseline test
+Location enums
+LocationConfig
+LocationController
+День 3–4
+Move Expedition 01 state to LocationStates
+Create location configs
+Update Terminal Map / Locations section
+Keep Expedition 01 working
+День 5–6
+ResearchStates refactor
+Library unlocked entries collection
+Future IDs
+AntennaState placeholder
+День 7–8
+SaveData collections
+SaveDataMapper update
+Save/Load/Reset test
+Terminal Status update
+День 9–10
+Full FP flow retest
+Standalone build
+Bug fixing
+Sprint 10 result notes
+Milestone 02 readiness check
+22. Критерии готовности Sprint 10
+Sprint 10 считается готовым, если:
+22.1. Location Foundation
+есть LocationId;
+есть LocationType;
+есть LocationState;
+есть DiscoverySource;
+есть LocationConfig;
+Expedition 01 переведена в location state;
+placeholders для Expedition 02 и ? Point 01 созданы.
+22.2. Terminal
+раздел Map / Locations работает;
+Expedition 01 отображается через config;
+travel в Expedition 01 работает;
+UI поддерживает тип Expedition;
+UI подготовлен к типу UnknownSignal / ?.
+22.3. State
+GameSessionState больше не держит всё через отдельные FP bool;
+location states хранятся коллекцией;
+research states хранятся коллекцией;
+library entries хранятся коллекцией;
+AntennaState добавлен.
+22.4. Save
+SaveData поддерживает collections;
+save работает;
+load работает;
+reset работает;
+First Playable state восстанавливается корректно.
+22.5. Compatibility
+First Playable flow не сломан;
+Expedition 01 открывается через Drone;
+Research работает;
+Library работает;
+Translation Fragmented работает;
+билд собирается;
+нет blocker bugs.
+23. Риски Sprint 10
+23.1. Риск: переписать слишком много
+Проблема:
+Рефактор state может затянуться и сломать First Playable.
+Решение:
+Менять только то, что нужно для Milestone 02.
+После каждого блока проверять FP flow.
+23.2. Риск: сделать полноценную карту
+Проблема:
+Map / Locations может затянуть в UI design и карту планеты.
+Решение:
+В Sprint 10 это всё ещё список/карточки.
+Финальная карта позже.
+23.3. Риск: начать делать Antenna system
+Проблема:
+После добавления AntennaState захочется сразу сделать calibration.
+Решение:
+В Sprint 10 антенна только Locked placeholder.
+Рабочая антенна — Sprint 12.
+23.4. Риск: сломать save/load
+Проблема:
+Переход на collections может сломать старый save.
+Решение:
+Для internal milestone можно reset старый save.
+Главное — новый save работает стабильно.
+24. Главный результат Sprint 10
+После Sprint 10 проект переходит из состояния:
+First Playable сделан под одну экспедицию
+в состояние:
+проект готов поддерживать несколько типов локаций
+Это фундамент для следующего шага:
+Sprint 11 — Expedition 02 Gameplay Content

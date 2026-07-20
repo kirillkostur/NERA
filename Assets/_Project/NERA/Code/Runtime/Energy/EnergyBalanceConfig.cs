@@ -16,18 +16,22 @@ namespace NERA.Energy
         [SerializeField, Min(0f)] private float clearDayGeneration = 40f;
         [SerializeField, Min(0f)] private float cloudyDayGeneration = 18f;
         [SerializeField, Min(0f)] private float sandstormGeneration = 5f;
-        [SerializeField, Min(0f)] private float sandstormContaminationPerSecond = 0.01f;
+        [SerializeField, Min(0f)] private float outdoorDeviceConditionLossPerSecond = 0.005f;
 
         [Header("Station Consumers (per second)")]
         [SerializeField, Min(0f)] private float terminalConsumption = 2f;
         [SerializeField, Min(0f)] private float laboratoryConsumption = 4f;
         [SerializeField, Min(0f)] private float droneChargingConsumption = 4f;
+        [SerializeField, Min(0f)] private float antennaCalibrationConsumption = 3f;
         [SerializeField, Min(0f)] private float lightingConsumption = 3f;
         [SerializeField, Min(0f)] private float turretIdleConsumption = 2f;
         [SerializeField, Min(0f)] private float turretFiringConsumption = 5f;
 
         [Header("Drone")]
         [SerializeField, Min(0.1f)] private float droneRechargeDuration = 20f;
+
+        [Header("Antenna")]
+        [SerializeField, Min(0.1f)] private float antennaCalibrationDuration = 8f;
 
         [Header("Time")]
         [SerializeField, Min(30f)] private float fullDayDurationSeconds = 600f;
@@ -39,14 +43,16 @@ namespace NERA.Energy
         public float ClearDayGeneration => clearDayGeneration;
         public float CloudyDayGeneration => cloudyDayGeneration;
         public float SandstormGeneration => sandstormGeneration;
-        public float SandstormContaminationPerSecond => sandstormContaminationPerSecond;
+        public float OutdoorDeviceConditionLossPerSecond => outdoorDeviceConditionLossPerSecond;
         public float TerminalConsumption => terminalConsumption;
         public float LaboratoryConsumption => laboratoryConsumption;
         public float DroneChargingConsumption => droneChargingConsumption;
+        public float AntennaCalibrationConsumption => antennaCalibrationConsumption;
         public float LightingConsumption => lightingConsumption;
         public float TurretIdleConsumption => turretIdleConsumption;
         public float TurretFiringConsumption => turretFiringConsumption;
         public float DroneRechargeDuration => droneRechargeDuration;
+        public float AntennaCalibrationDuration => antennaCalibrationDuration;
         public float FullDayDurationSeconds => fullDayDurationSeconds;
         public float SunriseHour => sunriseHour;
         public float SunsetHour => sunsetHour;

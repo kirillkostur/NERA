@@ -1,0 +1,660 @@
+NERA — Sprint 05 Plan
+Research + Library Placeholder
+1. Назначение Sprint 05
+Sprint 05 нужен, чтобы после первой экспедиции у игрока появился смысл возвращения на станцию.
+После Sprint 04 игрок уже может:
+Station
+→ Restore Power
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Find Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+Sprint 05 добавляет следующий шаг:
+Return to Station
+→ Analyze Research Object
+→ Update Library
+→ Improve Translation Level
+→ Receive hint for next goal
+Главная задача Sprint 05 — впервые показать центральную тему игры:
+Понять важнее, чем победить.
+2. Главная цель спринта
+Цель
+Сделать первый рабочий placeholder research flow.
+Игрок должен:
+вернуться на станцию после Expedition 01;
+открыть терминал;
+увидеть, что есть новый объект для анализа;
+запустить research / analysis;
+получить результат анализа;
+увидеть обновление Library;
+увидеть улучшение Translation Level;
+получить намёк на следующую цель.
+3. Почему это важно
+До Sprint 05 находки в экспедиции существуют только как flags:
+AncientRecord01_Found = true
+ResearchObject01_Collected = true
+IOTrace01_Seen = true
+Но для NERA этого мало.
+Игра должна объяснить игроку:
+Я не просто подобрал объект.
+Я получил данные.
+Станция их обработала.
+Теперь я лучше понимаю NERA.
+Sprint 05 превращает находки в знание.
+4. Scope Sprint 05
+4.1. Что входит
+В Sprint 05 входит:
+Research placeholder system;
+Research terminal section;
+object analysis action;
+research result state;
+Library placeholder section;
+Library entry unlock;
+Translation level placeholder;
+Ancient Record translation update;
+hint for next objective;
+runtime state update;
+technical build.
+4.2. Что НЕ входит
+В Sprint 05 не входит:
+полноценная research tree;
+сложные research timers;
+ресурсы для исследований;
+несколько исследуемых объектов;
+полноценная библиотека со всеми категориями;
+финальный UI библиотеки;
+полноценная система перевода;
+сохранение на диск;
+Expedition 02;
+антенна;
+? точки;
+финальные тексты лора;
+катсцены;
+озвучка;
+финальный art pass UI.
+5. Основной flow Sprint 05
+5.1. До экспедиции
+До прохождения Expedition 01 в терминале Research section показывает:
+Research
+No samples available.
+Explore discovered expeditions to collect research objects.
+Library section показывает:
+Library
+No entries available.
+Translation section показывает:
+Ancient NERA Language
+Status: Unknown
+5.2. После возвращения с Expedition 01
+Если игрок нашёл NERA Memory Core, терминал показывает:
+Research
+New object available:
+NERA Memory Core
+[Analyze]
+Состояние:
+ResearchObject01_Collected = true
+ResearchObject01_Analyzed = false
+5.3. Запуск анализа
+Игрок нажимает:
+[Analyze]
+Для Sprint 05 анализ может быть мгновенным или с коротким placeholder progress.
+Лучше сделать короткий progress:
+Analyzing NERA Memory Core...
+После завершения:
+ResearchObject01_Analyzed = true
+5.4. Результат анализа
+Терминал показывает:
+Analysis complete.
+Object type:
+Memory storage device.
+Result:
+The object contains fragments of repeated symbolic patterns.
+После этого обновляется Library:
+LibraryEntry_NERA_MemoryCore_Unlocked = true
+LibraryEntry_AncientOutpost_Unlocked = true
+И Translation:
+AncientLanguageLevel = Fragmented
+5.5. Новый намёк
+После анализа игрок получает намёк:
+New objective hint:
+The symbols mention a distant signal array.
+Further scans may reveal its location.
+Для разработки можно использовать русский debug-текст:
+Новый намёк:
+Символы указывают на удалённый сигнальный массив.
+Нужно продолжить сканирование.
+Это подготавливает следующий спринт или Expedition 02.
+6. Research System
+6.1. Назначение
+Research System отвечает за обработку найденных объектов.
+Она не должна быть просто inventory.
+Её смысл:
+найденный объект
+→ анализ
+→ результат
+→ новое знание
+→ обновление библиотеки
+→ прогресс понимания
+6.2. Минимальные состояния research object
+NotFound
+Collected
+Analyzed
+6.3. Для Sprint 05 нужен один объект
+ResearchObject_01 = NERA Memory Core
+Состояния:
+NotFound
+Collected
+Analyzed
+6.4. Research rules
+Делать
+хранить состояние research object отдельно от UI;
+запускать анализ через терминал;
+после анализа обновлять Library;
+после анализа обновлять Translation;
+показывать понятный результат игроку.
+Не делать
+не делать research tree;
+не делать ресурсы для анализа;
+не делать длинные таймеры;
+не делать crafting;
+не делать upgrade system;
+не смешивать research с inventory UI;
+не открывать новую локацию напрямую через research.
+7. Library System
+7.1. Назначение
+Library хранит знания игрока.
+Это не просто список предметов.
+Library должна отвечать на вопрос:
+Что я теперь знаю о NERA?
+7.2. Минимальные категории Library
+Для First Playable можно заложить категории:
+NERA Civilization
+Ancient Language
+IO
+Human Missions
+Expeditions
+Research Objects
+В Sprint 05 достаточно реально использовать:
+NERA Civilization
+Research Objects
+Ancient Language
+IO
+7.3. Library entries Sprint 05
+Минимальные записи:
+LIB_NERA_MemoryCore
+LIB_Expedition01_AncientOutpost
+LIB_AncientLanguage_FirstSymbols
+LIB_IO_WeakTrace
+7.4. Что открывает каждую запись
+LIB_NERA_MemoryCore
+Открывается после анализа объекта:
+ResearchObject01_Analyzed = true
+LIB_Expedition01_AncientOutpost
+Открывается после посещения экспедиции:
+Expedition01_Visited = true
+Или после возвращения:
+Expedition01_Returned = true
+Для Sprint 05 лучше:
+Expedition01_Returned = true
+LIB_AncientLanguage_FirstSymbols
+Открывается после нахождения древней записи:
+AncientRecord01_Found = true
+Но становится осмысленнее после анализа:
+ResearchObject01_Analyzed = true
+LIB_IO_WeakTrace
+Открывается после контакта со следом IO:
+IOTrace01_Seen = true
+8. Translation System Placeholder
+8.1. Правило проекта
+Перевод древних записей использует уровни, не проценты:
+Unknown
+Fragmented
+Partial
+Stable
+Complete
+8.2. Sprint 05 Translation Level
+До Expedition 01:
+AncientLanguageLevel = Unknown
+После нахождения записи, но до анализа:
+AncientLanguageLevel = Unknown
+или:
+AncientLanguageLevel = Fragmented
+Лучшее правило для Sprint 05:
+AncientRecord found alone = Unknown
+Research analysis complete = Fragmented
+Почему:
+запись сама по себе непонятна;
+станция должна обработать данные;
+research получает больше смысла.
+8.3. Результат после анализа
+После анализа NERA Memory Core:
+AncientLanguageLevel = Fragmented
+UI показывает:
+Ancient NERA Language
+Status: Fragmented
+Recognized:
+Repeated symbolic structure detected.
+Meaning:
+Unstable / incomplete.
+8.4. Что НЕ делать
+Не делать:
+проценты перевода;
+мини-игру дешифровки;
+полный словарь;
+много уровней прогресса;
+полноценные тексты;
+автоперевод всего лора.
+9. Terminal UI Sprint 05
+9.1. Разделы терминала после Sprint 05
+Терминал должен иметь:
+Status
+Drone
+Expeditions
+Research
+Library
+Translation
+Exit
+Рабочие в Sprint 05:
+Research
+Library
+Translation
+Уже были рабочие или placeholder:
+Drone
+Expeditions
+9.2. Research section before object
+NERA STATION TERMINAL
+Section: Research
+No samples available.
+Hint:
+Explore discovered expeditions to collect research objects.
+9.3. Research section with object
+NERA STATION TERMINAL
+Section: Research
+Available sample:
+NERA Memory Core
+Status: Collected
+[Analyze]
+9.4. Research section after analysis
+NERA STATION TERMINAL
+Section: Research
+NERA Memory Core
+Status: Analyzed
+Result:
+Memory storage device.
+Contains repeated symbolic patterns.
+9.5. Library section
+NERA STATION TERMINAL
+Section: Library
+Categories:
+[NERA Civilization]
+[Research Objects]
+[Ancient Language]
+[IO]
+После анализа видны карточки:
+NERA Memory Core
+Ancient Outpost
+First Symbols
+Weak IO Trace
+9.6. Translation section
+До анализа:
+Ancient NERA Language
+Status: Unknown
+No stable patterns recognized.
+После анализа:
+Ancient NERA Language
+Status: Fragmented
+Repeated symbols detected.
+Meaning is incomplete.
+10. Runtime States Sprint 05
+10.1. Новые flags
+Добавить в GameSessionState:
+ResearchObject01_Analyzed
+LibraryEntry_NERA_MemoryCore_Unlocked
+LibraryEntry_AncientOutpost_Unlocked
+LibraryEntry_AncientLanguage_FirstSymbols_Unlocked
+LibraryEntry_IO_WeakTrace_Unlocked
+AncientLanguageLevel
+NextObjectiveHintAvailable
+10.2. Не хранить состояние в UI
+Плохо:
+TerminalResearchPanel.hasAnalyzedMemoryCore = true
+Хорошо:
+GameSessionState.ResearchObject01_Analyzed = true
+UI только отображает состояние.
+11. Предлагаемые классы
+11.1. Runtime/Research
+Папка:
+Assets/_Project/NERA/Code/Runtime/Research
+Классы:
+ResearchObjectState.cs
+ResearchObjectId.cs
+ResearchController.cs
+ResearchResult.cs
+ResearchTerminalView.cs
+11.2. Runtime/Library
+Папка:
+Assets/_Project/NERA/Code/Runtime/Library
+Классы:
+LibraryEntryId.cs
+LibraryEntryConfig.cs
+LibraryController.cs
+LibraryTerminalView.cs
+11.3. Runtime/Translation
+Папка:
+Assets/_Project/NERA/Code/Runtime/Translation
+Классы:
+TranslationLevel.cs
+TranslationController.cs
+TranslationTerminalView.cs
+11.4. Runtime/Core
+Расширить:
+GameSessionState.cs
+12. Минимальная модель данных
+12.1. ResearchObjectId
+public enum ResearchObjectId
+{
+NERAMemoryCore01
+}
+12.2. ResearchObjectState
+public enum ResearchObjectState
+{
+NotFound,
+Collected,
+Analyzed
+}
+12.3. TranslationLevel
+public enum TranslationLevel
+{
+Unknown,
+Fragmented,
+Partial,
+Stable,
+Complete
+}
+12.4. LibraryEntryId
+public enum LibraryEntryId
+{
+NERAMemoryCore,
+Expedition01AncientOutpost,
+AncientLanguageFirstSymbols,
+IOWeakTrace
+}
+13. Configs Sprint 05
+13.1. LibraryEntryConfig
+Путь:
+Assets/_Project/NERA/Configs/Library
+Файлы:
+CFG_Library_NERA_MemoryCore
+CFG_Library_Expedition01_AncientOutpost
+CFG_Library_AncientLanguage_FirstSymbols
+CFG_Library_IO_WeakTrace
+13.2. ResearchResultConfig
+Путь:
+Assets/_Project/NERA/Configs/Research
+Файл:
+CFG_ResearchResult_NERA_MemoryCore01
+13.3. Почему configs нужны уже сейчас
+Даже если тексты placeholder, лучше сразу хранить их как данные.
+Плохо:
+Research result text written directly inside UI script.
+Хорошо:
+ResearchController gives result id.
+UI reads ResearchResultConfig.
+14. Research result text placeholder
+14.1. Короткий текст результата
+Object: NERA Memory Core
+Analysis:
+The device contains fragments of repeated symbolic patterns.
+Conclusion:
+This was likely used as a memory storage or communication module.
+New data added to Library.
+Ancient language status updated: Fragmented.
+14.2. Более атмосферный вариант
+Object: NERA Memory Core
+Analysis:
+The internal structure is not electronic in a human sense.
+The device reacts to repeated symbols found in the ancient record.
+Conclusion:
+NERA technology may store meaning through pattern resonance.
+Ancient language status updated: Fragmented.
+Для Sprint 05 лучше использовать первый вариант, потому что он проще и понятнее.
+15. Library text placeholders
+15.1. NERA Memory Core
+NERA Memory Core
+A compact ancient device found inside Expedition 01.
+Initial analysis suggests it was used to store or repeat symbolic patterns.
+Its structure combines organic form and mechanical precision.
+15.2. Ancient Outpost
+Ancient Outpost
+A small abandoned NERA structure located near the station.
+The site contains early evidence of ancient symbolic systems and damaged energy devices.
+No living NERA beings were found.
+15.3. First Symbols
+First Symbols
+The symbols are not translated yet.
+However, repeated patterns suggest that the language has structure.
+Further analysis may reveal stable meanings.
+15.4. Weak IO Trace
+Weak IO Trace
+A weak IO energy trace was detected inside the ancient outpost.
+The trace does not appear immediately hostile, but it confirms that IO activity is not limited to Earth.
+16. Objective after Research
+16.1. Новый objective hint
+После анализа объекта:
+Objective updated:
+Use the drone to search for the signal array.
+Но в Sprint 05 не нужно реально открывать Expedition 02.
+16.2. Почему не открывать новую локацию
+Research не должен напрямую открывать экспедиции.
+Правильная логика позже:
+Research gives hint
+→ player launches drone
+→ drone discovers next expedition
+Неправильно:
+Research complete
+→ Expedition 02 unlocked immediately
+17. Rules
+17.1. Делать
+анализ через терминал;
+результат анализа короткий и понятный;
+Library обновляется после анализа;
+Translation level меняется на Fragmented;
+hint появляется после анализа;
+состояние хранится в GameSessionState;
+UI только отображает state.
+17.2. Не делать
+не делать research tree;
+не делать длинные таймеры;
+не делать ресурсы;
+не делать crafting;
+не открывать экспедиции напрямую;
+не писать лор внутри кода;
+не делать финальный UI;
+не делать save/load;
+не делать слишком много записей в библиотеке.
+18. Sprint 05 Tasks
+18.1. Research System
+TASK-S05-001 — Create ResearchObjectId enum
+TASK-S05-002 — Create ResearchObjectState enum
+TASK-S05-003 — Create ResearchController
+TASK-S05-004 — Connect ResearchController to GameSessionState
+TASK-S05-005 — Add NERA Memory Core state
+TASK-S05-006 — Add Analyze method
+TASK-S05-007 — Set ResearchObject01_Analyzed after analysis
+TASK-S05-008 — Add OnResearchCompleted event
+18.2. Research UI
+TASK-S05-009 — Add Research section to Terminal UI
+TASK-S05-010 — Show empty state before object collected
+TASK-S05-011 — Show NERA Memory Core after collection
+TASK-S05-012 — Add Analyze button
+TASK-S05-013 — Disable Analyze button if already analyzed
+TASK-S05-014 — Show analysis result after completion
+18.3. Library System
+TASK-S05-015 — Create LibraryEntryId enum
+TASK-S05-016 — Create LibraryEntryConfig ScriptableObject
+TASK-S05-017 — Create LibraryController
+TASK-S05-018 — Add UnlockEntry method
+TASK-S05-019 — Add Library entries for Sprint 05
+TASK-S05-020 — Unlock Memory Core entry after research
+TASK-S05-021 — Unlock Ancient Outpost entry after return
+TASK-S05-022 — Unlock First Symbols entry after research
+TASK-S05-023 — Unlock Weak IO Trace entry if IOTrace01_Seen = true
+18.4. Library UI
+TASK-S05-024 — Add Library section to Terminal UI
+TASK-S05-025 — Add category list placeholder
+TASK-S05-026 — Show unlocked Library entries
+TASK-S05-027 — Show selected entry title
+TASK-S05-028 — Show selected entry body text
+18.5. Translation System
+TASK-S05-029 — Create TranslationLevel enum
+TASK-S05-030 — Create TranslationController
+TASK-S05-031 — Default AncientLanguageLevel = Unknown
+TASK-S05-032 — Set AncientLanguageLevel = Fragmented after NERA Memory Core analysis
+TASK-S05-033 — Add OnTranslationLevelChanged event
+18.6. Translation UI
+TASK-S05-034 — Add Translation section to Terminal UI
+TASK-S05-035 — Show current AncientLanguageLevel
+TASK-S05-036 — Show Unknown text before analysis
+TASK-S05-037 — Show Fragmented text after analysis
+18.7. Objective Hint
+TASK-S05-038 — Add NextObjectiveHintAvailable flag
+TASK-S05-039 — Show objective hint after research complete
+TASK-S05-040 — Add terminal status message: Further drone scan recommended
+18.8. Build
+TASK-S05-041 — Clean Console errors
+TASK-S05-042 — Test full Station → Expedition → Station → Research flow
+TASK-S05-043 — Create standalone build
+TASK-S05-044 — Test Sprint 05 flow in build
+TASK-S05-045 — Write Sprint 05 result notes
+19. Рекомендуемый порядок выполнения
+День 1–2
+ResearchObjectId
+ResearchObjectState
+ResearchController
+Analyze method
+GameSessionState integration
+День 3–4
+Research terminal section
+Analyze button
+Research result display
+Runtime state update
+День 5–6
+LibraryEntryId
+LibraryEntryConfig
+LibraryController
+Library entries
+Library terminal section
+День 7–8
+TranslationLevel
+TranslationController
+Translation terminal section
+Unknown → Fragmented state
+Objective hint
+День 9–10
+Full flow test
+Bug fixing
+Standalone build
+Cleanup
+Sprint notes
+20. Критерии готовности Sprint 05
+Sprint 05 считается готовым, если:
+20.1. Research
+до экспедиции research section пустой;
+после сбора NERA Memory Core объект появляется в research section;
+игрок может нажать Analyze;
+после анализа объект получает состояние Analyzed;
+результат анализа отображается в терминале.
+20.2. Library
+Library section существует;
+до открытия записей она пустая или показывает locked state;
+после анализа появляются новые записи;
+игрок может выбрать запись;
+отображается title и body text.
+20.3. Translation
+Translation section существует;
+до анализа уровень Unknown;
+после анализа уровень Fragmented;
+UI показывает изменение уровня;
+не используются проценты перевода.
+20.4. Objective Hint
+после анализа появляется hint на следующую цель;
+hint не открывает Expedition 02 напрямую;
+hint предлагает продолжить сканирование.
+20.5. Technical
+состояние хранится не в UI;
+нет ошибок в Console;
+нет Missing Scripts;
+нет Missing Prefabs;
+билд собирается;
+полный flow работает в standalone build.
+21. Полный flow после Sprint 05
+После Sprint 05 First Playable loop выглядит так:
+Start on Station
+→ Restore Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Explore Ancient Outpost
+→ Read Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+→ Open Terminal
+→ Analyze NERA Memory Core
+→ Library Updated
+→ Ancient Language Level: Fragmented
+→ New hint received
+Это уже почти полный core loop NERA в минимальном виде.
+22. Что не исправлять в Sprint 05
+Не тратить время на:
+финальный дизайн терминала
+сложные категории библиотеки
+много лорных записей
+полноценную дешифровку языка
+research tree
+save/load
+ресурсы исследований
+анимации анализа
+озвучку терминала
+Expedition 02
+Главная цель Sprint 05:
+находки из экспедиции превращаются в знание
+23. Риски Sprint 05
+23.1. Риск: сделать слишком большую Library
+Проблема:
+Библиотека может быстро превратиться в отдельную игру с кучей категорий и текстов.
+Решение:
+В Sprint 05 только 3–4 записи.
+Главная задача — проверить unlock и отображение.
+23.2. Риск: сделать полноценную Translation System
+Проблема:
+Можно уйти в проценты, словарь, мини-игру и сложные правила перевода.
+Решение:
+Только уровни:
+Unknown / Fragmented / Partial / Stable / Complete.
+В Sprint 05 используется только Unknown → Fragmented.
+23.3. Риск: открыть Expedition 02 слишком рано
+Проблема:
+Research result может случайно стать unlock-кнопкой новой локации.
+Решение:
+Research даёт hint.
+Drone открывает обычные экспедиции.
+23.4. Риск: смешать Research, Library и Translation
+Проблема:
+Один UI-скрипт начинает хранить всё: объект, анализ, записи, перевод.
+Решение:
+ResearchController анализирует.
+LibraryController открывает записи.
+TranslationController меняет уровень.
+Terminal UI только показывает.
+24. Главный результат Sprint 05
+После Sprint 05 появляется полный смысл первой экспедиции:
+поехал
+→ нашёл
+→ вернулся
+→ исследовал
+→ понял больше
+Это ключевая формула NERA.

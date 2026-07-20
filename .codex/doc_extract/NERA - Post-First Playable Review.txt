@@ -1,0 +1,446 @@
+NERA — Post-First Playable Review
+Review, Decisions, Next Milestone
+1. Назначение документа
+Этот документ нужен после фиксации:
+NERA First Playable v0.1.0
+Цель — не добавить новые задачи, а спокойно оценить:
+что First Playable доказал;
+что работает;
+что не работает;
+какие системы можно развивать;
+какие системы нужно упростить или переписать;
+какой следующий milestone логичен;
+что делать дальше с Expedition 02, антенной, ? точками, inventory, IO и картой.
+Главный принцип:
+First Playable — это не финал.
+Это проверка, есть ли у NERA рабочее ядро.
+2. Что First Playable должен был доказать
+First Playable должен был проверить главный loop:
+станция
+→ терминал
+→ дрон
+→ экспедиция
+→ находка
+→ возвращение
+→ исследование
+→ библиотека / перевод
+→ новое понимание
+→ новая цель
+Если этот loop ощущается понятным, значит проект имеет основу.
+Если loop работает технически, но не вызывает интереса, значит проблема не в коде, а в подаче, контенте или темпе.
+3. Главные вопросы ревью
+После прохождения First Playable нужно ответить на 10 вопросов.
+3.1. Игровой loop
+Хочется ли после финального hint продолжить играть?
+Если да — core loop работает.
+Если нет — нужно понять почему:
+мало тайны;
+слабая награда за исследование;
+станция не ощущается важной;
+экспедиция слишком пустая;
+research не даёт ощущения открытия;
+Library выглядит как сухой список;
+Translation Level не ощущается значимым.
+3.2. Станция
+Станция ощущается как база игрока или просто меню в 3D?
+Хороший результат:
+игрок понимает, что станция — центр прогресса;
+терминал важен;
+возвращение на станцию имеет смысл;
+включение питания ощущается событием.
+Плохой результат:
+станция выглядит как пустая комната;
+терминал ощущается как обычное меню;
+возвращаться на станцию скучно;
+нет ощущения “я дома / я в безопасной зоне”.
+3.3. Терминал
+Терминал помогает понять игру или мешает?
+Хороший результат:
+игрок понимает разделы;
+понятно, где запускать дрон;
+понятно, где research;
+понятно, что обновилось в Library;
+понятно, что Translation изменился.
+Плохой результат:
+слишком много вкладок;
+непонятно, что нажимать;
+слишком много placeholder text;
+нет визуального приоритета;
+новые данные теряются.
+3.4. Дрон
+Запуск дрона ощущается как обнаружение или как кнопка выбора уровня?
+Хороший результат:
+я запустил сканирование
+→ получил новую точку
+→ хочу туда пойти
+Плохой результат:
+я нажал кнопку
+→ появилась кнопка Travel
+Если дрон ощущается сухо, на следующем этапе его нужно усилить feedback, а не обязательно делать полноценную модель.
+3.5. Expedition 01
+Expedition 01 ощущается как место с тайной?
+Хороший результат:
+виден силуэт древнего комплекса;
+есть понятный маршрут;
+древняя запись вызывает интерес;
+Memory Core ощущается важным;
+IO Trace добавляет тревогу;
+после экспедиции есть желание понять находку.
+Плохой результат:
+локация ощущается как тестовая площадка;
+объекты выглядят одинаково;
+находки неинтересны;
+маршрут слишком прямой или слишком пустой;
+IO Trace не считывается.
+3.6. Research
+Анализ объекта ощущается как награда за экспедицию?
+Хороший результат:
+игрок понимает, что принёс данные;
+анализ даёт новое знание;
+Library обновляется осмысленно;
+Translation Level меняется не просто технически, а эмоционально.
+Плохой результат:
+нажал Analyze и получил сухой текст;
+непонятно, зачем объект был нужен;
+Library не хочется читать;
+Translation выглядит как бесполезный статус.
+3.7. Library
+Library хочется открыть после обновления?
+Хороший результат:
+записи короткие;
+есть ощущение открытия;
+текст отвечает на вопросы;
+появляется новый вопрос.
+Плохой результат:
+слишком сухо;
+слишком длинно;
+нет смысла читать;
+записи ничего не меняют в понимании мира.
+3.8. Translation
+Переход Unknown → Fragmented ощущается важным?
+Хороший результат:
+игрок видит, что язык начал раскрываться;
+уровень Fragmented понятен;
+хочется получить Partial;
+перевод связан с древней записью и Memory Core.
+Плохой результат:
+это просто текст в UI;
+игрок не понимает, зачем нужен Translation Level;
+нет ощущения прогресса.
+3.9. IO
+IO воспринимается как важная угроза или как случайный эффект?
+Хороший результат:
+IO Trace тревожит;
+игрок понимает, что IO связана с NERA;
+IO не превращает игру в shooter;
+появляется вопрос: “что IO делает здесь?”
+Плохой результат:
+след IO незаметен;
+IO выглядит как обычный VFX;
+нет связи с лором;
+игрок не понимает, почему это важно.
+3.10. Техническое состояние
+Проект можно дальше расширять без страха всё сломать?
+Хороший результат:
+systems separated;
+state хранится понятно;
+сцены грузятся стабильно;
+UI обновляется по state;
+debug не обязателен;
+билд собирается.
+Плохой результат:
+состояние размазано;
+UI хранит gameplay state;
+scene transitions ломают input;
+GameSession нестабилен;
+после каждого изменения что-то ломается.
+4. Review Scorecard
+После прохождения First Playable каждому блоку можно дать оценку:
+0 — не работает
+1 — работает технически, но плохо ощущается
+2 — работает и понятно
+3 — работает, понятно и вызывает интерес
+4.1. Таблица оценки
+Core Loop:
+Station:
+Terminal:
+Drone:
+Expedition 01:
+Research:
+Library:
+Translation:
+IO Presence:
+Technical Stability:
+Performance:
+4.2. Интерпретация
+0–1 = нужно пересмотреть
+2 = можно развивать
+3 = сильная сторона проекта
+Главное правило:
+Если Core Loop ниже 2 — нельзя идти в большой production.
+Сначала исправить loop.
+5. Возможные выводы после ревью
+5.1. Вариант A — Core Loop работает
+Если игроку интересно продолжить, следующий milestone можно строить вокруг расширения игры.
+Логичный следующий этап:
+Milestone 02 — Exploration Expansion
+Состав:
+Expedition 02;
+улучшенный Drone Scan;
+первая версия карты;
+начало Antenna system;
+первая ? точка;
+больше Library/Translation контента.
+5.2. Вариант B — Loop работает, но слишком сухой
+Если всё понятно, но не хватает эмоции, следующий milestone должен быть не про новые системы, а про ощущение.
+Логичный следующий этап:
+Milestone 02 — Atmosphere + Discovery Pass
+Состав:
+усиление станции;
+улучшение терминала;
+улучшение Expedition 01;
+stronger IO presence;
+better research reveal;
+better Library writing;
+better audio/VFX.
+5.3. Вариант C — Системы ломкие
+Если First Playable часто ломается, нельзя добавлять Expedition 02.
+Логичный следующий этап:
+Milestone 02 — Technical Stabilization
+Состав:
+GameSession cleanup;
+state flow cleanup;
+terminal architecture cleanup;
+scene loading cleanup;
+save placeholder cleanup;
+input/cursor stabilization;
+better test scenes.
+5.4. Вариант D — Expedition 01 слабая
+Если станции и системы работают, но сама экспедиция неинтересна, следующий milestone должен улучшать контент.
+Логичный следующий этап:
+Milestone 02 — Expedition Quality Pass
+Состав:
+redesign Expedition 01 route;
+better ancient structure;
+stronger Memory Core reveal;
+stronger IO Trace moment;
+improved environmental storytelling;
+better final research payoff.
+6. Что не решать сразу после First Playable
+После First Playable не нужно сразу принимать огромные решения:
+сколько будет точное количество финальных экспедиций;
+нужна ли боёвка;
+какой будет финальный UI;
+будет ли большая открытая карта;
+сколько часов будет игра;
+какие все типы IO;
+какие все системы progression.
+Сначала нужно ответить:
+Работает ли базовая формула NERA?
+Если да — расширяем.
+Если нет — улучшаем формулу.
+7. Post-FP Backlog Categories
+После ревью все идеи нужно разложить по категориям.
+7.1. Must Fix
+То, что мешает базовому прохождению.
+Примеры:
+scene transition breaks input
+terminal does not refresh state
+research result unclear
+Expedition 01 objective confusing
+IO Trace not visible
+7.2. Should Improve
+То, что не ломает игру, но сильно улучшит ощущение.
+Примеры:
+better drone scan feedback
+better station online transition
+better Memory Core visual
+Library NEW markers
+stronger final hint
+7.3. Later
+То, что важно, но не сейчас.
+Примеры:
+Expedition 03+
+full inventory UI
+Steam achievements
+graphics settings
+localization
+full save slots
+7.4. Cut / Avoid
+То, что не подходит NERA или слишком раздувает scope.
+Примеры:
+combat-heavy IO encounters
+loot grind
+crafting tree
+large empty open world
+complex drone piloting
+survival hunger/thirst systems
+8. Decision: Что делать после FP
+После ревью нужно выбрать один из 4 путей.
+8.1. Path A — Expand
+Выбираем, если:
+core loop работает;
+игроку интересно;
+технически проект стабилен;
+Expedition 01 достаточно убедительна.
+Следующий документ:
+Milestone 02 Plan — Exploration Expansion
+8.2. Path B — Polish
+Выбираем, если:
+core loop понятен;
+технически работает;
+но игра пока сухая;
+хочется больше атмосферы и эмоции.
+Следующий документ:
+Milestone 02 Plan — Atmosphere + Discovery Pass
+8.3. Path C — Stabilize
+Выбираем, если:
+много багов;
+state ломается;
+terminal fragile;
+scene transitions нестабильны.
+Следующий документ:
+Milestone 02 Plan — Technical Stabilization
+8.4. Path D — Rework Expedition 01
+Выбираем, если:
+станция работает;
+терминал работает;
+research работает;
+но Expedition 01 неинтересная.
+Следующий документ:
+Milestone 02 Plan — Expedition 01 Rework
+9. Рекомендация для NERA
+Для NERA самый логичный путь после First Playable:
+Path A + часть Path B
+То есть:
+Milestone 02 — Exploration Expansion
+Но с обязательным условием:
+не просто добавлять Expedition 02,
+а усилить чувство открытия
+Почему:
+NERA строится вокруг экспедиций;
+после First Playable игрок должен хотеть следующую цель;
+нужно проверить, масштабируется ли loop на вторую локацию;
+нужно впервые добавить Antenna / ? distinction;
+нужно разделить обычные экспедиции NERA и человеческие следы.
+10. Предлагаемый Milestone 02
+10.1. Название
+Milestone 02 — Exploration Expansion
+10.2. Главная цель
+Расширить First Playable loop до второго уровня понимания:
+дрон открывает обычную Expedition 02
+антенна открывает первую ? точку
+research/library/translation дают контекст
+игрок начинает различать NERA и человеческие следы
+10.3. Что должен добавить Milestone 02
+Expedition 02;
+улучшенный Drone Scan;
+первая Antenna system;
+первая ? точка;
+базовая карта/list distinction;
+больше Library entries;
+Translation Level progress до Partial;
+сильнее IO context;
+лучшее разделение:
+NERA expeditions;
+human traces / previous missions.
+11. Что важно не потерять
+При расширении нельзя сломать главный принцип:
+Понять важнее, чем победить.
+Это значит:
+не превращать IO в обычных врагов;
+не превращать экспедиции в loot runs;
+не делать карту просто списком уровней;
+не делать research как crafting;
+не делать Translation как проценты;
+не открывать всё через один UI-клик.
+12. Post-FP Review Tasks
+12.1. Прохождение и оценка
+TASK-PFPR-001 — пройти First Playable v0.1.0 полностью
+TASK-PFPR-002 — заполнить Review Scorecard
+TASK-PFPR-003 — записать 5 сильных сторон
+TASK-PFPR-004 — записать 5 слабых сторон
+TASK-PFPR-005 — записать 5 главных вопросов
+12.2. Анализ систем
+TASK-PFPR-006 — оценить Station
+TASK-PFPR-007 — оценить Terminal
+TASK-PFPR-008 — оценить Drone
+TASK-PFPR-009 — оценить Expedition 01
+TASK-PFPR-010 — оценить Research
+TASK-PFPR-011 — оценить Library
+TASK-PFPR-012 — оценить Translation
+TASK-PFPR-013 — оценить IO Presence
+12.3. Технический анализ
+TASK-PFPR-014 — проверить состояние GameSession
+TASK-PFPR-015 — проверить scene transition architecture
+TASK-PFPR-016 — проверить terminal UI architecture
+TASK-PFPR-017 — проверить save placeholder
+TASK-PFPR-018 — проверить performance baseline
+12.4. Backlog cleanup
+TASK-PFPR-019 — собрать все идеи в Post-FP Backlog
+TASK-PFPR-020 — разделить backlog на Must Fix / Should Improve / Later / Cut
+TASK-PFPR-021 — удалить или отложить scope creep идеи
+TASK-PFPR-022 — выбрать путь Milestone 02
+12.5. Decision document
+TASK-PFPR-023 — оформить Post-FP Review Summary
+TASK-PFPR-024 — зафиксировать выбранный Path
+TASK-PFPR-025 — зафиксировать Milestone 02 цель
+TASK-PFPR-026 — определить следующий документ
+13. Шаблон Post-FP Review Summary
+NERA — Post-First Playable Review Summary
+Build:
+Date:
+Reviewer:
+1. Full Flow Status
+Result:
+2. Scorecard
+Core Loop:
+Station:
+Terminal:
+Drone:
+Expedition 01:
+Research:
+Library:
+Translation:
+IO Presence:
+Technical Stability:
+Performance:
+3. Strongest Parts
+-
+-
+-
+4. Weakest Parts
+-
+-
+-
+5. Main Problems
+-
+-
+-
+6. Must Fix
+-
+-
+-
+7. Should Improve
+-
+-
+-
+8. Cut / Avoid
+-
+-
+-
+9. Chosen Path
+Path:
+10. Next Milestone
+Milestone:
+11. Notes
+14. Критерии готовности Post-FP Review
+Post-FP Review считается готовым, если:
+First Playable пройден полностью;
+scorecard заполнен;
+сильные стороны записаны;
+слабые стороны записаны;
+backlog очищен;
+выбран путь после FP;
+выбран Milestone 02;
+понятно, что делать дальше.

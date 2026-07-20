@@ -34,7 +34,6 @@ namespace NERA.Drone
         private float elapsedScanTime;
         private StationPowerController stationPower;
         private ExpeditionDiscoveryController discovery;
-        private EnergySystemController registeredEnergySystem;
 
         private void Awake()
         {
@@ -196,7 +195,7 @@ namespace NERA.Drone
         private void EnsureEnergyRegistration()
         {
             EnergySystemController energy = EnergySystemController.Instance;
-            if (energy == null || registeredEnergySystem == energy)
+            if (energy == null)
                 return;
 
             energy.RegisterConsumer(
@@ -208,7 +207,6 @@ namespace NERA.Drone
                 DroneChargerConsumerId,
                 IsCharging
             );
-            registeredEnergySystem = energy;
         }
 
         private void Subscribe()

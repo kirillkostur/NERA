@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using NERA.Antenna;
 using System.IO;
 using NERA.Expeditions;
 using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Library;
+using NERA.Research;
 using NERA.Station;
 using UnityEngine;
 
@@ -24,7 +27,10 @@ namespace NERA.Save
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
         private EnergySystemController energySystem;
+        private AntennaController antenna;
         private PlayerInventory inventory;
+        private ResearchController research;
+        private LibraryController library;
         private bool isLoading;
         private bool autoSavePending;
         private float autoSaveAt;
@@ -149,6 +155,17 @@ namespace NERA.Save
                 data.energyGridEnabled = energySystem.GridEnabled;
             }
 
+            if (antenna != null)
+            {
+                data.antennaCondition = antenna.Condition;
+                data.activeAntennaSignalLocationId = antenna.ActiveSignalId;
+                data.activeAntennaSignalSectorIndex =
+                    antenna.ActiveSignalSectorIndex;
+                data.consumedAntennaSignalLocationIds.AddRange(
+                    antenna.ConsumedSignalIds
+                );
+            }
+
             if (discovery != null)
                 data.discoveredLocationIds.AddRange(discovery.DiscoveredLocationIds);
 
@@ -174,6 +191,15 @@ namespace NERA.Save
                 );
             }
 
+            if (research != null)
+                data.analyzedResearchIds.AddRange(research.AnalyzedResearchIds);
+
+            if (library != null)
+            {
+                data.unlockedLibraryEntryIds.AddRange(library.UnlockedEntryIds);
+                data.knownLibraryItemIds.AddRange(library.KnownItemIds);
+            }
+
             return data;
         }
 
@@ -193,8 +219,20 @@ namespace NERA.Save
                 stationPower.SetState((StationPowerState)data.stationPowerState);
             }
 
+            antenna?.RestoreCondition(data.antennaCondition);
+            antenna?.RestoreSignalState(
+                data.activeAntennaSignalLocationId,
+                data.activeAntennaSignalSectorIndex,
+                data.consumedAntennaSignalLocationIds
+            );
+
             if (discovery != null)
                 discovery.RestoreDiscovered(data.discoveredLocationIds);
+
+            RegisterResearchLibraryEntries();
+            research?.RestoreAnalyzed(data.analyzedResearchIds);
+            library?.RestoreUnlocked(data.unlockedLibraryEntryIds);
+            library?.RestoreKnownItems(data.knownLibraryItemIds);
 
             if (inventory != null)
             {
@@ -280,12 +318,18 @@ namespace NERA.Save
                 stationPower.SetState(StationPowerState.Offline);
 
             energySystem?.ResetForNewGame();
+            antenna?.RestoreCondition(1f);
+            antenna?.RestoreSignalState(string.Empty, -1, Array.Empty<string>());
 
             if (discovery != null)
                 discovery.RestoreDiscovered(Array.Empty<string>());
 
             if (inventory != null)
                 inventory.RestoreItems(Array.Empty<ItemData>());
+
+            research?.RestoreAnalyzed(Array.Empty<string>());
+            library?.RestoreUnlocked(Array.Empty<string>());
+            library?.RestoreKnownItems(Array.Empty<string>());
 
             isLoading = false;
         }
@@ -315,8 +359,37 @@ namespace NERA.Save
             if (energySystem == null)
                 energySystem = GetComponent<EnergySystemController>();
 
+            if (antenna == null)
+                antenna = GetComponent<AntennaController>();
+
             if (inventory == null)
                 inventory = GetComponentInChildren<PlayerInventory>(true);
+
+            if (research == null)
+                research = GetComponent<ResearchController>();
+
+            if (library == null)
+                library = GetComponent<LibraryController>();
+
+            RegisterResearchLibraryEntries();
+        }
+
+        private void RegisterResearchLibraryEntries()
+        {
+            if (library == null)
+                return;
+
+            foreach (ItemData item in itemCatalog)
+            {
+                library.RegisterItem(item);
+
+                ResearchDefinition definition = item != null
+                    ? item.ResearchDefinition
+                    : null;
+
+                if (definition?.UnlockedEntry != null)
+                    library.Register(definition.UnlockedEntry);
+            }
         }
 
         private void Subscribe()
@@ -330,8 +403,20 @@ namespace NERA.Save
             if (energySystem != null)
                 energySystem.StateChanged += HandleEnergyStateChanged;
 
+            if (antenna != null)
+                antenna.ConditionChanged += HandleAntennaConditionChanged;
+
+            if (antenna != null)
+                antenna.ActiveSignalChanged += HandleAntennaSignalChanged;
+
             if (inventory != null)
                 inventory.InventoryChanged += HandleInventoryChanged;
+
+            if (research != null)
+                research.ResearchAnalyzed += HandleResearchAnalyzed;
+
+            if (library != null)
+                library.EntryUnlocked += HandleLibraryEntryUnlocked;
         }
 
         private void Unsubscribe()
@@ -345,8 +430,20 @@ namespace NERA.Save
             if (energySystem != null)
                 energySystem.StateChanged -= HandleEnergyStateChanged;
 
+            if (antenna != null)
+                antenna.ConditionChanged -= HandleAntennaConditionChanged;
+
+            if (antenna != null)
+                antenna.ActiveSignalChanged -= HandleAntennaSignalChanged;
+
             if (inventory != null)
                 inventory.InventoryChanged -= HandleInventoryChanged;
+
+            if (research != null)
+                research.ResearchAnalyzed -= HandleResearchAnalyzed;
+
+            if (library != null)
+                library.EntryUnlocked -= HandleLibraryEntryUnlocked;
         }
 
         private void HandleProgressChanged(string _)
@@ -364,7 +461,27 @@ namespace NERA.Save
             RequestAutoSave();
         }
 
+        private void HandleAntennaConditionChanged(float _)
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleAntennaSignalChanged(ExpeditionLocationData _)
+        {
+            RequestAutoSave();
+        }
+
         private void HandleInventoryChanged()
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleResearchAnalyzed(string _)
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleLibraryEntryUnlocked(string _)
         {
             RequestAutoSave();
         }

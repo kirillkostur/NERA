@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entryId: expedition01_memory_core
   title: NERA MEMORY CORE // INITIAL ANALYSIS
+  category: 2
   description: The recovered core contains fragmented station records. Its
     energy pattern is controlled and artificial, unlike the unstable signatures associated
     with Blue IO. The archive confirms that the outpost deliberately preserved these

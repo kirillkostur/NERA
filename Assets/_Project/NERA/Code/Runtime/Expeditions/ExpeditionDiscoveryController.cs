@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Locations;
 using UnityEngine;
 
 namespace NERA.Expeditions
@@ -67,6 +68,77 @@ namespace NERA.Expeditions
             }
 
             return result;
+        }
+
+        public List<ExpeditionLocationData> GetKnownLocations(
+            LocationType locationType
+        )
+        {
+            List<ExpeditionLocationData> result = new List<ExpeditionLocationData>();
+
+            foreach (ExpeditionLocationData location in knownLocations)
+            {
+                if (location != null && location.LocationType == locationType)
+                    result.Add(location);
+            }
+
+            return result;
+        }
+
+        public List<ExpeditionLocationData> GetKnownLocations(
+            DiscoverySource discoverySource
+        )
+        {
+            List<ExpeditionLocationData> result = new List<ExpeditionLocationData>();
+
+            foreach (ExpeditionLocationData location in knownLocations)
+            {
+                if (location != null && location.DiscoverySource == discoverySource)
+                    result.Add(location);
+            }
+
+            return result;
+        }
+
+        public List<ExpeditionLocationData> GetUndiscoveredLocations(
+            DiscoverySource discoverySource
+        )
+        {
+            List<ExpeditionLocationData> result = new List<ExpeditionLocationData>();
+
+            foreach (ExpeditionLocationData location in knownLocations)
+            {
+                if (location != null &&
+                    location.DiscoverySource == discoverySource &&
+                    !IsDiscovered(location))
+                {
+                    result.Add(location);
+                }
+            }
+
+            return result;
+        }
+
+        public bool TryGetNextUndiscovered(
+            DiscoverySource discoverySource,
+            out ExpeditionLocationData location
+        )
+        {
+            foreach (ExpeditionLocationData candidate in knownLocations)
+            {
+                if (candidate == null ||
+                    candidate.DiscoverySource != discoverySource ||
+                    IsDiscovered(candidate))
+                {
+                    continue;
+                }
+
+                location = candidate;
+                return true;
+            }
+
+            location = null;
+            return false;
         }
 
         public void RestoreDiscovered(IEnumerable<string> locationIds)

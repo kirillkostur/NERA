@@ -31,6 +31,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField, Min(0f)] private float minStaminaToSprint = 0.2f;
 
     private CharacterController characterController;
+    private PlayerFollowCamera followCamera;
 
     private float standingHeight;
     private float verticalVelocity;
@@ -70,6 +71,7 @@ public sealed class PlayerController : MonoBehaviour
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
 
+        ResolveFollowCamera();
         standingHeight = characterController.height;
         currentStamina = maxStamina;
     }
@@ -178,8 +180,12 @@ public sealed class PlayerController : MonoBehaviour
         if (isMoving)
         {
             moveDirection = GetCameraRelativeDirection(input);
-            RotateToDirection(moveDirection);
+            if (!IsAiming())
+                RotateToDirection(moveDirection);
         }
+
+        if (IsAiming())
+            RotateToCameraForward();
 
         Vector3 velocity = moveDirection * GetCurrentSpeed();
         velocity.y = verticalVelocity;
@@ -277,6 +283,32 @@ public sealed class PlayerController : MonoBehaviour
             rotationSpeed * Time.deltaTime);
     }
 
+    private void RotateToCameraForward()
+    {
+        Vector3 direction = GetCameraForward();
+        if (direction.sqrMagnitude < 0.01f)
+            return;
+
+        RotateToDirection(direction);
+    }
+
+    private bool IsAiming()
+    {
+        if (followCamera == null)
+            ResolveFollowCamera();
+
+        return followCamera != null && followCamera.IsAiming;
+    }
+
+    private void ResolveFollowCamera()
+    {
+        if (cameraTransform != null)
+            followCamera = cameraTransform.GetComponent<PlayerFollowCamera>();
+
+        if (followCamera == null)
+            followCamera = FindFirstObjectByType<PlayerFollowCamera>();
+    }
+
     private void UpdateAnimator()
     {
         if (animator == null)
@@ -304,6 +336,7 @@ public sealed class PlayerController : MonoBehaviour
     public void SetCameraTransform(Transform newCameraTransform)
     {
         cameraTransform = newCameraTransform;
+        ResolveFollowCamera();
     }
 
     public void SetInputEnabled(bool enabled)

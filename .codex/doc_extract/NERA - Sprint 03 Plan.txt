@@ -1,0 +1,604 @@
+NERA — Sprint 03 Plan
+Drone + Expedition Unlock
+1. Назначение Sprint 03
+Sprint 03 нужен, чтобы связать станцию, терминал и первую экспедицию в один понятный игровой flow.
+После Sprint 01 у нас есть:
+Player
+Camera
+Interaction
+Scene transitions
+Pickup placeholder
+Technical build
+После Sprint 02 у нас есть:
+Station Offline
+→ Restore Power
+→ Terminal Online
+→ Terminal Placeholder UI
+Sprint 03 добавляет следующий шаг:
+Terminal
+→ Launch Drone
+→ Scan Area
+→ Discover Expedition 01
+→ Show Expedition 01 in terminal
+→ Allow travel to Expedition 01
+2. Главная цель спринта
+Цель
+Сделать первый рабочий вариант системы дрона и открытия первой экспедиции.
+Игрок должен:
+включить питание станции;
+открыть терминал;
+перейти в раздел Drone;
+нажать Launch Drone;
+увидеть состояние сканирования;
+получить результат: Expedition 01 discovered;
+увидеть Expedition 01 в placeholder map/list;
+выбрать Expedition 01;
+перейти в сцену Expedition_01_FirstPlayable.
+3. Почему это важно
+До Sprint 03 переход в экспедицию может существовать только как debug transition.
+Но для NERA важно, чтобы экспедиции открывались через логику мира:
+станция
+→ терминал
+→ дрон
+→ обнаружение
+→ экспедиция
+Это делает First Playable ближе к настоящей игре.
+Главное ощущение:
+Я сам обнаружил новую точку.
+Теперь у меня есть причина туда пойти.
+4. Scope Sprint 03
+4.1. Что входит
+В Sprint 03 входит:
+Drone state;
+Drone launch action;
+Drone scan placeholder;
+scan progress / fake delay;
+Expedition 01 unlock state;
+Expedition 01 config placeholder;
+отображение Expedition 01 в терминале;
+travel button;
+переход из станции в Expedition 01 через UI терминала;
+блокировка Expedition 01 до сканирования;
+debug reset для теста.
+4.2. Что НЕ входит
+В Sprint 03 не входит:
+полноценная 3D-модель дрона;
+физический полёт дрона;
+управление дроном;
+мини-игра сканирования;
+procedural scan;
+полноценная карта;
+финальный UI карты;
+анимация запуска дрона;
+cinematic drone launch;
+реальные данные всех 10 экспедиций;
+? точки от антенны;
+research;
+library;
+translation;
+save/load на диск.
+5. Игровой flow Sprint 03
+5.1. Начальное состояние
+После запуска сцены станции:
+StationPowerState = Offline
+DroneState = Locked
+Expedition_01_Unlocked = false
+Пока станция без энергии:
+терминал выключен;
+дрон недоступен;
+Expedition 01 не отображается как доступная цель.
+5.2. После восстановления питания
+Когда игрок включает питание:
+StationPowerState = Online
+DroneState = Ready
+Теперь в терминале доступен раздел:
+Drone
+5.3. Запуск дрона
+Игрок открывает терминал:
+NERA Station Terminal
+Переходит в раздел:
+Drone
+Нажимает:
+[Launch Drone]
+После этого состояние меняется:
+DroneState = Scanning
+5.4. Сканирование
+На Sprint 03 сканирование может быть placeholder.
+Достаточно показать:
+Drone scanning surrounding area...
+Или:
+Scan progress: 0% → 100%
+Важно:
+игрок понимает, что дрон что-то делает;
+система не мгновенно телепортирует в экспедицию;
+появляется ощущение обнаружения.
+5.5. Результат сканирования
+После завершения сканирования:
+DroneState = ScanComplete
+Expedition_01_Unlocked = true
+UI показывает:
+New expedition discovered:
+Expedition 01 — Ancient Outpost
+5.6. Открытие Expedition 01
+После сканирования в терминале появляется доступная карточка:
+Expedition 01
+Ancient Outpost
+Status: Discovered
+Кнопка:
+[Travel]
+После нажатия:
+Load Scene: Expedition_01_FirstPlayable
+6. Основные состояния
+6.1. DroneState
+Минимальные состояния:
+Locked
+Ready
+Scanning
+ScanComplete
+6.2. Расшифровка состояний
+Locked
+Дрон недоступен.
+Используется, когда станция без питания.
+Condition:
+StationPowerState = Offline
+Ready
+Дрон готов к запуску.
+Condition:
+StationPowerState = Online
+Expedition_01_Unlocked = false
+Scanning
+Дрон выполняет placeholder scan.
+Condition:
+Launch Drone pressed
+ScanComplete
+Сканирование завершено.
+Condition:
+Expedition_01_Unlocked = true
+7. Expedition Unlock Rules
+7.1. Обычные экспедиции открывает дрон
+Правило проекта:
+Обычные экспедиции открывает дрон.
+Это значит:
+Expedition 01 открывается через Drone Scan;
+Expedition 02–10 в будущем тоже могут открываться через Drone / Terminal progression;
+? точки не открываются дроном.
+7.2. ? точки открывает антенна
+Важно не смешивать:
+Drone = обычные экспедиции NERA
+Antenna = ? точки / человеческие следы / прошлые миссии
+В Sprint 03 антенны ещё нет.
+Но архитектурно нельзя называть ? точки обычными expedition unlock.
+7.3. Research и Translation не открывают локации напрямую
+Research / Library / Translation могут давать:
+подсказки;
+понимание;
+записи;
+контекст;
+новые смыслы.
+Но не должны напрямую делать:
+Translation Complete → Expedition unlocked
+Для First Playable можно использовать их позже как условие понимания, но не как прямую кнопку открытия локации.
+8. Терминал в Sprint 03
+8.1. Разделы терминала
+После Sprint 03 терминал должен иметь минимум:
+Status
+Drone
+Map / Expeditions
+Exit
+Остальные разделы можно оставить disabled:
+Library — Not implemented
+Research — Not implemented
+Translation — Not implemented
+8.2. Drone Section
+Раздел Drone показывает:
+До запуска:
+Drone System
+Status: Ready
+[Launch Drone]
+Во время сканирования:
+Drone System
+Status: Scanning
+Scanning nearby NERA structures...
+После сканирования:
+Drone System
+Status: Scan Complete
+New expedition discovered.
+8.3. Map / Expeditions Section
+Это ещё не финальная карта.
+На Sprint 03 это может быть простой список:
+Known Locations
+[Expedition 01 — Ancient Outpost]
+Status: Discovered
+[Travel]
+До сканирования:
+Known Locations
+No expeditions discovered.
+Launch drone scan from Drone section.
+9. Предлагаемые классы
+9.1. Runtime/Drone
+Папка:
+Assets/_Project/NERA/Code/Runtime/Drone
+Классы:
+DroneState.cs
+DroneScanController.cs
+DroneScanResult.cs
+DroneTerminalView.cs
+9.2. Runtime/Expeditions
+Папка:
+Assets/_Project/NERA/Code/Runtime/Expeditions
+Классы:
+ExpeditionId.cs
+ExpeditionConfig.cs
+ExpeditionState.cs
+ExpeditionUnlockController.cs
+ExpeditionTravelController.cs
+ExpeditionTerminalView.cs
+9.3. Runtime/Terminal
+Папка:
+Assets/_Project/NERA/Code/Runtime/Terminal
+В Sprint 03 расширяются:
+TerminalUIScreen.cs
+TerminalSectionButton.cs
+TerminalDebugActions.cs
+10. Минимальная модель данных
+10.1. ExpeditionId
+Для First Playable достаточно enum:
+public enum ExpeditionId
+{
+Expedition01
+}
+Позже можно расширить:
+public enum ExpeditionId
+{
+Expedition01,
+Expedition02,
+Expedition03,
+Expedition04,
+Expedition05,
+Expedition06,
+Expedition07,
+Expedition08,
+Expedition09,
+Expedition10
+}
+10.2. ExpeditionState
+Минимальные состояния:
+public enum ExpeditionState
+{
+Unknown,
+Discovered,
+Completed
+}
+Для Sprint 03 нужны только:
+Unknown
+Discovered
+10.3. ExpeditionConfig
+Минимальные поля:
+ExpeditionId
+DisplayName
+ShortDescription
+SceneName
+InitialState
+Пример:
+ExpeditionId: Expedition01
+DisplayName: Expedition 01 — Ancient Outpost
+ShortDescription: First discovered NERA structure near the station.
+SceneName: Expedition_01_FirstPlayable
+InitialState: Unknown
+10.4. Почему нужен config
+Даже если сейчас экспедиция одна, config нужен, чтобы не хардкодить всё в UI.
+Плохо:
+Button Travel → LoadScene("Expedition_01_FirstPlayable")
+Лучше:
+Button Travel → Selected ExpeditionConfig → SceneName
+11. Scene Rules
+11.1. Station scene
+Сцена:
+Assets/_Project/NERA/Scenes/Station/Station_FirstPlayable.unity
+В ней должны появиться:
+DroneScanController
+ExpeditionUnlockController
+ExpeditionTravelController
+Terminal Drone Section
+Terminal Expeditions Section
+11.2. Expedition scene
+Сцена:
+Assets/_Project/NERA/Scenes/Expeditions/Expedition_01_FirstPlayable.unity
+В Sprint 03 она может быть всё ещё пустой/blockout.
+Главное:
+сцена загружается;
+игрок появляется в правильной точке;
+есть способ вернуться на станцию;
+нет ошибок в Console.
+11.3. Build Settings
+Обе сцены должны быть добавлены в Build Settings:
+Station_FirstPlayable
+Expedition_01_FirstPlayable
+Если сцены не добавлены, travel в билде сломается.
+12. Правила реализации
+12.1. Делать
+делать Drone Scan как простое состояние;
+использовать fake delay или progress bar;
+хранить unlock state в одном месте;
+показывать Expedition 01 только после unlock;
+делать переход через config;
+держать UI простым;
+проверять flow в standalone build.
+12.2. Не делать
+не делать физического дрона;
+не делать управление дроном;
+не делать сложную карту;
+не делать 3D hologram map;
+не делать cinematic launch;
+не делать систему всех 10 экспедиций полностью;
+не делать save/load;
+не делать полноценный quest system;
+не делать unlock через research/translation.
+13. UI Wireframe
+13.1. Terminal — Drone
+NERA STATION TERMINAL
+Section: Drone
+Drone Status: Ready
+The drone can scan nearby structures around the station.
+[Launch Drone]
+[Back]
+13.2. Terminal — Drone Scanning
+NERA STATION TERMINAL
+Section: Drone
+Drone Status: Scanning
+Scanning nearby NERA structures...
+Progress: 64%
+13.3. Terminal — Scan Complete
+NERA STATION TERMINAL
+Section: Drone
+Drone Status: Scan Complete
+New expedition discovered:
+Expedition 01 — Ancient Outpost
+[View Expeditions]
+13.4. Terminal — Expeditions before scan
+NERA STATION TERMINAL
+Section: Expeditions
+Known Locations:
+No expeditions discovered.
+Hint:
+Launch drone scan to search for nearby structures.
+13.5. Terminal — Expeditions after scan
+NERA STATION TERMINAL
+Section: Expeditions
+Known Locations:
+Expedition 01 — Ancient Outpost
+Status: Discovered
+First discovered NERA structure near the station.
+[Travel]
+14. Player Experience Rules
+14.1. Игрок должен понимать причину
+Переход в Expedition 01 не должен выглядеть как меню выбора уровня.
+Он должен ощущаться как результат действия:
+Я включил станцию.
+Я запустил дрон.
+Дрон нашёл объект.
+Теперь я могу туда пойти.
+14.2. Не перегружать текстом
+На Sprint 03 тексты должны быть короткие.
+Хорошо:
+New expedition discovered.
+Ancient structure detected near the station.
+Плохо:
+Drone satellite triangulation module has detected anomalous architectural signal signature...
+Для First Playable достаточно простой формулировки.
+15. Debug Rules
+15.1. Debug reset
+Для тестирования нужен debug reset:
+Debug_ResetDroneScan
+Debug_ResetExpeditionUnlock
+Можно сделать:
+inspector button;
+debug key;
+temporary UI button;
+editor-only context menu.
+15.2. Debug unlock
+Допустимо иметь:
+Debug_UnlockExpedition01
+Но основной flow должен работать без него.
+15.3. Debug не должен быть единственным способом пройти
+Плохо:
+Expedition 01 открывается только через Debug_UnlockExpedition01.
+Хорошо:
+Expedition 01 открывается через Launch Drone.
+Debug_UnlockExpedition01 нужен только для теста.
+16. Sprint 03 Tasks
+16.1. Drone State
+TASK-S03-001 — Create DroneState enum
+TASK-S03-002 — Create DroneScanController
+TASK-S03-003 — Add default Locked state
+TASK-S03-004 — Set Ready when StationPowerState becomes Online
+TASK-S03-005 — Add LaunchScan method
+TASK-S03-006 — Add fake scan duration
+TASK-S03-007 — Add OnDroneStateChanged event
+16.2. Scan Result
+TASK-S03-008 — Create DroneScanResult data structure
+TASK-S03-009 — Add result: Expedition 01 discovered
+TASK-S03-010 — Trigger scan result after scan duration
+TASK-S03-011 — Notify ExpeditionUnlockController
+16.3. Expedition Config
+TASK-S03-012 — Create ExpeditionId enum
+TASK-S03-013 — Create ExpeditionState enum
+TASK-S03-014 — Create ExpeditionConfig ScriptableObject
+TASK-S03-015 — Create CFG_Expedition_01
+TASK-S03-016 — Add DisplayName, Description, SceneName
+16.4. Expedition Unlock
+TASK-S03-017 — Create ExpeditionUnlockController
+TASK-S03-018 — Store Expedition 01 state
+TASK-S03-019 — Default Expedition 01 = Unknown
+TASK-S03-020 — Set Expedition 01 = Discovered after drone scan
+TASK-S03-021 — Add IsExpeditionDiscovered method
+TASK-S03-022 — Add OnExpeditionStateChanged event
+16.5. Terminal Drone UI
+TASK-S03-023 — Add Drone section to Terminal UI
+TASK-S03-024 — Show DroneState text
+TASK-S03-025 — Add Launch Drone button
+TASK-S03-026 — Disable Launch Drone button when not Ready
+TASK-S03-027 — Show scanning progress text
+TASK-S03-028 — Show scan complete message
+16.6. Terminal Expeditions UI
+TASK-S03-029 — Add Expeditions / Map placeholder section
+TASK-S03-030 — Show empty state before scan
+TASK-S03-031 — Show Expedition 01 after discovery
+TASK-S03-032 — Add Expedition 01 card
+TASK-S03-033 — Add Travel button
+TASK-S03-034 — Disable Travel if expedition is not discovered
+16.7. Scene Travel
+TASK-S03-035 — Create ExpeditionTravelController
+TASK-S03-036 — Travel uses ExpeditionConfig.SceneName
+TASK-S03-037 — Load Expedition_01_FirstPlayable from terminal
+TASK-S03-038 — Make sure player spawns correctly in Expedition 01
+TASK-S03-039 — Make sure return to station still works
+16.8. Build
+TASK-S03-040 — Add scenes to Build Settings
+TASK-S03-041 — Clean Console errors
+TASK-S03-042 — Create standalone build
+TASK-S03-043 — Test full flow in build
+TASK-S03-044 — Write Sprint 03 result notes
+17. Рекомендуемый порядок выполнения
+День 1–2
+DroneState
+DroneScanController
+LaunchScan
+Fake scan duration
+Station power connection
+День 3–4
+ExpeditionId
+ExpeditionState
+ExpeditionConfig
+CFG_Expedition_01
+ExpeditionUnlockController
+День 5–6
+Terminal Drone section
+Launch Drone button
+Scan progress
+Scan complete message
+День 7–8
+Terminal Expeditions section
+Expedition 01 card
+Travel button
+Scene loading from config
+День 9–10
+Bug fixing
+Standalone build
+Full flow test
+Cleanup
+Sprint notes
+18. Критерии готовности Sprint 03
+Sprint 03 считается готовым, если:
+18.1. Drone
+дрон заблокирован до включения станции;
+после включения питания дрон становится доступен;
+игрок может запустить сканирование из терминала;
+во время сканирования видно состояние Scanning;
+после сканирования появляется результат.
+18.2. Expedition Unlock
+Expedition 01 изначально скрыта или недоступна;
+после scan result она становится Discovered;
+unlock state хранится не в UI, а в отдельной системе;
+UI получает состояние из системы.
+18.3. Terminal UI
+есть Drone section;
+есть Expeditions / Map placeholder section;
+до сканирования Expedition 01 недоступна;
+после сканирования Expedition 01 отображается;
+кнопка Travel появляется или становится активной.
+18.4. Scene Travel
+Travel загружает Expedition_01_FirstPlayable;
+в билде сцена загружается;
+игрок появляется в Expedition 01;
+есть способ вернуться на станцию;
+переход не требует debug-команд.
+18.5. Technical
+нет ошибок в Console;
+нет Missing Scripts;
+нет Missing Prefabs;
+нет Missing Materials;
+билд собирается;
+полный flow работает в standalone build.
+19. Полный flow после Sprint 03
+После завершения Sprint 03 First Playable loop будет выглядеть так:
+Start on Station
+→ Station Offline
+→ Restore Power
+→ Terminal Online
+→ Open Terminal
+→ Launch Drone
+→ Drone Scanning
+→ Expedition 01 Discovered
+→ Open Expeditions List
+→ Travel to Expedition 01
+→ Return to Station
+Это уже почти первая половина основного loop NERA.
+20. Что не исправлять в Sprint 03
+Не тратить время на:
+красивый terminal UI
+финальный drone model
+реальную карту
+анимации запуска
+звуки дрона
+полный save/load
+все экспедиции
+антенну
+? точки
+library
+research
+translation
+Эти вещи важны, но не для Sprint 03.
+21. Риски Sprint 03
+21.1. Риск: начать делать настоящего дрона
+Проблема:
+Хочется сделать модель, анимацию, запуск, полёт, камеру дрона.
+Решение:
+В Sprint 03 дрон — это система состояния и UI action.
+Физический дрон можно добавить позже.
+21.2. Риск: начать делать полноценную карту
+Проблема:
+Карта может занять слишком много времени.
+Решение:
+В Sprint 03 Map = список найденных экспедиций.
+Настоящая карта будет отдельным документом и отдельным спринтом.
+21.3. Риск: смешать Drone и Antenna
+Проблема:
+Можно случайно сделать так, что дрон открывает и обычные экспедиции, и ? точки.
+Решение:
+Drone открывает Expedition.
+Antenna открывает ?.
+В Sprint 03 антенну не делать.
+21.4. Риск: сделать unlock внутри UI
+Проблема:
+Кнопка Launch Drone сама включает Expedition 01 внутри UI.
+Решение:
+UI только вызывает DroneScanController.
+DroneScanController отдаёт result.
+ExpeditionUnlockController меняет state.
+UI только отображает state.
+22. Минимальный технический принцип
+Правильная цепочка:
+Terminal UI
+→ DroneScanController.LaunchScan()
+→ DroneState = Scanning
+→ Scan complete
+→ DroneScanResult
+→ ExpeditionUnlockController.Unlock(Expedition01)
+→ ExpeditionState = Discovered
+→ Terminal UI updates
+→ Travel button enabled
+Неправильная цепочка:
+Launch Drone Button
+→ Expedition_01_Unlocked = true inside UI
+→ LoadScene hardcoded
+23. Что должно появиться после Sprint 03
+После Sprint 03 проект будет иметь первый цельный игровой переход:
+станция
+→ восстановление питания
+→ терминал
+→ дрон
+→ обнаружение
+→ экспедиция
+Это критический фундамент NERA.
+После этого логичный следующий документ:

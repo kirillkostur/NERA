@@ -6,7 +6,7 @@ namespace NERA.Research
 {
     public sealed class LaboratoryItemDropSlot : MonoBehaviour, IDropHandler
     {
-        public Action<NERA.Items.ItemData> ItemDropped;
+        public Action<LaboratoryInventoryItemDrag> ItemDropped;
 
         public void OnDrop(PointerEventData eventData)
         {
@@ -14,8 +14,8 @@ namespace NERA.Research
                 ? eventData.pointerDrag.GetComponent<LaboratoryInventoryItemDrag>()
                 : null;
 
-            if (dragItem != null)
-                ItemDropped?.Invoke(dragItem.Item);
+            if (dragItem != null && dragItem.Item != null)
+                ItemDropped?.Invoke(dragItem);
         }
     }
 }

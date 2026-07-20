@@ -18,13 +18,16 @@ MonoBehaviour:
   cloudyDayGeneration: 18
   sandstormGeneration: 5
   sandstormContaminationPerSecond: 0.01
+  outdoorDeviceConditionLossPerSecond: 0.005
   terminalConsumption: 2
   laboratoryConsumption: 4
   droneChargingConsumption: 4
+  antennaCalibrationConsumption: 3
   lightingConsumption: 3
   turretIdleConsumption: 2
   turretFiringConsumption: 5
   droneRechargeDuration: 20
+  antennaCalibrationDuration: 8
   fullDayDurationSeconds: 600
   sunriseHour: 6
   sunsetHour: 18

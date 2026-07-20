@@ -1,36 +1,46 @@
+using System;
+using System.Collections.Generic;
 using NERA.Items;
 using UnityEngine;
 
 namespace NERA.Inventory
 {
     /// <summary>
-    /// Owns the visual selected through the player's quick-access slots.
-    /// Behaviour for individual tools can live on their equipped prefabs.
+    /// Keeps quick-access items visually equipped and routes input from any
+    /// quick-access item that owns the pressed key.
     /// </summary>
     [RequireComponent(typeof(PlayerInventory))]
     public sealed class PlayerEquipmentController : MonoBehaviour
     {
         private const string DefaultAnchorName = "mixamorig1:RightHand";
 
-        [SerializeField] private Transform equipmentAnchor;
-        [SerializeField] private string fallbackAnchorName =
-            DefaultAnchorName;
+        [SerializeField] private string fallbackAnchorName = DefaultAnchorName;
 
+        private readonly Dictionary<int, GameObject> equippedVisuals =
+            new Dictionary<int, GameObject>();
         private PlayerInventory inventory;
-        private GameObject equippedVisual;
 
-        public ItemData EquippedItem { get; private set; }
-        public GameObject EquippedVisual => equippedVisual;
+        public event Action<ItemData, QuickAccessAction> EquipmentUseRequested;
+
+        public ItemData EquippedItem => FindPreferredQuickAccessItem();
+        public GameObject EquippedVisual
+        {
+            get
+            {
+                int index = FindPreferredQuickAccessIndex();
+                return index >= 0 &&
+                       equippedVisuals.TryGetValue(index, out GameObject visual)
+                    ? visual
+                    : null;
+            }
+        }
+
+        public IReadOnlyDictionary<int, GameObject> EquippedVisuals =>
+            equippedVisuals;
 
         private void Awake()
         {
             inventory = GetComponent<PlayerInventory>();
-
-            if (equipmentAnchor == null)
-                equipmentAnchor = FindChildRecursive(
-                    transform,
-                    fallbackAnchorName
-                );
         }
 
         private void OnEnable()
@@ -38,59 +48,153 @@ namespace NERA.Inventory
             if (inventory == null)
                 inventory = GetComponent<PlayerInventory>();
 
-            inventory.QuickAccessSelectionChanged +=
-                HandleQuickAccessSelectionChanged;
+            inventory.InventoryChanged += RefreshEquippedVisuals;
+            RefreshEquippedVisuals();
         }
 
         private void OnDisable()
         {
             if (inventory != null)
             {
-                inventory.QuickAccessSelectionChanged -=
-                    HandleQuickAccessSelectionChanged;
+                inventory.InventoryChanged -= RefreshEquippedVisuals;
             }
+
+            ClearEquippedVisuals();
         }
 
-        public void Equip(ItemData item)
+        private void Update()
         {
-            ClearEquippedVisual();
-            EquippedItem = item;
-
-            if (item == null || item.EquippedVisualPrefab == null)
+            if (inventory == null || Cursor.lockState != CursorLockMode.Locked)
                 return;
 
-            if (equipmentAnchor == null)
-            {
-                Debug.LogWarning(
-                    "PlayerEquipmentController: equipment anchor is missing.",
-                    this
-                );
+            ItemData item = FindPressedQuickAccessItem();
+            if (item == null)
                 return;
-            }
 
-            equippedVisual = Instantiate(
-                item.EquippedVisualPrefab,
-                equipmentAnchor,
-                false
+            EquipmentUseRequested?.Invoke(item, item.QuickAccessAction);
+            Debug.Log(
+                $"Equipment: {item.DisplayName} used " +
+                $"({item.QuickAccessAction}).",
+                this
             );
-            equippedVisual.name = $"Equipped_{item.DisplayName}";
         }
 
-        private void HandleQuickAccessSelectionChanged(
-            int index,
-            ItemData item
-        )
+        private ItemData FindPressedQuickAccessItem()
         {
-            Equip(item);
+            ItemData fallbackItem = null;
+
+            for (int i = 0; i < inventory.QuickAccessSlots.Count; i++)
+            {
+                if (!PlayerInventory.IsActiveQuickAccessSlot(i))
+                    continue;
+
+                ItemData item = inventory.QuickAccessSlots[i];
+                if (!CanUseItem(item) || !Input.GetKeyDown(item.UseKey))
+                    continue;
+
+                if (item.QuickAccessAction == QuickAccessAction.Fire)
+                    return item;
+
+                fallbackItem ??= item;
+            }
+
+            return fallbackItem;
         }
 
-        private void ClearEquippedVisual()
+        private ItemData FindPreferredQuickAccessItem()
         {
-            if (equippedVisual != null)
-                Destroy(equippedVisual);
+            int index = FindPreferredQuickAccessIndex();
+            return inventory != null && index >= 0
+                ? inventory.QuickAccessSlots[index]
+                : null;
+        }
 
-            equippedVisual = null;
-            EquippedItem = null;
+        private int FindPreferredQuickAccessIndex()
+        {
+            if (inventory == null)
+                return -1;
+
+            int fallbackIndex = -1;
+
+            for (int i = 0; i < inventory.QuickAccessSlots.Count; i++)
+            {
+                if (!PlayerInventory.IsActiveQuickAccessSlot(i))
+                    continue;
+
+                ItemData item = inventory.QuickAccessSlots[i];
+                if (!CanUseItem(item))
+                    continue;
+
+                if (item.QuickAccessAction == QuickAccessAction.Fire)
+                    return i;
+
+                if (fallbackIndex < 0)
+                    fallbackIndex = i;
+            }
+
+            return fallbackIndex;
+        }
+
+        private static bool CanUseItem(ItemData item)
+        {
+            return item != null &&
+                   item.QuickAccessAction != QuickAccessAction.None;
+        }
+
+        private void RefreshEquippedVisuals()
+        {
+            ClearEquippedVisuals();
+            if (inventory == null)
+                return;
+
+            for (int index = 0; index < inventory.QuickAccessSlots.Count; index++)
+            {
+                if (!PlayerInventory.IsActiveQuickAccessSlot(index))
+                    continue;
+
+                ItemData item = inventory.QuickAccessSlots[index];
+                if (item == null || item.EquippedVisualPrefab == null)
+                    continue;
+
+                Transform anchor = FindChildRecursive(
+                    transform,
+                    string.IsNullOrWhiteSpace(item.EquipmentAnchorName)
+                        ? fallbackAnchorName
+                        : item.EquipmentAnchorName
+                );
+                if (anchor == null)
+                {
+                    Debug.LogWarning(
+                        $"PlayerEquipmentController: anchor '{item.EquipmentAnchorName}' " +
+                        $"was not found for '{item.DisplayName}'.",
+                        this
+                    );
+                    continue;
+                }
+
+                GameObject visual = Instantiate(
+                    item.EquippedVisualPrefab,
+                    anchor,
+                    false
+                );
+                visual.name = $"Equipped_{index + 1}_{item.DisplayName}";
+                visual.transform.localPosition = item.EquippedLocalPosition;
+                visual.transform.localRotation = Quaternion.Euler(
+                    item.EquippedLocalEulerAngles
+                );
+                equippedVisuals[index] = visual;
+            }
+        }
+
+        private void ClearEquippedVisuals()
+        {
+            foreach (GameObject visual in equippedVisuals.Values)
+            {
+                if (visual != null)
+                    Destroy(visual);
+            }
+
+            equippedVisuals.Clear();
         }
 
         private static Transform FindChildRecursive(

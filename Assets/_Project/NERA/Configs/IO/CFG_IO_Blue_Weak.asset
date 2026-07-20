@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e72edfa0fcb84f77b7207af040aa1710, type: 3}
+  m_Name: CFG_IO_Blue_Weak
+  m_EditorClassIdentifier: 
+  enemyId: io_blue_weak
+  displayName: Weak Blue IO
+  maxHealth: 30
+  detectionRadius: 10
+  attackRange: 6
+  moveSpeed: 2
+  hoverHeight: 1.6
+  hoverAmplitude: 0.15
+  hoverFrequency: 2
+  attackCooldown: 2
+  projectileSpeed: 8
+  projectileLifetime: 4
+  projectileDamage: 10
+  projectileScale: 0.22
+  projectilePrefab: {fileID: 0}
+  energyColor: {r: 0.1, g: 0.65, b: 1, a: 1}
+  emissionIntensity: 2.5
+  projectileEmissionIntensity: 4
+  deathDropPrefab: {fileID: 2278190858216321600, guid: 8cfef65c4fe154149a1054233a5086bf, type: 3}
+  deathDropOffset: {x: 0, y: 0.3, z: 0}

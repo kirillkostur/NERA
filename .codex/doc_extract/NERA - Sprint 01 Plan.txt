@@ -1,0 +1,720 @@
+NERA — First Sprint Plan
+Назначение документа
+First Sprint Plan описывает задачи первого рабочего спринта разработки NERA.
+Этот документ нужен, чтобы перейти от документации к реальной работе в Unity.
+Он отвечает на вопросы:
+Что делать в первые 2 недели?
+Какие задачи закрыть первыми?
+Что должно быть готово в конце спринта?
+Что не трогать в первом спринте?
+Как проверить, что фундамент проекта работает?
+00. Цель первого спринта
+Главная цель
+Цель первого спринта — подготовить Unity-проект к разработке First Playable и собрать первый технический скелет игры.
+В конце спринта не нужно иметь красивую станцию, экспедицию, дрон, терминал или исследование.
+Нужно иметь базу:
+структура проекта создана;
+есть сцена станции;
+есть сцена первой экспедиции;
+игрок появляется в сцене;
+камера работает;
+игрок может ходить;
+есть базовый переход Station → Expedition;
+есть базовый переход Expedition → Station;
+есть система взаимодействия;
+есть prompt взаимодействия;
+есть hold interaction;
+есть pickup item;
+есть первый технический билд.
+Главная проверка
+В конце первого спринта ты должен иметь возможность запустить игру и пройти маленький технический loop:
+старт на станции
+↓
+подойти к объекту
+↓
+увидеть подсказку
+↓
+выполнить interaction
+↓
+подобрать предмет
+↓
+перейти в экспедицию
+↓
+вернуться на станцию
+Главная мысль
+Первый спринт не про красоту.
+Первый спринт про фундамент.
+Если фундамент будет чистым, дальше будет проще делать станцию, терминал, дрон, экспедицию, инвентарь и исследования.
+01. Sprint Scope
+Продолжительность
+Рекомендуемый формат:
+2 недели
+Почему 2 недели:
+ты работаешь фактически один;
+нужно не просто создать сцены, а проверить flow;
+будут мелкие Unity-проблемы;
+нужно оставить время на тестовый билд;
+лучше закрыть меньше задач, но стабильно.
+Главный результат спринта
+В конце Sprint 01 должен быть:
+NERA Technical Foundation Build
+Это не First Playable.
+Это техническая основа, на которой дальше можно делать First Playable.
+Что входит в Sprint 01
+структура папок;
+базовые сцены;
+игрок;
+камера;
+слои и теги;
+scene flow;
+interaction system;
+interaction prompt;
+hold interaction;
+pickup item;
+простая UI-подсказка;
+первый тестовый билд.
+Что не входит в Sprint 01
+станционная энергия;
+терминал;
+карта;
+дрон;
+инвентарь;
+исследования;
+библиотека;
+перевод;
+IO;
+сейвы;
+арт станции;
+арт экспедиции;
+финальный свет;
+аудио;
+VFX.
+02. Week 1 — Project Foundation
+Цель недели
+Подготовить структуру Unity-проекта, сцены и базовый переход между станцией и экспедицией.
+Ожидаемый результат недели
+К концу первой недели должно быть:
+создана структура папок;
+создана сцена Station_FirstPlayable;
+создана сцена Expedition_01_FirstPlayable;
+игрок стоит в сцене станции;
+камера работает;
+можно перейти из станции в экспедицию;
+можно вернуться из экспедиции на станцию;
+проект собирается без ошибок.
+Day 1 — Project Structure
+Цель
+Создать чистую структуру проекта под NERA.
+Задачи
+01. Создать корневую папку:
+Assets/_Project/NERA/
+02. Создать основные папки:
+Art
+Audio
+Code
+Configs
+Content
+Prefabs
+Scenes
+Settings
+UI
+VFX
+Tests
+_Development
+_Sandbox
+03. В Code создать:
+Runtime
+Editor
+04. В Code/Runtime создать:
+Core
+Player
+Camera
+Interaction
+Items
+Inventory
+Station
+Terminal
+Drone
+Expeditions
+Research
+Library
+Translation
+IO
+UI
+Save
+Utilities
+05. В Scenes создать:
+Station
+Expeditions
+Tests
+06. В Content создать:
+Station
+Expeditions
+AncientNERA
+Human
+Planet
+IO
+Items
+Interactables
+Props
+Shared
+07. В Prefabs создать:
+Player
+Camera
+Interaction
+Items
+Systems
+Managers
+08. В UI создать:
+Screens
+Widgets
+Icons
+Fonts
+Materials
+Prefabs
+09. В Configs создать базовые папки:
+Game
+Player
+Interaction
+Items
+Inventory
+Station
+Drone
+Expeditions
+Research
+Library
+Translation
+IO
+UI
+10. Проверить, что в проекте нет хаотичных новых папок вне NERA.
+Минимальный результат
+Структура проекта создана.
+Папки готовы для дальнейшей разработки.
+Новые файлы понятно куда класть.
+Не делать в этот день
+не писать игровые системы;
+не делать UI;
+не делать станцию;
+не импортировать большой арт;
+не подключать Addressables;
+не наводить идеальный порядок во всех сторонних ассетах.
+Day 2 — Scene Setup
+Цель
+Создать базовые игровые сцены.
+Задачи
+01. Создать сцену:
+Assets/_Project/NERA/Scenes/Station/Station_FirstPlayable.unity
+02. Создать сцену:
+Assets/_Project/NERA/Scenes/Expeditions/Expedition_01_FirstPlayable.unity
+03. Создать тестовую сцену:
+Assets/_Project/NERA/Scenes/Tests/Test_Interaction.unity
+04. Добавить Station_FirstPlayable в Build Settings.
+05. Добавить Expedition_01_FirstPlayable в Build Settings.
+06. В Station_FirstPlayable создать простой floor.
+07. В Station_FirstPlayable создать placeholder зоны станции.
+08. В Expedition_01_FirstPlayable создать простой floor.
+09. В Expedition_01_FirstPlayable создать placeholder corridor / route.
+10. Добавить Directional Light, если нужен.
+11. Добавить базовый Volume / camera environment, если уже используется.
+12. Сохранить сцены.
+13. Проверить Play Mode в каждой сцене.
+Минимальный результат
+Есть две рабочие сцены.
+Обе открываются без ошибок.
+В обеих сценах есть простое пространство для теста игрока.
+Не делать в этот день
+не делать финальный blockout экспедиции;
+не делать свет;
+не делать декор;
+не делать материалы;
+не делать полноценную станцию.
+Day 3 — Player Prefab Check
+Цель
+Проверить игрока и камеру в обеих сценах.
+Задачи
+01. Найти текущий Player / ThirdPersonController prefab.
+02. Перенести его в:
+Assets/_Project/NERA/Prefabs/Player/
+если он ещё не там.
+03. Проверить камеру от третьего лица.
+04. Проверить movement.
+05. Проверить collision capsule / CharacterController.
+06. Создать PlayerSpawnPoint prefab или пустой объект-маркер.
+07. Добавить PlayerSpawnPoint в Station_FirstPlayable.
+08. Добавить ExpeditionSpawnPoint в Expedition_01_FirstPlayable.
+09. Проверить старт игрока на станции.
+10. Проверить старт игрока в экспедиции.
+11. Проверить движение по плоскости.
+12. Проверить движение возле стен.
+13. Проверить камеру в узком коридоре.
+14. Проверить FOV.
+15. Проверить near clip.
+16. Настроить базовую скорость движения, если нужно.
+Минимальный результат
+Игрок нормально ходит.
+Камера не мешает.
+Игрок не проваливается.
+Игрок не застревает в простых местах.
+Player prefab лежит в правильной папке.
+Не делать в этот день
+не полировать анимации;
+не делать stamina;
+не делать здоровье;
+не делать боевую систему;
+не делать сложную камеру.
+Day 4 — Layers, Tags, Basic Standards
+Цель
+Настроить базовые технические правила сцены.
+Задачи
+01. Создать / проверить layers:
+Player
+Interactable
+Item
+Enemy
+Environment
+Trigger
+02. Создать / проверить tags:
+Player
+Interactable
+Item
+Station
+ExpeditionExit
+03. Назначить Player layer игроку.
+04. Назначить Environment layer полу и стенам.
+05. Создать пустые placeholder-объекты:
+Station_ExpeditionExit
+Expedition_ReturnExit
+06. Назначить им Trigger layer.
+07. Проверить collisions.
+08. Создать простую папку для Physics settings, если нужно:
+Assets/_Project/NERA/Settings/Physics/
+09. Проверить, что игрок не взаимодействует с ненужными слоями.
+10. Записать текущие правила layers/tags в короткий README или заметку.
+Минимальный результат
+В проекте есть базовые слои.
+Игрок и окружение разделены.
+Будущая Interaction System сможет фильтровать Interactable и Item.
+Не делать в этот день
+не настраивать сложную collision matrix;
+не делать отдельные слои под все будущие системы;
+не делать оптимизацию физики раньше времени.
+Day 5 — Scene Transition Prototype
+Цель
+Сделать простой переход между станцией и экспедицией.
+Задачи
+01. Создать SceneLoader.cs в Code/Runtime/Core или Code/Runtime/Expeditions.
+02. Сделать простой метод LoadScene(sceneName).
+03. Создать ExpeditionExitInteractable или SceneTransitionTrigger.
+04. В Station_FirstPlayable добавить переход в Expedition_01_FirstPlayable.
+05. В Expedition_01_FirstPlayable добавить переход обратно в Station_FirstPlayable.
+06. Сделать переход по interaction или trigger.
+07. После загрузки сцены ставить игрока в нужную spawn point позицию.
+08. Если пока сложно — использовать простой scene load без сохранения позиции.
+09. Проверить Station → Expedition.
+10. Проверить Expedition → Station.
+11. Проверить, что сцены есть в Build Settings.
+12. Проверить, что нет ошибок после нескольких переходов подряд.
+Минимальный результат
+Игрок может перейти со станции в экспедицию.
+Игрок может вернуться из экспедиции на станцию.
+Переход работает стабильно.
+Не делать в этот день
+не делать loading screen;
+не делать async loading, если это тормозит;
+не делать сохранение состояния;
+не делать карту;
+не делать терминал.
+Week 1 Done Criteria
+Первая неделя считается закрытой, если:
+структура проекта создана;
+есть Station_FirstPlayable;
+есть Expedition_01_FirstPlayable;
+игрок ходит в обеих сценах;
+камера работает;
+есть базовые layers/tags;
+есть переход Station → Expedition;
+есть переход Expedition → Station;
+проект запускается без критических ошибок.
+03. Week 2 — Interaction Foundation
+Цель недели
+Сделать базовую систему взаимодействия, подсказки и pickup item.
+Ожидаемый результат недели
+К концу второй недели игрок должен уметь:
+видеть interact prompt;
+нажимать interaction;
+удерживать кнопку interaction;
+получать результат long interaction;
+подбирать предмет;
+видеть простую обратную связь;
+пройти технический loop в тестовом билде.
+Day 6 — Interaction Detection
+Цель
+Сделать обнаружение интерактивных объектов.
+Задачи
+01. Создать IInteractable или BaseInteractable.
+02. Создать PlayerInteractionDetector.
+03. Выбрать метод detection:
+- Raycast от камеры;
+или
+- Sphere overlap перед игроком.
+04. Для старта рекомендован Raycast от центра камеры.
+05. Фильтровать объекты по Interactable layer.
+06. Создать TestInteractable object.
+07. Добавить interaction name.
+08. Добавить interaction action text.
+09. При наведении на объект получать ссылку на interactable.
+10. При отведении взгляда очищать текущий interactable.
+11. Добавить debug log:
+Current Interactable: ObjectName
+12. Проверить в Test_Interaction scene.
+13. Проверить в Station_FirstPlayable.
+Минимальный результат
+Игрок смотрит на объект.
+Система понимает, что объект интерактивный.
+В debug видно, какой объект выбран.
+Не делать в этот день
+не делать UI красоты;
+не делать много типов interaction;
+не делать inventory;
+не делать pickup;
+не делать hold interaction.
+Day 7 — Interaction Prompt UI
+Цель
+Показать игроку простую подсказку взаимодействия.
+Задачи
+01. Создать UI canvas для HUD.
+02. Создать InteractPrompt widget.
+03. Добавить текст:
+[E] Interact
+04. Показывать prompt только когда есть current interactable.
+05. Скрывать prompt, когда interactable нет.
+06. Показывать название действия:
+[E] Open Terminal
+[E] Pick Up
+[E] Repair
+07. Добавить locked state:
+Locked
+Need Power
+Need Item
+08. Сделать простой InteractionPromptController.
+09. Проверить prompt в Test_Interaction scene.
+10. Проверить prompt на станции.
+11. Проверить, что prompt не зависает после перехода сцены.
+Минимальный результат
+Игрок видит понятную подсказку, когда смотрит на объект.
+Подсказка исчезает, когда объект не выбран.
+Не делать в этот день
+не делать финальный HUD;
+не делать иконки;
+не делать анимации;
+не делать разные стили;
+не делать tutorial UI.
+Day 8 — Press Interaction
+Цель
+Сделать обычное взаимодействие по нажатию.
+Задачи
+01. Подключить input для interaction key.
+02. По нажатию E вызывать Interact() у current interactable.
+03. Создать TestButtonInteractable.
+04. При interaction выводить debug log.
+05. Создать SimpleDoorPlaceholder или TestLightSwitch.
+06. Проверить, что interaction меняет состояние объекта.
+07. Добавить событие OnInteracted.
+08. Добавить locked state.
+09. Если объект locked — показывать reason.
+10. Проверить несколько объектов в сцене.
+11. Проверить, что interaction не срабатывает, если объект далеко.
+12. Проверить, что interaction не срабатывает через стену.
+Минимальный результат
+Игрок смотрит на объект.
+Нажимает E.
+Объект выполняет действие.
+Не делать в этот день
+не делать long interaction;
+не делать pickup;
+не делать сложные условия;
+не делать UI меню.
+Day 9 — Hold Interaction
+Цель
+Сделать взаимодействие с удержанием кнопки.
+Задачи
+01. Добавить тип interaction:
+Press
+Hold
+02. Создать HoldInteractable.
+03. Добавить hold duration.
+04. При удержании E заполнять progress.
+05. При отпускании E сбрасывать progress.
+06. При достижении 100% вызывать CompleteInteraction.
+07. Добавить progress indicator в prompt UI.
+08. Создать TestRepairInteractable.
+09. Создать SolarPanel_Dirty placeholder.
+10. При Hold Complete менять состояние объекта:
+Dirty → Clean
+11. Выводить notification/debug:
+Interaction Complete
+12. Проверить, что игрок может отменить удержание.
+13. Проверить, что повторное удержание не нужно после completed.
+Минимальный результат
+Игрок может удерживать E.
+Видит progress.
+После завершения объект меняет состояние.
+Не делать в этот день
+не делать сложные анимации ремонта;
+не делать инструменты;
+не делать resource cost;
+не делать energy system.
+Day 10 — Pickup Item Prototype
+Цель
+Сделать первый подбираемый предмет.
+Задачи
+01. Создать ItemData ScriptableObject.
+02. Создать ItemType enum.
+03. Добавить базовые поля:
+ItemId
+DisplayName
+Description
+ItemType
+Icon placeholder
+04. Создать WorldItem component.
+05. Создать TestItemData:
+Item_TestAncientObject
+06. Создать prefab:
+P_WorldItem_TestAncientObject
+07. Сделать WorldItem interactable.
+08. При interaction предмет “подбирается”.
+09. Пока без полноценного инвентаря:
+- выводить debug log;
+или
+- складывать в простой List<ItemData> на PlayerInventory placeholder.
+10. Создать PlayerInventory placeholder.
+11. Добавить метод AddItem(ItemData item).
+12. После pickup удалять или скрывать world item.
+13. Добавить notification/debug:
+Item Picked Up
+14. Разместить item в Expedition_01_FirstPlayable.
+15. Проверить pickup в экспедиции.
+16. Проверить возврат на станцию после pickup.
+Минимальный результат
+В мире лежит предмет.
+Игрок видит prompt.
+Нажимает E.
+Предмет подбирается.
+Предмет исчезает из мира.
+В debug / placeholder inventory видно, что предмет получен.
+Не делать в этот день
+не делать полноценный Inventory UI;
+не делать слоты;
+не делать item icons;
+не делать drop;
+не делать item actions;
+не делать research.
+Day 11 — Technical Loop Assembly
+Цель
+Собрать маленький технический loop из уже сделанных элементов.
+Задачи
+01. В Station_FirstPlayable поставить TestRepairInteractable.
+02. В Station_FirstPlayable поставить SceneTransition в Expedition.
+03. В Expedition_01_FirstPlayable поставить TestItem.
+04. В Expedition_01_FirstPlayable поставить ReturnTransition.
+05. Запустить игру со станции.
+06. Выполнить hold interaction.
+07. Перейти в экспедицию.
+08. Подобрать предмет.
+09. Вернуться на станцию.
+10. Проверить, что состояние предмета хотя бы временно сохраняется в runtime.
+11. Проверить, что prompt работает после смены сцены.
+12. Проверить, что input не ломается.
+13. Проверить, что нет null reference errors.
+14. Исправить критические баги.
+Минимальный результат
+Можно пройти техническую последовательность:
+Station → Hold Interaction → Expedition → Pickup → Return.
+Не делать в этот день
+не добавлять новые системы;
+не расширять задачи;
+не делать красивый UI;
+не делать станционную энергию.
+Day 12 — Basic Build
+Цель
+Собрать первый технический билд.
+Задачи
+01. Проверить Build Settings.
+02. Убедиться, что нужные сцены добавлены.
+03. Проверить Player Settings.
+04. Проверить URP settings.
+05. Сделать development build.
+06. Запустить билд вне Unity.
+07. Проверить управление.
+08. Проверить переходы сцен.
+09. Проверить interaction.
+10. Проверить hold interaction.
+11. Проверить pickup.
+12. Проверить возврат.
+13. Записать список проблем.
+14. Исправить только критические ошибки.
+15. Сделать повторную сборку, если нужно.
+Минимальный результат
+Есть первый standalone build.
+В билде можно пройти технический loop.
+Не делать в этот день
+не полировать;
+не менять архитектуру;
+не добавлять новые фичи;
+не чинить мелочи, если они не мешают loop.
+Day 13 — Cleanup and Documentation
+Цель
+Навести порядок после первого технического прохода.
+Задачи
+01. Проверить, что новые скрипты лежат в правильных папках.
+02. Проверить, что prefabs лежат в правильных папках.
+03. Проверить, что сцены сохранены.
+04. Переименовать временные объекты с понятными именами.
+05. Удалить мусорные объекты из сцен.
+06. Создать короткий README или заметку:
+Sprint01_CurrentState
+07. Записать:
+- что готово;
+- что работает;
+- что сломано;
+- что перенести в Sprint 02.
+08. Создать список bugs.
+09. Создать список postponed ideas.
+10. Проверить Git status.
+11. Сделать commit.
+Минимальный результат
+Проект не загажен.
+Понятно, что было сделано.
+Есть commit с результатом Sprint 01.
+Не делать в этот день
+не начинать Sprint 02;
+не добавлять терминал;
+не добавлять дрон;
+не переписывать системы без причины.
+Day 14 — Sprint Review
+Цель
+Проверить результат спринта и подготовить Sprint 02.
+Задачи
+01. Запустить Unity.
+02. Пройти technical loop в Editor.
+03. Пройти technical loop в Build.
+04. Проверить список Done Criteria.
+05. Оценить, что было сложно.
+06. Оценить, что нужно упростить.
+07. Выписать технические долги.
+08. Выписать задачи для Sprint 02.
+09. Зафиксировать, можно ли двигаться к Station Power + Terminal.
+10. Если нет — определить, что нужно доделать в Sprint 01.5.
+Минимальный результат
+Понятно, завершён ли Sprint 01.
+Понятно, можно ли переходить к Sprint 02.
+Есть список следующих задач.
+04. Sprint 01 Done Criteria
+Sprint 01 считается завершённым, если выполнено:
+структура проекта создана;
+Station_FirstPlayable существует;
+Expedition_01_FirstPlayable существует;
+Player prefab работает;
+камера работает;
+игрок может ходить;
+слои и теги настроены;
+есть простой scene transition;
+можно перейти Station → Expedition;
+можно вернуться Expedition → Station;
+есть Interaction Detection;
+есть Interaction Prompt;
+есть Press Interaction;
+есть Hold Interaction;
+есть TestPickupItem;
+есть placeholder inventory list или debug pickup result;
+есть первый технический билд;
+билд можно запустить вне Unity;
+technical loop проходится от начала до конца.
+05. What Not To Do In Sprint 01
+В первом спринте нельзя делать:
+финальную станцию;
+энергию станции;
+терминал;
+дрон;
+карту;
+инвентарь с UI;
+исследования;
+библиотеку;
+перевод;
+IO;
+сохранения;
+аудио;
+VFX;
+финальный свет;
+Addressables;
+Steam;
+локализацию;
+настройки графики;
+полный blockout Expedition 01;
+красивые материалы;
+полный UI style.
+Почему
+Потому что Sprint 01 должен ответить только на вопрос:
+Можем ли мы стабильно ходить, взаимодействовать, подбирать предмет и переходить между сценами?
+Если да — можно двигаться дальше.
+06. Sprint Review Checklist
+Project
+Файлы лежат в правильных папках?
+Нет ли мусора в корне Assets?
+Сцены добавлены в Build Settings?
+Проект собирается?
+Git commit сделан?
+Player
+Игрок ходит нормально?
+Камера не ломается?
+Игрок не проваливается?
+Игрок не застревает в простых местах?
+Управление комфортно для теста?
+Scene Flow
+Station загружается?
+Expedition загружается?
+Переход Station → Expedition работает?
+Переход Expedition → Station работает?
+После нескольких переходов нет ошибок?
+Interaction
+Prompt появляется?
+Prompt исчезает?
+Press interaction работает?
+Hold interaction работает?
+Progress отображается?
+Locked state пока не ломает систему?
+Pickup
+Предмет можно подобрать?
+Предмет исчезает из мира?
+В debug / placeholder inventory видно, что предмет получен?
+Pickup работает после перехода в экспедицию?
+Build
+Build запускается?
+Управление работает в build?
+Scene transition работает в build?
+Interaction работает в build?
+Pickup работает в build?
+07. Output Sprint 01
+В конце Sprint 01 у тебя должно быть:
+рабочий Unity-проект с чистой структурой;
+2 сцены;
+игрок;
+камера;
+scene transition;
+interaction system;
+hold interaction;
+pickup item;
+технический билд;
+список проблем;
+список задач для Sprint 02.
+Главная мысль документа
+Sprint 01 должен быть максимально техническим и скучным по контенту.
+Его задача — не показать NERA, а построить рельсы, по которым NERA дальше начнёт собираться.
+Если в конце Sprint 01 игрок может:
+ходить;
+взаимодействовать;
+удерживать кнопку;
+подбирать предмет;
+переходить между сценами;
+возвращаться обратно;
+значит проект готов двигаться к первой настоящей игровой механике — восстановлению станции и терминалу.

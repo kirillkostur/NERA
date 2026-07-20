@@ -17,5 +17,12 @@ MonoBehaviour:
   description: A compact NERA data-storage core recovered from the Ancient Outpost.
     Its sealed structure preserves fragmented station records.
   itemType: 2
-  icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
-  researchDefinition: {fileID: 11400000, guid: 14297a125c53688458ca61dab6540a49, type: 2}
+  icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  worldPrefab: {fileID: 7962635430784054245, guid: b7a7a4a5e7764b1f95cc311e99bb124a, type: 3}
+  equippedVisualPrefab: {fileID: 0}
+  equipmentAnchorName: mixamorig1:RightHand
+  equippedLocalPosition: {x: 0, y: 0, z: 0}
+  equippedLocalEulerAngles: {x: 0, y: 0, z: 0}
+  quickAccessAction: 0
+  useKey: 323
+  researchDefinition: {fileID: 11400000, guid: 58d4e5fb1624465aac628569e5e6ab28, type: 2}

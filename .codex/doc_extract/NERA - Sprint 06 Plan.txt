@@ -1,0 +1,728 @@
+NERA — Sprint 06 Plan
+First Playable Integration + Save Placeholder
+1. Назначение Sprint 06
+Sprint 06 нужен, чтобы собрать все сделанные системы в один стабильный First Playable flow.
+До этого спринты добавляли отдельные куски:
+Sprint 01 → player / camera / interaction / scene transitions
+Sprint 02 → station power / terminal placeholder
+Sprint 03 → drone / expedition unlock
+Sprint 04 → Expedition 01 content
+Sprint 05 → research / library / translation placeholder
+Sprint 06 не должен добавлять много нового контента.
+Его задача:
+собрать всё вместе
+→ проверить полный проход
+→ убрать критические debug-зависимости
+→ добавить минимальный save placeholder
+→ подготовить First Playable к дальнейшему polish
+2. Главная цель спринта
+Цель
+Сделать стабильный полный проход First Playable от старта до получения намёка на следующую цель.
+Игрок должен пройти:
+Start on Station
+→ Restore Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Find Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+→ Analyze NERA Memory Core
+→ Library Updated
+→ Translation Level: Fragmented
+→ New Objective Hint
+И всё это должно работать:
+без ручных действий в Editor;
+без debug-кнопок как обязательного шага;
+без потери runtime state при смене сцен;
+без ошибок в Console;
+в standalone build.
+3. Почему это важно
+До Sprint 06 проект может работать кусками.
+Например:
+терминал работает отдельно
+экспедиция работает отдельно
+research работает отдельно
+library работает отдельно
+Но First Playable — это не набор систем.
+First Playable — это проверка:
+работает ли игра как единый опыт
+Sprint 06 отвечает на главный вопрос:
+Можно ли уже пройти NERA от начала до первого понимания?
+4. Scope Sprint 06
+4.1. Что входит
+В Sprint 06 входит:
+интеграция всех систем;
+проверка полного flow;
+единый GameSessionState;
+сохранение состояния между сценами в рамках сессии;
+минимальный save placeholder;
+main flow validation;
+objective state cleanup;
+terminal state cleanup;
+scene transition cleanup;
+debug cleanup;
+build validation;
+первый internal checklist First Playable.
+4.2. Что НЕ входит
+В Sprint 06 не входит:
+полноценная save/load system;
+несколько save slots;
+Steam Cloud;
+settings menu;
+финальный main menu;
+Expedition 02;
+антенна;
+? точки;
+полноценный quest system;
+финальный UI;
+art polish;
+audio polish;
+оптимизация всего проекта;
+achievements;
+localization.
+5. Главный принцип Sprint 06
+Sprint 06 — это не спринт “добавить ещё”.
+Sprint 06 — это спринт:
+сделать уже добавленное рабочим
+Правило:
+Если новая фича не помогает пройти First Playable стабильнее — не добавлять.
+6. Полный First Playable Flow
+6.1. Flow Stage 01 — Station Offline
+Начало игры:
+Scene: Station_FirstPlayable
+StationPowerState = Offline
+Terminal = Locked
+Drone = Locked
+Expedition01 = Unknown
+Игрок должен:
+появиться на станции;
+увидеть, что станция не работает;
+найти power core;
+восстановить питание.
+Критерий:
+игрок понимает: сначала нужно включить станцию
+6.2. Flow Stage 02 — Station Online
+После восстановления питания:
+StationPowerState = Online
+Terminal = Available
+Drone = Ready
+Игрок должен:
+увидеть визуальную смену состояния станции;
+открыть терминал;
+перейти в Drone section.
+Критерий:
+игрок понимает: теперь можно использовать терминал
+6.3. Flow Stage 03 — Drone Scan
+В терминале:
+DroneState = Ready
+Игрок запускает дрон:
+Launch Drone
+→ DroneState = Scanning
+→ Scan Complete
+→ Expedition01 = Discovered
+Критерий:
+игрок понимает: дрон нашёл новую точку
+6.4. Flow Stage 04 — Travel to Expedition 01
+После сканирования:
+Expedition01 = Discovered
+Travel = Available
+Игрок нажимает:
+Travel
+→ Load Expedition_01_FirstPlayable
+Критерий:
+переход в экспедицию происходит из терминала, а не через debug
+6.5. Flow Stage 05 — Expedition 01
+В экспедиции игрок должен:
+появиться в правильной точке;
+пройти короткий маршрут;
+прочитать древнюю запись;
+осмотреть NERA Memory Core;
+заметить IO Trace;
+вернуться на станцию.
+Флаги:
+Expedition01_Visited = true
+AncientRecord01_Found = true
+ResearchObject01_Collected = true
+IOTrace01_Seen = true
+Expedition01_Returned = true
+Критерий:
+игрок возвращается на станцию с данными
+6.6. Flow Stage 06 — Research
+После возврата:
+ResearchObject01_Collected = true
+ResearchObject01_Analyzed = false
+Терминал показывает:
+New object available:
+NERA Memory Core
+[Analyze]
+После анализа:
+ResearchObject01_Analyzed = true
+Критерий:
+игрок понимает: находку нужно анализировать на станции
+6.7. Flow Stage 07 — Knowledge Update
+После анализа:
+Library entries unlocked
+AncientLanguageLevel = Fragmented
+NextObjectiveHintAvailable = true
+Игрок видит:
+обновление Library;
+изменение Translation Level;
+намёк на следующую цель.
+Критерий:
+игрок ощущает: я понял больше
+7. GameSessionState
+7.1. Назначение
+GameSessionState — временное хранилище прогресса First Playable.
+Он нужен, чтобы состояние не терялось между сценами.
+Пример:
+игрок нашёл объект в Expedition 01
+→ вернулся на станцию
+→ терминал должен знать, что объект найден
+7.2. Что хранить в GameSessionState
+Минимальный список:
+StationPowerState
+DroneState
+Expedition01_State
+Expedition01_Visited
+AncientRecord01_Found
+ResearchObject01_State
+IOTrace01_Seen
+Expedition01_Returned
+LibraryEntry_NERA_MemoryCore_Unlocked
+LibraryEntry_AncientOutpost_Unlocked
+LibraryEntry_AncientLanguage_FirstSymbols_Unlocked
+LibraryEntry_IO_WeakTrace_Unlocked
+AncientLanguageLevel
+NextObjectiveHintAvailable
+7.3. Что НЕ хранить в GameSessionState
+Не хранить:
+ссылки на scene objects;
+ссылки на UI buttons;
+ссылки на GameObjects из сцен;
+temporary VFX;
+audio sources;
+camera references;
+loaded prefabs;
+runtime-only interaction targets.
+Плохо:
+GameSessionState.TerminalButton = someButton;
+Хорошо:
+GameSessionState.ResearchObject01_State = Collected;
+8. State Persistence Between Scenes
+8.1. Проблема
+При смене сцен Unity уничтожает объекты сцены.
+Если состояние лежит на объекте сцены, оно потеряется.
+Плохо:
+AncientRecord01_Found хранится на AncientRecord_01 в Expedition scene
+После возврата на станцию терминал может не знать, что запись найдена.
+8.2. Решение для First Playable
+Использовать один persistent object:
+GameSession
+Он создаётся при старте игры и не уничтожается при смене сцен.
+Пример:
+GameSession
+├── GameSessionState
+├── SceneFlowController
+└── DebugSessionControls
+8.3. Правило
+Scene objects могут менять state.
+Но scene objects не должны быть главным хранилищем прогресса.
+Правильно:
+AncientRecordInteractable
+→ GameSessionState.AncientRecord01_Found = true
+Неправильно:
+AncientRecordInteractable.found = true
+9. Save Placeholder
+9.1. Назначение
+Save Placeholder нужен не для финального сохранения игры.
+Он нужен, чтобы заранее понять:
+какие данные вообще нужно сохранять
+9.2. Что сделать в Sprint 06
+Минимальный вариант:
+SaveData class
+SaveDataMapper
+Debug Save
+Debug Load
+Debug Reset
+Это может работать:
+в памяти;
+через JSON в Application.persistentDataPath;
+через временный editor-only debug.
+Лучше для Sprint 06:
+JSON save в Application.persistentDataPath
+Почему:
+быстро;
+проверяет реальное сохранение;
+работает в билде;
+не требует сложной архитектуры.
+9.3. Что сохранять
+Сохранять только First Playable state:
+StationPowerState
+DroneState
+Expedition01_State
+Expedition01_Visited
+AncientRecord01_Found
+ResearchObject01_State
+IOTrace01_Seen
+Expedition01_Returned
+Library entries
+AncientLanguageLevel
+NextObjectiveHintAvailable
+9.4. Что не сохранять
+Не сохранять:
+позицию игрока;
+точное состояние камеры;
+открытый UI экран;
+temporary prompts;
+VFX state;
+audio state;
+progress bar сканирования;
+состояние hold interaction;
+ссылки на объекты.
+Для First Playable достаточно сохранять этапы прогресса.
+10. Save / Load Rules
+10.1. Save
+Save должен происходить вручную через debug-кнопку или debug hotkey.
+Например:
+F5 → Save
+F9 → Load
+F10 → Reset
+Или через Debug panel.
+10.2. Load
+Load должен восстановить:
+состояние станции;
+открыта ли Expedition 01;
+найдены ли объекты;
+анализирован ли объект;
+открыты ли записи Library;
+Translation Level;
+hint.
+10.3. Reset
+Reset должен вернуть First Playable в начальное состояние:
+StationPowerState = Offline
+DroneState = Locked
+Expedition01 = Unknown
+ResearchObject01 = NotFound
+AncientLanguageLevel = Unknown
+Library entries = locked
+10.4. Не делать autosave
+В Sprint 06 не делать autosave.
+Почему:
+сначала нужно проверить структуру данных
+Autosave можно добавить позже.
+11. Scene Bootstrap Rules
+11.1. Назначение
+Каждая сцена должна при загрузке синхронизироваться с GameSessionState.
+Пример:
+если StationPowerState = Online
+→ станция должна визуально быть Online
+→ терминал должен быть доступен
+→ power core не должен снова предлагать Restore Power
+11.2. Station Bootstrap
+При загрузке станции:
+Read GameSessionState
+Apply station power visual state
+Apply terminal access state
+Apply drone state
+Apply research availability
+Apply library state
+Apply translation state
+Apply objective hint
+11.3. Expedition Bootstrap
+При загрузке Expedition 01:
+Read GameSessionState
+Mark Expedition01_Visited = true
+Hide AncientRecord if already found
+Hide / disable MemoryCore if already collected
+Mark IOTrace if already seen
+Setup return beacon
+Set objective text
+12. Debug Cleanup
+12.1. Что оставить
+Debug можно оставить, если он помогает тестировать.
+Оставить:
+Debug_ResetProgress
+Debug_Save
+Debug_Load
+Debug_UnlockExpedition01
+Debug_GiveResearchObject01
+Debug_SetTranslationFragmented
+12.2. Что убрать из обязательного flow
+Нельзя, чтобы прохождение зависело от:
+Debug_UnlockExpedition01
+Debug_GiveResearchObject01
+Debug_OpenResearchResult
+Debug_SetLibraryEntry
+Debug может ускорять тест.
+Но основной путь должен работать без него.
+12.3. Debug naming
+Все debug-объекты:
+Debug_
+Все debug UI:
+UI_Debug_
+Все debug scripts:
+DebugSomething.cs
+13. Objective Integration
+13.1. Проблема
+К Sprint 06 objective hints могут быть разбросаны:
+Station script;
+Expedition script;
+Research UI;
+Terminal UI;
+Debug script.
+Это плохо.
+13.2. Решение
+Добавить простой ObjectiveController.
+Он не должен быть полноценной quest system.
+Он должен только читать состояние и показывать текущий hint.
+13.3. Objective stages
+Минимальный список:
+RestoreStationPower
+LaunchDrone
+TravelToExpedition01
+FindAncientRecord
+InspectMemoryCore
+ReturnToStation
+AnalyzeMemoryCore
+ReviewLibraryUpdate
+NextGoalHint
+13.4. Objective text
+Restore station power.
+Open the terminal.
+Launch the drone.
+Travel to the discovered structure.
+Explore the ancient outpost.
+Read the ancient record.
+Inspect the NERA Memory Core.
+Return to station for analysis.
+Analyze the NERA Memory Core.
+Review updated data in Library.
+Use the drone to search for the signal array.
+14. Terminal Integration
+14.1. Терминал после Sprint 06
+Терминал должен корректно отображать состояние всех систем:
+Status
+Drone
+Expeditions
+Research
+Library
+Translation
+Exit
+14.2. Status Section
+Status должен показывать краткую сводку:
+Station: Online
+Drone: Scan Complete
+Expedition 01: Discovered / Visited / Returned
+Research: New object available / Analysis complete
+Language: Unknown / Fragmented
+14.3. Drone Section
+Должен учитывать:
+StationPowerState
+DroneState
+Expedition01_State
+Если Expedition 01 уже открыта, не нужно повторно запускать тот же scan как обязательный шаг.
+14.4. Expeditions Section
+Должен учитывать:
+Expedition01_State
+Возможные состояния:
+Unknown → not shown / locked
+Discovered → Travel available
+Visited → Travel available
+Completed / Returned → Travel available or marked returned
+Для First Playable достаточно:
+Unknown
+Discovered
+Returned
+14.5. Research Section
+Должен учитывать:
+ResearchObject01_State
+Состояния:
+NotFound → No samples
+Collected → Analyze available
+Analyzed → Show result
+14.6. Library Section
+Должен показывать только unlocked entries.
+Locked entries можно не показывать.
+Для First Playable лучше:
+показывать только то, что игрок уже открыл
+14.7. Translation Section
+Должен показывать:
+AncientLanguageLevel
+Без процентов.
+15. Scene Transition Integration
+15.1. Переходы
+В Sprint 06 должны быть стабильны переходы:
+Station → Expedition 01
+Expedition 01 → Station
+15.2. Spawn points
+Нужны явные spawn points:
+Station_PlayerStart_Default
+Station_PlayerStart_ReturnFromExpedition
+Expedition01_PlayerStart_Default
+15.3. Правило
+Игрок после возврата из экспедиции не должен появляться в стартовой точке, если это ломает flow.
+Лучше:
+после возврата игрок появляется рядом с терминалом / return area
+16. Предлагаемые классы
+16.1. Runtime/Core
+GameSession.cs
+GameSessionState.cs
+GameSessionBootstrap.cs
+ObjectiveController.cs
+SceneFlowController.cs
+16.2. Runtime/Save
+SaveData.cs
+SaveController.cs
+SaveDataMapper.cs
+SaveDebugController.cs
+16.3. Runtime/Expeditions
+Расширить:
+ExpeditionSceneBootstrap.cs
+ExpeditionTravelController.cs
+ExpeditionProgressController.cs
+16.4. Runtime/Station
+Расширить:
+StationSceneBootstrap.cs
+StationPowerController.cs
+StationPowerVisualController.cs
+16.5. Runtime/Terminal
+Расширить:
+TerminalUIScreen.cs
+TerminalStatusView.cs
+TerminalNavigationController.cs
+17. Save Data Structure
+17.1. Минимальный SaveData
+SaveData
+├── stationPowerState
+├── droneState
+├── expedition01State
+├── expedition01Visited
+├── ancientRecord01Found
+├── researchObject01State
+├── ioTrace01Seen
+├── expedition01Returned
+├── libraryEntriesUnlocked
+├── ancientLanguageLevel
+└── nextObjectiveHintAvailable
+17.2. Почему SaveData отдельно от GameSessionState
+GameSessionState — runtime-состояние.
+SaveData — сериализуемое состояние.
+Плохо:
+сериализовать весь GameSessionState со всеми ссылками
+Хорошо:
+GameSessionState → SaveDataMapper → SaveData → JSON
+18. Build Rules Sprint 06
+18.1. Обязательный build
+Sprint 06 нельзя считать готовым без standalone build.
+Причина:
+input, cursor, UI, scene loading и save часто ломаются именно в билде
+18.2. Проверка билда
+В билде проверить:
+старт игры;
+включение станции;
+открытие терминала;
+запуск дрона;
+открытие Expedition 01;
+загрузку Expedition 01;
+сбор записи;
+сбор research object;
+IO trace;
+возврат на станцию;
+research;
+library update;
+translation update;
+save;
+load;
+reset.
+19. Sprint 06 Tasks
+19.1. Game Session
+TASK-S06-001 — Create GameSession persistent object
+TASK-S06-002 — Create GameSessionState final FP version
+TASK-S06-003 — Move runtime flags into GameSessionState
+TASK-S06-004 — Ensure GameSession persists between scenes
+TASK-S06-005 — Add ResetSession method
+19.2. Scene Bootstrap
+TASK-S06-006 — Create StationSceneBootstrap
+TASK-S06-007 — Apply Station state on scene load
+TASK-S06-008 — Create ExpeditionSceneBootstrap
+TASK-S06-009 — Apply Expedition state on scene load
+TASK-S06-010 — Hide/disable collected Expedition objects
+TASK-S06-011 — Sync UI with session state after load
+19.3. Save Placeholder
+TASK-S06-012 — Create SaveData
+TASK-S06-013 — Create SaveDataMapper
+TASK-S06-014 — Create SaveController
+TASK-S06-015 — Save GameSessionState to JSON
+TASK-S06-016 — Load JSON into GameSessionState
+TASK-S06-017 — Add Debug Save
+TASK-S06-018 — Add Debug Load
+TASK-S06-019 — Add Debug Reset
+19.4. Objective Integration
+TASK-S06-020 — Create ObjectiveController
+TASK-S06-021 — Add objective stages
+TASK-S06-022 — Update objective based on GameSessionState
+TASK-S06-023 — Show objective hint in station
+TASK-S06-024 — Show objective hint in expedition
+19.5. Terminal Integration
+TASK-S06-025 — Add Terminal Status section
+TASK-S06-026 — Sync Drone section with GameSessionState
+TASK-S06-027 — Sync Expeditions section with GameSessionState
+TASK-S06-028 — Sync Research section with GameSessionState
+TASK-S06-029 — Sync Library section with GameSessionState
+TASK-S06-030 — Sync Translation section with GameSessionState
+TASK-S06-031 — Refresh Terminal UI when state changes
+19.6. Scene Transitions
+TASK-S06-032 — Add Station_PlayerStart_ReturnFromExpedition
+TASK-S06-033 — Add Expedition01_PlayerStart_Default
+TASK-S06-034 — Update SceneFlowController to support spawn ids
+TASK-S06-035 — Test Station → Expedition spawn
+TASK-S06-036 — Test Expedition → Station spawn
+19.7. Debug Cleanup
+TASK-S06-037 — List all debug objects/scripts
+TASK-S06-038 — Mark required debug tools with Debug_ prefix
+TASK-S06-039 — Remove obsolete debug buttons
+TASK-S06-040 — Ensure debug is not required for full flow
+19.8. Full Flow Test
+TASK-S06-041 — Test full First Playable flow in Editor
+TASK-S06-042 — Fix Console errors
+TASK-S06-043 — Fix missing references
+TASK-S06-044 — Test full First Playable flow in standalone build
+TASK-S06-045 — Write Sprint 06 result notes
+20. Рекомендуемый порядок выполнения
+День 1–2
+GameSession
+GameSessionState cleanup
+Move scattered flags into one place
+Persistent object between scenes
+День 3–4
+StationSceneBootstrap
+ExpeditionSceneBootstrap
+Apply state after scene load
+Collected objects visibility
+День 5–6
+SaveData
+SaveDataMapper
+SaveController
+Debug Save / Load / Reset
+День 7–8
+ObjectiveController
+Terminal Status section
+Terminal state refresh
+Scene transition spawn ids
+День 9–10
+Full flow test
+Standalone build
+Bug fixing
+Debug cleanup
+Sprint notes
+21. Критерии готовности Sprint 06
+Sprint 06 считается готовым, если:
+21.1. Full Flow
+игрок может стартовать на станции;
+восстановить питание;
+открыть терминал;
+запустить дрон;
+открыть Expedition 01;
+перейти в Expedition 01;
+найти запись;
+найти research object;
+увидеть IO trace;
+вернуться на станцию;
+проанализировать объект;
+увидеть Library update;
+увидеть Translation Level update;
+получить hint на следующую цель.
+21.2. State
+состояние не теряется при смене сцен;
+все важные flags лежат в GameSessionState;
+сцены применяют state при загрузке;
+UI обновляется по state;
+collected objects не появляются повторно как новые.
+21.3. Save Placeholder
+debug save работает;
+debug load работает;
+debug reset работает;
+save file создаётся в билде;
+load восстанавливает ключевые First Playable states;
+reset возвращает игру в начало.
+21.4. Terminal
+терминал показывает актуальное состояние;
+раздел Drone не ломается после завершения scan;
+Expedition 01 остаётся доступной после открытия;
+Research показывает объект после возврата;
+Library показывает открытые записи;
+Translation показывает правильный уровень.
+21.5. Scene Transitions
+Station → Expedition работает;
+Expedition → Station работает;
+player spawn корректный;
+камера не ломается после загрузки сцены;
+input работает после переходов;
+курсор не остаётся разблокированным после закрытия UI.
+21.6. Technical
+нет ошибок в Console;
+нет Missing Scripts;
+нет Missing Prefabs;
+нет Missing Materials;
+билд собирается;
+полный flow работает в standalone build;
+debug не обязателен для прохождения.
+22. Что не делать в Sprint 06
+Не добавлять:
+новые экспедиции
+антенну
+? точки
+новых врагов IO
+боёвку
+новые research objects
+большую библиотеку
+финальный UI
+финальный save/load
+main menu
+settings
+Steam integration
+achievements
+Главный фокус:
+интеграция и стабильность
+23. Риски Sprint 06
+23.1. Риск: начать переписывать архитектуру
+Проблема:
+Когда систем стало много, появляется желание всё переписать красиво.
+Решение:
+Не переписывать всё.
+Стабилизировать только то, что нужно для First Playable.
+23.2. Риск: сделать полноценный save
+Проблема:
+Save/load может разрастись в сложную систему.
+Решение:
+Только SaveData для First Playable.
+Без slots, autosave, cloud, settings.
+23.3. Риск: сломать scene transitions
+Проблема:
+Persistent GameSession, spawn ids и UI cursor могут конфликтовать.
+Решение:
+Проверять переходы после каждого изменения.
+Не откладывать build test на самый конец.
+23.4. Риск: debug останется частью прохождения
+Проблема:
+Системы могут работать только через debug-кнопки.
+Решение:
+В конце пройти игру с нуля без debug.
+Debug оставить только для ускорения тестов.
+24. Главный результат Sprint 06
+После Sprint 06 проект должен впервые ощущаться как цельный First Playable:
+станция
+→ питание
+→ терминал
+→ дрон
+→ экспедиция
+→ находки
+→ возврат
+→ исследование
+→ библиотека
+→ перевод
+→ новая цель
+Это главный каркас NERA.

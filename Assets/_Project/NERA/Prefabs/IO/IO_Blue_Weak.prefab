@@ -121,13 +121,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc86dafa2867d354ca31650ecc5333e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 30
-  detectionRadius: 10
-  attackRange: 6
-  moveSpeed: 2
-  hoverHeight: 1.6
-  attackCooldown: 2
-  projectileSpeed: 8
-  projectileLifetime: 4
-  projectileDamage: 10
-  energyColor: {r: 0.1, g: 0.65, b: 1, a: 1}
+  config: {fileID: 11400000, guid: 2b46e0bca7bb4755a3a399d69e4dd6e5, type: 2}

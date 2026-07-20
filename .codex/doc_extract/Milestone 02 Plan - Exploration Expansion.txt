@@ -1,0 +1,511 @@
+NERA — Milestone 02 Plan
+Exploration Expansion
+1. Назначение Milestone 02
+Milestone 02 нужен после фиксации:
+NERA First Playable v0.1.0
+First Playable доказал базовый loop:
+станция
+→ терминал
+→ дрон
+→ экспедиция
+→ находка
+→ возвращение
+→ исследование
+→ библиотека / перевод
+→ новая цель
+Milestone 02 должен проверить следующий вопрос:
+Масштабируется ли этот loop на новые экспедиции, новые типы сигналов и более глубокое понимание мира?
+2. Главная цель Milestone 02
+Цель
+Расширить игру за пределы первой экспедиции, не ломая основной loop.
+Milestone 02 должен добавить:
+Expedition 02;
+улучшенный Drone Scan;
+первую Antenna system;
+первую ? точку;
+различие между обычными экспедициями NERA и человеческими следами;
+развитие Library;
+развитие Translation Level до Partial;
+более сильное присутствие IO;
+более понятную карту / список локаций.
+Главная формула этапа:
+дрон открывает NERA-экспедиции
+антенна открывает ? точки
+research и translation дают понимание
+3. Почему Milestone 02 важен
+First Playable показывает, что игра может работать один раз.
+Milestone 02 должен показать, что структура может повторяться и развиваться.
+Проблема First Playable:
+одна станция
+одна экспедиция
+одна находка
+один анализ
+один hint
+Этого достаточно для проверки ядра, но недостаточно для игры.
+Milestone 02 должен ответить:
+Что происходит после первого понимания?
+4. Основной loop Milestone 02
+После Milestone 02 loop должен выглядеть так:
+Station
+→ Terminal
+→ Drone Scan
+→ Expedition 02 discovered
+→ Travel to Expedition 02
+→ New NERA discovery
+→ Return to Station
+→ Research
+→ Library update
+→ Translation: Fragmented → Partial
+→ Antenna calibration
+→ ? signal discovered
+→ Human trace investigated
+→ New question about previous missions
+5. Главные новые элементы
+5.1. Expedition 02
+Expedition 02 — первая проверка масштабирования обычной экспедиции.
+Она должна быть:
+больше Expedition 01;
+всё ещё компактной;
+с новой формой древней архитектуры;
+с более явным IO context;
+с новой древней записью;
+с новым research object;
+с hint на антенну или сигнал.
+5.2. Antenna System
+Антенна нужна, чтобы открыть отдельный тип целей:
+? точки
+Важно:
+? = человеческие следы / сигналы / предыдущие миссии
+Антенна не должна открывать обычные NERA-экспедиции.
+5.3. ? Point 01
+Первая ? точка должна показать игроку:
+на NERA уже были люди
+или рядом есть следы прошлой экспедиции
+Это не обычная древняя локация.
+Это отдельный эмоциональный слой:
+я не первый
+5.4. Translation Level: Partial
+В First Playable перевод дошёл до:
+Fragmented
+В Milestone 02 он должен перейти до:
+Partial
+Это должно ощущаться как реальный прогресс.
+Игрок должен впервые понять не просто “есть символы”, а часть смысла.
+6. Что входит в Milestone 02
+Milestone 02 включает:
+Expedition 02 blockout + gameplay content
+Drone Scan improvement
+Antenna System placeholder
+? Point 01
+Map/List location type distinction
+New Research Object
+New Ancient Record
+New Library entries
+Translation Level update to Partial
+Stronger IO context
+First post-FP technical cleanup
+Standalone milestone build
+7. Что НЕ входит в Milestone 02
+Milestone 02 не включает:
+Expedition 03–10
+полноценную open world карту
+полноценное управление дроном
+боёвку с IO
+полноценный AI врагов
+полный inventory UI
+anomaly slots
+Steam integration
+achievements
+localization
+финальный art pass
+финальный audio pass
+финальный optimization pass
+большую систему квестов
+8. Состав Milestone 02 по спринтам
+Рекомендуемый состав:
+Sprint 10 — Post-FP Cleanup + Milestone 02 Foundation
+Sprint 11 — Expedition 02 Gameplay Content
+Sprint 12 — Antenna + ? Point 01
+Sprint 13 — Translation Partial + Library Expansion
+Sprint 14 — Milestone 02 Integration + QA
+Sprint 15 — Milestone 02 Lock
+9. Sprint 10 — Post-FP Cleanup + Milestone 02 Foundation
+9.1. Назначение
+Перед добавлением новых систем нужно убрать самые слабые места после First Playable.
+Цель:
+не строить Milestone 02 поверх хрупкого First Playable
+9.2. Что входит
+закрыть must-fix из Post-FP Review;
+подчистить GameSessionState;
+стабилизировать Terminal UI;
+подготовить location data model;
+разделить location types:
+Expedition;
+UnknownSignal / ?;
+подготовить configs для Expedition 02;
+подготовить configs для ? Point 01.
+9.3. Результат Sprint 10
+После Sprint 10 проект готов к расширению:
+системы выдерживают больше одной экспедиции
+10. Sprint 11 — Expedition 02 Gameplay Content
+10.1. Назначение
+Добавить вторую обычную экспедицию NERA.
+10.2. Основной flow
+Drone Scan
+→ Expedition 02 discovered
+→ Travel to Expedition 02
+→ Explore new NERA location
+→ Find Ancient Record 02
+→ Inspect Research Object 02
+→ Stronger IO sign
+→ Return to Station
+10.3. Чем Expedition 02 отличается от Expedition 01
+Expedition 01:
+маленький древний аванпост
+первый контакт с языком
+слабый IO след
+Expedition 02:
+сигнальный массив / relay structure
+больше технического назначения
+больше связи с IO
+даёт основание для антенны
+11. Sprint 12 — Antenna + ? Point 01
+11.1. Назначение
+Добавить первый альтернативный способ открытия локаций.
+11.2. Главное правило
+Drone открывает обычные экспедиции NERA.
+Antenna открывает ? точки.
+11.3. Основной flow
+Research from Expedition 02
+→ Antenna calibration available
+→ Calibrate Antenna
+→ ? Point 01 discovered
+→ Travel to ? Point 01
+→ Find human trace
+→ Return to Station
+11.4. Что такое ? Point 01
+Это не древний комплекс.
+Это может быть:
+старый аварийный маяк;
+обломок человеческого дрона;
+капсула предыдущей миссии;
+повреждённый модуль связи;
+следы лагеря;
+запись другого человека.
+Главная эмоция:
+я здесь не первый
+12. Sprint 13 — Translation Partial + Library Expansion
+12.1. Назначение
+Развить понимание мира после Expedition 02 и ? Point 01.
+12.2. Translation progression
+В First Playable:
+Unknown → Fragmented
+В Milestone 02:
+Fragmented → Partial
+12.3. Что значит Partial
+Partial означает:
+игрок понимает часть смысла древних записей
+но ещё не видит полной картины
+Пример:
+До Partial:
+“Repeated symbols detected.”
+После Partial:
+“Signal / Warning / Gate / Memory”
+12.4. Library Expansion
+Добавить новые записи:
+Expedition 02;
+NERA Signal Array;
+IO Distortion;
+Antenna Calibration;
+Unknown Human Signal;
+Previous Mission Fragment;
+Partial Translation Notes.
+13. Sprint 14 — Milestone 02 Integration + QA
+13.1. Назначение
+Проверить, что Milestone 02 работает как цельный этап.
+13.2. Проверяемый flow
+First Playable flow
+→ Expedition 02 unlock
+→ Expedition 02 complete
+→ Research update
+→ Translation Partial
+→ Antenna calibration
+→ ? Point 01 unlock
+→ Human trace found
+→ Return to Station
+→ Library update
+13.3. Важные проверки
+не ломается First Playable flow;
+Expedition 01 остаётся рабочей;
+Expedition 02 открывается через Drone;
+? Point открывается через Antenna;
+карта / список показывает разные типы точек;
+Translation progress корректный;
+Library не превращается в мусорную свалку текстов;
+GameSessionState не разрастается хаотично.
+14. Sprint 15 — Milestone 02 Lock
+14.1. Назначение
+Зафиксировать Milestone 02 как стабильную внутреннюю версию.
+14.2. Build name
+NERA_M02_LOCK_v0.2.0_YYYY_MM_DD
+14.3. Lock criteria
+Milestone 02 можно залочить, если:
+First Playable flow всё ещё работает;
+Expedition 02 проходится;
+Antenna открывает ? Point 01;
+? Point 01 проходится;
+Translation Level доходит до Partial;
+Library обновляется;
+нет blocker bugs;
+milestone build проходит clean playthrough.
+15. Location Type Rules
+15.1. Типы локаций
+В Milestone 02 появляются минимум два типа локаций:
+Expedition
+UnknownSignal
+15.2. Expedition
+Открывается через:
+Drone
+Содержит:
+древнюю структуру NERA;
+NERA research objects;
+ancient records;
+IO signs;
+обычное продвижение по NERA loop.
+15.3. UnknownSignal / ?
+Открывается через:
+Antenna
+Содержит:
+человеческие следы;
+сигналы прошлых миссий;
+маяки;
+фрагменты данных;
+контекст о людях и Земле.
+15.4. Правило отображения
+На карте / в списке:
+Expedition = обычная найденная точка
+? = неизвестный человеческий сигнал
+Нельзя смешивать:
+? ≠ обычная экспедиция NERA
+16. Drone Rules Milestone 02
+16.1. Что улучшить
+Drone Scan должен стать чуть богаче, но всё ещё не полноценным управлением дроном.
+Добавить:
+разные scan results;
+scan history;
+короткое описание найденной точки;
+статус “No new expedition found” при повторном скане;
+визуальный feedback сканирования.
+16.2. Что не делать
+Не делать:
+физический дрон;
+управление дроном;
+полёт;
+мини-игру;
+drone upgrades;
+drone fuel;
+drone durability.
+Дрон пока остаётся:
+инструментом обнаружения обычных экспедиций
+17. Antenna Rules
+17.1. Назначение
+Антенна нужна для человеческих сигналов.
+Она должна отвечать за:
+поиск следов людей / прошлых миссий / неизвестных сигналов
+17.2. Почему нужна отдельная система
+Если все точки открывает дрон, игрок не почувствует разницы между:
+древняя цивилизация NERA
+и
+человеческие следы
+Антенна создаёт отдельный слой mystery.
+17.3. Antenna placeholder
+Для Milestone 02 достаточно:
+terminal section Antenna;
+состояние Locked / Ready / Calibrating / SignalFound;
+кнопка Calibrate Antenna;
+результат ? Signal discovered;
+открытие ? Point 01.
+18. ? Point Rules
+18.1. Главная эмоция
+я не первый на NERA
+18.2. Что должно быть внутри
+Минимум:
+human trace object;
+data log / broken message;
+visual sign of previous mission;
+return point;
+Library update after return.
+18.3. Что не должно быть внутри
+Не должно быть:
+древней NERA архитектуры как главного объекта;
+обычного NERA research object;
+обычного drone unlock;
+большого боя;
+полноценной катсцены;
+прямого ответа на все вопросы.
+19. Translation Rules Milestone 02
+19.1. Progression
+Unknown → Fragmented → Partial
+19.2. Как получить Partial
+Partial должен открываться не от одного действия, а от совокупности:
+Ancient Record 01 found
+NERA Memory Core analyzed
+Ancient Record 02 found
+Research Object 02 analyzed
+Для Milestone 02 можно сделать упрощённо:
+Research Object 02 analyzed → Translation Level = Partial
+Но в документации фиксируем правильную будущую идею:
+понимание растёт от накопления данных
+19.3. Что даёт Partial
+Partial должен дать игроку:
+несколько понятных слов;
+лучшее понимание Expedition 02;
+намёк на связь IO и NERA;
+возможность прочитать часть древней записи.
+20. Library Rules Milestone 02
+20.1. Библиотека должна оставаться короткой
+Не добавлять много длинных текстов.
+Лучше:
+меньше записей
+но каждая даёт новый смысл
+20.2. Новые Library entries
+Минимальный список:
+LIB_Expedition02_SignalArray
+LIB_NERA_SignalRelay
+LIB_IO_Distortion
+LIB_AntennaCalibration
+LIB_HumanSignal_01
+LIB_PreviousMissionFragment_01
+LIB_Translation_Partial
+21. IO Rules Milestone 02
+21.1. IO становится ближе
+В First Playable IO была следом.
+В Milestone 02 IO должна стать заметнее, но всё ещё не врагом для боя.
+Варианты:
+stronger IO distortion;
+зона искажения;
+красный/жёлтый warning marker;
+повреждённый NERA механизм;
+связь с human trace;
+намёк, что IO реагирует на древние устройства.
+21.2. Не превращать IO в shooter enemy
+Пока не делать:
+HP;
+урон;
+оружие;
+combat UI;
+death loop;
+enemy waves.
+IO должна быть:
+опасным явлением
+а не:
+обычным мобом
+22. Technical Rules Milestone 02
+22.1. Главный технический риск
+После добавления Expedition 02 и ? Point 01 может раздуться GameSessionState.
+Нужно заранее разделить данные.
+22.2. Рекомендуемая структура state
+GameSessionState
+├── StationState
+├── DroneState
+├── AntennaState
+├── LocationStates
+├── ResearchStates
+├── LibraryState
+├── TranslationState
+└── ObjectiveState
+22.3. Почему так
+Плохо:
+bool Expedition01Visited
+bool Expedition02Visited
+bool QuestionPoint01Visited
+bool Record01Found
+bool Record02Found
+bool HumanLog01Found
+...
+Это быстро превращается в хаос.
+Лучше:
+Dictionary<LocationId, LocationState>
+Dictionary<ResearchObjectId, ResearchObjectState>
+HashSet<LibraryEntryId>
+23. Milestone 02 Success Criteria
+Milestone 02 считается успешным, если:
+23.1. Gameplay
+игрок может пройти First Playable flow;
+после него открыть Expedition 02;
+пройти Expedition 02;
+вернуться на станцию;
+провести research;
+получить Translation Level Partial;
+откалибровать антенну;
+открыть ? Point 01;
+найти человеческий след;
+вернуться на станцию;
+получить новый Library update.
+23.2. Design
+игрок понимает разницу между Expedition и ?;
+дрон не открывает ? точки;
+антенна не открывает обычные экспедиции;
+Translation progress ощущается сильнее;
+Library даёт новый смысл;
+IO ощущается важнее, но не превращается в боёвку.
+23.3. Technical
+state не ломается между сценами;
+локации описаны через configs;
+UI не хранит gameplay state;
+build собирается;
+нет blocker bugs;
+performance baseline не деградировал критично.
+24. Что не делать в Milestone 02
+Не делать:
+10 экспедиций сразу
+большой open world
+полноценное управление дроном
+боёвку с IO
+сложную антенную мини-игру
+полный quest system
+полный inventory UI
+финальный UI map
+финальный art pass всех локаций
+полную оптимизацию
+Steam features
+Главный фокус:
+расширить loop без раздувания scope
+25. Главные риски Milestone 02
+25.1. Риск: раздувание scope
+Проблема:
+Expedition 02 + Antenna + ? Point могут легко превратиться в большой production этап.
+Решение:
+Milestone 02 = компактное расширение.
+Одна новая экспедиция.
+Одна ? точка.
+Одна новая ступень перевода.
+25.2. Риск: карта станет слишком сложной
+Проблема:
+Хочется сделать полноценную карту планеты.
+Решение:
+Пока карта = список/карточки с типами точек.
+Финальная карта позже.
+25.3. Риск: антенна станет копией дрона
+Проблема:
+Если антенна просто такая же кнопка, как Drone Scan, различие потеряется.
+Решение:
+Дрон = древние структуры NERA.
+Антенна = человеческие сигналы.
+UI и тексты должны подчёркивать разницу.
+25.4. Риск: Translation останется сухим статусом
+Проблема:
+Partial может быть просто новым словом в UI.
+Решение:
+Partial должен реально менять текст древней записи или Library interpretation.
+26. Главный результат Milestone 02
+После Milestone 02 NERA должна доказать:
+основной loop можно повторять
+игрок различает типы открытий
+исследование даёт новое понимание
+на NERA есть не только древняя цивилизация, но и человеческие следы
+IO становится связующим источником тревоги
+Это переводит проект из состояния:
+один рабочий First Playable loop
+в состояние:
+начинается настоящая структура игры

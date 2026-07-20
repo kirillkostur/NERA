@@ -1,0 +1,582 @@
+NERA — Sprint 09 Plan
+First Playable Lock
+1. Назначение Sprint 09
+Sprint 09 нужен, чтобы зафиксировать First Playable как стабильный milestone.
+После Sprint 08 у нас уже должны быть:
+full flow QA
+bug list
+performance baseline
+memory baseline
+build size baseline
+loading baseline
+must-fix list
+standalone build test
+Sprint 09 не должен расширять игру.
+Его задача:
+закрыть blockers
+→ закрыть critical bugs
+→ убрать лишний debug из основного flow
+→ зафиксировать состав First Playable
+→ собрать milestone build
+→ оформить release notes
+2. Главная цель спринта
+Цель
+Сделать версию First Playable, которую можно считать стабильной внутренней сборкой.
+После Sprint 09 должно быть понятно:
+что входит в First Playable;
+что не входит в First Playable;
+какие баги исправлены;
+какие баги остаются известными;
+какой build является milestone;
+можно ли пройти игру от начала до конца;
+какие следующие шаги после lock.
+Главный результат:
+NERA First Playable locked as internal milestone
+3. Почему это важно
+Без lock проект может застрять в бесконечном состоянии:
+ещё чуть-чуть улучшим
+ещё один эффект
+ещё один UI экран
+ещё один фикс
+ещё одна маленькая система
+Это опасно.
+First Playable нужен не для идеала.
+First Playable нужен, чтобы доказать:
+core loop NERA работает
+4. Главный принцип Sprint 09
+Sprint 09 — это спринт фиксации.
+Правило:
+Если задача не нужна для стабильного прохождения First Playable — она не входит в Sprint 09.
+5. First Playable Lock Definition
+5.1. Что значит “First Playable locked”
+First Playable считается locked, если:
+полный loop проходится от начала до конца;
+нет blocker bugs;
+critical bugs закрыты или явно приняты как known issues;
+билд собирается;
+билд запускается;
+standalone build проходится без debug;
+состав контента зафиксирован;
+дальнейшие изменения идут уже после milestone.
+5.2. Что НЕ значит “locked”
+Locked не значит:
+финальное качество;
+готовность к публичному показу;
+vertical slice;
+demo для Steam;
+trailer-ready build;
+art complete;
+audio complete;
+optimization complete;
+production complete.
+Это только:
+внутренний стабильный First Playable
+6. Locked First Playable Scope
+6.1. Входит в First Playable
+First Playable включает:
+Station_FirstPlayable
+Expedition_01_FirstPlayable
+Player third-person movement
+Camera
+Interaction system
+Station power restore
+Terminal fullscreen UI
+Drone scan placeholder
+Expedition 01 unlock
+Travel to Expedition 01
+Ancient Record interaction
+NERA Memory Core interaction
+IO Trace placeholder
+Return to Station
+Research placeholder
+Library placeholder
+Translation Level update
+Next objective hint
+Save placeholder
+Basic feedback
+Basic VFX
+Basic audio placeholder
+Standalone build
+6.2. Не входит в First Playable
+First Playable не включает:
+Expedition 02–10
+Antenna system
+? points
+Full world map
+Full drone model / flight
+Combat
+Full IO enemy AI
+Full inventory UI
+Anomaly slots
+Full save system
+Main menu
+Settings menu
+Steam integration
+Achievements
+Localization
+Final art
+Final audio
+Final VFX
+Final lighting
+Final optimization
+7. Required Full Flow
+7.1. Обязательный проход
+Milestone build должен проходиться так:
+Start on Station
+→ Restore Station Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Explore Ancient Outpost
+→ Read Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+→ Analyze NERA Memory Core
+→ Library Updated
+→ Ancient Language Level: Fragmented
+→ Next Objective Hint
+7.2. Запрещено для lock
+В milestone build нельзя, чтобы обязательный проход зависел от:
+debug unlock
+manual inspector changes
+editor-only objects
+scene reload by hand
+console commands
+temporary keyboard shortcuts that are not documented
+Debug-инструменты можно оставить, но они не должны быть частью прохождения.
+8. Bug Fix Priority
+8.1. Blocker bugs
+Все blocker bugs должны быть закрыты.
+Blocker examples:
+build does not launch
+station scene does not load
+expedition scene does not load
+player cannot move
+terminal cannot open
+drone scan cannot complete
+travel button does not work
+return to station does not work
+research cannot complete
+game crashes
+Правило:
+Blocker нельзя переносить после First Playable Lock.
+8.2. Critical bugs
+Critical bugs должны быть:
+исправлены;
+или явно записаны как accepted known issue, если они не ломают milestone.
+Critical examples:
+cursor remains visible after terminal
+input sometimes breaks after scene transition
+objective hint does not update
+UI displays wrong state after load
+collected objects appear again
+save/load restores incomplete state
+8.3. Major bugs
+Major bugs можно перенести после lock, если:
+они не ломают прохождение;
+не мешают понять loop;
+не портят базовый опыт слишком сильно.
+8.4. Minor bugs
+Minor bugs не должны задерживать lock.
+Примеры:
+typos
+rough alignment
+placeholder icons
+minor clipping
+temporary materials
+weak audio mix
+9. Debug Cleanup
+9.1. Что оставить
+Можно оставить debug-инструменты:
+Debug_Save
+Debug_Load
+Debug_Reset
+Debug_UnlockExpedition01
+Debug_GiveResearchObject01
+Debug_SetTranslationFragmented
+Но они должны быть:
+явно подписаны;
+не видны обычному игроку;
+не обязательны для прохождения;
+не мешать UI.
+9.2. Что убрать
+Убрать из обычного flow:
+debug buttons inside main terminal panels
+temporary cheat prompts
+editor-only instructions
+visible debug state text
+test cubes without purpose
+obsolete placeholder triggers
+duplicated scene transition objects
+9.3. Debug naming
+Все оставленные debug-инструменты должны быть в одном месте:
+Debug
+UI_Debug
+DebugSessionControls
+10. Build Naming
+10.1. Milestone build name
+Формат:
+NERA_FP_LOCK_v0.1.0_YYYY_MM_DD
+Пример:
+NERA_FP_LOCK_v0.1.0_2026_07_31
+10.2. Почему v0.1.0
+v0.1.0 означает:
+первый зафиксированный внутренний First Playable
+Это не публичная версия.
+11. Version Rules
+11.1. Version format
+Использовать формат:
+Major.Minor.Patch
+Для внутренней разработки:
+0.1.0 = First Playable Lock
+0.1.1 = Hotfix after First Playable Lock
+0.2.0 = Next major internal milestone
+11.2. Что считается patch
+Patch повышается, если:
+исправили баг;
+не добавили новую систему;
+не расширили scope;
+не изменили milestone content.
+Пример:
+0.1.0 → 0.1.1
+11.3. Что считается minor
+Minor повышается, если:
+добавили новый крупный кусок loop;
+добавили новую экспедицию;
+добавили антенну;
+добавили ? точки;
+добавили полноценный inventory UI.
+Пример:
+0.1.0 → 0.2.0
+12. First Playable Release Notes
+12.1. Назначение
+Release Notes нужны, чтобы зафиксировать состояние build.
+Они отвечают на вопросы:
+что внутри?
+что работает?
+что не работает?
+какие есть известные проблемы?
+какой следующий шаг?
+12.2. Формат release notes
+NERA First Playable Lock — v0.1.0
+Build:
+Date:
+Unity Version:
+Target:
+Scenes:
+Included:
+Known Issues:
+Not Included:
+Tested Flow:
+Performance Notes:
+Next Step:
+12.3. Пример release notes
+NERA First Playable Lock — v0.1.0
+Build:
+NERA_FP_LOCK_v0.1.0_2026_07_31
+Target:
+PC / Steam internal build
+Scenes:
+Station_FirstPlayable
+Expedition_01_FirstPlayable
+Included:
+- Station power restore
+- Terminal fullscreen UI
+- Drone scan placeholder
+- Expedition 01 unlock
+- Expedition 01 gameplay flow
+- Research placeholder
+- Library placeholder
+- Translation level update
+- Save placeholder
+Known Issues:
+- Terminal UI is placeholder.
+- Expedition 01 art is blockout.
+- Audio is placeholder.
+- Save system is debug-only.
+- Optimization is baseline only.
+Not Included:
+- Combat
+- Expedition 02+
+- Antenna
+- ? points
+- Full inventory
+- Full map
+- Final art/audio/VFX
+Tested Flow:
+Full First Playable completed in standalone build.
+Next Step:
+Post-lock review and backlog cleanup.
+13. First Playable Lock Checklist
+13.1. Build checklist
+[ ] Build created
+[ ] Build launches
+[ ] Station scene loads
+[ ] Expedition scene loads
+[ ] No blocker console errors
+[ ] Full flow completed
+[ ] Save placeholder tested
+[ ] Reset tested
+[ ] Build size recorded
+[ ] FPS baseline recorded
+13.2. Gameplay checklist
+[ ] Player moves
+[ ] Camera works
+[ ] Interaction prompt works
+[ ] Hold interaction works
+[ ] Station power restored
+[ ] Terminal opens
+[ ] Terminal closes
+[ ] Drone scan works
+[ ] Expedition 01 unlocks
+[ ] Travel works
+[ ] Ancient Record works
+[ ] NERA Memory Core works
+[ ] IO Trace visible
+[ ] Return to station works
+[ ] Research works
+[ ] Library updates
+[ ] Translation updates
+[ ] Final hint appears
+13.3. UI checklist
+[ ] Cursor locks in gameplay
+[ ] Cursor unlocks in terminal
+[ ] Esc closes terminal
+[ ] Terminal Status section correct
+[ ] Drone section correct
+[ ] Expeditions section correct
+[ ] Research section correct
+[ ] Library section correct
+[ ] Translation section correct
+[ ] UI refreshes after state changes
+13.4. State checklist
+[ ] GameSession persists between scenes
+[ ] StationPowerState persists
+[ ] DroneState persists
+[ ] Expedition01 state persists
+[ ] AncientRecord01 state persists
+[ ] ResearchObject01 state persists
+[ ] IOTrace01 state persists
+[ ] Library entries persist
+[ ] AncientLanguageLevel persists
+[ ] Reset returns clean state
+14. Lock Criteria
+14.1. Mandatory
+First Playable можно залочить только если:
+0 blocker bugs
+full flow completed in standalone build
+core state persists between scenes
+terminal works
+scene transitions work
+research/library/translation placeholder works
+release notes written
+14.2. Acceptable known issues
+Допустимо оставить:
+placeholder UI visuals
+blockout art
+placeholder audio
+placeholder VFX
+minor text issues
+minor visual clipping
+non-final lighting
+non-final save UX
+non-final performance
+14.3. Not acceptable
+Нельзя оставлять:
+broken scene transition
+broken terminal input
+broken player input
+broken drone unlock
+broken research flow
+missing final hint
+crashes
+save/load corrupts state
+objects required for flow missing
+15. Post-Lock Rules
+15.1. После lock не менять milestone build
+Milestone build нельзя перезаписывать.
+Если нужен фикс:
+создаётся hotfix build
+Пример:
+NERA_FP_LOCK_v0.1.1_2026_08_01
+15.2. Все новые идеи — в backlog
+После lock новые идеи не добавляются напрямую в milestone.
+Они идут в backlog:
+Post-FP Backlog
+Expedition 02 Ideas
+Antenna System
+? Points
+Inventory UI
+Combat/Threat Prototype
+Map Improvements
+15.3. Lock защищает проект
+Lock нужен, чтобы не потерять стабильную версию.
+Правило:
+Стабильная версия важнее бесконечно улучшаемой текущей сцены.
+16. Sprint 09 Tasks
+16.1. Bug Fix
+TASK-S09-001 — Review Sprint 08 bug list
+TASK-S09-002 — Fix all blocker bugs
+TASK-S09-003 — Fix critical input/cursor bugs
+TASK-S09-004 — Fix critical scene transition bugs
+TASK-S09-005 — Fix critical terminal state bugs
+TASK-S09-006 — Fix critical research/library/translation bugs
+TASK-S09-007 — Retest full flow after fixes
+16.2. Debug Cleanup
+TASK-S09-008 — Remove debug buttons from normal terminal flow
+TASK-S09-009 — Move debug tools to Debug panel/object
+TASK-S09-010 — Rename remaining debug objects with Debug_ prefix
+TASK-S09-011 — Remove obsolete test objects from scenes
+TASK-S09-012 — Confirm debug is not required for completion
+16.3. Scope Lock
+TASK-S09-013 — Write locked First Playable scope
+TASK-S09-014 — Write not-included list
+TASK-S09-015 — Confirm no new features are added
+TASK-S09-016 — Freeze First Playable content list
+16.4. Build Lock
+TASK-S09-017 — Create NERA_FP_LOCK_v0.1.0 build
+TASK-S09-018 — Test milestone build from clean start
+TASK-S09-019 — Complete full flow in milestone build
+TASK-S09-020 — Record build size
+TASK-S09-021 — Record basic FPS notes
+TASK-S09-022 — Archive milestone build
+16.5. Release Notes
+TASK-S09-023 — Write release notes
+TASK-S09-024 — Add known issues
+TASK-S09-025 — Add included features
+TASK-S09-026 — Add not included features
+TASK-S09-027 — Add tested flow
+TASK-S09-028 — Add next step
+16.6. Final Checklist
+TASK-S09-029 — Complete build checklist
+TASK-S09-030 — Complete gameplay checklist
+TASK-S09-031 — Complete UI checklist
+TASK-S09-032 — Complete state checklist
+TASK-S09-033 — Make lock decision
+17. Рекомендуемый порядок выполнения
+День 1–2
+Review Sprint 08 report
+Fix blocker bugs
+Fix critical scene/input issues
+Retest core flow
+День 3–4
+Fix terminal/research/library/translation critical bugs
+Clean debug from normal flow
+Retest full flow without debug
+День 5–6
+Scope lock
+Not-included list
+Known issues list
+Release notes draft
+День 7–8
+Create milestone build
+Run clean full playthrough
+Record build size and FPS notes
+Fix only blockers if found
+День 9–10
+Final milestone build
+Archive build
+Complete checklists
+Write final Sprint 09 result notes
+First Playable Lock decision
+18. Критерии готовности Sprint 09
+Sprint 09 считается готовым, если:
+18.1. Bug Status
+все blocker bugs закрыты;
+critical bugs закрыты или записаны как accepted known issues;
+major/minor bugs зафиксированы;
+список known issues готов.
+18.2. Full Flow
+полный First Playable flow проходится;
+прохождение не требует debug;
+игрок не застревает;
+финальный hint появляется;
+исследование и библиотека работают.
+18.3. Build
+milestone build создан;
+milestone build запускается;
+milestone build прошёл clean playthrough;
+build version записана;
+build size записан;
+baseline notes записаны.
+18.4. Documentation
+locked scope записан;
+not-included list записан;
+release notes готовы;
+checklists заполнены;
+post-lock next step определён.
+19. Что не делать в Sprint 09
+Не делать:
+новые фичи
+новую экспедицию
+антенну
+? точки
+новых IO
+боёвку
+финальный UI
+полный save rewrite
+graphics settings
+main menu
+Steam integration
+art overhaul
+lighting overhaul
+Главный фокус:
+закрыть milestone
+20. Риски Sprint 09
+20.1. Риск: добавить “маленькую” новую фичу
+Проблема:
+маленькая фича может сломать стабильный flow
+Решение:
+В Sprint 09 новые фичи запрещены.
+Только fix / cleanup / lock.
+20.2. Риск: бесконечно фиксить minor bugs
+Проблема:
+Можно не залочить milestone из-за мелочей.
+Решение:
+Minor bugs идут в known issues.
+Lock не должен зависеть от них.
+20.3. Риск: потерять стабильный build
+Проблема:
+После успешного build можно продолжить менять проект и потерять рабочее состояние.
+Решение:
+Milestone build архивируется.
+Версия фиксируется.
+Дальнейшие изменения идут после lock.
+20.4. Риск: считать FP готовым к публичному показу
+Проблема:
+First Playable может ошибочно восприниматься как vertical slice.
+Решение:
+В release notes явно указать:
+это internal First Playable, не public demo.
+21. Главный результат Sprint 09
+После Sprint 09 у проекта появляется первая стабильная веха:
+NERA First Playable v0.1.0
+Это значит:
+core loop доказан
+проект можно пройти
+системы связаны
+состояние фиксируется
+дальше можно осознанно планировать следующий этап
+22. Следующий шаг
+После Sprint 09 логично сделать не новый спринт сразу, а отдельный документ:
+Post-First Playable Review
+Он должен ответить:
+что в First Playable получилось;
+что не получилось;
+какие системы надо переписать;
+что можно оставить;
+что выкинуть;
+какой следующий milestone;
+делать ли Expedition 02;
+когда добавлять антенну;
+когда добавлять ? точки;
+нужно ли усиливать IO;
+когда начинать full inventory;
+когда делать real map;
+что будет следующим главным production-слоем.
+После First Playable Lock проект должен перейти из режима:
+собираем первый рабочий loop
+в режим:
+решаем, какой следующий слой делает NERA сильнее

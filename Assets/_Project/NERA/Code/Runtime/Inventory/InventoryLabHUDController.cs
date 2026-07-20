@@ -31,13 +31,14 @@ namespace NERA.Inventory
         private Canvas rootCanvas;
         private GameObject inventoryPanel;
         private GameObject laboratoryPanel;
+        private ScrollRect backpackScrollRect;
         private Transform backpackSlotRoot;
-        private Transform anomalySlotRoot;
-        private Transform quickSlotRoot;
         private TMP_Text selectedItemName;
         private TMP_Text selectedItemDescription;
         private Button dropButton;
         private Image laboratorySlotIcon;
+        private LaboratoryInventoryItemDrag laboratorySlotDrag;
+        private LaboratoryItemDropSlot laboratoryDropSlot;
         private TMP_Text laboratoryStatusLabel;
         private TMP_Text scanButtonLabel;
         private Button scanButton;
@@ -91,13 +92,6 @@ namespace NERA.Inventory
                      Input.GetKeyDown(KeyCode.Escape))
             {
                 CloseAll();
-            }
-
-            if (!inventoryOpen && !laboratoryOpen && inventory != null)
-            {
-                if (Input.GetKeyDown(KeyCode.Alpha1)) inventory.SelectQuickAccess(0);
-                if (Input.GetKeyDown(KeyCode.Alpha2)) inventory.SelectQuickAccess(1);
-                if (Input.GetKeyDown(KeyCode.Alpha3)) inventory.SelectQuickAccess(2);
             }
 
             if (laboratoryOpen)
@@ -156,6 +150,13 @@ namespace NERA.Inventory
             laboratorySlotIcon = laboratoryPanel.transform
                 .Find("SampleSlot/Icon")
                 .GetComponent<Image>();
+            Transform laboratorySampleSlot = laboratoryPanel.transform.Find("SampleSlot");
+            laboratorySlotDrag = laboratorySampleSlot.GetComponent<LaboratoryInventoryItemDrag>();
+            if (laboratorySlotDrag == null)
+                laboratorySlotDrag = laboratorySampleSlot.gameObject.AddComponent<LaboratoryInventoryItemDrag>();
+            laboratoryDropSlot = laboratorySampleSlot.GetComponent<LaboratoryItemDropSlot>();
+            if (laboratoryDropSlot == null)
+                laboratoryDropSlot = laboratorySampleSlot.gameObject.AddComponent<LaboratoryItemDropSlot>();
             laboratoryStatusLabel = laboratoryPanel.transform.Find("Status").GetComponent<TMP_Text>();
             scanButton = laboratoryPanel.transform.Find("ScanButton").GetComponent<Button>();
             scanButtonLabel = scanButton.GetComponentInChildren<TMP_Text>();
@@ -196,6 +197,8 @@ namespace NERA.Inventory
                 return;
             }
 
+            backpackScrollRect = backpackSlotRoot.GetComponentInParent<ScrollRect>();
+            ConfigureBackpackScrollRect();
             CacheBackpackSlotViews(
                 backpackSlotRoot,
                 backpackViews,
@@ -207,17 +210,19 @@ namespace NERA.Inventory
             if (anomaliesRoot == null)
                 anomaliesRoot = inventoryPanel.transform.Find("Anomalies");
 
-            anomalySlotRoot = CacheFixedSlotViews(
+            CacheFixedSlotViews(
                 anomaliesRoot,
                 anomalyViews,
                 PlayerInventory.AnomalyCapacity,
-                false
+                false,
+                InventorySlotGroup.Anomaly
             );
-            quickSlotRoot = CacheFixedSlotViews(
+            CacheFixedSlotViews(
                 transform.Find("QuickAccessHUD"),
                 quickViews,
                 PlayerInventory.QuickAccessCapacity,
-                true
+                true,
+                InventorySlotGroup.QuickAccess
             );
         }
 
@@ -230,50 +235,51 @@ namespace NERA.Inventory
             destination.Clear();
             int capacity = inventoryConfig.BackpackCapacity;
 
-            for (int i = 0; i < InventoryConfig.MaxBackpackCapacity; i++)
+            for (int i = 0; i < capacity; i++)
             {
                 Transform spawnPoint = parent.Find($"Slot_{i + 1}");
                 if (spawnPoint == null)
                 {
-                    if (i < capacity)
-                    {
-                        Debug.LogError(
-                            $"InventoryLabHUDController: backpack spawn point " +
-                            $"'Slot_{i + 1}' is missing.",
-                            this
-                        );
-                    }
-
+                    Debug.LogError(
+                        $"InventoryLabHUDController: backpack spawn point " +
+                        $"'Slot_{i + 1}' is missing.",
+                        this
+                    );
                     continue;
                 }
 
-                bool shouldBeActive = i < capacity;
-                spawnPoint.gameObject.SetActive(shouldBeActive);
-                if (!shouldBeActive)
-                    continue;
+                spawnPoint.gameObject.SetActive(true);
 
                 InventorySlotView view =
                     spawnPoint.GetComponentInChildren<InventorySlotView>(true);
-                if (view == null)
+                if (view == null || view.transform == spawnPoint)
                 {
                     view = Instantiate(
                         inventoryConfig.SlotPrefab,
                         spawnPoint,
                         false
                     );
-
-                    RectTransform viewRect =
-                        view.transform as RectTransform;
-                    if (viewRect != null)
-                        viewRect.anchoredPosition = Vector2.zero;
-
-                    view.transform.localRotation = Quaternion.identity;
-                    view.transform.localScale = Vector3.one;
                 }
 
+                view.name = $"InventorySlotView_{i + 1}";
+
+                RectTransform viewRect = view.transform as RectTransform;
+                if (viewRect != null)
+                    viewRect.anchoredPosition = Vector2.zero;
+
                 view.gameObject.SetActive(true);
+                view.transform.localRotation = Quaternion.identity;
+                view.transform.localScale = Vector3.one;
                 view.Initialize(i, false, rootCanvas);
+                ConfigureDropTarget(view, InventorySlotGroup.Backpack, i);
                 destination.Add(view);
+            }
+
+            for (int i = capacity; i < InventoryConfig.MaxBackpackCapacity; i++)
+            {
+                Transform extraSlot = parent.Find($"Slot_{i + 1}");
+                if (extraSlot != null)
+                    extraSlot.gameObject.SetActive(false);
             }
         }
 
@@ -281,10 +287,31 @@ namespace NERA.Inventory
             Transform parent,
             List<InventorySlotView> destination,
             int count,
-            bool showQuickAccessNumbers
+            bool showQuickAccessNumbers,
+            InventorySlotGroup group
         )
         {
             destination.Clear();
+
+            if (parent == null)
+            {
+                Debug.LogError(
+                    $"InventoryLabHUDController: slot root for '{group}' is missing.",
+                    this
+                );
+                return null;
+            }
+
+            if (group == InventorySlotGroup.QuickAccess)
+            {
+                return CacheQuickAccessSlotViews(
+                    parent,
+                    destination,
+                    count,
+                    showQuickAccessNumbers,
+                    group
+                );
+            }
 
             for (int i = 0; i < count; i++)
             {
@@ -304,6 +331,51 @@ namespace NERA.Inventory
                     view = slot.gameObject.AddComponent<InventorySlotView>();
 
                 view.Initialize(i, showQuickAccessNumbers, rootCanvas);
+                ConfigureDropTarget(view, group, i);
+                destination.Add(view);
+            }
+
+            return parent;
+        }
+
+        private Transform CacheQuickAccessSlotViews(
+            Transform parent,
+            List<InventorySlotView> destination,
+            int count,
+            bool showQuickAccessNumbers,
+            InventorySlotGroup group
+        )
+        {
+            List<RectTransform> slots = new List<RectTransform>();
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                RectTransform slot = parent.GetChild(i) as RectTransform;
+                if (slot != null)
+                    slots.Add(slot);
+            }
+
+            slots.Sort((left, right) =>
+                left.anchoredPosition.x.CompareTo(right.anchoredPosition.x));
+
+            if (slots.Count < count)
+            {
+                Debug.LogError(
+                    $"InventoryLabHUDController: '{parent.name}' contains " +
+                    $"{slots.Count} quick-access slots, but {count} are required.",
+                    this
+                );
+            }
+
+            int cachedCount = Mathf.Min(count, slots.Count);
+            for (int i = 0; i < cachedCount; i++)
+            {
+                RectTransform slot = slots[i];
+                InventorySlotView view = slot.GetComponent<InventorySlotView>();
+                if (view == null)
+                    view = slot.gameObject.AddComponent<InventorySlotView>();
+
+                view.Initialize(i, showQuickAccessNumbers, rootCanvas);
+                ConfigureDropTarget(view, group, i);
                 destination.Add(view);
             }
 
@@ -312,29 +384,9 @@ namespace NERA.Inventory
 
         private void BindButtons()
         {
-            for (int i = 0; i < backpackViews.Count; i++)
-            {
-                int index = i;
-                backpackViews[i].Button.onClick.AddListener(
-                    () => SelectItem(InventorySlotGroup.Backpack, index)
-                );
-            }
-
-            for (int i = 0; i < anomalyViews.Count; i++)
-            {
-                int index = i;
-                anomalyViews[i].Button.onClick.AddListener(
-                    () => SelectItem(InventorySlotGroup.Anomaly, index)
-                );
-            }
-
-            for (int i = 0; i < quickViews.Count; i++)
-            {
-                int index = i;
-                quickViews[i].Button.onClick.AddListener(
-                    () => SelectQuickItem(index)
-                );
-            }
+            BindSlotButtons(backpackViews, InventorySlotGroup.Backpack);
+            BindSlotButtons(anomalyViews, InventorySlotGroup.Anomaly);
+            BindSlotButtons(quickViews, InventorySlotGroup.QuickAccess);
 
             dropButton.onClick.AddListener(DropSelected);
             Button laboratoryCloseButton = FindButtonInChildren(
@@ -354,8 +406,32 @@ namespace NERA.Inventory
             }
             scanButton.onClick.AddListener(StartScan);
             takeButton.onClick.AddListener(TakeSample);
-            laboratoryPanel.transform.Find("SampleSlot").GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped += LoadSample;
+            laboratoryDropSlot.ItemDropped += LoadSample;
+        }
+
+        private void BindSlotButtons(
+            List<InventorySlotView> views,
+            InventorySlotGroup group
+        )
+        {
+            for (int i = 0; i < views.Count; i++)
+            {
+                int index = i;
+                views[i].Button.onClick.AddListener(
+                    () => HandleSlotClicked(group, index)
+                );
+            }
+        }
+
+        private void HandleSlotClicked(InventorySlotGroup group, int index)
+        {
+            if (group == InventorySlotGroup.QuickAccess)
+            {
+                SelectQuickItem(index);
+                return;
+            }
+
+            SelectItem(group, index);
         }
 
         private static Button FindButtonInChildren(
@@ -379,7 +455,9 @@ namespace NERA.Inventory
                 return;
 
             if (inventory != null)
+            {
                 inventory.InventoryChanged -= RefreshAll;
+            }
 
             inventory = playerInventory;
             if (inventory != null)
@@ -399,7 +477,6 @@ namespace NERA.Inventory
         private void SelectQuickItem(int index)
         {
             SetSelection(InventorySlotGroup.QuickAccess, index);
-            inventory?.SelectQuickAccess(index);
         }
 
         private void DropSelected()
@@ -419,13 +496,18 @@ namespace NERA.Inventory
             }
         }
 
-        private void LoadSample(ItemData item)
+        private void LoadSample(LaboratoryInventoryItemDrag drag)
         {
-            if (!laboratoryOpen || item == null || item.ItemType != ItemType.ResearchSample)
+            if (!laboratoryOpen || drag == null || drag.Item == null)
                 return;
 
             ResearchController controller = ResearchController.Instance;
-            if (controller != null && controller.LoadItem(item, inventory))
+            if (controller != null && controller.LoadItem(
+                drag.Item,
+                inventory,
+                drag.SourceGroup,
+                drag.SourceIndex
+            ))
             {
                 ClearSelection();
                 RefreshAll();
@@ -467,23 +549,12 @@ namespace NERA.Inventory
             );
             RefreshSelection();
 
-            for (int i = 0; i < backpackViews.Count; i++)
-            {
-                ItemData item = inventory.GetItem(InventorySlotGroup.Backpack, i);
-                LaboratoryInventoryItemDrag drag =
-                    backpackViews[i].LaboratoryDrag;
-                if (drag != null)
-                {
-                    drag.Initialize(
-                        item != null && item.ItemType == ItemType.ResearchSample
-                            ? item
-                            : null,
-                        rootCanvas
-                    );
-                }
-            }
+            RefreshDrags(backpackViews, inventory.BackpackSlots, InventorySlotGroup.Backpack);
+            RefreshDrags(anomalyViews, inventory.AnomalySlots, InventorySlotGroup.Anomaly);
+            RefreshDrags(quickViews, inventory.QuickAccessSlots, InventorySlotGroup.QuickAccess);
 
             RefreshLaboratory();
+            RefreshBackpackScrollState();
         }
 
         private void RefreshLaboratory()
@@ -495,6 +566,7 @@ namespace NERA.Inventory
             bool analyzing = controller.State == ResearchController.ResearchState.Analyzing;
             bool hasItem = controller.LoadedItem != null;
             bool analyzed = hasItem && controller.IsAnalyzed(controller.LoadedItem);
+            bool researchable = hasItem && controller.IsResearchable(controller.LoadedItem);
 
             laboratorySlotIcon.sprite = hasItem
                 ? controller.LoadedItem.Icon
@@ -506,10 +578,20 @@ namespace NERA.Inventory
             laboratoryStatusLabel.text = controller.StatusMessage;
             scanButtonLabel.text = analyzing
                 ? $"SCANNING {Mathf.RoundToInt(controller.Progress * 100f)}%"
-                : analyzed ? "ANALYZED" : "START SCAN";
+                : !hasItem ? "START SCAN"
+                : !researchable ? "KNOWN ITEM"
+                : analyzed ? "ANALYZED"
+                : "START SCAN";
             scanButton.interactable =
                 controller.CanStartAnalysis;
             takeButton.interactable = hasItem && !analyzing;
+            laboratorySlotDrag.Initialize(
+                hasItem ? controller.LoadedItem : null,
+                rootCanvas,
+                InventorySlotGroup.Backpack,
+                -1,
+                true
+            );
         }
 
         private void RefreshSlots(
@@ -533,6 +615,145 @@ namespace NERA.Inventory
                     selectedIndex == i,
                     SelectedColor
                 );
+                RefreshSlotKeyLabel(views[i], item, group, i);
+            }
+        }
+
+        private static void RefreshSlotKeyLabel(
+            InventorySlotView view,
+            ItemData item,
+            InventorySlotGroup group,
+            int index
+        )
+        {
+            bool showLabel =
+                group == InventorySlotGroup.QuickAccess &&
+                PlayerInventory.IsActiveQuickAccessSlot(index) &&
+                item != null &&
+                item.QuickAccessAction != QuickAccessAction.None;
+
+            view.SetKeyLabel(showLabel ? FormatUseKey(item.UseKey) : string.Empty, showLabel);
+        }
+
+        private static string FormatUseKey(KeyCode key)
+        {
+            switch (key)
+            {
+                case KeyCode.Mouse0:
+                    return "LCM";
+                case KeyCode.Mouse1:
+                    return "RCM";
+                case KeyCode.Mouse2:
+                    return "MCM";
+                default:
+                    return key.ToString();
+            }
+        }
+
+        private void RefreshDrags(
+            List<InventorySlotView> views,
+            System.Collections.Generic.IReadOnlyList<ItemData> slots,
+            InventorySlotGroup group
+        )
+        {
+            for (int i = 0; i < views.Count; i++)
+            {
+                LaboratoryInventoryItemDrag drag = views[i].LaboratoryDrag;
+                if (drag == null)
+                    continue;
+
+                ItemData item = i < slots.Count ? slots[i] : null;
+                drag.Initialize(item, rootCanvas, group, i);
+            }
+        }
+
+        private void ConfigureDropTarget(
+            InventorySlotView view,
+            InventorySlotGroup group,
+            int index
+        )
+        {
+            InventorySlotDropTarget target = view.GetComponent<InventorySlotDropTarget>();
+            if (target == null)
+                target = view.gameObject.AddComponent<InventorySlotDropTarget>();
+
+            target.Initialize(group, index, HandleSlotDrop);
+        }
+
+        private void ConfigureBackpackScrollRect()
+        {
+            if (backpackScrollRect == null)
+                return;
+
+            backpackScrollRect.horizontal = false;
+            backpackScrollRect.movementType = ScrollRect.MovementType.Clamped;
+        }
+
+        private void RefreshBackpackScrollState()
+        {
+            if (backpackScrollRect == null || backpackSlotRoot == null)
+                return;
+
+            Canvas.ForceUpdateCanvases();
+
+            RectTransform content = backpackSlotRoot as RectTransform;
+            RectTransform viewport = backpackScrollRect.viewport;
+            if (content == null || viewport == null)
+                return;
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+
+            bool shouldScroll = content.rect.height > viewport.rect.height + 1f;
+            backpackScrollRect.vertical = shouldScroll;
+            backpackScrollRect.verticalNormalizedPosition = 1f;
+
+            if (!shouldScroll)
+            {
+                content.anchoredPosition = new Vector2(content.anchoredPosition.x, 0f);
+                if (backpackScrollRect.verticalScrollbar != null)
+                    backpackScrollRect.verticalScrollbar.gameObject.SetActive(false);
+            }
+            else if (backpackScrollRect.verticalScrollbar != null)
+            {
+                backpackScrollRect.verticalScrollbar.gameObject.SetActive(true);
+            }
+        }
+
+        private void HandleSlotDrop(
+            InventorySlotGroup destinationGroup,
+            int destinationIndex,
+            LaboratoryInventoryItemDrag drag
+        )
+        {
+            if (inventory == null || drag == null)
+                return;
+
+            if (drag.IsLaboratorySource)
+            {
+                ResearchController controller = ResearchController.Instance;
+                if (controller != null &&
+                    controller.MoveLoadedItemToInventory(
+                        inventory,
+                        destinationGroup,
+                        destinationIndex
+                    ))
+                {
+                    SetSelection(destinationGroup, destinationIndex);
+                }
+                return;
+            }
+
+            if (drag.SourceIndex < 0)
+                return;
+
+            if (inventory.TryMoveItem(
+                drag.SourceGroup,
+                drag.SourceIndex,
+                destinationGroup,
+                destinationIndex
+            ))
+            {
+                SetSelection(destinationGroup, destinationIndex);
             }
         }
 

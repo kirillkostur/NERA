@@ -1,0 +1,1278 @@
+NERA — Unity Project Structure
+Назначение документа
+Unity Project Structure описывает, как должны быть организованы файлы, папки, сцены, префабы, конфиги, UI, арт, VFX и аудио в Unity-проекте NERA.
+Документ нужен, чтобы:
+проект не превратился в хаос;
+все игровые системы лежали в понятных местах;
+контент станции и экспедиций был разделён;
+общие ассеты не дублировались;
+First Playable можно было собрать без мусора;
+проект был готов к расширению до полной игры;
+будущая работа с Addressables была возможна без полной перестройки.
+01. Общий принцип структуры
+Главная идея
+Весь контент NERA должен лежать внутри одного корня проекта:
+Assets/_Project/NERA/
+Это позволяет отделить собственный контент игры от:
+Unity packages;
+Asset Store packages;
+Plugins;
+Third Party assets;
+URP settings;
+temporary imports;
+test assets.
+Почему нужен один корень
+Один корень даёт:
+чистый проект;
+быстрый поиск файлов;
+понятную структуру;
+удобный перенос;
+удобную чистку;
+меньше случайного мусора;
+меньше конфликтов с чужими ассетами.
+Главный принцип
+Всё, что относится к NERA, лежит в Assets/_Project/NERA/
+Исключения допустимы только для:
+Packages;
+Plugins;
+ThirdParty;
+Asset Store assets;
+Unity Render Pipeline settings;
+external tools.
+02. Корневая структура Assets
+Базовая структура
+Assets/
+_Project/
+NERA/
+Art/
+Audio/
+Code/
+Configs/
+Content/
+Prefabs/
+Scenes/
+Settings/
+UI/
+VFX/
+Tests/
+_Development/
+_Sandbox/
+Назначение папок
+Art/
+визуальные ассеты: модели, текстуры, материалы, shared art resources.
+Audio/
+звуки, музыка, ambience.
+Code/
+C# код проекта.
+Configs/
+ScriptableObject configs и игровые данные.
+Content/
+контент мира: станция, экспедиции, IO, предметы, древняя цивилизация.
+Prefabs/
+общие игровые префабы, которые не принадлежат одной конкретной локации.
+Scenes/
+основные сцены проекта.
+Settings/
+URP, input, graphics, project-specific настройки.
+UI/
+UI screens, widgets, icons, fonts, UI prefabs.
+VFX/
+общие VFX, частицы, VFX Graph / Particle System assets.
+Tests/
+тестовые сцены и тестовые ассеты для проверки систем.
+_Development/
+рабочие материалы разработки, которые ещё не готовы в production.
+_Sandbox/
+личные песочницы, временные эксперименты.
+Главное правило
+Если ассет используется в игре — он должен лежать в нормальной production-папке.
+Если ассет экспериментальный — он лежит в:
+_Development/
+или:
+_Sandbox/
+03. Code Structure
+Назначение
+Папка Code хранит весь C# runtime/editor код проекта.
+Структура
+Assets/_Project/NERA/Code/
+Runtime/
+Core/
+Player/
+Camera/
+Interaction/
+Items/
+Inventory/
+Station/
+Terminal/
+Drone/
+Expeditions/
+Research/
+Library/
+Translation/
+IO/
+VFX/
+Audio/
+UI/
+Save/
+Utilities/
+Editor/
+Tools/
+Inspectors/
+Importers/
+Debug/
+Runtime
+Runtime — весь код, который работает в игре.
+Core/
+общие игровые классы, GameManager, Service Locator / Bootstrap, Scene Flow.
+Player/
+логика игрока, здоровье, movement wrappers, player state.
+Camera/
+камера, camera collision, camera settings.
+Interaction/
+Interactable, interaction detection, hold interaction.
+Items/
+ItemData, WorldItem, item types.
+Inventory/
+Inventory, slots, inventory UI binding.
+Station/
+StationState, EnergyState, station systems.
+Terminal/
+Terminal logic, terminal tabs, terminal state.
+Drone/
+DroneState, drone launch flow, scan result.
+Expeditions/
+ExpeditionState, expedition entry/exit, location status.
+Research/
+ResearchSystem, analysis state, research results.
+Library/
+Library entries, record state, discovered knowledge.
+Translation/
+Translation levels, ancient record state, translation update logic.
+IO/
+IO enemy logic, detection, damage, behavior.
+VFX/
+VFX helpers, emissive controllers, effect triggers.
+Audio/
+audio event helpers, ambience triggers.
+UI/
+base UI components, screen controller, widgets.
+Save/
+SaveData, save/load system.
+Utilities/
+small helper classes.
+Editor
+Editor — код, который работает только в Unity Editor.
+Tools/
+кастомные окна и утилиты.
+Inspectors/
+кастомные инспекторы.
+Importers/
+импорт и обработка ассетов, если понадобится.
+Debug/
+debug tools, validation tools.
+Правило Runtime / Editor
+Код из Editor не должен попадать в билд.
+Код из Runtime не должен зависеть от UnityEditor.
+Главное правило
+Код должен быть разделён по системам, а не лежать в одной папке Scripts.
+Нельзя делать:
+Assets/Scripts/
+Player.cs
+Item.cs
+Manager.cs
+UI.cs
+Test.cs
+NewScript.cs
+04. Scene Structure
+Назначение
+Папка Scenes хранит основные игровые сцены.
+Структура
+Assets/_Project/NERA/Scenes/
+Boot/
+Boot.unity
+MainMenu/
+MainMenu.unity
+Station/
+Station_FirstPlayable.unity
+Station_Main.unity
+Expeditions/
+Expedition_01_FirstPlayable.unity
+Expedition_01.unity
+Expedition_02.unity
+Expedition_03.unity
+Expedition_04.unity
+Expedition_05.unity
+Expedition_06.unity
+Expedition_07.unity
+Expedition_08.unity
+Expedition_09.unity
+Expedition_10.unity
+Tests/
+Test_Interaction.unity
+Test_UI.unity
+Test_IO.unity
+Test_Lighting.unity
+Boot
+Boot используется для инициализации проекта, если понадобится.
+Там могут создаваться:
+GameManager;
+SaveSystem;
+ConfigDatabase;
+AudioManager;
+SceneLoader;
+UIRoot.
+Для First Playable можно начать без сложной Boot-сцены, если она пока мешает.
+Station
+Станция — отдельная сцена.
+Для First Playable:
+Station_FirstPlayable.unity
+Для полной игры позже:
+Station_Main.unity
+Expeditions
+Каждая крупная экспедиция — отдельная сцена.
+Expedition_01.unity
+Expedition_02.unity
+...
+Expedition_10.unity
+Для First Playable можно использовать:
+Expedition_01_FirstPlayable.unity
+Позже её можно превратить в полноценную Expedition_01.unity или заменить.
+Tests
+Тестовые сцены нужны для проверки систем отдельно от основной игры.
+Примеры:
+Test_Interaction.unity
+Test_UI.unity
+Test_IO.unity
+Test_Lighting.unity
+Главное правило
+Основные игровые сцены не должны использоваться как песочница.
+Для экспериментов использовать Tests или _Sandbox.
+05. Content Structure
+Назначение
+Content хранит игровые сущности и контент мира.
+Структура
+Assets/_Project/NERA/Content/
+Station/
+Expeditions/
+AncientNERA/
+Human/
+Planet/
+IO/
+Items/
+Interactables/
+Props/
+Shared/
+Назначение
+Station/
+контент человеческой станции.
+Expeditions/
+уникальный контент конкретных экспедиций.
+AncientNERA/
+общий контент древней цивилизации.
+Human/
+общий земной / человеческий контент.
+Planet/
+ландшафт, скалы, пустыня, природные элементы.
+IO/
+враги, кристаллы, следы IO.
+Items/
+предметы, world items, item visuals.
+Interactables/
+общие интерактивные объекты.
+Props/
+общие пропсы.
+Shared/
+общие ассеты, которые используются в разных местах.
+06. Station Content Structure
+Назначение
+Папка станции хранит всё, что относится только к станции.
+Структура
+Assets/_Project/NERA/Content/Station/
+Art/
+Models/
+Textures/
+Materials/
+Prefabs/
+Modules/
+Devices/
+Props/
+Interactables/
+VFX/
+Audio/
+Data/
+Prefabs станции
+Prefabs/
+Modules/
+Station_Module_Corridor_A.prefab
+Station_Module_Room_A.prefab
+Devices/
+Station_Terminal.prefab
+Station_Battery.prefab
+Station_SolarPanel.prefab
+Station_LabTable.prefab
+Station_DronePad.prefab
+Props/
+Station_Box_A.prefab
+Station_Cable_A.prefab
+Station_Lamp_A.prefab
+Interactables/
+SolarPanel_Clean_Interactable.prefab
+Terminal_Interactable.prefab
+Что хранить в Station
+Хранить здесь:
+уникальные ассеты станции;
+модули станции;
+устройства станции;
+станционные prop prefabs;
+станционные материалы;
+станционные VFX;
+станционные звуки.
+Что не хранить в Station
+Не хранить здесь:
+общие скалы;
+древние руины;
+IO;
+общие UI элементы;
+общие скрипты;
+предметы, которые используются везде.
+07. Expedition Content Structure
+Назначение
+Каждая экспедиция имеет свою папку для уникального контента.
+Структура
+Assets/_Project/NERA/Content/Expeditions/
+Expedition_01/
+Art/
+Materials/
+Prefabs/
+Scenes/
+VFX/
+Audio/
+Data/
+Expedition_02/
+Art/
+Materials/
+Prefabs/
+Scenes/
+VFX/
+Audio/
+Data/
+Expedition_03/
+Expedition_04/
+Expedition_05/
+Expedition_06/
+Expedition_07/
+Expedition_08/
+Expedition_09/
+Expedition_10/
+Для First Playable
+Assets/_Project/NERA/Content/Expeditions/Expedition_01/
+Art/
+Materials/
+Prefabs/
+Scenes/
+VFX/
+Audio/
+Data/
+Что хранить внутри конкретной экспедиции
+Хранить:
+уникальные hero props этой экспедиции;
+уникальные материалы;
+уникальные VFX;
+уникальные звуки;
+локальные prefabs;
+экспедиционные data assets;
+локальные art assets;
+специфичные decals / damage variants.
+Что не хранить внутри конкретной экспедиции
+Не хранить:
+общие древние модули;
+общие коридоры;
+общие двери;
+общие IO;
+общие предметы;
+общие материалы;
+общие UI;
+общие скрипты.
+Главное правило
+Если ассет может использоваться в нескольких экспедициях, он должен лежать не в Expedition_01, а в общей папке.
+Например:
+Content/AncientNERA/
+Content/Planet/
+Content/IO/
+Content/Shared/
+08. Ancient NERA Shared Content
+Назначение
+Эта папка хранит общий контент древней цивилизации NERA.
+Структура
+Assets/_Project/NERA/Content/AncientNERA/
+ModularKits/
+Corridor/
+Rooms/
+Doors/
+Arches/
+Floors/
+Walls/
+Columns/
+EnergyNodes/
+Props/
+Archive/
+Devices/
+Containers/
+Tablets/
+Decorative/
+Materials/
+M_Ancient_Stone_Light.mat
+M_Ancient_Composite.mat
+M_Ancient_Energy_Cyan.mat
+Textures/
+Prefabs/
+VFX/
+Audio/
+Что здесь хранить
+модульные коридоры древних;
+арки;
+двери;
+стены;
+колонны;
+энергетические узлы;
+архивные элементы;
+древние панели;
+таблички;
+общие материалы древних;
+общие VFX древней энергии.
+Главное правило
+Древняя архитектура должна быть переиспользуемой.
+Не делать уникальный коридор только для одной экспедиции, если его можно собрать модульно.
+09. Human Shared Content
+Назначение
+Папка Human хранит общий земной / человеческий контент.
+Структура
+Assets/_Project/NERA/Content/Human/
+ModularKits/
+Devices/
+Props/
+Materials/
+Textures/
+Prefabs/
+VFX/
+Audio/
+Примеры
+Human/Devices/
+Terminal/
+Battery/
+SolarPanel/
+Antenna/
+Turret/
+Drone/
+Human/Props/
+Boxes/
+Cables/
+Tools/
+Containers/
+Lamps/
+Что здесь хранить
+земные устройства;
+человеческие пропсы;
+общие материалы станции;
+кабели;
+ящики;
+инструменты;
+технические панели;
+дрон;
+турели;
+антенны.
+Разница между Human и Station
+Human — общий земной контент.
+Station — конкретная сборка станции игрока.
+Если объект может использоваться в человеческой ? точке или модуле прошлой экспедиции, он должен лежать в Human, а не только в Station.
+10. Planet Content Structure
+Назначение
+Папка Planet хранит природное окружение NERA.
+Структура
+Assets/_Project/NERA/Content/Planet/
+Rocks/
+Cliffs/
+Terrain/
+Sand/
+Plants/
+Sky/
+Materials/
+Textures/
+Prefabs/
+Примеры
+Rocks/
+Rock_A.prefab
+Rock_B.prefab
+Rock_Large_A.prefab
+Cliffs/
+Cliff_Module_A.prefab
+Canyon_Wall_A.prefab
+Plants/
+DryBush_A.prefab
+DesertGrass_A.prefab
+Materials/
+M_Planet_Sand.mat
+M_Planet_Rock_Terracotta.mat
+M_Planet_Cliff.mat
+Главное правило
+Природные ассеты должны быть общими для разных сцен.
+Не класть скалы внутрь конкретной экспедиции, если они могут использоваться на станции или в другой локации.
+11. IO Content Structure
+Назначение
+Папка IO хранит всё, что связано с IO.
+Структура
+Assets/_Project/NERA/Content/IO/
+Prefabs/
+IO_Blue.prefab
+IO_Yellow.prefab
+IO_Red.prefab
+Meshes/
+IO_Sphere_A.fbx
+Materials/
+M_IO_Blue.mat
+M_IO_Yellow.mat
+M_IO_Red.mat
+VFX/
+VFX_IO_Core_Blue.prefab
+VFX_IO_Trail_Blue.prefab
+VFX_IO_Death.prefab
+Audio/
+IO_Hum_Blue.wav
+IO_Attack.wav
+Crystals/
+Crystal_Blue.prefab
+Crystal_Yellow.prefab
+Crystal_Red.prefab
+Data/
+IO_Blue_Config.asset
+IO_Yellow_Config.asset
+IO_Red_Config.asset
+Для First Playable
+Минимально нужно:
+IO_Blue.prefab
+M_IO_Blue.mat
+VFX_IO_Core_Blue
+IO_Blue_Config
+Главное правило
+IO не должны лежать внутри Expedition_01.
+IO — это системный контент, который будет использоваться в разных экспедициях.
+12. Items Content Structure
+Назначение
+Папка Items хранит предметы, их данные и визуальные представления.
+Структура
+Assets/_Project/NERA/Content/Items/
+Prefabs/
+WorldItems/
+ResearchObjects/
+Records/
+Resources/
+Tools/
+Crystals/
+Data/
+ItemData/
+ResearchObjectData/
+AncientRecordData/
+Icons/
+Materials/
+Meshes/
+Примеры
+Data/ItemData/
+Item_AncientObject_01.asset
+Item_StationPart_01.asset
+Item_Crystal_Blue.asset
+Data/AncientRecordData/
+Record_Ancient_01.asset
+Prefabs/ResearchObjects/
+AncientObject_01.prefab
+Prefabs/Records/
+AncientRecord_Tablet_01.prefab
+Главное правило
+Данные предмета и его world prefab — разные вещи.
+ItemData = что это за предмет логически.
+Prefab = как он выглядит в мире.
+13. Prefabs Structure
+Назначение
+Папка Prefabs хранит общие игровые префабы, которые не относятся к одной конкретной локации.
+Структура
+Assets/_Project/NERA/Prefabs/
+Core/
+Player/
+Camera/
+Interaction/
+Items/
+UI/
+Systems/
+Managers/
+Примеры
+Player/
+Player.prefab
+Camera/
+ThirdPersonCameraRig.prefab
+Interaction/
+InteractPrompt.prefab
+TestInteractable.prefab
+Systems/
+GameManager.prefab
+SceneLoader.prefab
+SaveSystem.prefab
+ConfigDatabase.prefab
+Managers/
+AudioManager.prefab
+UIManager.prefab
+Что хранить здесь
+игрок;
+камера;
+менеджеры;
+универсальные interactable prefabs;
+системные prefabs;
+общие UI prefabs.
+Что не хранить здесь
+Не хранить:
+уникальные ассеты экспедиций;
+локальный декор;
+модели станции;
+модульные стены;
+скалы;
+материалы.
+14. Configs / ScriptableObjects Structure
+Назначение
+Папка Configs хранит ScriptableObject data и настройки игровых систем.
+Структура
+Assets/_Project/NERA/Configs/
+Game/
+GameConfig.asset
+BuildConfig.asset
+Player/
+PlayerConfig.asset
+CameraConfig.asset
+Interaction/
+InteractionConfig.asset
+Items/
+ItemDatabase.asset
+Inventory/
+InventoryConfig.asset
+Station/
+StationConfig.asset
+EnergyConfig.asset
+Drone/
+DroneConfig.asset
+Expeditions/
+ExpeditionDatabase.asset
+Expedition_01_Config.asset
+Research/
+ResearchDatabase.asset
+ResearchConfig.asset
+Library/
+LibraryDatabase.asset
+Translation/
+TranslationConfig.asset
+AncientLanguageDatabase.asset
+IO/
+IO_Blue_Config.asset
+IO_Yellow_Config.asset
+IO_Red_Config.asset
+UI/
+UIConfig.asset
+Audio/
+AudioConfig.asset
+Главное правило
+ScriptableObject должен хранить данные, а не поведение.
+Пример:
+Expedition_01_Config.asset
+хранит название, описание, статус, scene reference, danger level, тип локации.
+Но не должен сам загружать сцену или управлять прогрессом.
+Для First Playable
+Минимально нужны:
+PlayerConfig
+InteractionConfig
+InventoryConfig
+DroneConfig
+Expedition_01_Config
+ResearchConfig
+AncientLanguageDatabase
+IO_Blue_Config
+15. UI Structure
+Назначение
+Папка UI хранит все элементы интерфейса.
+Структура
+Assets/_Project/NERA/UI/
+Screens/
+Terminal/
+Inventory/
+MainMenu/
+Pause/
+Death/
+Widgets/
+Buttons/
+Cards/
+Lists/
+Slots/
+Notifications/
+Prompts/
+Tabs/
+Icons/
+Items/
+Statuses/
+Map/
+UICommon/
+Fonts/
+Materials/
+Prefabs/
+Styles/
+Terminal UI
+UI/Screens/Terminal/
+TerminalRoot.prefab
+TerminalHomeScreen.prefab
+MapScreen.prefab
+DroneScreen.prefab
+ResearchScreen.prefab
+LibraryScreen.prefab
+TranslationCard.prefab
+Inventory UI
+UI/Screens/Inventory/
+InventoryScreen.prefab
+InventorySlot.prefab
+ItemDetailsPanel.prefab
+Widgets
+UI/Widgets/
+NotificationWidget.prefab
+InteractionPrompt.prefab
+MapPointWidget.prefab
+ExpeditionCard.prefab
+ResearchItemCard.prefab
+LibraryEntryCard.prefab
+Главное правило
+UI не должен лежать внутри сцен.
+Сцена использует UI prefabs из папки UI.
+16. VFX Structure
+Назначение
+Папка VFX хранит общие визуальные эффекты.
+Структура
+Assets/_Project/NERA/VFX/
+IO/
+Energy/
+Fog/
+Dust/
+Interaction/
+UI/
+Portal/
+Materials/
+Textures/
+Prefabs/
+Примеры
+IO/
+VFX_IO_Blue_Core.prefab
+VFX_IO_Death.prefab
+Energy/
+VFX_AncientEnergyLine.prefab
+VFX_EnergyPulse.prefab
+Fog/
+VFX_LocalFog_A.prefab
+Dust/
+VFX_DustWind_A.prefab
+Interaction/
+VFX_Interact_Highlight.prefab
+Главное правило
+Общие VFX лежат в VFX.
+Локальные уникальные VFX экспедиции могут лежать внутри конкретной экспедиции.
+17. Audio Structure
+Назначение
+Папка Audio хранит общие звуки, музыку и ambience.
+Структура
+Assets/_Project/NERA/Audio/
+Ambience/
+Station/
+Planet/
+Expeditions/
+SFX/
+UI/
+Interaction/
+Items/
+Drone/
+Station/
+IO/
+Research/
+AncientNERA/
+Music/
+Ambient/
+Events/
+Credits/
+Mixers/
+MasterMixer.mixer
+Data/
+AudioEventDatabase.asset
+Для First Playable
+Минимально:
+Audio/SFX/UI/
+Audio/SFX/Interaction/
+Audio/SFX/Items/
+Audio/SFX/Drone/
+Audio/SFX/IO/
+Audio/Ambience/Station/
+Audio/Ambience/Planet/
+Главное правило
+Звук должен быть разделён по назначению, а не лежать в одной папке Sounds.
+18. Art Structure
+Назначение
+Папка Art хранит общие исходные и финальные визуальные ресурсы.
+Структура
+Assets/_Project/NERA/Art/
+Models/
+Textures/
+Materials/
+Shaders/
+Decals/
+Skybox/
+Lighting/
+Когда использовать Art
+Папка Art нужна для общих ресурсов.
+Но конкретный контент лучше хранить ближе к его смысловой области.
+Например:
+общий древний материал:
+Content/AncientNERA/Materials/
+общий материал планеты:
+Content/Planet/Materials/
+общий шейдер:
+Art/Shaders/
+общая skybox:
+Art/Skybox/
+Главное правило
+Не превращать Art в свалку всех моделей.
+Если модель относится к станции — она идёт в Content/Station.
+Если к древним — в Content/AncientNERA.
+Если к планете — в Content/Planet.
+19. Settings Structure
+Назначение
+Папка Settings хранит настройки проекта.
+Структура
+Assets/_Project/NERA/Settings/
+URP/
+Input/
+Graphics/
+Quality/
+Physics/
+Build/
+Примеры
+URP/
+NERA_URPAsset.asset
+NERA_Renderer.asset
+Input/
+NERA_InputActions.inputactions
+Graphics/
+GraphicsSettingsConfig.asset
+Quality/
+Quality_LOW.asset
+Quality_MEDIUM.asset
+Quality_HIGH.asset
+Build/
+BuildProfile_PC_Steam.asset
+Главное правило
+Настройки проекта должны лежать отдельно от контента.
+20. Tests Structure
+Назначение
+Папка Tests нужна для проверки систем отдельно от основной игры.
+Структура
+Assets/_Project/NERA/Tests/
+Scenes/
+Test_Interaction.unity
+Test_Items.unity
+Test_UI_Terminal.unity
+Test_IO.unity
+Test_Lighting.unity
+Test_Save.unity
+Prefabs/
+Data/
+Когда использовать Tests
+Использовать для:
+проверки новой системы;
+быстрой отладки;
+эксперимента с UI;
+теста IO;
+теста lighting;
+теста save/load.
+Главное правило
+Тестовые ассеты не должны случайно попасть в production-сцены.
+21. _Development and _Sandbox
+Назначение
+Эти папки нужны для временной работы.
+_Development
+Assets/_Project/NERA/_Development/
+Используется для:
+черновых ассетов;
+незавершённых моделей;
+тестовых материалов;
+рабочих префабов;
+неутверждённых решений;
+временных импортов.
+_Sandbox
+Assets/_Project/NERA/_Sandbox/
+Используется для личных экспериментов.
+Примеры:
+_Sandbox/Kirill/
+_Sandbox/LightingTests/
+_Sandbox/ShaderTests/
+_Sandbox/MovementTests/
+Главное правило
+То, что лежит в _Sandbox, не считается частью игры.
+Перед использованием ассет нужно перенести в production-папку.
+22. Addressables-ready Structure
+Назначение
+NERA может позже использовать Addressables для загрузки экспедиций, ассетов и контента.
+Даже если Addressables не настраиваются сразу, структура должна быть готова.
+Главное правило
+Контент должен быть разделён так, чтобы позже можно было сделать группы:
+Station
+Expedition_01
+Expedition_02
+...
+Expedition_10
+Shared_AncientNERA
+Shared_Human
+Shared_Planet
+Shared_IO
+UI
+Audio
+Потенциальные Addressables groups
+Addressables Groups:
+Base_Game
+Station
+Expedition_01
+Expedition_02
+Expedition_03
+Expedition_04
+Expedition_05
+Expedition_06
+Expedition_07
+Expedition_08
+Expedition_09
+Expedition_10
+Shared_AncientNERA
+Shared_Human
+Shared_Planet
+Shared_IO
+Shared_UI
+Shared_Audio
+Что важно
+Если общий ассет используется в нескольких экспедициях, он не должен лежать внутри одной экспедиции.
+Иначе при Addressables возможны:
+дубли ассетов;
+увеличение размера билда;
+сложность зависимостей;
+хаос в группах.
+Для First Playable
+Addressables можно не подключать сразу.
+Но структура уже должна быть подготовлена так, чтобы потом не переносить половину проекта.
+23. Naming Conventions
+Назначение
+Глава фиксирует базовые правила названий.
+Общий стиль
+Использовать понятные английские названия.
+Station_Terminal.prefab
+Expedition_01_Config.asset
+IO_Blue.prefab
+Item_AncientObject_01.asset
+M_Ancient_Stone_Light.mat
+VFX_IO_Blue_Core.prefab
+SFX_UI_Click.wav
+Префиксы
+M_       Material
+MI_      Material Instance / Variant, если используешь
+T_       Texture
+SM_      Static Mesh / Model
+SK_      Skeletal Mesh
+P_       Prefab, если хочешь явно
+VFX_     Visual effect
+SFX_     Sound effect
+AMB_     Ambience
+MUS_     Music
+UI_      UI element
+SO_      ScriptableObject, если хочешь
+CFG_     Config
+Unity-friendly вариант
+Можно не использовать слишком много префиксов, но важно быть стабильным.
+Рекомендуемый вариант для NERA:
+M_Ancient_Stone_Light
+T_Planet_Rock_BaseColor
+SM_Station_Terminal
+P_Station_Terminal
+VFX_IO_Blue_Core
+SFX_Drone_Launch
+CFG_Expedition_01
+Сцены
+Station_FirstPlayable.unity
+Station_Main.unity
+Expedition_01_FirstPlayable.unity
+Expedition_01.unity
+Test_Interaction.unity
+ScriptableObjects
+CFG_Player
+CFG_Inventory
+CFG_Drone
+CFG_Expedition_01
+CFG_IO_Blue
+DB_Items
+DB_Research
+DB_Library
+DB_AncientLanguage
+Главное правило
+Название должно отвечать на три вопроса:
+что это;
+к чему относится;
+какая версия / тип.
+Плохо:
+New Material
+Cube
+Test1
+Final_Final_2
+Object
+Хорошо:
+M_Ancient_Stone_Damaged
+P_IO_Blue
+CFG_Expedition_01
+UI_Terminal_MapScreen
+24. First Playable Minimal Folder Set
+Для старта First Playable не нужно создавать абсолютно всё.
+Минимально можно создать:
+Assets/_Project/NERA/
+Code/
+Runtime/
+Core/
+Player/
+Interaction/
+Items/
+Inventory/
+Station/
+Terminal/
+Drone/
+Expeditions/
+Research/
+Library/
+Translation/
+IO/
+UI/
+Save/
+Configs/
+Player/
+Interaction/
+Items/
+Inventory/
+Station/
+Drone/
+Expeditions/
+Research/
+Library/
+Translation/
+IO/
+Content/
+Station/
+Expeditions/
+Expedition_01/
+AncientNERA/
+Planet/
+IO/
+Items/
+Prefabs/
+Player/
+Systems/
+Interaction/
+Scenes/
+Station/
+Expeditions/
+Tests/
+UI/
+Screens/
+Widgets/
+Icons/
+VFX/
+IO/
+Energy/
+Fog/
+Audio/
+Ambience/
+SFX/
+Settings/
+_Development/
+_Sandbox/
+25. Что не делать
+Не хранить всё в одной папке
+Плохо:
+Assets/Models/
+Assets/Materials/
+Assets/Scripts/
+Assets/Prefabs/
+Это быстро станет хаосом.
+Не смешивать тесты и production
+Плохо:
+Station_Terminal.prefab
+Station_Terminal_TEST.prefab
+Station_Terminal_old.prefab
+Station_Terminal_final.prefab
+Для тестов есть:
+Tests/
+_Development/
+_Sandbox/
+Не класть общие ассеты внутрь одной экспедиции
+Плохо:
+Expedition_01/Materials/M_Ancient_Stone
+если этот материал потом используется в Expedition_02.
+Лучше:
+Content/AncientNERA/Materials/M_Ancient_Stone
+Не плодить финальные версии
+Плохо:
+Expedition01_Final
+Expedition01_Final2
+Expedition01_New
+Expedition01_RealFinal
+Лучше использовать Git и нормальные имена.
+Не делать папку Misc
+Папка Misc почти всегда превращается в мусор.
+Если хочется создать Misc, значит структура не продумана.
+26. Главная структура проекта
+Итоговый вариант:
+Assets/
+_Project/
+NERA/
+Art/
+Models/
+Textures/
+Materials/
+Shaders/
+Decals/
+Skybox/
+Lighting/
+Audio/
+Ambience/
+SFX/
+Music/
+Mixers/
+Data/
+Code/
+Runtime/
+Core/
+Player/
+Camera/
+Interaction/
+Items/
+Inventory/
+Station/
+Terminal/
+Drone/
+Expeditions/
+Research/
+Library/
+Translation/
+IO/
+VFX/
+Audio/
+UI/
+Save/
+Utilities/
+Editor/
+Tools/
+Inspectors/
+Importers/
+Debug/
+Configs/
+Game/
+Player/
+Interaction/
+Items/
+Inventory/
+Station/
+Drone/
+Expeditions/
+Research/
+Library/
+Translation/
+IO/
+UI/
+Audio/
+Content/
+Station/
+Expeditions/
+Expedition_01/
+Expedition_02/
+Expedition_03/
+Expedition_04/
+Expedition_05/
+Expedition_06/
+Expedition_07/
+Expedition_08/
+Expedition_09/
+Expedition_10/
+AncientNERA/
+Human/
+Planet/
+IO/
+Items/
+Interactables/
+Props/
+Shared/
+Prefabs/
+Core/
+Player/
+Camera/
+Interaction/
+Items/
+UI/
+Systems/
+Managers/
+Scenes/
+Boot/
+MainMenu/
+Station/
+Expeditions/
+Tests/
+Settings/
+URP/
+Input/
+Graphics/
+Quality/
+Physics/
+Build/
+UI/
+Screens/
+Widgets/
+Icons/
+Fonts/
+Materials/
+Prefabs/
+Styles/
+VFX/
+IO/
+Energy/
+Fog/
+Dust/
+Interaction/
+UI/
+Portal/
+Materials/
+Textures/
+Prefabs/
+Tests/
+Scenes/
+Prefabs/
+Data/
+_Development/
+_Sandbox/
+27. Главная мысль документа
+Unity Project Structure нужна не для красоты папок, а для контроля разработки.
+NERA будет расти через:
+станцию;
+экспедиции;
+исследования;
+переводы;
+IO;
+артефакты;
+UI;
+VFX;
+аудио;
+модульные ассеты.
+Если структура будет плохой, проект начнёт тормозить не из-за Unity, а из-за хаоса.
+Главное правило:
+общий контент лежит в shared-папках;
+уникальный контент лежит внутри своей локации;
+код разделён по системам;
+UI отделён от сцен;
+тесты отделены от production;
+временный мусор не попадает в игру.

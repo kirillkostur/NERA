@@ -1,0 +1,619 @@
+NERA — Sprint 07 Plan
+First Playable Polish Pass
+1. Назначение Sprint 07
+Sprint 07 нужен, чтобы First Playable перестал ощущаться как набор технических систем и начал ощущаться как игра.
+После Sprint 06 у нас уже есть полный рабочий flow:
+станция
+→ питание
+→ терминал
+→ дрон
+→ экспедиция
+→ находки
+→ возврат
+→ исследование
+→ библиотека
+→ перевод
+→ новая цель
+Sprint 07 не добавляет большие новые системы.
+Его задача:
+усилить читаемость
+→ усилить feedback
+→ усилить атмосферу
+→ убрать сухость placeholder-игры
+→ сделать прохождение понятным и приятным
+2. Главная цель спринта
+Цель
+Сделать первый polish-pass всего First Playable.
+Игрок должен:
+понимать, куда идти;
+понимать, с чем можно взаимодействовать;
+получать feedback после каждого важного действия;
+чувствовать разницу между выключенной и включенной станцией;
+чувствовать переход из безопасной станции в неизвестную экспедицию;
+замечать древние объекты;
+замечать след IO;
+понимать, что после анализа он узнал что-то новое;
+завершать First Playable с ощущением “я ближе к ответу”.
+3. Почему это важно
+До Sprint 07 проект может быть технически правильным, но эмоционально пустым.
+Проблема:
+всё работает
+но игрок не чувствует важность событий
+NERA держится не на экшене, а на ощущении исследования.
+Поэтому каждый ключевой шаг должен давать feedback:
+включил питание → станция ожила
+запустил дрон → появилась надежда найти ответ
+нашёл запись → появился первый контакт с языком NERA
+увидел IO → угроза стала ближе
+провёл анализ → понял больше
+4. Scope Sprint 07
+4.1. Что входит
+В Sprint 07 входит:
+улучшение objective hints;
+visual feedback для station power;
+visual feedback для terminal online/offline;
+visual feedback для drone scan;
+simple feedback для interactables;
+Expedition 01 readability pass;
+basic lighting pass;
+basic fog / atmosphere pass;
+placeholder VFX для IO trace;
+placeholder VFX для ancient objects;
+placeholder audio;
+UI feedback для research/library/translation;
+первый internal playtest checklist;
+исправление flow confusion.
+4.2. Что НЕ входит
+В Sprint 07 не входит:
+финальный art pass;
+финальные модели;
+финальные материалы;
+полноценная озвучка;
+полноценный саундтрек;
+полноценная анимация дрона;
+катсцены;
+combat system;
+Expedition 02;
+антенна;
+? точки;
+полноценный tutorial system;
+настройки графики;
+оптимизация всего проекта;
+Steam integration.
+5. Главный принцип Sprint 07
+Sprint 07 — это polish, но не production art.
+Правило:
+делаем игру понятнее и атмосфернее
+но не пытаемся сделать финальный визуал
+Нужно улучшать только то, что влияет на First Playable flow.
+6. Ключевые точки polish
+6.1. Station Offline
+До включения питания станция должна ощущаться:
+холодной;
+сломанной;
+тихой;
+неполной;
+небезопасной, но не враждебной.
+Минимальный feedback:
+dim emergency light
+terminal screen off
+low ambient hum missing
+power core highlighted weakly
+objective: Restore station power
+6.2. Station Power Restored
+После восстановления питания игрок должен сразу понять:
+станция ожила
+Feedback:
+включаются lights;
+терминал получает экран / emissive;
+появляется короткий звук питания;
+появляется terminal boot text;
+objective меняется;
+возможно лёгкий camera shake, но очень аккуратно.
+Не делать:
+взрывной cinematic;
+долгую анимацию;
+громкий эффект;
+перегруженный VFX.
+6.3. Terminal Online
+Терминал должен быть визуальным центром станции.
+До питания:
+Terminal Offline
+Restore station power first.
+После питания:
+Terminal Online
+Feedback:
+screen glow;
+короткий beep;
+UI открывается быстро;
+active sections читаются;
+locked sections не выглядят сломанными.
+6.4. Drone Scan
+Drone scan должен ощущаться как действие, а не как debug-кнопка.
+Feedback:
+Drone Status: Scanning
+Scanning nearby NERA structures...
+progress animation
+short audio pulse
+result message
+После завершения:
+New Expedition Discovered
+Expedition 01 — Ancient Outpost
+Важно:
+игрок должен понять, что новая цель появилась из-за запуска дрона
+6.5. Expedition 01 Arrival
+При входе в экспедицию игрок должен почувствовать смену пространства:
+станция = безопасность / техника / человек
+экспедиция = неизвестность / древность / планета NERA
+Feedback:
+другой ambient sound;
+больше ветра;
+открытое пространство;
+видимый силуэт древней структуры;
+fog / haze;
+цветовой контраст;
+objective: Explore the detected structure.
+6.6. Ancient Record
+Древняя запись должна быть заметной.
+Feedback:
+subtle glow;
+unique shape;
+readable prompt;
+после чтения — short message;
+можно слегка изменить objective.
+После interaction:
+Ancient record found.
+Symbols added to terminal database.
+6.7. NERA Memory Core
+Research object должен ощущаться важнее обычного предмета.
+Feedback:
+более сильный glow;
+hold interaction;
+короткая progress bar;
+звук сканирования / сбора;
+после завершения — message.
+После interaction:
+NERA Memory Core collected.
+Return to station for analysis.
+6.8. IO Trace
+IO Trace должен быть маленьким, но тревожным моментом.
+Feedback:
+blue unstable glow;
+distortion / particle noise;
+low audio pulse;
+warning text;
+objective не обязательно менять.
+Message:
+Unstable IO energy detected.
+Важно:
+IO = присутствие, не бой
+6.9. Research Complete
+После анализа игрок должен почувствовать интеллектуальную награду.
+Feedback:
+terminal analysis complete;
+library update marker;
+translation level changed;
+new objective hint.
+Messages:
+Analysis complete.
+Library updated.
+Ancient language status: Fragmented.
+New objective hint available.
+7. Objective Hint Polish
+7.1. Назначение
+Objective hints должны помогать игроку, но не превращать игру в checklist.
+Они должны быть короткими.
+7.2. Финальный список hints для First Playable
+Restore station power.
+Open the terminal.
+Launch the drone.
+Review discovered expedition.
+Travel to Expedition 01.
+Explore the detected structure.
+Read the ancient record.
+Inspect the NERA Memory Core.
+Return to station for analysis.
+Analyze the NERA Memory Core.
+Review updated Library data.
+Use the drone to search for the signal array.
+7.3. Правила objective text
+Делать
+писать коротко;
+использовать глагол;
+обновлять после важных событий;
+показывать не больше одной текущей цели.
+Не делать
+длинные объяснения;
+несколько целей одновременно;
+лорные абзацы в objective;
+слишком очевидные подсказки после каждого шага.
+8. Interaction Feedback Polish
+8.1. Prompt rules
+Prompt должен быть одинаковым по стилю:
+[E] Open Terminal
+Hold [E] Restore Power
+[E] Read Ancient Record
+Hold [E] Inspect Object
+[E] Return to Station
+8.2. Press interaction
+Для press interaction:
+prompt появляется при наведении / близости;
+нажатие сразу выполняет действие;
+появляется короткий result feedback.
+8.3. Hold interaction
+Для hold interaction:
+prompt явно показывает Hold;
+есть progress feedback;
+при отпускании progress сбрасывается;
+после завершения действие не повторяется.
+8.4. Важное правило
+Игрок не должен гадать:
+сработало действие или нет
+Каждое важное взаимодействие должно иметь результат:
+UI message;
+звук;
+изменение объекта;
+изменение света;
+изменение objective;
+открытие нового раздела.
+9. Station Polish
+9.1. Offline station
+Должно быть:
+низкий свет
+terminal off
+power core highlighted
+минимум активных экранов
+тишина / слабый шум
+9.2. Online station
+Должно быть:
+основной свет включён
+terminal screen active
+systems hum
+terminal interaction доступен
+drone section active
+9.3. Station visual checklist
+power core видно;
+terminal видно;
+offline/online состояния отличаются;
+игрок понимает, что изменилось после восстановления питания;
+терминал становится центром внимания.
+10. Expedition 01 Polish
+10.1. Route readability
+Маршрут должен быть читаемым:
+Start
+→ Desert Path
+→ Ancient Structure
+→ Record
+→ Memory Core
+→ IO Trace
+→ Return Beacon
+10.2. Visual guidance
+Использовать:
+силуэт структуры;
+световой акцент;
+контраст материалов;
+ограничители из камней;
+glow на важных объектах;
+fog для глубины.
+10.3. Не делать
+Не делать:
+большую пустую пустыню;
+много одинаковых камней;
+много лишних props;
+сложные развилки;
+вертикальность без gameplay-смысла;
+скрытые обязательные объекты.
+11. Lighting Polish
+11.1. Station lighting
+Цель:
+offline = cold/dim
+online = readable/functional
+11.2. Expedition lighting
+Цель:
+mysterious but readable
+Использовать:
+Directional Light;
+baked light где возможно;
+local highlight для древних объектов;
+fog;
+emissive.
+11.3. LOW rules
+Не добавлять много dynamic lights.
+Для First Playable:
+лучше 1 хороший highlight, чем 5 случайных lights
+12. VFX Polish
+12.1. Минимальный VFX набор
+Для Sprint 07 достаточно:
+VFX_Terminal_PowerOn
+VFX_NERA_AncientGlow
+VFX_NERA_MemoryCore_Glow
+VFX_IO_Trace_Blue_Weak
+VFX_Drone_ScanPulse_UI
+12.2. VFX rules
+Делать
+короткие эффекты;
+читаемый цвет;
+умеренную яркость;
+LOW-friendly particle count;
+минимум transparent overdraw.
+Не делать
+большие full-screen эффекты;
+тяжёлые volumetric эффекты;
+много частиц без смысла;
+яркий bloom везде;
+VFX, который мешает prompt.
+13. Audio Polish
+13.1. Минимальный audio набор
+Для Sprint 07 нужны placeholder-звуки:
+SFX_Station_PowerOn
+SFX_Terminal_Open
+SFX_Terminal_Error
+SFX_Drone_ScanStart
+SFX_Drone_ScanComplete
+SFX_Interaction_Success
+SFX_Research_Analyze
+SFX_Research_Complete
+SFX_IO_Trace_Pulse
+AMB_Station_Offline
+AMB_Station_Online
+AMB_Expedition01_Wind
+13.2. Audio rules
+Делать
+короткие SFX;
+не громкие;
+с понятной функцией;
+ambient отдельно для станции и экспедиции.
+Не делать
+финальный саундтрек;
+громкие резкие звуки;
+постоянный шум терминала;
+звуки, которые надоедают при тестах;
+много layered audio без необходимости.
+14. Terminal UI Polish
+14.1. Цель
+Терминал должен быть не красивым, а понятным.
+14.2. Что улучшить
+активный раздел должен быть очевиден;
+disabled sections должны быть видны, но не мешать;
+важные новые данные должны иметь marker;
+после research должен появиться NEW marker;
+кнопка Travel должна быть понятной;
+кнопка Analyze должна быть понятной;
+статус языка должен быть заметен.
+14.3. Terminal status summary
+Добавить краткий статус:
+Station: Online
+Drone: Scan Complete
+Expedition 01: Returned
+Research: Analysis Complete
+Language: Fragmented
+15. Library Polish
+15.1. Library entry feedback
+После открытия новых записей:
+Library updated.
+New entries available.
+В Library можно помечать новые записи:
+NEW
+15.2. Library rules
+Делать
+показывать только unlocked entries;
+показывать короткий текст;
+выделять новые записи;
+давать ощущение прогресса знания.
+Не делать
+много категорий;
+большие лорные простыни;
+locked entries на весь экран;
+сложные фильтры.
+16. Translation Polish
+16.1. Translation feedback
+До анализа:
+Ancient NERA Language
+Status: Unknown
+После анализа:
+Ancient NERA Language
+Status: Fragmented
+Feedback:
+Translation level improved.
+Unknown → Fragmented
+16.2. Важно
+Не использовать проценты.
+Не писать:
+Translation: 15%
+Писать:
+Status: Fragmented
+17. Internal Playtest Checklist
+17.1. Цель playtest
+Проверить не “работает ли код”, а:
+понятно ли игроку, что делать
+17.2. Вопросы после прохождения
+После прохождения нужно ответить:
+Я понял, что сначала нужно включить питание?
+Я понял, что терминал стал доступен?
+Я понял, что дрон открыл Expedition 01?
+Я понял, куда идти в экспедиции?
+Я заметил древнюю запись?
+Я понял, что Memory Core важен?
+Я заметил IO Trace?
+Я понял, зачем возвращаться на станцию?
+Я понял, что research дал новое знание?
+Я увидел, что Translation Level изменился?
+Я понял намёк на следующую цель?
+17.3. Если ответ “нет”
+Если на любой вопрос ответ “нет”, не добавлять новую систему.
+Нужно улучшить:
+objective text;
+visual highlight;
+prompt;
+UI message;
+sound;
+layout.
+18. Sprint 07 Tasks
+18.1. Objective Polish
+TASK-S07-001 — Review all objective hints
+TASK-S07-002 — Replace long debug text with short player-facing text
+TASK-S07-003 — Add objective update after station power restored
+TASK-S07-004 — Add objective update after drone scan complete
+TASK-S07-005 — Add objective update after Memory Core collected
+TASK-S07-006 — Add objective update after research complete
+18.2. Interaction Feedback
+TASK-S07-007 — Standardize all interaction prompts
+TASK-S07-008 — Add result messages for key interactions
+TASK-S07-009 — Add hold progress feedback for Restore Power
+TASK-S07-010 — Add hold progress feedback for Inspect Object
+TASK-S07-011 — Disable completed one-time interactions
+18.3. Station Polish
+TASK-S07-012 — Improve Station Offline lighting readability
+TASK-S07-013 — Improve Station Online lighting readability
+TASK-S07-014 — Add terminal offline visual state
+TASK-S07-015 — Add terminal online visual state
+TASK-S07-016 — Add power restored feedback
+TASK-S07-017 — Add basic station ambience placeholder
+18.4. Terminal Polish
+TASK-S07-018 — Improve Terminal section navigation readability
+TASK-S07-019 — Add Status summary section
+TASK-S07-020 — Add NEW marker for updated Library
+TASK-S07-021 — Add analysis complete message
+TASK-S07-022 — Add translation level changed message
+TASK-S07-023 — Add drone scan result message
+18.5. Expedition 01 Polish
+TASK-S07-024 — Improve Expedition 01 route readability
+TASK-S07-025 — Add visual guide toward ancient structure
+TASK-S07-026 — Add highlight to Ancient Record
+TASK-S07-027 — Add highlight to NERA Memory Core
+TASK-S07-028 — Add visual boundary pass
+TASK-S07-029 — Add Return Beacon visual clarity
+18.6. VFX Placeholder
+TASK-S07-030 — Add VFX_Terminal_PowerOn placeholder
+TASK-S07-031 — Add VFX_NERA_AncientGlow placeholder
+TASK-S07-032 — Add VFX_NERA_MemoryCore_Glow placeholder
+TASK-S07-033 — Add VFX_IO_Trace_Blue_Weak placeholder
+TASK-S07-034 — Check VFX visibility on LOW
+18.7. Audio Placeholder
+TASK-S07-035 — Add SFX_Station_PowerOn
+TASK-S07-036 — Add SFX_Terminal_Open
+TASK-S07-037 — Add SFX_Terminal_Error
+TASK-S07-038 — Add SFX_Drone_ScanStart
+TASK-S07-039 — Add SFX_Drone_ScanComplete
+TASK-S07-040 — Add SFX_Research_Complete
+TASK-S07-041 — Add SFX_IO_Trace_Pulse
+TASK-S07-042 — Add AMB_Station_Offline
+TASK-S07-043 — Add AMB_Station_Online
+TASK-S07-044 — Add AMB_Expedition01_Wind
+18.8. Playtest
+TASK-S07-045 — Play full flow without debug
+TASK-S07-046 — Fill internal playtest checklist
+TASK-S07-047 — Fix confusing steps
+TASK-S07-048 — Create standalone build
+TASK-S07-049 — Test standalone build
+TASK-S07-050 — Write Sprint 07 result notes
+19. Рекомендуемый порядок выполнения
+День 1–2
+Objective hints
+Interaction prompts
+Result messages
+Hold progress feedback
+День 3–4
+Station offline/online readability
+Terminal state feedback
+Terminal status section
+Drone scan result feedback
+День 5–6
+Expedition 01 route readability
+Ancient object highlights
+IO Trace placeholder VFX
+Return Beacon clarity
+День 7–8
+Placeholder audio
+Library NEW markers
+Translation level feedback
+Research complete feedback
+День 9–10
+Full no-debug playtest
+Confusion fixes
+Standalone build
+Sprint notes
+20. Критерии готовности Sprint 07
+Sprint 07 считается готовым, если:
+20.1. Flow readability
+игрок понимает, что нужно включить питание;
+игрок понимает, что терминал стал доступен;
+игрок понимает, что дрон открыл Expedition 01;
+игрок понимает, куда идти в Expedition 01;
+игрок понимает, что нужно вернуться на станцию;
+игрок понимает, что research дал новое знание.
+20.2. Feedback
+каждое важное действие имеет feedback;
+station power restoration ощущается;
+drone scan ощущается;
+object collection ощущается;
+IO trace заметен;
+research complete ощущается;
+translation level update заметен.
+20.3. Atmosphere
+станция offline и online отличаются;
+Expedition 01 отличается от станции;
+ancient objects визуально выделяются;
+IO trace тревожный, но не боевой;
+атмосфера поддерживает curiosity.
+20.4. UI
+терминал понятный;
+active section читается;
+новые данные помечаются;
+Library update заметен;
+Translation Level читается;
+кнопки не выглядят сломанными.
+20.5. Technical
+полный flow проходится без debug;
+нет ошибок в Console;
+нет Missing Scripts;
+нет Missing Prefabs;
+билд собирается;
+standalone build проходится от начала до конца.
+21. Что не делать в Sprint 07
+Не делать:
+финальный визуал
+финальный UI
+финальную музыку
+полноценный trailer-like lighting
+новые экспедиции
+новые системы
+боёвку
+сложные cutscenes
+полноценную карту
+настройки графики
+Steam features
+Главный фокус:
+ясность + feedback + атмосфера
+22. Риски Sprint 07
+22.1. Риск: уйти в art polish
+Проблема:
+Можно потратить весь спринт на красивые камни, материалы и свет.
+Решение:
+Polish только там, где игрок принимает решение или получает feedback.
+22.2. Риск: добавить новые фичи
+Проблема:
+Может захотеться добавить антенну, Expedition 02, новый тип IO.
+Решение:
+Sprint 07 не добавляет новый loop.
+Он усиливает существующий loop.
+22.3. Риск: перегрузить UI сообщениями
+Проблема:
+Каждое действие начинает спамить игрока текстом.
+Решение:
+Сообщение только после важных событий.
+Коротко.
+Без лорных абзацев.
+22.4. Риск: сделать слишком много VFX
+Проблема:
+VFX может перегрузить low-poly стиль и ухудшить читаемость.
+Решение:
+VFX = акцент.
+Не украшение ради украшения.
+23. Главный результат Sprint 07
+После Sprint 07 First Playable должен ощущаться не просто работающим, а понятным:
+я понял, что произошло
+я понял, зачем я это сделал
+я понял, что узнал новое
+я хочу узнать, что будет дальше
+Это главный эмоциональный результат Sprint 07.

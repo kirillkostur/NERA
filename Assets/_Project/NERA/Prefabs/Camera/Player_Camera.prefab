@@ -160,12 +160,15 @@ MonoBehaviour:
   minPitch: -30
   maxPitch: 70
   lockCursor: 1
-  disableCameraInputWhenTerminalOpen: 1
   distance: 3
   minDistance: 2
   maxDistance: 4
   distanceTransitionSpeed: 6
   zoomSpeed: 1
+  aimKey: 324
+  aimDistance: 2.2
+  aimShoulderOffset: {x: 0.65, y: -0.05, z: 0.25}
+  aimLookAhead: 8
   collisionMask:
     serializedVersion: 2
     m_Bits: 512

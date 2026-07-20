@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using NERA.Inventory;
 
 namespace NERA.Research
 {
@@ -9,15 +10,27 @@ namespace NERA.Research
         IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public NERA.Items.ItemData Item { get; private set; }
+        public InventorySlotGroup SourceGroup { get; private set; }
+        public int SourceIndex { get; private set; }
+        public bool IsLaboratorySource { get; private set; }
 
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
         private GameObject dragIcon;
 
-        public void Initialize(NERA.Items.ItemData item, Canvas canvas)
+        public void Initialize(
+            NERA.Items.ItemData item,
+            Canvas canvas,
+            InventorySlotGroup sourceGroup = InventorySlotGroup.Backpack,
+            int sourceIndex = -1,
+            bool isLaboratorySource = false
+        )
         {
             Item = item;
             rootCanvas = canvas;
+            SourceGroup = sourceGroup;
+            SourceIndex = sourceIndex;
+            IsLaboratorySource = isLaboratorySource;
             canvasGroup = GetComponent<CanvasGroup>();
         }
 

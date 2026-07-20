@@ -1,0 +1,705 @@
+NERA — Sprint 08 Plan
+First Playable QA + Optimization Baseline
+1. Назначение Sprint 08
+Sprint 08 нужен, чтобы зафиксировать техническое состояние First Playable.
+После Sprint 07 у нас уже есть:
+рабочий loop
+понятные цели
+feedback
+атмосфера
+placeholder VFX
+placeholder audio
+terminal polish
+Expedition 01 readability pass
+Sprint 08 не должен добавлять новые фичи.
+Его задача:
+проверить стабильность
+→ измерить производительность
+→ найти критические баги
+→ зафиксировать baseline
+→ подготовить First Playable к lock
+2. Главная цель спринта
+Цель
+Сделать первый технический QA-pass First Playable.
+Нужно проверить:
+полный проход игры;
+стабильность сцен;
+стабильность UI;
+стабильность input/cursor;
+FPS baseline;
+memory baseline;
+build size baseline;
+scene loading;
+LOW preset assumptions;
+критические баги;
+must-fix список перед First Playable lock.
+Главный результат:
+мы понимаем, в каком техническом состоянии находится First Playable
+3. Почему это важно
+До Sprint 08 игра может “работать у нас в редакторе”.
+Но First Playable должен работать как билд.
+Проблема:
+Editor скрывает часть проблем
+В билде могут проявиться:
+неработающие scene transitions;
+сломанный cursor lock;
+потеря input после UI;
+пустые ссылки;
+неправильные Build Settings;
+missing assets;
+сильные просадки FPS;
+долгие загрузки;
+большой размер билда;
+проблемы LOW-настроек.
+Sprint 08 нужен, чтобы поймать это до First Playable Lock.
+4. Scope Sprint 08
+4.1. Что входит
+В Sprint 08 входит:
+full playthrough QA;
+build QA;
+bug list;
+critical / major / minor bug categories;
+FPS baseline;
+RAM baseline;
+VRAM rough baseline;
+build size baseline;
+scene loading baseline;
+input/cursor QA;
+terminal UI QA;
+interaction QA;
+save placeholder QA;
+LOW preset assumptions;
+simple optimization pass;
+First Playable technical report.
+4.2. Что НЕ входит
+В Sprint 08 не входит:
+новые экспедиции;
+новая механика;
+боёвка;
+антенна;
+? точки;
+полноценные graphics settings;
+финальный optimization pass;
+финальный art pass;
+финальный audio pass;
+Steam integration;
+achievements;
+localization;
+полноценная save/load architecture rewrite.
+5. Главный принцип Sprint 08
+Sprint 08 — это не “делаем красиво”.
+Sprint 08 — это:
+измеряем
+→ фиксируем
+→ исправляем критичное
+Правило:
+Если проблема не мешает First Playable и не ломает baseline — не трогать сейчас.
+6. QA Priorities
+6.1. Priority 1 — Blocker
+Баги, которые полностью ломают прохождение.
+Примеры:
+игра не запускается;
+билд не собирается;
+сцена не загружается;
+игрок не появляется;
+терминал не открывается;
+дрон не открывает Expedition 01;
+невозможно вернуться на станцию;
+невозможно завершить research;
+input полностью ломается;
+save/load ломает состояние.
+Blocker должен быть исправлен в Sprint 08.
+6.2. Priority 2 — Critical
+Баги, которые сильно мешают прохождению, но игру можно пройти обходным путём.
+Примеры:
+UI иногда не закрывается;
+cursor остаётся видимым в gameplay;
+objective не обновляется;
+prompt не появляется с первого раза;
+объект можно собрать дважды;
+Library не всегда обновляется;
+Translation Level не обновляется визуально;
+после возврата игрок появляется в неудобной точке.
+Critical желательно исправить в Sprint 08.
+6.3. Priority 3 — Major
+Баги, которые заметны, но не ломают core flow.
+Примеры:
+текст криво выровнен;
+VFX слишком яркий;
+звук повторяется слишком часто;
+light pop заметен;
+небольшие просадки FPS;
+debug text остался в UI;
+неидеальная навигация в терминале.
+Major можно исправлять, если осталось время.
+6.4. Priority 4 — Minor
+Мелкие проблемы.
+Примеры:
+typo;
+некрасивый placeholder;
+слабый материал;
+мелкий clipping;
+неидеальный fade;
+временная иконка.
+Minor не должен съедать Sprint 08.
+7. Full Playthrough QA
+7.1. Проверяемый flow
+Проверить полный flow с нуля:
+Start on Station
+→ Restore Power
+→ Open Terminal
+→ Launch Drone
+→ Discover Expedition 01
+→ Travel to Expedition 01
+→ Explore Ancient Outpost
+→ Read Ancient Record
+→ Inspect NERA Memory Core
+→ Notice IO Trace
+→ Return to Station
+→ Analyze NERA Memory Core
+→ Library Updated
+→ Translation Level: Fragmented
+→ New Objective Hint
+7.2. Правило теста
+Проход должен быть выполнен:
+без debug-кнопок
+без ручных действий в Editor
+без перезапуска сцены
+без изменения Inspector
+Если без debug пройти нельзя — это blocker.
+8. Build QA
+8.1. Что проверять в билде
+Проверить:
+билд запускается;
+окно открывается корректно;
+mouse lock работает;
+keyboard input работает;
+UI input работает;
+Esc закрывает fullscreen UI;
+сцены загружаются;
+save file создаётся;
+load работает;
+reset работает;
+игра закрывается без ошибок.
+8.2. Build Settings
+Проверить, что в Build Settings есть:
+Station_FirstPlayable
+Expedition_01_FirstPlayable
+Если будет MainMenu позже — добавить отдельно.
+На Sprint 08 MainMenu не обязателен.
+9. Input / Cursor QA
+9.1. Gameplay mode
+В gameplay mode должно быть:
+Player movement = enabled
+Camera control = enabled
+Cursor = hidden
+Cursor lock = locked
+UI input = disabled / limited
+9.2. Terminal mode
+В terminal mode должно быть:
+Player movement = disabled
+Camera control = disabled
+Cursor = visible
+Cursor lock = unlocked
+UI input = enabled
+9.3. После закрытия UI
+После закрытия терминала:
+Player movement = enabled
+Camera control = enabled
+Cursor = hidden
+Cursor lock = locked
+9.4. Частые баги
+Проверить:
+cursor остаётся видимым после закрытия терминала;
+камера двигается при открытом терминале;
+игрок двигается при открытом терминале;
+Esc не закрывает терминал;
+Esc закрывает терминал, но не возвращает input;
+после scene transition input не работает;
+после save/load input не работает.
+10. Interaction QA
+10.1. Проверить interactables
+Проверить:
+Station Power Core
+Station Terminal
+Ancient Record
+NERA Memory Core
+Return Beacon
+10.2. Проверить prompt
+Каждый prompt должен:
+появляться в правильной зоне;
+исчезать при выходе из зоны;
+показывать правильное действие;
+не конфликтовать с другим prompt;
+не оставаться на экране после взаимодействия.
+10.3. Проверить one-time interactions
+One-time interactions должны отключаться после выполнения:
+Restore Power
+Read Ancient Record
+Inspect NERA Memory Core
+Notice IO Trace
+11. Terminal UI QA
+11.1. Проверить разделы
+Проверить:
+Status
+Drone
+Expeditions
+Research
+Library
+Translation
+Exit
+11.2. Проверить состояния
+До питания
+Terminal locked / offline
+Drone locked
+Research empty
+Library empty
+Translation Unknown
+После питания
+Terminal online
+Drone ready
+После drone scan
+Expedition 01 discovered
+Travel available
+После возврата
+Research object available
+Analyze available
+После анализа
+Research analyzed
+Library updated
+Translation Fragmented
+Next hint available
+12. Save Placeholder QA
+12.1. Проверить Save
+Save должен сохранять:
+StationPowerState
+DroneState
+Expedition01_State
+Expedition01_Visited
+AncientRecord01_Found
+ResearchObject01_State
+IOTrace01_Seen
+Expedition01_Returned
+Library entries
+AncientLanguageLevel
+NextObjectiveHintAvailable
+12.2. Проверить Load
+Load должен корректно восстановить:
+состояние станции;
+доступность терминала;
+состояние дрона;
+открытие Expedition 01;
+найденные объекты;
+research state;
+Library entries;
+Translation Level;
+objective hint.
+12.3. Проверить Reset
+Reset должен вернуть:
+StationPowerState = Offline
+DroneState = Locked
+Expedition01_State = Unknown
+ResearchObject01_State = NotFound
+AncientLanguageLevel = Unknown
+Library entries = locked
+12.4. Важно
+После Load/Reset UI должен обновляться.
+Плохо:
+state загрузился, но UI показывает старые данные
+13. Performance Baseline
+13.1. Target LOW specs
+Минимальный ориентир проекта:
+GTX 1050 Ti
+Ryzen 3/5
+8 GB RAM
+PC / Steam
+13.2. Что измерять
+Нужно зафиксировать:
+FPS average
+FPS minimum rough
+CPU frame time
+GPU frame time
+RAM usage
+rough VRAM usage
+build size
+scene loading time
+13.3. Где измерять
+Минимальные точки замера:
+Station Offline
+Station Online
+Terminal Open
+Drone Scan UI
+Expedition 01 Start
+Expedition 01 Ancient Structure
+IO Trace Area
+Return to Station
+Research Complete UI
+13.4. Как фиксировать
+Для каждой точки:
+Location:
+State:
+FPS:
+CPU ms:
+GPU ms:
+RAM:
+Notes:
+Пример:
+Location: Expedition 01 / IO Trace Area
+State: IO Trace visible
+FPS: 92
+CPU: 6.5 ms
+GPU: 8.2 ms
+RAM: 2.1 GB
+Notes: stable, no visible stutter
+14. FPS Goals
+14.1. First Playable rough goals
+Для First Playable не нужен финальный FPS lock, но нужен ориентир.
+Цель:
+1080p LOW: playable on GTX 1050 Ti
+Желательно:
+60 FPS target on LOW
+Допустимо на раннем First Playable:
+45–60 FPS, если нет постоянных фризов
+Плохо:
+ниже 30 FPS
+регулярные фризы
+сильные просадки при UI
+долгие зависания при смене сцен
+14.2. Что считать проблемой
+Проблема:
+FPS падает ниже 30;
+GPU frame time резко растёт на VFX;
+UI вызывает просадки;
+fog слишком дорогой;
+dynamic lights слишком дорогие;
+scene loading вызывает длинный freeze;
+память растёт после каждого перехода.
+15. Memory Baseline
+15.1. Что проверять
+Проверить:
+RAM usage после старта;
+RAM usage после перехода в Expedition 01;
+RAM usage после возврата на станцию;
+не растёт ли память после повторных переходов.
+15.2. Красные флаги
+Проблемы:
+память растёт после каждого Station ↔ Expedition перехода
+сцены не выгружаются
+дублируются persistent objects
+аудио/видео/текстуры остаются в памяти без причины
+16. Build Size Baseline
+16.1. Target
+Желательный ориентир проекта:
+финальный билд до 10 GB
+Для First Playable билд должен быть намного меньше.
+Ориентир для раннего First Playable:
+до 2–4 GB
+Если First Playable уже близок к 10 GB — это проблема.
+16.2. Что проверять
+Проверить:
+размер билда;
+какие папки/ассеты занимают больше всего;
+нет ли случайных source files;
+нет ли больших тестовых текстур;
+нет ли лишнего контента из _Sandbox;
+нет ли неиспользуемых аудио/видео.
+17. Scene Loading Baseline
+17.1. Что измерять
+Измерить:
+Station → Expedition 01
+Expedition 01 → Station
+Фиксировать:
+load time
+visible freeze
+player spawn correctness
+input after load
+UI state after load
+17.2. Цель
+Для First Playable:
+загрузка должна быть стабильной и без поломки состояния
+Скорость важна, но не критична, если сцены маленькие.
+18. Optimization Pass
+18.1. Что можно оптимизировать в Sprint 08
+Только простые вещи:
+отключить лишние realtime shadows;
+убрать лишние dynamic lights;
+проверить fog intensity/cost;
+проверить VFX particle count;
+отключить тяжёлые debug objects;
+убрать неиспользуемые объекты из сцен;
+проверить texture import settings;
+проверить audio compression;
+проверить collider complexity;
+проверить post-processing.
+18.2. Что НЕ делать
+Не делать:
+глубокий render pipeline rewrite;
+сложный addressables pipeline;
+aggressive asset bundling;
+shader rewrite;
+LOD system для всего проекта;
+occlusion culling pass;
+сложную streaming system.
+Это позже.
+19. LOW Preset Assumptions
+19.1. LOW должен предполагать
+real-time shadows off or minimal
+dynamic lights minimal
+fog controlled
+VFX reduced
+post-processing reduced
+texture quality reduced
+baked lighting as base
+19.2. Что проверить уже сейчас
+Даже без полноценного меню настроек нужно проверить руками:
+можно ли выключить realtime shadows;
+не ломается ли читаемость без realtime shadows;
+важные объекты видны без дорогих эффектов;
+IO trace читается без heavy bloom;
+Expedition 01 читается на упрощённом освещении.
+20. Bug Tracking Rules
+20.1. Формат бага
+Каждый баг фиксировать так:
+BUG-S08-001
+Title:
+Priority:
+Location:
+Steps:
+Expected:
+Actual:
+Notes:
+Status:
+20.2. Пример
+BUG-S08-004
+Title:
+Cursor remains visible after closing Terminal.
+Priority:
+Critical
+Location:
+Station_FirstPlayable / Terminal UI
+Steps:
+1. Restore station power.
+2. Open terminal.
+3. Close terminal with Esc.
+Expected:
+Cursor hidden and camera control restored.
+Actual:
+Cursor remains visible and camera does not rotate.
+Notes:
+Happens only in standalone build.
+Status:
+Open
+21. First Playable Technical Report
+21.1. Что должен содержать отчёт
+В конце Sprint 08 должен быть короткий отчёт:
+Build version
+Build date
+Scenes included
+Full flow status
+Known blockers
+Known critical bugs
+FPS baseline
+Memory baseline
+Build size
+Loading baseline
+Save placeholder status
+Top risks
+Must-fix before First Playable Lock
+21.2. Формат отчёта
+NERA First Playable Technical Report — Sprint 08
+Build:
+Date:
+Full Flow:
+Status:
+Performance:
+Station FPS:
+Expedition FPS:
+Worst area:
+Memory:
+Start:
+After Expedition:
+After Return:
+Build Size:
+Loading:
+Station → Expedition:
+Expedition → Station:
+Known Blockers:
+Known Critical Bugs:
+Must-Fix:
+Notes:
+22. Sprint 08 Tasks
+22.1. Full Flow QA
+TASK-S08-001 — Play full First Playable flow in Editor
+TASK-S08-002 — Play full First Playable flow in standalone build
+TASK-S08-003 — Confirm no debug is required
+TASK-S08-004 — Confirm final objective hint appears
+TASK-S08-005 — Record full flow issues
+22.2. Build QA
+TASK-S08-006 — Create Sprint 08 standalone build
+TASK-S08-007 — Verify Build Settings scenes
+TASK-S08-008 — Verify game starts correctly
+TASK-S08-009 — Verify scene transitions in build
+TASK-S08-010 — Verify save/load/reset in build
+22.3. Input / Cursor QA
+TASK-S08-011 — Test gameplay input
+TASK-S08-012 — Test terminal input
+TASK-S08-013 — Test Esc close terminal
+TASK-S08-014 — Test input after scene transition
+TASK-S08-015 — Test input after save/load/reset
+22.4. Interaction QA
+TASK-S08-016 — Test Station Power Core interaction
+TASK-S08-017 — Test Terminal interaction
+TASK-S08-018 — Test Ancient Record interaction
+TASK-S08-019 — Test NERA Memory Core interaction
+TASK-S08-020 — Test Return Beacon interaction
+TASK-S08-021 — Test one-time interaction disable
+22.5. Terminal QA
+TASK-S08-022 — Test Status section
+TASK-S08-023 — Test Drone section
+TASK-S08-024 — Test Expeditions section
+TASK-S08-025 — Test Research section
+TASK-S08-026 — Test Library section
+TASK-S08-027 — Test Translation section
+TASK-S08-028 — Test UI refresh after state changes
+22.6. Save QA
+TASK-S08-029 — Test Debug Save
+TASK-S08-030 — Test Debug Load
+TASK-S08-031 — Test Debug Reset
+TASK-S08-032 — Check save file path
+TASK-S08-033 — Check state after loading save
+TASK-S08-034 — Check UI after loading save
+22.7. Performance Baseline
+TASK-S08-035 — Measure FPS in Station Offline
+TASK-S08-036 — Measure FPS in Station Online
+TASK-S08-037 — Measure FPS with Terminal Open
+TASK-S08-038 — Measure FPS in Expedition 01 Start
+TASK-S08-039 — Measure FPS near Ancient Structure
+TASK-S08-040 — Measure FPS near IO Trace
+TASK-S08-041 — Record CPU/GPU frame time where possible
+22.8. Memory / Build Size / Loading
+TASK-S08-042 — Record RAM usage at start
+TASK-S08-043 — Record RAM usage after Expedition load
+TASK-S08-044 — Record RAM usage after return to Station
+TASK-S08-045 — Record build size
+TASK-S08-046 — Record Station → Expedition load time
+TASK-S08-047 — Record Expedition → Station load time
+22.9. Simple Optimization
+TASK-S08-048 — Disable unnecessary realtime shadows
+TASK-S08-049 — Review dynamic lights
+TASK-S08-050 — Review VFX particle counts
+TASK-S08-051 — Review post-processing cost
+TASK-S08-052 — Review texture import settings
+TASK-S08-053 — Remove unused debug objects from build scenes
+22.10. Report
+TASK-S08-054 — Create bug list
+TASK-S08-055 — Categorize bugs by priority
+TASK-S08-056 — Create Sprint 08 Technical Report
+TASK-S08-057 — Define must-fix list before First Playable Lock
+23. Рекомендуемый порядок выполнения
+День 1–2
+Create standalone build
+Full flow QA in Editor
+Full flow QA in build
+Record blockers and critical bugs
+День 3–4
+Input/cursor QA
+Interaction QA
+Terminal UI QA
+Save/load/reset QA
+День 5–6
+Performance measurements
+Memory measurements
+Build size check
+Scene loading measurements
+День 7–8
+Simple optimization pass
+Fix blockers
+Fix critical bugs
+Retest full flow
+День 9–10
+Final Sprint 08 build
+Technical report
+Must-fix list
+First Playable lock readiness decision
+24. Критерии готовности Sprint 08
+Sprint 08 считается готовым, если:
+24.1. Full Flow
+полный flow проходится в Editor;
+полный flow проходится в standalone build;
+debug не требуется;
+финальный hint появляется;
+игрок не застревает.
+24.2. Build
+билд собирается;
+билд запускается;
+обе сцены загружаются;
+переходы работают;
+save/load/reset работают.
+24.3. QA
+создан список багов;
+все Blocker bugs исправлены;
+Critical bugs либо исправлены, либо явно попали в must-fix;
+Major bugs зафиксированы;
+Minor bugs не блокируют milestone.
+24.4. Performance
+FPS baseline записан;
+memory baseline записан;
+build size записан;
+loading time записан;
+worst performance areas известны.
+24.5. Optimization
+лишние realtime shadows проверены;
+лишние dynamic lights проверены;
+очевидно тяжёлые VFX проверены;
+неиспользуемые debug objects убраны из build scenes;
+LOW assumptions зафиксированы.
+25. Что не делать в Sprint 08
+Не делать:
+новые системы
+новую экспедицию
+новый контент
+новый UI-дизайн
+новую архитектуру save
+полный optimization rewrite
+addressables pipeline
+Steam features
+graphics settings menu
+Главный фокус:
+QA + baseline + critical fixes
+26. Риски Sprint 08
+26.1. Риск: начать фиксить всё подряд
+Проблема:
+QA найдёт много мелких проблем, и можно утонуть в minor fixes.
+Решение:
+Сначала Blocker.
+Потом Critical.
+Потом Major.
+Minor — только если быстро.
+26.2. Риск: начать преждевременную оптимизацию
+Проблема:
+Можно потратить много времени на глубокую оптимизацию без реальных замеров.
+Решение:
+Сначала baseline.
+Потом простые очевидные правки.
+Глубокую оптимизацию делать позже.
+26.3. Риск: игнорировать билд
+Проблема:
+В Editor всё работает, а билд ломается.
+Решение:
+Sprint 08 считается готовым только после standalone build test.
+26.4. Риск: переписать save
+Проблема:
+Save placeholder может потянуть полноценную save architecture.
+Решение:
+Сейчас нужен только First Playable state.
+Без slots, autosave, cloud, profiles.
+27. Главный результат Sprint 08
+После Sprint 08 у проекта должен быть технический baseline First Playable:
+мы знаем, что работает
+мы знаем, что ломается
+мы знаем, где просадки
+мы знаем, что нужно исправить перед lock
+Это переводит проект из состояния:
+“кажется, работает”
+в состояние:
+“проверено, измерено, зафиксировано”

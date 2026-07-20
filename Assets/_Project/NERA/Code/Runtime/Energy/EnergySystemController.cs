@@ -15,7 +15,6 @@ namespace NERA.Energy
         private sealed class SolarRecord
         {
             public float OutputMultiplier;
-            public float Contamination;
         }
 
         private sealed class ConsumerRecord
@@ -80,7 +79,6 @@ namespace NERA.Energy
             if (deltaTime <= 0f)
                 return;
 
-            UpdateSolarContamination(deltaTime);
             CurrentGeneration = CalculateGeneration();
             RefreshState();
             RefreshConsumers();
@@ -138,8 +136,7 @@ namespace NERA.Energy
 
         public bool RegisterSolarPanel(
             string panelId,
-            float outputMultiplier,
-            float initialContamination
+            float outputMultiplier
         )
         {
             if (string.IsNullOrWhiteSpace(panelId))
@@ -155,30 +152,9 @@ namespace NERA.Energy
                 panelId,
                 new SolarRecord
                 {
-                    OutputMultiplier = Mathf.Max(0f, outputMultiplier),
-                    Contamination = Mathf.Clamp01(initialContamination)
+                    OutputMultiplier = Mathf.Max(0f, outputMultiplier)
                 }
             );
-            return true;
-        }
-
-        public float GetSolarContamination(string panelId)
-        {
-            return solarPanels.TryGetValue(panelId, out SolarRecord panel)
-                ? panel.Contamination
-                : 0f;
-        }
-
-        public bool CleanSolarPanel(string panelId)
-        {
-            if (!solarPanels.TryGetValue(panelId, out SolarRecord panel) ||
-                panel.Contamination <= 0f)
-            {
-                return false;
-            }
-
-            panel.Contamination = 0f;
-            EnergyChanged?.Invoke();
             return true;
         }
 
@@ -259,9 +235,6 @@ namespace NERA.Energy
 
             currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
 
-            foreach (SolarRecord panel in solarPanels.Values)
-                panel.Contamination = 0f;
-
             RefreshState();
             RefreshConsumers();
             EnergyChanged?.Invoke();
@@ -295,29 +268,9 @@ namespace NERA.Energy
             foreach (SolarRecord panel in solarPanels.Values)
             {
                 total += baseOutput *
-                         panel.OutputMultiplier *
-                         (1f - panel.Contamination);
+                         panel.OutputMultiplier;
             }
             return total;
-        }
-
-        private void UpdateSolarContamination(float deltaTime)
-        {
-            StationEnvironmentController environment =
-                StationEnvironmentController.Instance;
-            if (environment == null ||
-                environment.Weather != StationWeather.Sandstorm)
-            {
-                return;
-            }
-
-            foreach (SolarRecord panel in solarPanels.Values)
-            {
-                panel.Contamination = Mathf.Clamp01(
-                    panel.Contamination +
-                    Config.SandstormContaminationPerSecond * deltaTime
-                );
-            }
         }
 
         private float CalculateConsumption()
@@ -367,6 +320,23 @@ namespace NERA.Energy
         {
             if (Instance == this)
                 Instance = null;
+        }
+    }
+
+    internal static class StationEnergyDeviceId
+    {
+        public static string Build(Component component, string prefix)
+        {
+            string path = component.gameObject.scene.path;
+            Transform current = component.transform;
+
+            while (current != null)
+            {
+                path += $"/{current.name}[{current.GetSiblingIndex()}]";
+                current = current.parent;
+            }
+
+            return $"{prefix}:{path}";
         }
     }
 }

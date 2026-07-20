@@ -23,5 +23,5 @@ MonoBehaviour:
   droneScanDuration: 5
   initialState: 0
   mapSymbol: 1
-  mapSectorIndex: 8
+  mapSectorIndex: 0
   mapPreview: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}

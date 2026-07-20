@@ -15,19 +15,7 @@ namespace NERA.Enemies
             Dead
         }
 
-        [Header("Blue IO")]
-        [SerializeField, Min(1f)] private float maxHealth = 30f;
-        [SerializeField, Min(1f)] private float detectionRadius = 10f;
-        [SerializeField, Min(0.5f)] private float attackRange = 6f;
-        [SerializeField, Min(0f)] private float moveSpeed = 2f;
-        [SerializeField, Min(0.1f)] private float hoverHeight = 1.6f;
-
-        [Header("Energy Attack")]
-        [SerializeField, Min(0.1f)] private float attackCooldown = 2f;
-        [SerializeField, Min(0.1f)] private float projectileSpeed = 8f;
-        [SerializeField, Min(0.1f)] private float projectileLifetime = 4f;
-        [SerializeField, Min(0f)] private float projectileDamage = 10f;
-        [SerializeField] private Color energyColor = new Color(0.1f, 0.65f, 1f);
+        [SerializeField] private IOEnemyConfig config;
 
         private Transform target;
         private PlayerHealth targetHealth;
@@ -41,16 +29,19 @@ namespace NERA.Enemies
 
         private void Awake()
         {
-            currentHealth = maxHealth;
+            currentHealth = MaxHealth;
             baseY = transform.position.y;
 
             Renderer targetRenderer = GetComponentInChildren<Renderer>();
             if (targetRenderer != null)
             {
                 runtimeMaterial = targetRenderer.material;
-                runtimeMaterial.color = energyColor;
+                runtimeMaterial.color = EnergyColor;
                 runtimeMaterial.EnableKeyword("_EMISSION");
-                runtimeMaterial.SetColor("_EmissionColor", energyColor * 2.5f);
+                runtimeMaterial.SetColor(
+                    "_EmissionColor",
+                    EnergyColor * EmissionIntensity
+                );
             }
         }
 
@@ -70,7 +61,7 @@ namespace NERA.Enemies
             }
 
             float distance = Vector3.Distance(transform.position, target.position);
-            if (distance > detectionRadius)
+            if (distance > DetectionRadius)
             {
                 ClearTarget();
                 state = State.Idle;
@@ -80,7 +71,7 @@ namespace NERA.Enemies
             MarkEncountered();
             FaceTarget();
 
-            if (distance > attackRange)
+            if (distance > AttackRange)
             {
                 state = State.Pursuing;
                 PursueTarget();
@@ -123,7 +114,7 @@ namespace NERA.Enemies
             if (playerHealth == null || !playerHealth.IsAlive)
                 return;
 
-            if (Vector3.Distance(transform.position, player.transform.position) > detectionRadius)
+            if (Vector3.Distance(transform.position, player.transform.position) > DetectionRadius)
                 return;
 
             target = player.transform;
@@ -161,7 +152,7 @@ namespace NERA.Enemies
             transform.position = Vector3.MoveTowards(
                 transform.position,
                 destination,
-                moveSpeed * Time.deltaTime);
+                MoveSpeed * Time.deltaTime);
         }
 
         private void TryAttack()
@@ -176,17 +167,19 @@ namespace NERA.Enemies
             if (Time.time < nextAttackTime)
                 return;
 
-            nextAttackTime = Time.time + attackCooldown;
+            nextAttackTime = Time.time + AttackCooldown;
 
             Vector3 origin = transform.position + transform.forward * 0.8f;
             Vector3 direction = (target.position + Vector3.up - origin).normalized;
 
-            GameObject projectile = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            GameObject projectile = ProjectilePrefab != null
+                ? Instantiate(ProjectilePrefab)
+                : GameObject.CreatePrimitive(PrimitiveType.Sphere);
             projectile.name = "IO_Energy_Projectile";
             projectile.transform.SetPositionAndRotation(
                 origin,
                 Quaternion.LookRotation(direction));
-            projectile.transform.localScale = Vector3.one * 0.22f;
+            projectile.transform.localScale = Vector3.one * ProjectileScale;
 
             Collider projectileCollider = projectile.GetComponent<Collider>();
             if (projectileCollider != null)
@@ -196,18 +189,21 @@ namespace NERA.Enemies
             if (projectileRenderer != null)
             {
                 Material projectileMaterial = projectileRenderer.material;
-                projectileMaterial.color = energyColor;
+                projectileMaterial.color = EnergyColor;
                 projectileMaterial.EnableKeyword("_EMISSION");
-                projectileMaterial.SetColor("_EmissionColor", energyColor * 4f);
+                projectileMaterial.SetColor(
+                    "_EmissionColor",
+                    EnergyColor * ProjectileEmissionIntensity
+                );
             }
 
             IOEnergyProjectile energyProjectile =
                 projectile.AddComponent<IOEnergyProjectile>();
             energyProjectile.Initialize(
                 direction,
-                projectileSpeed,
-                projectileDamage,
-                projectileLifetime,
+                ProjectileSpeed,
+                ProjectileDamage,
+                ProjectileLifetime,
                 gameObject);
         }
 
@@ -222,7 +218,8 @@ namespace NERA.Enemies
         private void Hover()
         {
             Vector3 position = transform.position;
-            position.y = baseY + Mathf.Sin(Time.time * 2f) * 0.15f;
+            position.y = baseY +
+                Mathf.Sin(Time.time * HoverFrequency) * HoverAmplitude;
             transform.position = position;
         }
 
@@ -235,14 +232,14 @@ namespace NERA.Enemies
 
         private void SpawnResearchDrop()
         {
-            GameObject drop = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            drop.name = "IO_Blue_Energy_Stone";
-            drop.transform.position = transform.position;
-            drop.transform.localScale = Vector3.one * 0.3f;
+            if (DeathDropPrefab == null)
+                return;
 
-            Renderer dropRenderer = drop.GetComponent<Renderer>();
-            if (dropRenderer != null)
-                dropRenderer.material.color = energyColor;
+            Instantiate(
+                DeathDropPrefab,
+                transform.position + DeathDropOffset,
+                Quaternion.identity
+            );
         }
 
         private void OnDisable()
@@ -258,12 +255,26 @@ namespace NERA.Enemies
                 Destroy(runtimeMaterial);
         }
 
-        private void OnValidate()
-        {
-            maxHealth = Mathf.Max(1f, maxHealth);
-            detectionRadius = Mathf.Max(1f, detectionRadius);
-            attackRange = Mathf.Clamp(attackRange, 0.5f, detectionRadius);
-            hoverHeight = Mathf.Max(0.1f, hoverHeight);
-        }
+        private float MaxHealth => config != null ? config.MaxHealth : 30f;
+        private float DetectionRadius => config != null ? config.DetectionRadius : 10f;
+        private float AttackRange => config != null ? config.AttackRange : 6f;
+        private float MoveSpeed => config != null ? config.MoveSpeed : 2f;
+        private float HoverAmplitude => config != null ? config.HoverAmplitude : 0.15f;
+        private float HoverFrequency => config != null ? config.HoverFrequency : 2f;
+        private float AttackCooldown => config != null ? config.AttackCooldown : 2f;
+        private float ProjectileSpeed => config != null ? config.ProjectileSpeed : 8f;
+        private float ProjectileLifetime => config != null ? config.ProjectileLifetime : 4f;
+        private float ProjectileDamage => config != null ? config.ProjectileDamage : 10f;
+        private float ProjectileScale => config != null ? config.ProjectileScale : 0.22f;
+        private GameObject ProjectilePrefab => config != null ? config.ProjectilePrefab : null;
+        private Color EnergyColor => config != null
+            ? config.EnergyColor
+            : new Color(0.1f, 0.65f, 1f);
+        private float EmissionIntensity => config != null ? config.EmissionIntensity : 2.5f;
+        private float ProjectileEmissionIntensity => config != null
+            ? config.ProjectileEmissionIntensity
+            : 4f;
+        private GameObject DeathDropPrefab => config != null ? config.DeathDropPrefab : null;
+        private Vector3 DeathDropOffset => config != null ? config.DeathDropOffset : Vector3.zero;
     }
 }

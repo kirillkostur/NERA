@@ -33,6 +33,16 @@ namespace NERA.Inventory
             }
         }
 
+        public void SetKeyLabel(string text, bool visible)
+        {
+            CacheComponents();
+            if (numberLabel == null)
+                return;
+
+            numberLabel.gameObject.SetActive(visible);
+            numberLabel.text = text;
+        }
+
         private void Awake()
         {
             CacheComponents();
@@ -49,12 +59,12 @@ namespace NERA.Inventory
             if (numberLabel != null)
             {
                 numberLabel.gameObject.SetActive(showQuickAccessNumber);
-                numberLabel.text = (index + 1).ToString();
+                numberLabel.text = string.Empty;
             }
 
             if (laboratoryDrag != null)
             {
-                laboratoryDrag.enabled = !showQuickAccessNumber;
+                laboratoryDrag.enabled = true;
                 laboratoryDrag.Initialize(null, rootCanvas);
             }
         }
@@ -85,7 +95,11 @@ namespace NERA.Inventory
             if (canvasGroup == null)
                 canvasGroup = GetComponent<CanvasGroup>();
             if (laboratoryDrag == null)
+            {
                 laboratoryDrag = GetComponent<LaboratoryInventoryItemDrag>();
+                if (laboratoryDrag == null)
+                    laboratoryDrag = gameObject.AddComponent<LaboratoryInventoryItemDrag>();
+            }
         }
     }
 }

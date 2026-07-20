@@ -27,6 +27,7 @@ namespace NERA.Research
 
         private readonly HashSet<string> analyzedResearchIds = new HashSet<string>();
         [SerializeField] private StationPowerController stationPower;
+        [SerializeField] private LibraryController library;
 
         public IReadOnlyCollection<string> AnalyzedResearchIds => analyzedResearchIds;
         public ResearchState State { get; private set; }
@@ -36,7 +37,6 @@ namespace NERA.Research
 
         private PlayerInventory sourceInventory;
         private float analysisRemaining;
-        private EnergySystemController registeredEnergySystem;
 
         private void Awake()
         {
@@ -47,8 +47,6 @@ namespace NERA.Research
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
-
             EnsureEnergyRegistration();
         }
 
@@ -76,6 +74,16 @@ namespace NERA.Research
             }
 
             ResearchDefinition definition = LoadedItem.ResearchDefinition;
+            if (definition == null)
+            {
+                StatusMessage = "This item does not require analysis.";
+                SetState(ResearchState.ItemLoaded);
+                EnergySystemController.Instance?.SetConsumerActive(
+                    LaboratoryConsumerId,
+                    false
+                );
+                return;
+            }
             StatusMessage = $"Scanning {LoadedItem.DisplayName}...";
             analysisRemaining = Mathf.Max(0f, analysisRemaining - deltaTime);
             Progress = 1f - analysisRemaining / definition.AnalysisDuration;
@@ -86,22 +94,130 @@ namespace NERA.Research
 
         public bool LoadItem(ItemData item, PlayerInventory inventory)
         {
-            if (State == ResearchState.Analyzing || LoadedItem != null || item == null || inventory == null ||
-                item.ItemType != ItemType.ResearchSample || item.ResearchDefinition == null || !inventory.RemoveItem(item))
+            if (!CanLoadItem(item) || inventory == null)
+                return false;
+
+            InventorySlotGroup group = PlayerInventory.GetSlotGroup(item.ItemType);
+            System.Collections.Generic.IReadOnlyList<ItemData> slots = group switch
             {
+                InventorySlotGroup.Anomaly => inventory.AnomalySlots,
+                InventorySlotGroup.QuickAccess => inventory.QuickAccessSlots,
+                _ => inventory.BackpackSlots
+            };
+
+            for (int index = 0; index < slots.Count; index++)
+            {
+                if (slots[index] == item)
+                    return LoadItem(item, inventory, group, index);
+            }
+
+            return false;
+        }
+
+        public bool LoadItem(
+            ItemData item,
+            PlayerInventory inventory,
+            InventorySlotGroup sourceGroup,
+            int sourceIndex
+        )
+        {
+            if (!CanLoadItem(item))
+                return false;
+
+            if (State == ResearchState.Analyzing || item == null || inventory == null ||
+                inventory.GetItem(sourceGroup, sourceIndex) != item)
+            {
+                return false;
+            }
+
+            ItemData previousLoadedItem = LoadedItem;
+            if (previousLoadedItem != null &&
+                PlayerInventory.GetSlotGroup(previousLoadedItem.ItemType) != sourceGroup)
+            {
+                return false;
+            }
+
+            if (!inventory.RemoveItemAt(sourceGroup, sourceIndex, out _))
+                return false;
+
+            if (previousLoadedItem != null &&
+                !inventory.TrySetItemAt(sourceGroup, sourceIndex, previousLoadedItem))
+            {
+                inventory.TrySetItemAt(sourceGroup, sourceIndex, item);
                 return false;
             }
 
             LoadedItem = item;
             sourceInventory = inventory;
             ResearchDefinition definition = item.ResearchDefinition;
-            bool alreadyAnalyzed = analyzedResearchIds.Contains(definition.ResearchId);
+            bool researchable = IsResearchable(item);
+            bool alreadyAnalyzed = researchable &&
+                analyzedResearchIds.Contains(definition.ResearchId);
             Progress = alreadyAnalyzed ? 1f : 0f;
-            StatusMessage = alreadyAnalyzed
+            StatusMessage = !researchable
+                ? item.DisplayName
+                : alreadyAnalyzed
                 ? $"{item.DisplayName} has already been analyzed."
                 : $"{item.DisplayName} loaded. Ready to scan.";
-            SetState(alreadyAnalyzed ? ResearchState.Complete : ResearchState.ItemLoaded);
+
+            if (alreadyAnalyzed)
+                UnlockLibraryEntry(definition);
+
+            SetState(researchable && alreadyAnalyzed
+                ? ResearchState.Complete
+                : ResearchState.ItemLoaded);
             return true;
+        }
+
+        public bool MoveLoadedItemToInventory(
+            PlayerInventory inventory,
+            InventorySlotGroup destinationGroup,
+            int destinationIndex
+        )
+        {
+            if (State == ResearchState.Analyzing || LoadedItem == null || inventory == null)
+                return false;
+
+            ItemData itemToMove = LoadedItem;
+            if (PlayerInventory.GetSlotGroup(itemToMove.ItemType) != destinationGroup)
+                return false;
+
+            if (!inventory.TryReplaceItemAt(
+                    destinationGroup,
+                    destinationIndex,
+                    itemToMove,
+                    out ItemData replacedItem
+                ))
+            {
+                return false;
+            }
+
+            LoadedItem = replacedItem;
+            sourceInventory = replacedItem != null ? inventory : null;
+            Progress = 0f;
+
+            if (LoadedItem == null)
+            {
+                StatusMessage = "Laboratory ready.";
+                SetState(ResearchState.Idle);
+            }
+            else
+            {
+                RefreshLoadedItemState();
+            }
+
+            return true;
+        }
+
+        public bool IsResearchable(ItemData item)
+        {
+            return item?.ResearchDefinition?.UnlockedEntry != null &&
+                   !string.IsNullOrWhiteSpace(item.ResearchDefinition.ResearchId);
+        }
+
+        public bool CanLoadItem(ItemData item)
+        {
+            return item != null;
         }
 
         public bool IsAnalyzed(ItemData item)
@@ -132,6 +248,7 @@ namespace NERA.Research
         public bool CanStartAnalysis =>
             State == ResearchState.ItemLoaded &&
             LoadedItem != null &&
+            IsResearchable(LoadedItem) &&
             !IsAnalyzed(LoadedItem) &&
             HasOperationalPower;
 
@@ -139,6 +256,12 @@ namespace NERA.Research
         {
             if (State != ResearchState.ItemLoaded || LoadedItem == null)
                 return false;
+
+            if (!IsResearchable(LoadedItem))
+            {
+                StatusMessage = "This item is already identified and does not require analysis.";
+                return false;
+            }
 
             StationPowerController power = stationPower != null
                 ? stationPower
@@ -181,10 +304,15 @@ namespace NERA.Research
             stationPower = powerSource;
         }
 
+        public void SetLibrary(LibraryController libraryController)
+        {
+            library = libraryController;
+        }
+
         private void EnsureEnergyRegistration()
         {
             EnergySystemController energy = EnergySystemController.Instance;
-            if (energy == null || registeredEnergySystem == energy)
+            if (energy == null)
                 return;
 
             energy.RegisterConsumer(
@@ -196,15 +324,12 @@ namespace NERA.Research
                 LaboratoryConsumerId,
                 State == ResearchState.Analyzing
             );
-            registeredEnergySystem = energy;
         }
 
         private void CompleteAnalysis(ResearchDefinition definition)
         {
             analyzedResearchIds.Add(definition.ResearchId);
-
-            if (definition.UnlockedEntry != null && LibraryController.Instance != null)
-                LibraryController.Instance.Unlock(definition.UnlockedEntry.EntryId);
+            UnlockLibraryEntry(definition);
 
             StatusMessage = $"Analysis complete: {definition.DisplayName}";
             string completedId = definition.ResearchId;
@@ -218,6 +343,34 @@ namespace NERA.Research
 
             ResearchAnalyzed?.Invoke(completedId);
             Debug.Log($"Research: analyzed '{completedId}'.", this);
+        }
+
+        private void UnlockLibraryEntry(ResearchDefinition definition)
+        {
+            if (definition?.UnlockedEntry == null)
+                return;
+
+            LibraryController targetLibrary = library != null
+                ? library
+                : LibraryController.Instance;
+            if (targetLibrary == null)
+                return;
+
+            targetLibrary.Unlock(definition.UnlockedEntry);
+        }
+
+        public void RestoreAnalyzed(IEnumerable<string> researchIds)
+        {
+            analyzedResearchIds.Clear();
+
+            if (researchIds == null)
+                return;
+
+            foreach (string researchId in researchIds)
+            {
+                if (!string.IsNullOrWhiteSpace(researchId))
+                    analyzedResearchIds.Add(researchId);
+            }
         }
 
         public bool RetrieveLoadedItem()
@@ -237,6 +390,28 @@ namespace NERA.Research
             StatusMessage = "Laboratory ready.";
             SetState(ResearchState.Idle);
             return true;
+        }
+
+        private void RefreshLoadedItemState()
+        {
+            ResearchDefinition definition = LoadedItem?.ResearchDefinition;
+            bool researchable = IsResearchable(LoadedItem);
+            bool alreadyAnalyzed = researchable &&
+                analyzedResearchIds.Contains(definition.ResearchId);
+
+            Progress = alreadyAnalyzed ? 1f : 0f;
+            StatusMessage = !researchable
+                ? LoadedItem.DisplayName
+                : alreadyAnalyzed
+                ? $"{LoadedItem.DisplayName} has already been analyzed."
+                : $"{LoadedItem.DisplayName} loaded. Ready to scan.";
+
+            if (alreadyAnalyzed)
+                UnlockLibraryEntry(definition);
+
+            SetState(researchable && alreadyAnalyzed
+                ? ResearchState.Complete
+                : ResearchState.ItemLoaded);
         }
 
         private void SetState(ResearchState newState)

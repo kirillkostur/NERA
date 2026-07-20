@@ -1,8 +1,17 @@
 using UnityEngine;
 using NERA.Research;
+using NERA.Combat;
 
 namespace NERA.Items
 {
+    public enum QuickAccessAction
+    {
+        None,
+        ToggleLight,
+        Scan,
+        Fire
+    }
+
     [CreateAssetMenu(
         fileName = "Item_New",
         menuName = "NERA/Items/Item Data"
@@ -22,8 +31,18 @@ namespace NERA.Items
         [SerializeField] private WorldItem worldPrefab;
         [SerializeField] private GameObject equippedVisualPrefab;
 
+        [Header("Equipment")]
+        [SerializeField] private string equipmentAnchorName = "mixamorig1:RightHand";
+        [SerializeField] private Vector3 equippedLocalPosition;
+        [SerializeField] private Vector3 equippedLocalEulerAngles;
+        [SerializeField] private QuickAccessAction quickAccessAction;
+        [SerializeField] private KeyCode useKey = KeyCode.Mouse0;
+
         [Header("Research")]
         [SerializeField] private ResearchDefinition researchDefinition;
+
+        [Header("Weapon")]
+        [SerializeField] private WeaponDefinition weaponDefinition;
 
         public string ItemId => itemId;
         public string DisplayName => displayName;
@@ -32,7 +51,13 @@ namespace NERA.Items
         public Sprite Icon => icon;
         public WorldItem WorldPrefab => worldPrefab;
         public GameObject EquippedVisualPrefab => equippedVisualPrefab;
+        public string EquipmentAnchorName => equipmentAnchorName;
+        public Vector3 EquippedLocalPosition => equippedLocalPosition;
+        public Vector3 EquippedLocalEulerAngles => equippedLocalEulerAngles;
+        public QuickAccessAction QuickAccessAction => quickAccessAction;
+        public KeyCode UseKey => useKey;
         public ResearchDefinition ResearchDefinition => researchDefinition;
+        public WeaponDefinition WeaponDefinition => weaponDefinition;
 
         private void OnValidate()
         {
