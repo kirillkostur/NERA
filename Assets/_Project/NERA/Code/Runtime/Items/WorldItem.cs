@@ -12,14 +12,23 @@ namespace NERA.Items
         [SerializeField] private ItemData itemData;
         [SerializeField] private bool destroyAfterPickup = true;
 
+        private ItemInstance itemInstance;
+
         public ItemData ItemData => itemData;
+        public ItemInstance ItemInstance => itemInstance;
 
         public void Initialize(ItemData item)
         {
-            itemData = item;
+            Initialize(ItemInstance.Create(item));
+        }
+
+        public void Initialize(ItemInstance instance)
+        {
+            itemInstance = instance;
+            itemData = instance?.ItemData;
             destroyAfterPickup = true;
             SetActionText("Pick Up");
-            SetAvailable(item != null, item == null ? "Item data missing" : string.Empty);
+            SetAvailable(itemData != null, itemData == null ? "Item data missing" : string.Empty);
         }
 
         private void Reset()
@@ -59,7 +68,8 @@ namespace NERA.Items
                 return;
             }
 
-            if (!inventory.AddItem(itemData))
+            ItemInstance instance = itemInstance ?? ItemInstance.Create(itemData);
+            if (!inventory.AddItem(instance))
                 return;
 
             LibraryController.Instance?.RegisterKnownItem(itemData);

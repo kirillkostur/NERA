@@ -4,9 +4,17 @@ using System.Collections.Generic;
 namespace NERA.Save
 {
     [Serializable]
+    public sealed class InventoryItemSaveData
+    {
+        public string instanceId;
+        public string itemId;
+        public float charge;
+    }
+
+    [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 4;
+        public int version = 6;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;
@@ -20,6 +28,11 @@ namespace NERA.Save
         public List<string> backpackSlotItemIds = new List<string>();
         public List<string> anomalySlotItemIds = new List<string>();
         public List<string> quickAccessSlotItemIds = new List<string>();
+        public List<InventoryItemSaveData> backpackItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> anomalyItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> quickAccessItems = new List<InventoryItemSaveData>();
+        public InventoryItemSaveData chargingTableItem;
+        public InventoryItemSaveData laboratoryItem;
         public List<string> analyzedResearchIds = new List<string>();
         public List<string> unlockedLibraryEntryIds = new List<string>();
         public List<string> knownLibraryItemIds = new List<string>();

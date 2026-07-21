@@ -26,3 +26,4 @@ MonoBehaviour:
   useKey: 114
   researchDefinition: {fileID: 0}
   weaponDefinition: {fileID: 0}
+  energyDefinition: {fileID: 11400000, guid: a525d302d3699854f967d8018da4a260, type: 2}

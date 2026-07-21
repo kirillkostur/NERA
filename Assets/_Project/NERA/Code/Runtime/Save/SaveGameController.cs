@@ -16,6 +16,7 @@ namespace NERA.Save
     public sealed class SaveGameController : MonoBehaviour
     {
         [SerializeField] private string fileName = "nera_save.json";
+        [SerializeField] private ItemCatalogData itemDatabase;
         [SerializeField] private List<ItemData> itemCatalog = new List<ItemData>();
         [SerializeField, Min(0.05f)] private float autoSaveDelay = 0.25f;
 
@@ -27,6 +28,7 @@ namespace NERA.Save
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
         private EnergySystemController energySystem;
+        private ItemChargingController itemCharger;
         private AntennaController antenna;
         private PlayerInventory inventory;
         private ResearchController research;
@@ -189,7 +191,16 @@ namespace NERA.Save
                     inventory.QuickAccessSlots,
                     data.quickAccessSlotItemIds
                 );
+                CaptureInstances(inventory.BackpackItemInstances, data.backpackItems);
+                CaptureInstances(inventory.AnomalyItemInstances, data.anomalyItems);
+                CaptureInstances(inventory.QuickAccessItemInstances, data.quickAccessItems);
             }
+
+            if (itemCharger?.LoadedItem != null)
+                data.chargingTableItem = CaptureInstance(itemCharger.LoadedItem);
+
+            if (research?.LoadedItemInstance != null)
+                data.laboratoryItem = CaptureInstance(research.LoadedItemInstance);
 
             if (research != null)
                 data.analyzedResearchIds.AddRange(research.AnalyzedResearchIds);
@@ -236,30 +247,48 @@ namespace NERA.Save
 
             if (inventory != null)
             {
-                if (HasStructuredInventory(data))
+                if (HasInstanceInventory(data))
+                {
+                    inventory.RestoreInstanceSlots(
+                        ResolveInstances(data.backpackItems),
+                        ResolveInstances(data.anomalyItems),
+                        ResolveInstances(data.quickAccessItems)
+                    );
+                }
+                else if (HasStructuredInventory(data))
                 {
                     inventory.RestoreSlots(
                         ResolveSlots(data.backpackSlotItemIds),
                         ResolveSlots(data.anomalySlotItemIds),
                         ResolveSlots(data.quickAccessSlotItemIds)
                     );
-                    return;
                 }
-
-                List<ItemData> restoredItems = new List<ItemData>();
-
-                foreach (string itemId in data.inventoryItemIds)
+                else
                 {
-                    ItemData item = FindItem(itemId);
+                    List<ItemData> restoredItems = new List<ItemData>();
 
-                    if (item != null)
-                        restoredItems.Add(item);
-                    else
-                        Debug.LogWarning($"SaveGame: Unknown item id '{itemId}'.", this);
+                    foreach (string itemId in data.inventoryItemIds)
+                    {
+                        ItemData item = FindItem(itemId);
+
+                        if (item != null)
+                            restoredItems.Add(item);
+                        else
+                            Debug.LogWarning($"SaveGame: Unknown item id '{itemId}'.", this);
+                    }
+
+                    inventory.RestoreItems(restoredItems);
                 }
-
-                inventory.RestoreItems(restoredItems);
             }
+
+            itemCharger?.RestoreLoadedItem(
+                ResolveInstance(data.chargingTableItem),
+                inventory
+            );
+            research?.RestoreLoadedItem(
+                ResolveInstance(data.laboratoryItem),
+                inventory
+            );
         }
 
         private static bool HasStructuredInventory(SaveGameData data)
@@ -268,6 +297,86 @@ namespace NERA.Save
                 (data.backpackSlotItemIds?.Count ?? 0) > 0 ||
                 (data.anomalySlotItemIds?.Count ?? 0) > 0 ||
                 (data.quickAccessSlotItemIds?.Count ?? 0) > 0;
+        }
+
+        private static bool HasInstanceInventory(SaveGameData data)
+        {
+            return data.version >= 5 ||
+                (data.backpackItems?.Count ?? 0) > 0 ||
+                (data.anomalyItems?.Count ?? 0) > 0 ||
+                (data.quickAccessItems?.Count ?? 0) > 0;
+        }
+
+        private static void CaptureInstances(
+            IReadOnlyList<ItemInstance> source,
+            List<InventoryItemSaveData> destination
+        )
+        {
+            foreach (ItemInstance instance in source)
+            {
+                destination.Add(instance?.ItemData == null
+                    ? null
+                    : new InventoryItemSaveData
+                    {
+                        instanceId = instance.InstanceId,
+                        itemId = instance.ItemData.ItemId,
+                        charge = instance.Charge
+                    });
+            }
+        }
+
+        private static InventoryItemSaveData CaptureInstance(ItemInstance instance)
+        {
+            return instance?.ItemData == null
+                ? null
+                : new InventoryItemSaveData
+                {
+                    instanceId = instance.InstanceId,
+                    itemId = instance.ItemData.ItemId,
+                    charge = instance.Charge
+                };
+        }
+
+        private List<ItemInstance> ResolveInstances(
+            IReadOnlyList<InventoryItemSaveData> savedItems
+        )
+        {
+            if (savedItems == null)
+                return new List<ItemInstance>();
+
+            List<ItemInstance> resolved = new List<ItemInstance>(savedItems.Count);
+            foreach (InventoryItemSaveData saved in savedItems)
+            {
+                if (saved == null || string.IsNullOrWhiteSpace(saved.itemId))
+                {
+                    resolved.Add(null);
+                    continue;
+                }
+
+                ItemData item = FindItem(saved.itemId);
+                resolved.Add(item != null
+                    ? ItemInstance.Restore(saved.instanceId, item, saved.charge)
+                    : null);
+
+                if (item == null)
+                    Debug.LogWarning($"SaveGame: Unknown item id '{saved.itemId}'.", this);
+            }
+            return resolved;
+        }
+
+        private ItemInstance ResolveInstance(InventoryItemSaveData saved)
+        {
+            if (saved == null || string.IsNullOrWhiteSpace(saved.itemId))
+                return null;
+
+            ItemData item = FindItem(saved.itemId);
+            if (item == null)
+            {
+                Debug.LogWarning($"SaveGame: Unknown item id '{saved.itemId}'.", this);
+                return null;
+            }
+
+            return ItemInstance.Restore(saved.instanceId, item, saved.charge);
         }
 
         private static void CaptureSlots(
@@ -327,6 +436,9 @@ namespace NERA.Save
             if (inventory != null)
                 inventory.RestoreItems(Array.Empty<ItemData>());
 
+            itemCharger?.RestoreLoadedItem(null, inventory);
+            research?.RestoreLoadedItem(null, inventory);
+
             research?.RestoreAnalyzed(Array.Empty<string>());
             library?.RestoreUnlocked(Array.Empty<string>());
             library?.RestoreKnownItems(Array.Empty<string>());
@@ -336,7 +448,10 @@ namespace NERA.Save
 
         private ItemData FindItem(string itemId)
         {
-            foreach (ItemData item in itemCatalog)
+            if (itemDatabase != null)
+                return itemDatabase.Find(itemId);
+
+            foreach (ItemData item in LegacyCatalogItems)
             {
                 if (item != null &&
                     string.Equals(item.ItemId, itemId, StringComparison.Ordinal))
@@ -350,6 +465,9 @@ namespace NERA.Save
 
         private void CacheSystems()
         {
+            if (itemDatabase == null)
+                itemDatabase = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+
             if (discovery == null)
                 discovery = GetComponent<ExpeditionDiscoveryController>();
 
@@ -358,6 +476,9 @@ namespace NERA.Save
 
             if (energySystem == null)
                 energySystem = GetComponent<EnergySystemController>();
+
+            if (itemCharger == null)
+                itemCharger = GetComponent<ItemChargingController>();
 
             if (antenna == null)
                 antenna = GetComponent<AntennaController>();
@@ -379,7 +500,7 @@ namespace NERA.Save
             if (library == null)
                 return;
 
-            foreach (ItemData item in itemCatalog)
+            foreach (ItemData item in CatalogItems)
             {
                 library.RegisterItem(item);
 
@@ -391,6 +512,12 @@ namespace NERA.Save
                     library.Register(definition.UnlockedEntry);
             }
         }
+
+        private IEnumerable<ItemData> CatalogItems =>
+            itemDatabase != null ? itemDatabase.Items : LegacyCatalogItems;
+
+        private IEnumerable<ItemData> LegacyCatalogItems =>
+            itemCatalog ?? (IEnumerable<ItemData>)Array.Empty<ItemData>();
 
         private void Subscribe()
         {
@@ -414,6 +541,12 @@ namespace NERA.Save
 
             if (research != null)
                 research.ResearchAnalyzed += HandleResearchAnalyzed;
+
+            if (research != null)
+                research.StateChanged += HandleResearchStateChanged;
+
+            if (itemCharger != null)
+                itemCharger.LoadedItemChanged += HandleChargingItemChanged;
 
             if (library != null)
                 library.EntryUnlocked += HandleLibraryEntryUnlocked;
@@ -441,6 +574,12 @@ namespace NERA.Save
 
             if (research != null)
                 research.ResearchAnalyzed -= HandleResearchAnalyzed;
+
+            if (research != null)
+                research.StateChanged -= HandleResearchStateChanged;
+
+            if (itemCharger != null)
+                itemCharger.LoadedItemChanged -= HandleChargingItemChanged;
 
             if (library != null)
                 library.EntryUnlocked -= HandleLibraryEntryUnlocked;
@@ -477,6 +616,16 @@ namespace NERA.Save
         }
 
         private void HandleResearchAnalyzed(string _)
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleResearchStateChanged(ResearchController.ResearchState _)
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleChargingItemChanged()
         {
             RequestAutoSave();
         }

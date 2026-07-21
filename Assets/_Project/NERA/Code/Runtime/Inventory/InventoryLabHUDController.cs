@@ -1,6 +1,7 @@
 using NERA.Interaction;
 using NERA.Items;
 using NERA.Research;
+using NERA.Energy;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -31,6 +32,7 @@ namespace NERA.Inventory
         private Canvas rootCanvas;
         private GameObject inventoryPanel;
         private GameObject laboratoryPanel;
+        private GameObject chargingPanel;
         private ScrollRect backpackScrollRect;
         private Transform backpackSlotRoot;
         private TMP_Text selectedItemName;
@@ -43,6 +45,11 @@ namespace NERA.Inventory
         private TMP_Text scanButtonLabel;
         private Button scanButton;
         private Button takeButton;
+        private Image chargingSlotIcon;
+        private LaboratoryInventoryItemDrag chargingSlotDrag;
+        private LaboratoryItemDropSlot chargingDropSlot;
+        private TMP_Text chargingStatusLabel;
+        private Button chargingTakeButton;
         private PlayerInventory inventory;
         private ItemData selectedItem;
         private InventorySlotGroup selectedGroup;
@@ -52,6 +59,7 @@ namespace NERA.Inventory
         private PlayerFollowCamera followCamera;
         private bool inventoryOpen;
         private bool laboratoryOpen;
+        private bool chargingOpen;
 
         private void Awake()
         {
@@ -66,6 +74,7 @@ namespace NERA.Inventory
             CacheHierarchy();
             inventoryPanel.SetActive(false);
             laboratoryPanel.SetActive(false);
+            chargingPanel.SetActive(false);
         }
 
         private void Start()
@@ -83,12 +92,12 @@ namespace NERA.Inventory
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (inventoryOpen || laboratoryOpen)
+                if (inventoryOpen || laboratoryOpen || chargingOpen)
                     CloseAll();
                 else
                     OpenInventory();
             }
-            else if ((inventoryOpen || laboratoryOpen) &&
+            else if ((inventoryOpen || laboratoryOpen || chargingOpen) &&
                      Input.GetKeyDown(KeyCode.Escape))
             {
                 CloseAll();
@@ -96,14 +105,18 @@ namespace NERA.Inventory
 
             if (laboratoryOpen)
                 RefreshLaboratory();
+            if (chargingOpen)
+                RefreshChargingTable();
         }
 
         public void OpenInventory()
         {
             BindInventory(inventory != null ? inventory : FindFirstObjectByType<PlayerInventory>());
             laboratoryOpen = false;
+            chargingOpen = false;
             inventoryOpen = true;
             laboratoryPanel.SetActive(false);
+            chargingPanel.SetActive(false);
             inventoryPanel.SetActive(true);
             SetPlayerInput(false);
             RefreshAll();
@@ -117,9 +130,28 @@ namespace NERA.Inventory
             BindInventory(playerInventory);
 
             laboratoryOpen = true;
+            chargingOpen = false;
             inventoryOpen = true;
             inventoryPanel.SetActive(true);
             laboratoryPanel.SetActive(true);
+            chargingPanel.SetActive(false);
+            SetPlayerInput(false);
+            RefreshAll();
+        }
+
+        public void OpenChargingTable(GameObject interactor)
+        {
+            PlayerInventory playerInventory = interactor != null
+                ? interactor.GetComponentInParent<PlayerInventory>()
+                : FindFirstObjectByType<PlayerInventory>();
+            BindInventory(playerInventory);
+
+            laboratoryOpen = false;
+            chargingOpen = true;
+            inventoryOpen = true;
+            inventoryPanel.SetActive(true);
+            laboratoryPanel.SetActive(false);
+            chargingPanel.SetActive(true);
             SetPlayerInput(false);
             RefreshAll();
         }
@@ -128,10 +160,12 @@ namespace NERA.Inventory
         {
             inventoryOpen = false;
             laboratoryOpen = false;
+            chargingOpen = false;
             selectedItem = null;
             selectedIndex = -1;
             inventoryPanel.SetActive(false);
             laboratoryPanel.SetActive(false);
+            chargingPanel.SetActive(false);
             SetPlayerInput(true);
         }
 
@@ -139,6 +173,7 @@ namespace NERA.Inventory
         {
             inventoryPanel = transform.Find("InventoryPanel").gameObject;
             laboratoryPanel = transform.Find("LaboratoryPanel").gameObject;
+            chargingPanel = transform.Find("ChargingPanel").gameObject;
 
             selectedItemName = inventoryPanel.transform
                 .Find("SelectionPanel/Name")
@@ -161,6 +196,17 @@ namespace NERA.Inventory
             scanButton = laboratoryPanel.transform.Find("ScanButton").GetComponent<Button>();
             scanButtonLabel = scanButton.GetComponentInChildren<TMP_Text>();
             takeButton = laboratoryPanel.transform.Find("TakeButton").GetComponent<Button>();
+
+            Transform chargingItemSlot = chargingPanel.transform.Find("ItemSlot");
+            chargingSlotIcon = chargingItemSlot.Find("Icon").GetComponent<Image>();
+            chargingSlotDrag = chargingItemSlot.GetComponent<LaboratoryInventoryItemDrag>();
+            if (chargingSlotDrag == null)
+                chargingSlotDrag = chargingItemSlot.gameObject.AddComponent<LaboratoryInventoryItemDrag>();
+            chargingDropSlot = chargingItemSlot.GetComponent<LaboratoryItemDropSlot>();
+            if (chargingDropSlot == null)
+                chargingDropSlot = chargingItemSlot.gameObject.AddComponent<LaboratoryItemDropSlot>();
+            chargingStatusLabel = chargingPanel.transform.Find("Status").GetComponent<TMP_Text>();
+            chargingTakeButton = chargingPanel.transform.Find("TakeButton").GetComponent<Button>();
         }
 
         private void BuildSlotViews()
@@ -407,6 +453,15 @@ namespace NERA.Inventory
             scanButton.onClick.AddListener(StartScan);
             takeButton.onClick.AddListener(TakeSample);
             laboratoryDropSlot.ItemDropped += LoadSample;
+
+            Button chargingCloseButton = FindButtonInChildren(
+                chargingPanel.transform,
+                "CloseButton"
+            );
+            if (chargingCloseButton != null)
+                chargingCloseButton.onClick.AddListener(CloseAll);
+            chargingTakeButton.onClick.AddListener(TakeChargedItem);
+            chargingDropSlot.ItemDropped += LoadChargeItem;
         }
 
         private void BindSlotButtons(
@@ -526,6 +581,12 @@ namespace NERA.Inventory
             RefreshAll();
         }
 
+        private void TakeChargedItem()
+        {
+            ItemChargingController.Instance?.RetrieveLoadedItem();
+            RefreshAll();
+        }
+
         private void RefreshAll()
         {
             if (inventory == null)
@@ -553,7 +614,10 @@ namespace NERA.Inventory
             RefreshDrags(anomalyViews, inventory.AnomalySlots, InventorySlotGroup.Anomaly);
             RefreshDrags(quickViews, inventory.QuickAccessSlots, InventorySlotGroup.QuickAccess);
 
-            RefreshLaboratory();
+            if (laboratoryOpen)
+                RefreshLaboratory();
+            if (chargingOpen)
+                RefreshChargingTable();
             RefreshBackpackScrollState();
         }
 
@@ -594,6 +658,32 @@ namespace NERA.Inventory
             );
         }
 
+        private void RefreshChargingTable()
+        {
+            ItemChargingController charger = ItemChargingController.Instance;
+            ItemInstance instance = charger?.LoadedItem;
+            ItemData item = instance?.ItemData;
+            bool hasItem = item != null;
+
+            chargingSlotIcon.sprite = hasItem ? item.Icon : null;
+            chargingSlotIcon.color = hasItem && item.Icon == null
+                ? MissingIconColor
+                : Color.white;
+            chargingSlotIcon.enabled = hasItem;
+            chargingStatusLabel.text = !hasItem
+                ? charger?.StatusMessage ?? "Charging table unavailable."
+                : $"{charger.StatusMessage}\nCHARGE {Mathf.RoundToInt(instance.Charge01 * 100f)}%";
+            chargingTakeButton.interactable = hasItem;
+            chargingSlotDrag.Initialize(
+                item,
+                rootCanvas,
+                InventorySlotGroup.Backpack,
+                -1,
+                false,
+                true
+            );
+        }
+
         private void RefreshSlots(
             List<InventorySlotView> views,
             System.Collections.Generic.IReadOnlyList<ItemData> slots,
@@ -616,6 +706,22 @@ namespace NERA.Inventory
                     SelectedColor
                 );
                 RefreshSlotKeyLabel(views[i], item, group, i);
+            }
+        }
+
+        private void LoadChargeItem(LaboratoryInventoryItemDrag drag)
+        {
+            if (!chargingOpen || drag == null || drag.Item == null)
+                return;
+
+            ItemChargingController charger = ItemChargingController.Instance;
+            if (charger != null && charger.LoadItem(
+                    inventory,
+                    drag.SourceGroup,
+                    drag.SourceIndex))
+            {
+                ClearSelection();
+                RefreshAll();
             }
         }
 
@@ -727,6 +833,19 @@ namespace NERA.Inventory
         {
             if (inventory == null || drag == null)
                 return;
+
+            if (drag.IsChargingSource)
+            {
+                ItemChargingController charger = ItemChargingController.Instance;
+                if (charger != null && charger.MoveLoadedItemToInventory(
+                        inventory,
+                        destinationGroup,
+                        destinationIndex))
+                {
+                    SetSelection(destinationGroup, destinationIndex);
+                }
+                return;
+            }
 
             if (drag.IsLaboratorySource)
             {

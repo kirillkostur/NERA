@@ -44,6 +44,9 @@ namespace NERA.Items
         [Header("Weapon")]
         [SerializeField] private WeaponDefinition weaponDefinition;
 
+        [Header("Energy")]
+        [SerializeField] private ItemEnergyDefinition energyDefinition;
+
         public string ItemId => itemId;
         public string DisplayName => displayName;
         public string Description => description;
@@ -58,6 +61,7 @@ namespace NERA.Items
         public KeyCode UseKey => useKey;
         public ResearchDefinition ResearchDefinition => researchDefinition;
         public WeaponDefinition WeaponDefinition => weaponDefinition;
+        public ItemEnergyDefinition EnergyDefinition => energyDefinition;
 
         private void OnValidate()
         {

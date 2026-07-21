@@ -20,7 +20,7 @@ namespace NERA.Inventory
             new Dictionary<int, GameObject>();
         private PlayerInventory inventory;
 
-        public event Action<ItemData, QuickAccessAction> EquipmentUseRequested;
+        public event Func<ItemInstance, QuickAccessAction, bool> EquipmentUseRequested;
 
         public ItemData EquippedItem => FindPreferredQuickAccessItem();
         public GameObject EquippedVisual
@@ -67,35 +67,62 @@ namespace NERA.Inventory
             if (inventory == null || Cursor.lockState != CursorLockMode.Locked)
                 return;
 
-            ItemData item = FindPressedQuickAccessItem();
-            if (item == null)
-                return;
-
-            EquipmentUseRequested?.Invoke(item, item.QuickAccessAction);
-            Debug.Log(
-                $"Equipment: {item.DisplayName} used " +
-                $"({item.QuickAccessAction}).",
-                this
-            );
+            ItemInstance instance = FindPressedQuickAccessItem();
+            TryUseItem(instance);
         }
 
-        private ItemData FindPressedQuickAccessItem()
+        public bool TryUseItem(ItemInstance instance)
         {
-            ItemData fallbackItem = null;
+            ItemData item = instance?.ItemData;
+            if (inventory == null || !CanUseItem(item))
+                return false;
 
-            for (int i = 0; i < inventory.QuickAccessSlots.Count; i++)
+            float energyCost = item.EnergyDefinition?.EnergyPerUse ?? 0f;
+            if (!instance.CanConsume(energyCost))
+                return false;
+
+            bool actionSucceeded = item.QuickAccessAction != QuickAccessAction.Fire;
+            if (EquipmentUseRequested != null)
+            {
+                foreach (Delegate callback in EquipmentUseRequested.GetInvocationList())
+                {
+                    actionSucceeded |= ((Func<ItemInstance, QuickAccessAction, bool>)callback)(
+                        instance,
+                        item.QuickAccessAction
+                    );
+                }
+            }
+
+            if (!actionSucceeded || !inventory.TryConsumeCharge(instance, energyCost))
+                return false;
+
+            Debug.Log(
+                $"Equipment: {item.DisplayName} used " +
+                $"({item.QuickAccessAction}). Charge: " +
+                $"{instance.Charge:0.##}/{instance.MaxCharge:0.##}.",
+                this
+            );
+            return true;
+        }
+
+        private ItemInstance FindPressedQuickAccessItem()
+        {
+            ItemInstance fallbackItem = null;
+
+            for (int i = 0; i < inventory.QuickAccessItemInstances.Count; i++)
             {
                 if (!PlayerInventory.IsActiveQuickAccessSlot(i))
                     continue;
 
-                ItemData item = inventory.QuickAccessSlots[i];
+                ItemInstance instance = inventory.QuickAccessItemInstances[i];
+                ItemData item = instance?.ItemData;
                 if (!CanUseItem(item) || !Input.GetKeyDown(item.UseKey))
                     continue;
 
                 if (item.QuickAccessAction == QuickAccessAction.Fire)
-                    return item;
+                    return instance;
 
-                fallbackItem ??= item;
+                fallbackItem ??= instance;
             }
 
             return fallbackItem;
@@ -105,7 +132,7 @@ namespace NERA.Inventory
         {
             int index = FindPreferredQuickAccessIndex();
             return inventory != null && index >= 0
-                ? inventory.QuickAccessSlots[index]
+                ? inventory.QuickAccessItemInstances[index]?.ItemData
                 : null;
         }
 
@@ -116,12 +143,12 @@ namespace NERA.Inventory
 
             int fallbackIndex = -1;
 
-            for (int i = 0; i < inventory.QuickAccessSlots.Count; i++)
+            for (int i = 0; i < inventory.QuickAccessItemInstances.Count; i++)
             {
                 if (!PlayerInventory.IsActiveQuickAccessSlot(i))
                     continue;
 
-                ItemData item = inventory.QuickAccessSlots[i];
+                ItemData item = inventory.QuickAccessItemInstances[i]?.ItemData;
                 if (!CanUseItem(item))
                     continue;
 
@@ -147,12 +174,12 @@ namespace NERA.Inventory
             if (inventory == null)
                 return;
 
-            for (int index = 0; index < inventory.QuickAccessSlots.Count; index++)
+            for (int index = 0; index < inventory.QuickAccessItemInstances.Count; index++)
             {
                 if (!PlayerInventory.IsActiveQuickAccessSlot(index))
                     continue;
 
-                ItemData item = inventory.QuickAccessSlots[index];
+                ItemData item = inventory.QuickAccessItemInstances[index]?.ItemData;
                 if (item == null || item.EquippedVisualPrefab == null)
                     continue;
 

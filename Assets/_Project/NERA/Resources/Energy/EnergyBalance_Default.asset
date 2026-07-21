@@ -22,6 +22,7 @@ MonoBehaviour:
   terminalConsumption: 2
   laboratoryConsumption: 4
   droneChargingConsumption: 4
+  itemChargingConsumption: 4
   antennaCalibrationConsumption: 3
   lightingConsumption: 3
   turretIdleConsumption: 2

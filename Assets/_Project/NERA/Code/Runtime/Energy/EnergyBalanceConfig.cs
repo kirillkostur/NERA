@@ -22,6 +22,7 @@ namespace NERA.Energy
         [SerializeField, Min(0f)] private float terminalConsumption = 2f;
         [SerializeField, Min(0f)] private float laboratoryConsumption = 4f;
         [SerializeField, Min(0f)] private float droneChargingConsumption = 4f;
+        [SerializeField, Min(0f)] private float itemChargingConsumption = 4f;
         [SerializeField, Min(0f)] private float antennaCalibrationConsumption = 3f;
         [SerializeField, Min(0f)] private float lightingConsumption = 3f;
         [SerializeField, Min(0f)] private float turretIdleConsumption = 2f;
@@ -47,6 +48,7 @@ namespace NERA.Energy
         public float TerminalConsumption => terminalConsumption;
         public float LaboratoryConsumption => laboratoryConsumption;
         public float DroneChargingConsumption => droneChargingConsumption;
+        public float ItemChargingConsumption => itemChargingConsumption;
         public float AntennaCalibrationConsumption => antennaCalibrationConsumption;
         public float LightingConsumption => lightingConsumption;
         public float TurretIdleConsumption => turretIdleConsumption;

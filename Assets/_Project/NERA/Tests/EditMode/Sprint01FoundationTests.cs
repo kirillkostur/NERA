@@ -598,6 +598,7 @@ namespace NERA.Tests
         private GameObject root;
         private PlayerInventory inventory;
         private readonly System.Collections.Generic.List<ItemData> createdItems = new System.Collections.Generic.List<ItemData>();
+        private readonly System.Collections.Generic.List<ItemEnergyDefinition> createdEnergyDefinitions = new System.Collections.Generic.List<ItemEnergyDefinition>();
 
         [SetUp]
         public void SetUp()
@@ -611,6 +612,8 @@ namespace NERA.Tests
         {
             foreach (ItemData item in createdItems)
                 Object.DestroyImmediate(item);
+            foreach (ItemEnergyDefinition definition in createdEnergyDefinitions)
+                Object.DestroyImmediate(definition);
             Object.DestroyImmediate(root);
         }
 
@@ -648,6 +651,46 @@ namespace NERA.Tests
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 3), Is.EqualTo(equipment[2]));
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment[3]));
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 4), Is.EqualTo(equipment[4]));
+        }
+
+        [Test]
+        public void WorldItemPickupAddsItemInstanceToPlayerInventory()
+        {
+            ItemData item = CreateItem("world_part", ItemType.EngineeringPart);
+            GameObject worldObject = new GameObject("Test_WorldItem");
+            WorldItem worldItem = worldObject.AddComponent<WorldItem>();
+            worldItem.Initialize(item);
+
+            SerializedObject serializedWorldItem = new SerializedObject(worldItem);
+            serializedWorldItem.FindProperty("destroyAfterPickup").boolValue = false;
+            serializedWorldItem.ApplyModifiedPropertiesWithoutUndo();
+
+            worldItem.CompleteInteraction(root);
+
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 0), Is.EqualTo(item));
+            Assert.That(
+                inventory.GetItemInstance(InventorySlotGroup.Backpack, 0)?.ItemData,
+                Is.EqualTo(item)
+            );
+            Assert.That(worldObject.activeSelf, Is.False);
+
+            Object.DestroyImmediate(worldObject);
+        }
+
+        [Test]
+        public void InvalidSerializedInstancesDoNotOccupyEmptySlots()
+        {
+            ItemInstance invalidInstance = JsonUtility.FromJson<ItemInstance>("{}");
+            inventory.RestoreInstanceSlots(
+                new[] { invalidInstance, null },
+                new ItemInstance[PlayerInventory.AnomalyCapacity],
+                new ItemInstance[PlayerInventory.QuickAccessCapacity]
+            );
+
+            ItemData item = CreateItem("recovered_pickup", ItemType.EngineeringPart);
+
+            Assert.That(inventory.AddItem(item), Is.True);
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 0), Is.EqualTo(item));
         }
 
         [Test]
@@ -791,6 +834,82 @@ namespace NERA.Tests
                 inventory.GetItem(InventorySlotGroup.Backpack, 1),
                 Is.EqualTo(second)
             );
+        }
+
+        [Test]
+        public void RepeatedItemDataCreatesIndependentInstances()
+        {
+            ItemData item = CreateChargeableItem("charged_tool", ItemType.EngineeringPart);
+
+            Assert.That(inventory.AddItem(item), Is.True);
+            Assert.That(inventory.AddItem(item), Is.True);
+
+            ItemInstance first = inventory.GetItemInstance(InventorySlotGroup.Backpack, 0);
+            ItemInstance second = inventory.GetItemInstance(InventorySlotGroup.Backpack, 1);
+            Assert.That(first.InstanceId, Is.Not.EqualTo(second.InstanceId));
+            Assert.That(inventory.TryConsumeCharge(first, 10f), Is.True);
+            Assert.That(first.Charge, Is.EqualTo(90f).Within(0.001f));
+            Assert.That(second.Charge, Is.EqualTo(100f).Within(0.001f));
+        }
+
+        [Test]
+        public void InstanceRestorePreservesIdentitySlotAndCharge()
+        {
+            ItemData item = CreateChargeableItem("restored_tool", ItemType.EngineeringPart);
+            ItemInstance instance = ItemInstance.Create(item);
+            instance.TryConsume(35f);
+
+            inventory.RestoreInstanceSlots(
+                new[] { instance, null },
+                new ItemInstance[PlayerInventory.AnomalyCapacity],
+                new ItemInstance[PlayerInventory.QuickAccessCapacity]
+            );
+
+            ItemInstance restored = inventory.GetItemInstance(InventorySlotGroup.Backpack, 0);
+            Assert.That(restored.InstanceId, Is.EqualTo(instance.InstanceId));
+            Assert.That(restored.Charge, Is.EqualTo(65f).Within(0.001f));
+            Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 1), Is.Null);
+        }
+
+        [Test]
+        public void UnifiedEquipmentUseConsumesConfiguredItemEnergy()
+        {
+            ItemData scanner = CreateChargeableItem("scanner", ItemType.Equipment);
+            SerializedObject serializedScanner = new SerializedObject(scanner);
+            serializedScanner.FindProperty("quickAccessAction").enumValueIndex =
+                (int)QuickAccessAction.Scan;
+            serializedScanner.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(inventory.AddItem(scanner), Is.True);
+            ItemInstance instance = inventory.GetItemInstance(
+                InventorySlotGroup.QuickAccess,
+                PlayerInventory.ActiveQuickAccessStartIndex
+            );
+            PlayerEquipmentController equipment =
+                root.AddComponent<PlayerEquipmentController>();
+
+            Assert.That(equipment.TryUseItem(instance), Is.True);
+            Assert.That(instance.Charge, Is.EqualTo(90f).Within(0.001f));
+            Assert.That(equipment.TryUseItem(instance), Is.True);
+            Assert.That(instance.Charge, Is.EqualTo(80f).Within(0.001f));
+        }
+
+        private ItemData CreateChargeableItem(string id, ItemType type)
+        {
+            ItemEnergyDefinition energy = ScriptableObject.CreateInstance<ItemEnergyDefinition>();
+            SerializedObject serializedEnergy = new SerializedObject(energy);
+            serializedEnergy.FindProperty("capacity").floatValue = 100f;
+            serializedEnergy.FindProperty("initialCharge").floatValue = 100f;
+            serializedEnergy.FindProperty("energyPerUse").floatValue = 10f;
+            serializedEnergy.FindProperty("rechargePerSecond").floatValue = 20f;
+            serializedEnergy.ApplyModifiedPropertiesWithoutUndo();
+            createdEnergyDefinitions.Add(energy);
+
+            ItemData item = CreateItem(id, type);
+            SerializedObject serializedItem = new SerializedObject(item);
+            serializedItem.FindProperty("energyDefinition").objectReferenceValue = energy;
+            serializedItem.ApplyModifiedPropertiesWithoutUndo();
+            return item;
         }
 
         private ItemData CreateItem(string id, ItemType type)

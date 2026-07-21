@@ -33,19 +33,20 @@ namespace NERA.Combat
                 equipment.EquipmentUseRequested -= HandleEquipmentUseRequested;
         }
 
-        private void HandleEquipmentUseRequested(
-            ItemData item,
+        private bool HandleEquipmentUseRequested(
+            ItemInstance instance,
             QuickAccessAction action
         )
         {
+            ItemData item = instance?.ItemData;
             if (action != QuickAccessAction.Fire ||
                 item == null ||
                 item.WeaponDefinition == null)
             {
-                return;
+                return false;
             }
 
-            TryFire(item.WeaponDefinition);
+            return TryFire(item.WeaponDefinition);
         }
 
         private bool TryFire(WeaponDefinition weapon)

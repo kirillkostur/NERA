@@ -31,7 +31,8 @@ namespace NERA.Research
 
         public IReadOnlyCollection<string> AnalyzedResearchIds => analyzedResearchIds;
         public ResearchState State { get; private set; }
-        public ItemData LoadedItem { get; private set; }
+        public ItemInstance LoadedItemInstance { get; private set; }
+        public ItemData LoadedItem => LoadedItemInstance?.ItemData;
         public float Progress { get; private set; }
         public string StatusMessage { get; private set; } = "Laboratory ready.";
 
@@ -98,16 +99,16 @@ namespace NERA.Research
                 return false;
 
             InventorySlotGroup group = PlayerInventory.GetSlotGroup(item.ItemType);
-            System.Collections.Generic.IReadOnlyList<ItemData> slots = group switch
+            System.Collections.Generic.IReadOnlyList<ItemInstance> slots = group switch
             {
-                InventorySlotGroup.Anomaly => inventory.AnomalySlots,
-                InventorySlotGroup.QuickAccess => inventory.QuickAccessSlots,
-                _ => inventory.BackpackSlots
+                InventorySlotGroup.Anomaly => inventory.AnomalyItemInstances,
+                InventorySlotGroup.QuickAccess => inventory.QuickAccessItemInstances,
+                _ => inventory.BackpackItemInstances
             };
 
             for (int index = 0; index < slots.Count; index++)
             {
-                if (slots[index] == item)
+                if (slots[index]?.ItemData == item)
                     return LoadItem(item, inventory, group, index);
             }
 
@@ -124,30 +125,32 @@ namespace NERA.Research
             if (!CanLoadItem(item))
                 return false;
 
+            ItemInstance sourceInstance = inventory?.GetItemInstance(sourceGroup, sourceIndex);
             if (State == ResearchState.Analyzing || item == null || inventory == null ||
-                inventory.GetItem(sourceGroup, sourceIndex) != item)
+                sourceInstance?.ItemData != item)
             {
                 return false;
             }
 
-            ItemData previousLoadedItem = LoadedItem;
+            ItemInstance previousLoadedInstance = LoadedItemInstance;
+            ItemData previousLoadedItem = previousLoadedInstance?.ItemData;
             if (previousLoadedItem != null &&
                 PlayerInventory.GetSlotGroup(previousLoadedItem.ItemType) != sourceGroup)
             {
                 return false;
             }
 
-            if (!inventory.RemoveItemAt(sourceGroup, sourceIndex, out _))
+            if (!inventory.RemoveInstanceAt(sourceGroup, sourceIndex, out sourceInstance))
                 return false;
 
             if (previousLoadedItem != null &&
-                !inventory.TrySetItemAt(sourceGroup, sourceIndex, previousLoadedItem))
+                !inventory.TrySetInstanceAt(sourceGroup, sourceIndex, previousLoadedInstance))
             {
-                inventory.TrySetItemAt(sourceGroup, sourceIndex, item);
+                inventory.TrySetInstanceAt(sourceGroup, sourceIndex, sourceInstance);
                 return false;
             }
 
-            LoadedItem = item;
+            LoadedItemInstance = sourceInstance;
             sourceInventory = inventory;
             ResearchDefinition definition = item.ResearchDefinition;
             bool researchable = IsResearchable(item);
@@ -178,25 +181,26 @@ namespace NERA.Research
             if (State == ResearchState.Analyzing || LoadedItem == null || inventory == null)
                 return false;
 
-            ItemData itemToMove = LoadedItem;
+            ItemInstance instanceToMove = LoadedItemInstance;
+            ItemData itemToMove = instanceToMove.ItemData;
             if (PlayerInventory.GetSlotGroup(itemToMove.ItemType) != destinationGroup)
                 return false;
 
-            if (!inventory.TryReplaceItemAt(
+            if (!inventory.TryReplaceInstanceAt(
                     destinationGroup,
                     destinationIndex,
-                    itemToMove,
-                    out ItemData replacedItem
+                    instanceToMove,
+                    out ItemInstance replacedInstance
                 ))
             {
                 return false;
             }
 
-            LoadedItem = replacedItem;
-            sourceInventory = replacedItem != null ? inventory : null;
+            LoadedItemInstance = replacedInstance;
+            sourceInventory = replacedInstance != null ? inventory : null;
             Progress = 0f;
 
-            if (LoadedItem == null)
+            if (LoadedItemInstance == null)
             {
                 StatusMessage = "Laboratory ready.";
                 SetState(ResearchState.Idle);
@@ -373,18 +377,39 @@ namespace NERA.Research
             }
         }
 
+        public void RestoreLoadedItem(ItemInstance instance, PlayerInventory inventory)
+        {
+            EnergySystemController.Instance?.SetConsumerActive(
+                LaboratoryConsumerId,
+                false
+            );
+            LoadedItemInstance = instance?.ItemData != null ? instance : null;
+            sourceInventory = LoadedItemInstance != null ? inventory : null;
+            analysisRemaining = 0f;
+            Progress = 0f;
+
+            if (LoadedItemInstance == null)
+            {
+                StatusMessage = "Laboratory ready.";
+                SetState(ResearchState.Idle);
+                return;
+            }
+
+            RefreshLoadedItemState();
+        }
+
         public bool RetrieveLoadedItem()
         {
             if (State == ResearchState.Analyzing || LoadedItem == null || sourceInventory == null)
                 return false;
 
-            if (!sourceInventory.AddItem(LoadedItem))
+            if (!sourceInventory.AddItem(LoadedItemInstance))
             {
                 StatusMessage = "No free inventory slot for this sample.";
                 return false;
             }
 
-            LoadedItem = null;
+            LoadedItemInstance = null;
             sourceInventory = null;
             Progress = 0f;
             StatusMessage = "Laboratory ready.";

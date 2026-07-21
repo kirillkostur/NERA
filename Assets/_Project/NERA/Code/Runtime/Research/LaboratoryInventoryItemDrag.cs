@@ -13,6 +13,7 @@ namespace NERA.Research
         public InventorySlotGroup SourceGroup { get; private set; }
         public int SourceIndex { get; private set; }
         public bool IsLaboratorySource { get; private set; }
+        public bool IsChargingSource { get; private set; }
 
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
@@ -23,7 +24,8 @@ namespace NERA.Research
             Canvas canvas,
             InventorySlotGroup sourceGroup = InventorySlotGroup.Backpack,
             int sourceIndex = -1,
-            bool isLaboratorySource = false
+            bool isLaboratorySource = false,
+            bool isChargingSource = false
         )
         {
             Item = item;
@@ -31,6 +33,7 @@ namespace NERA.Research
             SourceGroup = sourceGroup;
             SourceIndex = sourceIndex;
             IsLaboratorySource = isLaboratorySource;
+            IsChargingSource = isChargingSource;
             canvasGroup = GetComponent<CanvasGroup>();
         }
 
