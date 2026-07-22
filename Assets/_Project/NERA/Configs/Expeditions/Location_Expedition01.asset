@@ -21,6 +21,7 @@ MonoBehaviour:
   spawnPointId: Expedition01_Start
   discoverySource: 0
   droneScanDuration: 10
+  requiredDroneUpgradeLevel: 0
   initialState: 0
   mapSymbol: 0
   mapSectorIndex: 0

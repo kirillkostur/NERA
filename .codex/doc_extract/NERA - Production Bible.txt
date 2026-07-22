@@ -1,4 +1,5 @@
 NERA — Production Bible
+АКТУАЛЬНОЕ УТОЧНЕНИЕ: задачи Translation System, Translation UI и Translation Level исключены из production scope. Их место занимает связка Research → Library → progression unlock; см. «NERA — Current Scope Decisions», DD-001.
 Назначение документа
 Production Bible описывает порядок разработки NERA с учётом текущих реальных условий проекта.
 Этот документ нужен не для описания лора, визуала или систем в теории. Его задача — превратить уже созданные Bible-документы в понятный план производства.

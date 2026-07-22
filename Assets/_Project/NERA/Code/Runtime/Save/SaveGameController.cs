@@ -33,6 +33,8 @@ namespace NERA.Save
         private PlayerInventory inventory;
         private ResearchController research;
         private LibraryController library;
+        private StationStorageController stationStorage;
+        private StationSystemsController stationSystems;
         private bool isLoading;
         private bool autoSavePending;
         private float autoSaveAt;
@@ -202,6 +204,41 @@ namespace NERA.Save
             if (research?.LoadedItemInstance != null)
                 data.laboratoryItem = CaptureInstance(research.LoadedItemInstance);
 
+            if (stationStorage != null)
+            {
+                CaptureInstances(
+                    stationStorage.BackpackSlots,
+                    data.stationBackpackItems);
+                CaptureInstances(
+                    stationStorage.QuickAccessSlots,
+                    data.stationQuickAccessItems);
+                CaptureInstances(
+                    stationStorage.AnomalySlots,
+                    data.stationAnomalyItems);
+            }
+
+            if (stationSystems != null)
+            {
+                Dictionary<StationSystemType, bool> states =
+                    new Dictionary<StationSystemType, bool>();
+                foreach (KeyValuePair<StationSystemType, bool> pair in
+                    stationSystems.RequestedStates)
+                {
+                    states[pair.Key] = pair.Value;
+                }
+
+                foreach (KeyValuePair<StationSystemType, int> pair in
+                    stationSystems.UpgradeLevels)
+                {
+                    data.stationSystems.Add(new StationSystemSaveData
+                    {
+                        systemType = (int)pair.Key,
+                        upgradeLevel = pair.Value,
+                        requestedActive = states.TryGetValue(pair.Key, out bool active) && active
+                    });
+                }
+            }
+
             if (research != null)
                 data.analyzedResearchIds.AddRange(research.AnalyzedResearchIds);
 
@@ -289,6 +326,48 @@ namespace NERA.Save
                 ResolveInstance(data.laboratoryItem),
                 inventory
             );
+
+            if (stationStorage != null)
+            {
+                bool hasGroupedStorage = data.version >= 8 ||
+                    (data.stationBackpackItems?.Count ?? 0) > 0 ||
+                    (data.stationQuickAccessItems?.Count ?? 0) > 0 ||
+                    (data.stationAnomalyItems?.Count ?? 0) > 0;
+                if (hasGroupedStorage)
+                {
+                    stationStorage.RestoreGroups(
+                        ResolveInstances(data.stationBackpackItems),
+                        ResolveInstances(data.stationQuickAccessItems),
+                        ResolveInstances(data.stationAnomalyItems));
+                }
+                else
+                {
+                    stationStorage.RestoreLegacy(
+                        ResolveInstances(data.stationStorageItems));
+                }
+            }
+
+            if (stationSystems != null)
+            {
+                Dictionary<StationSystemType, int> levels =
+                    new Dictionary<StationSystemType, int>();
+                Dictionary<StationSystemType, bool> states =
+                    new Dictionary<StationSystemType, bool>();
+                if (data.stationSystems != null)
+                {
+                    foreach (StationSystemSaveData saved in data.stationSystems)
+                    {
+                        if (saved != null && Enum.IsDefined(
+                                typeof(StationSystemType), saved.systemType))
+                        {
+                            StationSystemType type = (StationSystemType)saved.systemType;
+                            levels[type] = saved.upgradeLevel;
+                            states[type] = saved.requestedActive;
+                        }
+                    }
+                }
+                stationSystems.Restore(levels, states);
+            }
         }
 
         private static bool HasStructuredInventory(SaveGameData data)
@@ -439,6 +518,9 @@ namespace NERA.Save
             itemCharger?.RestoreLoadedItem(null, inventory);
             research?.RestoreLoadedItem(null, inventory);
 
+            stationStorage?.ResetStorage();
+            stationSystems?.ResetSystems();
+
             research?.RestoreAnalyzed(Array.Empty<string>());
             library?.RestoreUnlocked(Array.Empty<string>());
             library?.RestoreKnownItems(Array.Empty<string>());
@@ -491,6 +573,12 @@ namespace NERA.Save
 
             if (library == null)
                 library = GetComponent<LibraryController>();
+
+            if (stationStorage == null)
+                stationStorage = GetComponent<StationStorageController>();
+
+            if (stationSystems == null)
+                stationSystems = GetComponent<StationSystemsController>();
 
             RegisterResearchLibraryEntries();
         }
@@ -550,6 +638,12 @@ namespace NERA.Save
 
             if (library != null)
                 library.EntryUnlocked += HandleLibraryEntryUnlocked;
+
+            if (stationStorage != null)
+                stationStorage.StorageChanged += HandleStationStorageChanged;
+
+            if (stationSystems != null)
+                stationSystems.SystemsChanged += HandleStationSystemsChanged;
         }
 
         private void Unsubscribe()
@@ -583,6 +677,12 @@ namespace NERA.Save
 
             if (library != null)
                 library.EntryUnlocked -= HandleLibraryEntryUnlocked;
+
+            if (stationStorage != null)
+                stationStorage.StorageChanged -= HandleStationStorageChanged;
+
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleStationSystemsChanged;
         }
 
         private void HandleProgressChanged(string _)
@@ -631,6 +731,16 @@ namespace NERA.Save
         }
 
         private void HandleLibraryEntryUnlocked(string _)
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleStationStorageChanged()
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleStationSystemsChanged()
         {
             RequestAutoSave();
         }

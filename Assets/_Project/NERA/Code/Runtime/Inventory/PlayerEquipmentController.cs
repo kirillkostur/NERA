@@ -23,6 +23,7 @@ namespace NERA.Inventory
         public event Func<ItemInstance, QuickAccessAction, bool> EquipmentUseRequested;
 
         public ItemData EquippedItem => FindPreferredQuickAccessItem();
+        public bool HasEquippedWeapon => FindEquippedWeapon() != null;
         public GameObject EquippedVisual
         {
             get
@@ -73,6 +74,9 @@ namespace NERA.Inventory
 
         public bool TryUseItem(ItemInstance instance)
         {
+            if (inventory == null)
+                inventory = GetComponent<PlayerInventory>();
+
             ItemData item = instance?.ItemData;
             if (inventory == null || !CanUseItem(item))
                 return false;
@@ -134,6 +138,28 @@ namespace NERA.Inventory
             return inventory != null && index >= 0
                 ? inventory.QuickAccessItemInstances[index]?.ItemData
                 : null;
+        }
+
+        private ItemData FindEquippedWeapon()
+        {
+            if (inventory == null)
+                return null;
+
+            for (int i = 0; i < inventory.QuickAccessItemInstances.Count; i++)
+            {
+                if (!PlayerInventory.IsActiveQuickAccessSlot(i))
+                    continue;
+
+                ItemData item = inventory.QuickAccessItemInstances[i]?.ItemData;
+                if (item != null &&
+                    item.QuickAccessAction == QuickAccessAction.Fire &&
+                    item.WeaponDefinition != null)
+                {
+                    return item;
+                }
+            }
+
+            return null;
         }
 
         private int FindPreferredQuickAccessIndex()

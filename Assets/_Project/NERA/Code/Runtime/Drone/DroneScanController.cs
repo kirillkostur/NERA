@@ -95,10 +95,13 @@ namespace NERA.Drone
 
             return State != DroneState.Scanning &&
                 !IsCharging &&
+                IsSystemEnabled &&
                 stationPower != null &&
                 stationPower.IsPowered &&
                 discovery != null &&
                 location != null &&
+                (StationSystemsController.Instance == null ||
+                    StationSystemsController.Instance.CanDroneReach(location)) &&
                 location.DiscoverySource == Locations.DiscoverySource.Drone &&
                 !discovery.IsDiscovered(location);
         }
@@ -106,6 +109,9 @@ namespace NERA.Drone
         public void AdvanceScan(float deltaTime)
         {
             if (State != DroneState.Scanning || deltaTime <= 0f)
+                return;
+
+            if (!IsSystemEnabled)
                 return;
 
             elapsedScanTime = Mathf.Min(
@@ -122,6 +128,14 @@ namespace NERA.Drone
         {
             if (!IsCharging || deltaTime <= 0f)
                 return;
+
+            if (!IsSystemEnabled)
+            {
+                EnergySystemController.Instance?.SetConsumerActive(
+                    DroneChargerConsumerId,
+                    false);
+                return;
+            }
 
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy != null)
@@ -208,6 +222,11 @@ namespace NERA.Drone
                 IsCharging
             );
         }
+
+        private bool IsSystemEnabled =>
+            StationSystemsController.Instance == null ||
+            StationSystemsController.Instance.IsRequestedActive(
+                StationSystemType.Drone);
 
         private void Subscribe()
         {

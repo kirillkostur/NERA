@@ -6,6 +6,7 @@ using NERA.Energy;
 using NERA.Expeditions;
 using NERA.Library;
 using NERA.Items;
+using NERA.Inventory;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -220,6 +221,7 @@ namespace NERA.Terminal
             if (!IsOpen)
                 return;
 
+            InventoryLabHUDController.Instance?.CloseStationStorage();
             IsOpen = false;
             EnergySystemController.Instance?.SetConsumerActive(
                 TerminalConsumerId,
@@ -243,11 +245,26 @@ namespace NERA.Terminal
         private void ShowStatusSection()
         {
             ShowOnly(statusPanel);
+            StationPanelController stationPanelController =
+                statusPanel != null
+                    ? statusPanel.GetComponent<StationPanelController>()
+                    : null;
+            stationPanelController?.ShowDefaultSection();
             RefreshStatusSection();
         }
 
         private void RefreshStatusSection()
         {
+            StationPanelController stationPanelController =
+                statusPanel != null
+                    ? statusPanel.GetComponent<StationPanelController>()
+                    : null;
+            if (stationPanelController != null)
+            {
+                stationPanelController.RefreshAll();
+                return;
+            }
+
             Station.StationPowerController power = Station.StationPowerController.Instance;
             string powerState = power != null && power.IsPowered ? "ONLINE" : "OFFLINE";
             EnergySystemController energy = EnergySystemController.Instance;

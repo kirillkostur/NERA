@@ -21,6 +21,9 @@ namespace NERA.Expeditions
         [SerializeField, Min(0.1f)]
         [Tooltip("Time in seconds required for the drone to discover this location.")]
         private float droneScanDuration = 3f;
+        [SerializeField, Min(0)]
+        [Tooltip("Drone system upgrade level required to survey this location.")]
+        private int requiredDroneUpgradeLevel;
         [SerializeField] private LocationState initialState;
         [SerializeField] private MapSymbol mapSymbol;
         [SerializeField, Range(0, 8)] private int mapSectorIndex;
@@ -35,6 +38,7 @@ namespace NERA.Expeditions
         public string SpawnPointId => spawnPointId;
         public DiscoverySource DiscoverySource => discoverySource;
         public float DroneScanDuration => Mathf.Max(0.1f, droneScanDuration);
+        public int RequiredDroneUpgradeLevel => Mathf.Max(0, requiredDroneUpgradeLevel);
         public LocationState InitialState => initialState;
         public MapSymbol MapSymbol => mapSymbol;
         public int MapSectorIndex => mapSectorIndex;

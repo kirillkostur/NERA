@@ -120,6 +120,7 @@ namespace NERA.Antenna
                    ActiveSignal == null &&
                    !IsConsumed(target) &&
                    HasAnyDiscoveredExpeditionSector() &&
+                   IsSystemEnabled &&
                    IsOperational &&
                    HasCalibrationPower();
         }
@@ -128,6 +129,15 @@ namespace NERA.Antenna
         {
             if (State != AntennaState.Calibrating || deltaTime <= 0f)
                 return;
+
+            if (!IsSystemEnabled)
+            {
+                EnergySystemController.Instance?.SetConsumerActive(
+                    AntennaConsumerId,
+                    false);
+                SetState(AntennaState.Locked);
+                return;
+            }
 
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy != null && !energy.IsConsumerPowered(AntennaConsumerId))
@@ -189,6 +199,12 @@ namespace NERA.Antenna
                 return;
             }
 
+            if (!IsSystemEnabled)
+            {
+                SetState(AntennaState.Locked);
+                return;
+            }
+
             bool isPowered = stationPower != null && stationPower.IsPowered;
             SetState(isPowered ? AntennaState.Ready : AntennaState.Locked);
         }
@@ -201,6 +217,17 @@ namespace NERA.Antenna
 
             EnsureEnergyRegistration();
             return energy.CanPowerConsumer(AntennaConsumerId);
+        }
+
+        private bool IsSystemEnabled
+        {
+            get
+            {
+                StationSystemsController systems = StationSystemsController.Instance;
+                return systems == null ||
+                    (systems.IsUnlocked(StationSystemType.Antenna) &&
+                     systems.IsRequestedActive(StationSystemType.Antenna));
+            }
         }
 
         private void CompleteCalibration()

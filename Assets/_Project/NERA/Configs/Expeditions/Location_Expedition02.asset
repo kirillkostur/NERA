@@ -16,11 +16,13 @@ MonoBehaviour:
   id: 1
   locationType: 0
   displayName: "Expedition 02 \u2014 Signal Array"
-  description: Survey data unavailable.
+  description: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+    Recover the relay core and any surviving records.
   sceneName: Expedition_02
   spawnPointId: Expedition02_Start
   discoverySource: 0
   droneScanDuration: 5
+  requiredDroneUpgradeLevel: 1
   initialState: 0
   mapSymbol: 0
   mapSectorIndex: 2

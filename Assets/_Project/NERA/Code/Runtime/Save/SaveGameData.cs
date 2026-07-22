@@ -12,9 +12,17 @@ namespace NERA.Save
     }
 
     [Serializable]
+    public sealed class StationSystemSaveData
+    {
+        public int systemType;
+        public int upgradeLevel;
+        public bool requestedActive;
+    }
+
+    [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 6;
+        public int version = 8;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;
@@ -31,6 +39,11 @@ namespace NERA.Save
         public List<InventoryItemSaveData> backpackItems = new List<InventoryItemSaveData>();
         public List<InventoryItemSaveData> anomalyItems = new List<InventoryItemSaveData>();
         public List<InventoryItemSaveData> quickAccessItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> stationStorageItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> stationBackpackItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> stationQuickAccessItems = new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> stationAnomalyItems = new List<InventoryItemSaveData>();
+        public List<StationSystemSaveData> stationSystems = new List<StationSystemSaveData>();
         public InventoryItemSaveData chargingTableItem;
         public InventoryItemSaveData laboratoryItem;
         public List<string> analyzedResearchIds = new List<string>();

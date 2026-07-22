@@ -1,3 +1,4 @@
+using NERA.Inventory;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -32,11 +33,13 @@ public sealed class PlayerController : MonoBehaviour
 
     private CharacterController characterController;
     private PlayerFollowCamera followCamera;
+    private PlayerEquipmentController equipmentController;
 
     private float standingHeight;
     private float verticalVelocity;
     private float currentStamina;
     private float lastGroundedTime;
+    private Vector2 movementInput;
 
     private bool isGrounded;
     private bool isMoving;
@@ -50,6 +53,11 @@ public sealed class PlayerController : MonoBehaviour
     private static readonly int AnimatorCrouch = Animator.StringToHash("Crouch");
     private static readonly int AnimatorGrounded = Animator.StringToHash("Grounded");
     private static readonly int AnimatorJump = Animator.StringToHash("Jump");
+    private static readonly int AnimatorAim = Animator.StringToHash("Aim");
+    private static readonly int AnimatorWeaponAim = Animator.StringToHash("WeaponAim");
+    private static readonly int AnimatorAimX = Animator.StringToHash("AimX");
+    private static readonly int AnimatorAimY = Animator.StringToHash("AimY");
+    private static readonly int AnimatorSprint = Animator.StringToHash("Sprint");
 
     public float CurrentStamina => currentStamina;
     public float MaxStamina => maxStamina;
@@ -67,6 +75,8 @@ public sealed class PlayerController : MonoBehaviour
 
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+
+        equipmentController = GetComponent<PlayerEquipmentController>();
 
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
@@ -167,24 +177,32 @@ public sealed class PlayerController : MonoBehaviour
 
     private void Move()
     {
-        Vector3 input = new Vector3(
+        movementInput = new Vector2(
             Input.GetAxisRaw("Horizontal"),
+            Input.GetAxisRaw("Vertical"));
+
+        if (movementInput.sqrMagnitude > 1f)
+            movementInput.Normalize();
+
+        Vector3 input = new Vector3(
+            movementInput.x,
             0f,
-            Input.GetAxisRaw("Vertical")).normalized;
+            movementInput.y);
 
         isMoving = input.sqrMagnitude > 0.01f;
         isSprinting = CanSprint();
+        bool isAiming = IsAiming();
 
         Vector3 moveDirection = Vector3.zero;
 
         if (isMoving)
         {
             moveDirection = GetCameraRelativeDirection(input);
-            if (!IsAiming())
+            if (!isAiming)
                 RotateToDirection(moveDirection);
         }
 
-        if (IsAiming())
+        if (isAiming)
             RotateToCameraForward();
 
         Vector3 velocity = moveDirection * GetCurrentSpeed();
@@ -294,6 +312,9 @@ public sealed class PlayerController : MonoBehaviour
 
     private bool IsAiming()
     {
+        if (isCrouching)
+            return false;
+
         if (followCamera == null)
             ResolveFollowCamera();
 
@@ -314,10 +335,27 @@ public sealed class PlayerController : MonoBehaviour
         if (animator == null)
             return;
 
+        bool isAiming = IsAiming();
+        bool isWeaponAiming = isAiming && HasEquippedWeapon();
+        float aimLocomotionScale = isSprinting ? 1f : 0.5f;
+
         animator.SetBool(AnimatorCrouch, isCrouching);
         animator.SetBool(AnimatorGrounded, isGrounded);
+        animator.SetBool(AnimatorAim, isAiming);
+        animator.SetBool(AnimatorWeaponAim, isWeaponAiming);
+        animator.SetBool(AnimatorSprint, isSprinting);
         animator.SetFloat(AnimatorMoveSpeed, GetNormalMoveSpeed(), 0.1f, Time.deltaTime);
         animator.SetFloat(AnimatorCrouchMoveSpeed, GetCrouchMoveSpeed(), 0.1f, Time.deltaTime);
+        animator.SetFloat(
+            AnimatorAimX,
+            isAiming ? movementInput.x * aimLocomotionScale : 0f,
+            0.1f,
+            Time.deltaTime);
+        animator.SetFloat(
+            AnimatorAimY,
+            isAiming ? movementInput.y * aimLocomotionScale : 0f,
+            0.1f,
+            Time.deltaTime);
     }
 
     private float GetNormalMoveSpeed()
@@ -331,6 +369,15 @@ public sealed class PlayerController : MonoBehaviour
     private float GetCrouchMoveSpeed()
     {
         return isCrouching && isMoving ? 1f : 0f;
+    }
+
+    private bool HasEquippedWeapon()
+    {
+        if (equipmentController == null)
+            equipmentController = GetComponent<PlayerEquipmentController>();
+
+        return equipmentController != null
+            && equipmentController.HasEquippedWeapon;
     }
 
     public void SetCameraTransform(Transform newCameraTransform)
@@ -369,6 +416,7 @@ public sealed class PlayerController : MonoBehaviour
 
     private void ResetMovementState()
     {
+        movementInput = Vector2.zero;
         isMoving = false;
         isSprinting = false;
         isCrouching = false;
@@ -382,8 +430,13 @@ public sealed class PlayerController : MonoBehaviour
         animator.ResetTrigger(AnimatorJump);
         animator.SetBool(AnimatorCrouch, false);
         animator.SetBool(AnimatorGrounded, true);
+        animator.SetBool(AnimatorAim, false);
+        animator.SetBool(AnimatorWeaponAim, false);
+        animator.SetBool(AnimatorSprint, false);
         animator.SetFloat(AnimatorMoveSpeed, 0f);
         animator.SetFloat(AnimatorCrouchMoveSpeed, 0f);
+        animator.SetFloat(AnimatorAimX, 0f);
+        animator.SetFloat(AnimatorAimY, 0f);
     }
 
     private void OnValidate()

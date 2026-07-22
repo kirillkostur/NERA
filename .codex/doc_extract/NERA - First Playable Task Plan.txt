@@ -1,4 +1,5 @@
 NERA — First Playable Task Plan
+АКТУАЛЬНОЕ УТОЧНЕНИЕ: Translation System удалена из актуального scope. Исторические задачи Translation в этом плане не подлежат реализации; см. «NERA — Current Scope Decisions», DD-001.
 Назначение документа
 First Playable Task Plan описывает конкретный список задач для создания первой рабочей версии NERA.
 Этот документ не заменяет Production Bible. Production Bible отвечает на вопрос:

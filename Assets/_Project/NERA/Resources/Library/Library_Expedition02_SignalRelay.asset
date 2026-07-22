@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c410feb67687e544a52fc819f5fa286, type: 3}
+  m_Name: Library_Expedition02_SignalRelay
+  m_EditorClassIdentifier: 
+  entryId: expedition02_signal_relay
+  title: NERA SIGNAL RELAY // EXPEDITION 02
+  category: 2
+  description: The recovered relay core belonged to a planetary signal array. Its
+    routing table repeatedly redirects traffic toward a region marked by IO distortion.
+    The array also contains a dormant calibration sequence compatible with the station
+    antenna.
+  illustration: {fileID: 0}

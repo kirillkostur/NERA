@@ -140,6 +140,54 @@ namespace NERA.Inventory
             return false;
         }
 
+        public int CountItem(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+                return 0;
+
+            int count = 0;
+            foreach (ItemInstance instance in ItemInstances)
+            {
+                if (instance?.ItemData != null &&
+                    string.Equals(instance.ItemData.ItemId, itemId, StringComparison.Ordinal))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        public bool TryRemoveOne(string itemId, out ItemInstance removedInstance)
+        {
+            removedInstance = null;
+            if (string.IsNullOrWhiteSpace(itemId))
+                return false;
+
+            InventorySlotGroup[] groups =
+            {
+                InventorySlotGroup.Backpack,
+                InventorySlotGroup.Anomaly,
+                InventorySlotGroup.QuickAccess
+            };
+
+            foreach (InventorySlotGroup group in groups)
+            {
+                List<ItemInstance> slots = GetInstanceSlots(group);
+                for (int index = 0; index < slots.Count; index++)
+                {
+                    ItemInstance instance = slots[index];
+                    if (instance?.ItemData != null &&
+                        string.Equals(instance.ItemData.ItemId, itemId, StringComparison.Ordinal))
+                    {
+                        return RemoveInstanceAt(group, index, out removedInstance);
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public bool RemoveItem(ItemData item)
         {
             if (item == null)

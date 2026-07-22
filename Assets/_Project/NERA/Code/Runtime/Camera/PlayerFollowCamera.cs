@@ -55,6 +55,7 @@ public class PlayerFollowCamera : MonoBehaviour
     private bool inputEnabled = true;
     private bool isAiming;
     private float aimWeight;
+    private PlayerController targetPlayerController;
 
     public bool IsAiming => isAiming && aimWeight > 0.5f;
     public float Yaw => yaw;
@@ -62,6 +63,7 @@ public class PlayerFollowCamera : MonoBehaviour
     private void Start()
     {
         InitializeCamera();
+        CacheTargetPlayerController();
 
         if (autoFindPlayerOnStart)
             TryFindPlayerTarget();
@@ -83,8 +85,8 @@ public class PlayerFollowCamera : MonoBehaviour
         if (inputEnabled)
         {
             ReadMouseInput();
-            ReadZoomInput();
             ReadAimInput();
+            ReadZoomInput();
         }
         else
         {
@@ -172,7 +174,20 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void ReadAimInput()
     {
-        isAiming = Input.GetKey(aimKey);
+        isAiming = !IsTargetCrouching() && Input.GetKey(aimKey);
+    }
+
+    private bool IsTargetCrouching()
+    {
+        return targetPlayerController != null
+            && targetPlayerController.IsCrouching;
+    }
+
+    private void CacheTargetPlayerController()
+    {
+        targetPlayerController = target != null
+            ? target.GetComponentInParent<PlayerController>()
+            : null;
     }
 
     private void UpdateAimWeight()
@@ -276,11 +291,14 @@ public class PlayerFollowCamera : MonoBehaviour
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
+        CacheTargetPlayerController();
     }
 
     public void ClearTarget()
     {
         target = null;
+        targetPlayerController = null;
+        isAiming = false;
     }
 
     public bool HasTarget()

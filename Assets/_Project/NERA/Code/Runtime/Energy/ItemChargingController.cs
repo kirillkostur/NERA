@@ -17,7 +17,7 @@ namespace NERA.Energy
         public ItemInstance LoadedItem { get; private set; }
         public string StatusMessage { get; private set; } = "Charging table ready.";
         public bool WantsToCharge => LoadedItem != null && !LoadedItem.IsFullyCharged;
-        public bool IsCharging => WantsToCharge && HasOperationalPower;
+        public bool IsCharging => WantsToCharge && IsSystemEnabled && HasOperationalPower;
         public bool HasOperationalPower
         {
             get
@@ -140,6 +140,14 @@ namespace NERA.Energy
             if (LoadedItem == null || deltaTime <= 0f)
                 return;
 
+            if (!IsSystemEnabled)
+            {
+                EnergySystemController.Instance?.SetConsumerActive(ConsumerId, false);
+                StatusMessage = "Charging paused - charger is stopped.";
+                StateChanged?.Invoke();
+                return;
+            }
+
             if (LoadedItem.IsFullyCharged)
             {
                 RefreshState();
@@ -190,9 +198,11 @@ namespace NERA.Energy
         {
             EnsureEnergyRegistration();
             EnergySystemController energy = EnergySystemController.Instance;
-            energy?.SetConsumerActive(ConsumerId, WantsToCharge);
+            energy?.SetConsumerActive(ConsumerId, WantsToCharge && IsSystemEnabled);
             StatusMessage = LoadedItem == null
                 ? "Charging table ready."
+                : !IsSystemEnabled
+                    ? "Charging paused - charger is stopped."
                 : LoadedItem.IsFullyCharged
                     ? $"{LoadedItem.ItemData.DisplayName} fully charged."
                     : energy == null || !energy.IsConsumerPowered(ConsumerId)
@@ -208,8 +218,13 @@ namespace NERA.Energy
                 return;
 
             energy.RegisterConsumer(ConsumerId, energy.Config.ItemChargingConsumption, true);
-            energy.SetConsumerActive(ConsumerId, WantsToCharge);
+            energy.SetConsumerActive(ConsumerId, WantsToCharge && IsSystemEnabled);
         }
+
+        private bool IsSystemEnabled =>
+            Station.StationSystemsController.Instance == null ||
+            Station.StationSystemsController.Instance.IsRequestedActive(
+                Station.StationSystemType.Charger);
 
         private void OnDestroy()
         {

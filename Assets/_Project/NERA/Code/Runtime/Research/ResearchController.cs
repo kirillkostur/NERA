@@ -66,6 +66,15 @@ namespace NERA.Research
             if (State != ResearchState.Analyzing || LoadedItem == null || deltaTime <= 0f)
                 return;
 
+            if (!IsSystemEnabled)
+            {
+                EnergySystemController.Instance?.SetConsumerActive(
+                    LaboratoryConsumerId,
+                    false);
+                StatusMessage = "Scanning paused — laboratory is stopped.";
+                return;
+            }
+
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy != null &&
                 !energy.IsConsumerPowered(LaboratoryConsumerId))
@@ -252,6 +261,7 @@ namespace NERA.Research
         public bool CanStartAnalysis =>
             State == ResearchState.ItemLoaded &&
             LoadedItem != null &&
+            IsSystemEnabled &&
             IsResearchable(LoadedItem) &&
             !IsAnalyzed(LoadedItem) &&
             HasOperationalPower;
@@ -260,6 +270,12 @@ namespace NERA.Research
         {
             if (State != ResearchState.ItemLoaded || LoadedItem == null)
                 return false;
+
+            if (!IsSystemEnabled)
+            {
+                StatusMessage = "Laboratory is stopped from the station computer.";
+                return false;
+            }
 
             if (!IsResearchable(LoadedItem))
             {
@@ -329,6 +345,11 @@ namespace NERA.Research
                 State == ResearchState.Analyzing
             );
         }
+
+        private bool IsSystemEnabled =>
+            StationSystemsController.Instance == null ||
+            StationSystemsController.Instance.IsRequestedActive(
+                StationSystemType.Laboratory);
 
         private void CompleteAnalysis(ResearchDefinition definition)
         {

@@ -1,0 +1,69 @@
+NERA — Current Scope Decisions
+Status: ACTIVE
+Updated: 2026-07-21
+
+Назначение документа
+Этот файл фиксирует актуальные решения, которые имеют приоритет над более ранними Bible, Milestone и Sprint-документами.
+Если старый документ противоречит этому файлу, используется решение из Current Scope Decisions.
+
+DD-001 — Translation System удалена из проекта
+
+Решение
+В NERA не будет отдельной механики перевода или постепенной расшифровки языка.
+
+В актуальный scope не входят:
+Translation System;
+Translation Level;
+состояния Unknown / Fragmented / Partial / Complete;
+AncientLanguageLevel;
+отдельный Translation-раздел терминала;
+объекты, требующие перевода;
+повторное открытие старых записей ради улучшенного перевода;
+разблокировка контента через уровень перевода.
+
+Все упоминания этих механик в существующих Bible, Milestone и Sprint-документах считаются устаревшими.
+Исторические Sprint-планы сохраняются без переписывания, но больше не определяют текущий scope.
+
+Чем заменяется Translation
+Найденный объект поступает в лабораторию.
+Research раскрывает назначение или контекст объекта.
+После завершения Research открывается готовая запись Library.
+Research также может разблокировать функцию станции, новую цель или доступность следующего действия.
+
+Ancient Record, технические записи и другие документы показываются игроку как готовый авторский текст после получения или исследования.
+Они не имеют промежуточных версий перевода.
+
+Актуальный цикл Milestone 02
+Station
+→ Drone Scan
+→ Expedition 02 discovered
+→ Travel to Expedition 02
+→ Findings collected
+→ Return to Station
+→ Research
+→ Library update
+→ Antenna becomes available
+→ Antenna calibration
+→ Unknown Signal discovered
+→ Human trace investigated
+→ Return to Station
+→ Library update
+
+Правило прогрессии знания
+Игрок продвигается через новые факты, связи между находками и открытие функций станции.
+Прогресс знания не выражается отдельной шкалой или уровнем перевода.
+
+Влияние на текущие механики
+ResearchDefinition продолжает открывать LibraryEntryData.
+Research может дополнительно вызывать progression unlock.
+Save System не должна хранить TranslationState.
+Terminal не должен содержать Translation UI.
+Objective System должен реагировать на завершённые исследования и открытые записи Library.
+
+Следующие приоритеты механик
+1. Масштабируемые LocationState и ObjectiveState.
+2. Сохранение уникальных находок и одноразовых взаимодействий.
+3. Связь Research Expedition 02 с доступностью антенны.
+4. Полный жизненный цикл неизвестного сигнала.
+5. Death / Respawn / Checkpoint flow.
+6. Реальная механика Field Scanner.

@@ -56,6 +56,20 @@ namespace NERA.Energy
         public bool HasUsablePower =>
             gridEnabled && currentEnergy > 0.001f && TotalCapacity > 0f;
         public EnergyState State => state;
+        public int RegisteredConsumerCount => consumers.Count;
+        public int ActiveConsumerCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (ConsumerRecord consumer in consumers.Values)
+                {
+                    if (consumer.Powered)
+                        count++;
+                }
+                return count;
+            }
+        }
 
         private void Awake()
         {
@@ -200,6 +214,31 @@ namespace NERA.Energy
                    HasUsablePower &&
                    !(state == EnergyState.Emergency &&
                      consumer.DisableInEmergency);
+        }
+
+        public bool IsConsumerRequestedActive(string consumerId)
+        {
+            return consumers.TryGetValue(consumerId, out ConsumerRecord consumer) &&
+                consumer.RequestedActive;
+        }
+
+        public float GetConsumerRate(string consumerId)
+        {
+            return consumers.TryGetValue(consumerId, out ConsumerRecord consumer)
+                ? consumer.Rate
+                : 0f;
+        }
+
+        public void UnregisterConsumer(string consumerId)
+        {
+            if (string.IsNullOrWhiteSpace(consumerId) ||
+                !consumers.Remove(consumerId))
+            {
+                return;
+            }
+
+            RefreshConsumers();
+            EnergyChanged?.Invoke();
         }
 
         public void SetGridEnabled(bool enabled)

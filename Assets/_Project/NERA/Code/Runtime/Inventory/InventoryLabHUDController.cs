@@ -2,6 +2,7 @@ using NERA.Interaction;
 using NERA.Items;
 using NERA.Research;
 using NERA.Energy;
+using NERA.Station;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -21,6 +22,7 @@ namespace NERA.Inventory
             new Color(0.18f, 0.28f, 0.31f, 1f);
 
         public static InventoryLabHUDController Instance { get; private set; }
+        public PlayerInventory BoundInventory => inventory;
 
         private readonly List<InventorySlotView> backpackViews =
             new List<InventorySlotView>();
@@ -60,6 +62,7 @@ namespace NERA.Inventory
         private bool inventoryOpen;
         private bool laboratoryOpen;
         private bool chargingOpen;
+        private bool stationStorageOpen;
 
         private void Awake()
         {
@@ -89,6 +92,9 @@ namespace NERA.Inventory
         {
             if (inventory == null)
                 BindInventory(FindFirstObjectByType<PlayerInventory>());
+
+            if (stationStorageOpen)
+                return;
 
             if (Input.GetKeyDown(KeyCode.I))
             {
@@ -156,8 +162,36 @@ namespace NERA.Inventory
             RefreshAll();
         }
 
+        public void OpenStationStorage()
+        {
+            BindInventory(inventory != null
+                ? inventory
+                : FindFirstObjectByType<PlayerInventory>());
+            stationStorageOpen = true;
+            inventoryOpen = false;
+            laboratoryOpen = false;
+            chargingOpen = false;
+            inventoryPanel.SetActive(true);
+            laboratoryPanel.SetActive(false);
+            chargingPanel.SetActive(false);
+            SetPlayerInput(false);
+            RefreshAll();
+        }
+
+        public void CloseStationStorage()
+        {
+            if (!stationStorageOpen)
+                return;
+
+            stationStorageOpen = false;
+            selectedItem = null;
+            selectedIndex = -1;
+            inventoryPanel.SetActive(false);
+        }
+
         public void CloseAll()
         {
+            stationStorageOpen = false;
             inventoryOpen = false;
             laboratoryOpen = false;
             chargingOpen = false;
@@ -440,16 +474,7 @@ namespace NERA.Inventory
                 "CloseButton"
             );
             if (laboratoryCloseButton != null)
-            {
                 laboratoryCloseButton.onClick.AddListener(CloseAll);
-            }
-            else
-            {
-                Debug.LogWarning(
-                    "InventoryLabHUDController: laboratory close button was not found. Keyboard closing remains available.",
-                    this
-                );
-            }
             scanButton.onClick.AddListener(StartScan);
             takeButton.onClick.AddListener(TakeSample);
             laboratoryDropSlot.ItemDropped += LoadSample;
@@ -833,6 +858,21 @@ namespace NERA.Inventory
         {
             if (inventory == null || drag == null)
                 return;
+
+            if (drag.IsStationStorageSource)
+            {
+                StationStorageController storage = StationStorageController.Instance;
+                if (storage != null && storage.MoveToInventory(
+                        drag.SourceGroup,
+                        drag.SourceIndex,
+                        inventory,
+                        destinationGroup,
+                        destinationIndex))
+                {
+                    SetSelection(destinationGroup, destinationIndex);
+                }
+                return;
+            }
 
             if (drag.IsChargingSource)
             {

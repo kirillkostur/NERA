@@ -1,5 +1,6 @@
 NERA — Milestone 02 Plan
 Exploration Expansion
+АКТУАЛЬНОЕ УТОЧНЕНИЕ: Translation System удалена из проекта. Все упоминания Translation, Translation Level и состояний Fragmented / Partial в этом документе устарели. Актуальный цикл и замена этой механики зафиксированы в «NERA — Current Scope Decisions», DD-001.
 1. Назначение Milestone 02
 Milestone 02 нужен после фиксации:
 NERA First Playable v0.1.0

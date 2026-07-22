@@ -1,5 +1,6 @@
 NERA — Post-First Playable Review
 Review, Decisions, Next Milestone
+АКТУАЛЬНОЕ УТОЧНЕНИЕ: Translation System удалена из проекта. Все критерии и рекомендации, связанные с Translation Level, больше не применяются; см. «NERA — Current Scope Decisions», DD-001.
 1. Назначение документа
 Этот документ нужен после фиксации:
 NERA First Playable v0.1.0
