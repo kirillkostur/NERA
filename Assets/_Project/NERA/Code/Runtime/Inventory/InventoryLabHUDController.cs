@@ -30,8 +30,21 @@ namespace NERA.Inventory
             new List<InventorySlotView>();
         private readonly List<InventorySlotView> quickViews =
             new List<InventorySlotView>();
+        private readonly List<InventorySlotView> laboratoryBackpackViews =
+            new List<InventorySlotView>();
+        private readonly List<InventorySlotView> laboratoryAnomalyViews =
+            new List<InventorySlotView>();
+        private readonly List<InventorySlotView> laboratoryQuickViews =
+            new List<InventorySlotView>();
+        private readonly List<InventorySlotView> chargingBackpackViews =
+            new List<InventorySlotView>();
+        private readonly List<InventorySlotView> chargingAnomalyViews =
+            new List<InventorySlotView>();
+        private readonly List<InventorySlotView> chargingQuickViews =
+            new List<InventorySlotView>();
 
         private Canvas rootCanvas;
+        private GameObject quickAccessHud;
         private GameObject inventoryPanel;
         private GameObject laboratoryPanel;
         private GameObject chargingPanel;
@@ -63,6 +76,12 @@ namespace NERA.Inventory
         private bool laboratoryOpen;
         private bool chargingOpen;
         private bool stationStorageOpen;
+        private bool externalUiLocked;
+        private bool authoredHud;
+        private GameObject laboratoryScanScreen;
+        private GameObject laboratoryPowerScreen;
+        private Button laboratoryTabButton;
+        private Button chargingTabButton;
 
         private void Awake()
         {
@@ -74,17 +93,27 @@ namespace NERA.Inventory
 
             Instance = this;
             rootCanvas = GetComponent<Canvas>();
+            authoredHud = transform.Find("InventoryScreen") != null;
             CacheHierarchy();
             inventoryPanel.SetActive(false);
             laboratoryPanel.SetActive(false);
-            chargingPanel.SetActive(false);
+            if (!authoredHud && chargingPanel != null)
+                chargingPanel.SetActive(false);
         }
 
         private void Start()
         {
             BindInventory(FindFirstObjectByType<PlayerInventory>());
-            BuildSlotViews();
-            BindButtons();
+            if (authoredHud)
+            {
+                BuildAuthoredSlotViews();
+                BindAuthoredButtons();
+            }
+            else
+            {
+                BuildSlotViews();
+                BindButtons();
+            }
             RefreshAll();
         }
 
@@ -93,12 +122,14 @@ namespace NERA.Inventory
             if (inventory == null)
                 BindInventory(FindFirstObjectByType<PlayerInventory>());
 
-            if (stationStorageOpen)
+            if (stationStorageOpen || externalUiLocked)
                 return;
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (inventoryOpen || laboratoryOpen || chargingOpen)
+                if (laboratoryOpen || chargingOpen)
+                    return;
+                if (inventoryOpen)
                     CloseAll();
                 else
                     OpenInventory();
@@ -117,13 +148,18 @@ namespace NERA.Inventory
 
         public void OpenInventory()
         {
+            if (externalUiLocked)
+                return;
+
             BindInventory(inventory != null ? inventory : FindFirstObjectByType<PlayerInventory>());
             laboratoryOpen = false;
             chargingOpen = false;
             inventoryOpen = true;
             laboratoryPanel.SetActive(false);
-            chargingPanel.SetActive(false);
+            if (!authoredHud && chargingPanel != null)
+                chargingPanel.SetActive(false);
             inventoryPanel.SetActive(true);
+            SetQuickAccessVisible(true);
             SetPlayerInput(false);
             RefreshAll();
         }
@@ -137,10 +173,14 @@ namespace NERA.Inventory
 
             laboratoryOpen = true;
             chargingOpen = false;
-            inventoryOpen = true;
-            inventoryPanel.SetActive(true);
+            inventoryOpen = !authoredHud;
+            inventoryPanel.SetActive(!authoredHud);
             laboratoryPanel.SetActive(true);
-            chargingPanel.SetActive(false);
+            if (!authoredHud && chargingPanel != null)
+                chargingPanel.SetActive(false);
+            if (authoredHud)
+                ShowLaboratoryMode(false);
+            SetQuickAccessVisible(false);
             SetPlayerInput(false);
             RefreshAll();
         }
@@ -154,10 +194,14 @@ namespace NERA.Inventory
 
             laboratoryOpen = false;
             chargingOpen = true;
-            inventoryOpen = true;
-            inventoryPanel.SetActive(true);
-            laboratoryPanel.SetActive(false);
-            chargingPanel.SetActive(true);
+            inventoryOpen = !authoredHud;
+            inventoryPanel.SetActive(!authoredHud);
+            laboratoryPanel.SetActive(authoredHud);
+            if (chargingPanel != null)
+                chargingPanel.SetActive(true);
+            if (authoredHud)
+                ShowLaboratoryMode(true);
+            SetQuickAccessVisible(false);
             SetPlayerInput(false);
             RefreshAll();
         }
@@ -174,6 +218,7 @@ namespace NERA.Inventory
             inventoryPanel.SetActive(true);
             laboratoryPanel.SetActive(false);
             chargingPanel.SetActive(false);
+            SetQuickAccessVisible(false);
             SetPlayerInput(false);
             RefreshAll();
         }
@@ -187,6 +232,27 @@ namespace NERA.Inventory
             selectedItem = null;
             selectedIndex = -1;
             inventoryPanel.SetActive(false);
+            SetQuickAccessVisible(!externalUiLocked);
+        }
+
+        public void SetExternalUiLock(bool locked)
+        {
+            externalUiLocked = locked;
+            if (locked)
+            {
+                stationStorageOpen = false;
+                inventoryOpen = false;
+                laboratoryOpen = false;
+                chargingOpen = false;
+                selectedItem = null;
+                selectedIndex = -1;
+                inventoryPanel.SetActive(false);
+                laboratoryPanel.SetActive(false);
+                if (!authoredHud && chargingPanel != null)
+                    chargingPanel.SetActive(false);
+            }
+
+            SetQuickAccessVisible(!locked && !laboratoryOpen && !chargingOpen);
         }
 
         public void CloseAll()
@@ -199,15 +265,25 @@ namespace NERA.Inventory
             selectedIndex = -1;
             inventoryPanel.SetActive(false);
             laboratoryPanel.SetActive(false);
-            chargingPanel.SetActive(false);
+            if (!authoredHud && chargingPanel != null)
+                chargingPanel.SetActive(false);
+            SetQuickAccessVisible(!externalUiLocked);
             SetPlayerInput(true);
         }
 
         private void CacheHierarchy()
         {
+            if (authoredHud)
+            {
+                CacheAuthoredHierarchy();
+                return;
+            }
+
             inventoryPanel = transform.Find("InventoryPanel").gameObject;
             laboratoryPanel = transform.Find("LaboratoryPanel").gameObject;
             chargingPanel = transform.Find("ChargingPanel").gameObject;
+            Transform quickAccessRoot = transform.Find("QuickAccessHUD");
+            quickAccessHud = quickAccessRoot != null ? quickAccessRoot.gameObject : null;
 
             selectedItemName = inventoryPanel.transform
                 .Find("SelectionPanel/Name")
@@ -241,6 +317,269 @@ namespace NERA.Inventory
                 chargingDropSlot = chargingItemSlot.gameObject.AddComponent<LaboratoryItemDropSlot>();
             chargingStatusLabel = chargingPanel.transform.Find("Status").GetComponent<TMP_Text>();
             chargingTakeButton = chargingPanel.transform.Find("TakeButton").GetComponent<Button>();
+        }
+
+        private void CacheAuthoredHierarchy()
+        {
+            inventoryPanel = transform.Find("InventoryScreen").gameObject;
+            laboratoryPanel = transform.Find("LaboratoryScreen").gameObject;
+            chargingPanel = laboratoryPanel;
+
+            Transform quickAccessRoot = transform.Find("Slot_Invent_Equipment");
+            quickAccessHud = quickAccessRoot != null ? quickAccessRoot.gameObject : null;
+
+            dropButton = FindDescendant(inventoryPanel.transform, "DropButton")
+                ?.GetComponent<Button>();
+
+            laboratoryScanScreen = laboratoryPanel.transform.Find("ScanScreen")?.gameObject;
+            laboratoryPowerScreen = laboratoryPanel.transform.Find("PowerScreen")?.gameObject;
+            laboratoryTabButton = laboratoryPanel.transform.Find("ScanButton")
+                ?.GetComponent<Button>();
+            chargingTabButton = laboratoryPanel.transform.Find("PowerButton")
+                ?.GetComponent<Button>();
+
+            Transform sampleArea = laboratoryScanScreen != null
+                ? laboratoryScanScreen.transform.Find("background_Screen_Storage_Slot")
+                : null;
+            Transform sampleSlot = sampleArea != null ? sampleArea.Find("Slot") : null;
+            if (sampleSlot != null)
+            {
+                laboratorySlotIcon = EnsureRuntimeIcon(sampleSlot);
+                laboratorySlotDrag = EnsureDrag(sampleSlot);
+                laboratoryDropSlot = sampleSlot.GetComponent<LaboratoryItemDropSlot>();
+                if (laboratoryDropSlot == null)
+                    laboratoryDropSlot = sampleSlot.gameObject.AddComponent<LaboratoryItemDropSlot>();
+            }
+            laboratoryStatusLabel = FindDescendant(
+                laboratoryScanScreen != null ? laboratoryScanScreen.transform : null,
+                "Text_Description")?.GetComponent<TMP_Text>();
+            scanButton = sampleArea != null
+                ? sampleArea.Find("ScanButton")?.GetComponent<Button>()
+                : null;
+            scanButtonLabel = scanButton != null
+                ? scanButton.GetComponentInChildren<TMP_Text>(true)
+                : null;
+            takeButton = sampleArea != null
+                ? sampleArea.Find("DropButton")?.GetComponent<Button>()
+                : null;
+
+            Transform chargeArea = laboratoryPowerScreen != null
+                ? laboratoryPowerScreen.transform.Find("background_Screen_Storage_Slot")
+                : null;
+            Transform chargeSlot = chargeArea != null ? chargeArea.Find("Slot_01") : null;
+            if (chargeSlot != null)
+            {
+                chargingSlotIcon = EnsureRuntimeIcon(chargeSlot);
+                chargingSlotDrag = EnsureDrag(chargeSlot);
+                chargingDropSlot = chargeSlot.GetComponent<LaboratoryItemDropSlot>();
+                if (chargingDropSlot == null)
+                    chargingDropSlot = chargeSlot.gameObject.AddComponent<LaboratoryItemDropSlot>();
+            }
+            chargingStatusLabel = FindDescendant(
+                laboratoryPowerScreen != null ? laboratoryPowerScreen.transform : null,
+                "Text_Description")?.GetComponent<TMP_Text>();
+            chargingTakeButton = chargeArea != null
+                ? chargeArea.Find("DropButton")?.GetComponent<Button>()
+                : null;
+        }
+
+        private void SetQuickAccessVisible(bool visible)
+        {
+            if (quickAccessHud != null)
+                quickAccessHud.SetActive(visible);
+        }
+
+        private void BuildAuthoredSlotViews()
+        {
+            if (inventory == null)
+                return;
+
+            Transform inventoryRoot = inventoryPanel.transform.Find("ScanScreen");
+            CacheAuthoredSlotViews(
+                inventoryRoot?.Find("background_Screen_Storage_Slot_Invent"),
+                backpackViews,
+                InventorySlotGroup.Backpack);
+            CacheAuthoredSlotViews(
+                inventoryRoot?.Find("background_Screen_Storage_Slot_Invent_Anomaly"),
+                anomalyViews,
+                InventorySlotGroup.Anomaly);
+            CacheAuthoredSlotViews(
+                quickAccessHud != null ? quickAccessHud.transform : null,
+                quickViews,
+                InventorySlotGroup.QuickAccess);
+
+            CacheLaboratoryInventoryViews(
+                laboratoryScanScreen,
+                laboratoryBackpackViews,
+                laboratoryAnomalyViews,
+                laboratoryQuickViews);
+            CacheLaboratoryInventoryViews(
+                laboratoryPowerScreen,
+                chargingBackpackViews,
+                chargingAnomalyViews,
+                chargingQuickViews);
+        }
+
+        private void CacheLaboratoryInventoryViews(
+            GameObject screen,
+            List<InventorySlotView> backpacks,
+            List<InventorySlotView> anomalies,
+            List<InventorySlotView> equipment)
+        {
+            if (screen == null)
+                return;
+
+            CacheAuthoredSlotViews(
+                screen.transform.Find("background_Screen_Storage_Slot_Invent"),
+                backpacks,
+                InventorySlotGroup.Backpack);
+            CacheAuthoredSlotViews(
+                screen.transform.Find("background_Screen_Storage_Slot_Invent_Anomaly"),
+                anomalies,
+                InventorySlotGroup.Anomaly);
+            CacheAuthoredSlotViews(
+                screen.transform.Find("background_Screen_Storage_Slot_Invent_Equipment"),
+                equipment,
+                InventorySlotGroup.QuickAccess);
+        }
+
+        private void CacheAuthoredSlotViews(
+            Transform root,
+            List<InventorySlotView> destination,
+            InventorySlotGroup group)
+        {
+            destination.Clear();
+            if (root == null)
+                return;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform slot = root.GetChild(i);
+                if (slot == null || slot.GetComponent<Image>() == null)
+                    continue;
+
+                if (slot.GetComponent<Button>() == null)
+                    slot.gameObject.AddComponent<Button>();
+                EnsureRuntimeIcon(slot);
+
+                InventorySlotView view = slot.GetComponent<InventorySlotView>();
+                if (view == null)
+                    view = slot.gameObject.AddComponent<InventorySlotView>();
+
+                int slotIndex = destination.Count;
+                view.Initialize(
+                    slotIndex,
+                    group == InventorySlotGroup.QuickAccess,
+                    rootCanvas);
+                ConfigureDropTarget(view, group, slotIndex);
+                destination.Add(view);
+            }
+        }
+
+        private void BindAuthoredButtons()
+        {
+            BindSlotButtons(backpackViews, InventorySlotGroup.Backpack);
+            BindSlotButtons(anomalyViews, InventorySlotGroup.Anomaly);
+            BindSlotButtons(quickViews, InventorySlotGroup.QuickAccess);
+            BindSlotButtons(laboratoryBackpackViews, InventorySlotGroup.Backpack);
+            BindSlotButtons(laboratoryAnomalyViews, InventorySlotGroup.Anomaly);
+            BindSlotButtons(laboratoryQuickViews, InventorySlotGroup.QuickAccess);
+            BindSlotButtons(chargingBackpackViews, InventorySlotGroup.Backpack);
+            BindSlotButtons(chargingAnomalyViews, InventorySlotGroup.Anomaly);
+            BindSlotButtons(chargingQuickViews, InventorySlotGroup.QuickAccess);
+
+            if (dropButton != null)
+                dropButton.onClick.AddListener(DropSelected);
+
+            Button exitButton = laboratoryPanel.transform.Find("ExitButton")
+                ?.GetComponent<Button>();
+            if (exitButton != null)
+                exitButton.onClick.AddListener(CloseAll);
+
+            if (laboratoryTabButton != null)
+                laboratoryTabButton.onClick.AddListener(() => ShowLaboratoryMode(false));
+            if (chargingTabButton != null)
+                chargingTabButton.onClick.AddListener(() => ShowLaboratoryMode(true));
+            if (scanButton != null)
+                scanButton.onClick.AddListener(StartScan);
+            if (takeButton != null)
+                takeButton.onClick.AddListener(TakeSample);
+            if (laboratoryDropSlot != null)
+                laboratoryDropSlot.ItemDropped += LoadSample;
+            if (chargingTakeButton != null)
+                chargingTakeButton.onClick.AddListener(TakeChargedItem);
+            if (chargingDropSlot != null)
+                chargingDropSlot.ItemDropped += LoadChargeItem;
+        }
+
+        private void ShowLaboratoryMode(bool charging)
+        {
+            laboratoryOpen = !charging;
+            chargingOpen = charging;
+            if (laboratoryScanScreen != null)
+                laboratoryScanScreen.SetActive(!charging);
+            if (laboratoryPowerScreen != null)
+                laboratoryPowerScreen.SetActive(charging);
+
+            Transform upgrade = laboratoryPanel.transform.Find("UpgradeScreen");
+            Transform map = laboratoryPanel.transform.Find("MapScreen");
+            Transform library = laboratoryPanel.transform.Find("LibraryScreen");
+            Transform storage = laboratoryPanel.transform.Find("StorageScreen");
+            if (upgrade != null) upgrade.gameObject.SetActive(false);
+            if (map != null) map.gameObject.SetActive(false);
+            if (library != null) library.gameObject.SetActive(false);
+            if (storage != null) storage.gameObject.SetActive(false);
+            RefreshAll();
+        }
+
+        private static Transform FindDescendant(Transform root, string objectName)
+        {
+            if (root == null)
+                return null;
+            if (root.name == objectName)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform result = FindDescendant(root.GetChild(i), objectName);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        private static Image EnsureRuntimeIcon(Transform slot)
+        {
+            Transform existing = slot.Find("Icon");
+            Image icon = existing != null ? existing.GetComponent<Image>() : null;
+            if (icon != null)
+                return icon;
+
+            GameObject iconObject = new GameObject(
+                "Icon",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            iconObject.transform.SetParent(slot, false);
+            RectTransform rect = iconObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.12f, 0.12f);
+            rect.anchorMax = new Vector2(0.88f, 0.88f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            Image created = iconObject.GetComponent<Image>();
+            created.preserveAspect = true;
+            created.raycastTarget = false;
+            created.enabled = false;
+            return created;
+        }
+
+        private static LaboratoryInventoryItemDrag EnsureDrag(Transform slot)
+        {
+            LaboratoryInventoryItemDrag drag =
+                slot.GetComponent<LaboratoryInventoryItemDrag>();
+            if (drag == null)
+                drag = slot.gameObject.AddComponent<LaboratoryInventoryItemDrag>();
+            return drag;
         }
 
         private void BuildSlotViews()
@@ -633,11 +972,59 @@ namespace NERA.Inventory
                 inventory.QuickAccessSlots,
                 InventorySlotGroup.QuickAccess
             );
+            RefreshSlots(
+                laboratoryBackpackViews,
+                inventory.BackpackSlots,
+                InventorySlotGroup.Backpack);
+            RefreshSlots(
+                laboratoryAnomalyViews,
+                inventory.AnomalySlots,
+                InventorySlotGroup.Anomaly);
+            RefreshSlots(
+                laboratoryQuickViews,
+                inventory.QuickAccessSlots,
+                InventorySlotGroup.QuickAccess);
+            RefreshSlots(
+                chargingBackpackViews,
+                inventory.BackpackSlots,
+                InventorySlotGroup.Backpack);
+            RefreshSlots(
+                chargingAnomalyViews,
+                inventory.AnomalySlots,
+                InventorySlotGroup.Anomaly);
+            RefreshSlots(
+                chargingQuickViews,
+                inventory.QuickAccessSlots,
+                InventorySlotGroup.QuickAccess);
             RefreshSelection();
 
             RefreshDrags(backpackViews, inventory.BackpackSlots, InventorySlotGroup.Backpack);
             RefreshDrags(anomalyViews, inventory.AnomalySlots, InventorySlotGroup.Anomaly);
             RefreshDrags(quickViews, inventory.QuickAccessSlots, InventorySlotGroup.QuickAccess);
+            RefreshDrags(
+                laboratoryBackpackViews,
+                inventory.BackpackSlots,
+                InventorySlotGroup.Backpack);
+            RefreshDrags(
+                laboratoryAnomalyViews,
+                inventory.AnomalySlots,
+                InventorySlotGroup.Anomaly);
+            RefreshDrags(
+                laboratoryQuickViews,
+                inventory.QuickAccessSlots,
+                InventorySlotGroup.QuickAccess);
+            RefreshDrags(
+                chargingBackpackViews,
+                inventory.BackpackSlots,
+                InventorySlotGroup.Backpack);
+            RefreshDrags(
+                chargingAnomalyViews,
+                inventory.AnomalySlots,
+                InventorySlotGroup.Anomaly);
+            RefreshDrags(
+                chargingQuickViews,
+                inventory.QuickAccessSlots,
+                InventorySlotGroup.QuickAccess);
 
             if (laboratoryOpen)
                 RefreshLaboratory();
@@ -657,30 +1044,41 @@ namespace NERA.Inventory
             bool analyzed = hasItem && controller.IsAnalyzed(controller.LoadedItem);
             bool researchable = hasItem && controller.IsResearchable(controller.LoadedItem);
 
-            laboratorySlotIcon.sprite = hasItem
-                ? controller.LoadedItem.Icon
-                : null;
-            laboratorySlotIcon.color = hasItem && controller.LoadedItem.Icon == null
-                ? MissingIconColor
-                : Color.white;
-            laboratorySlotIcon.enabled = hasItem;
-            laboratoryStatusLabel.text = controller.StatusMessage;
-            scanButtonLabel.text = analyzing
-                ? $"SCANNING {Mathf.RoundToInt(controller.Progress * 100f)}%"
-                : !hasItem ? "START SCAN"
-                : !researchable ? "KNOWN ITEM"
-                : analyzed ? "ANALYZED"
-                : "START SCAN";
-            scanButton.interactable =
-                controller.CanStartAnalysis;
-            takeButton.interactable = hasItem && !analyzing;
-            laboratorySlotDrag.Initialize(
-                hasItem ? controller.LoadedItem : null,
-                rootCanvas,
-                InventorySlotGroup.Backpack,
-                -1,
-                true
-            );
+            if (laboratorySlotIcon != null)
+            {
+                laboratorySlotIcon.sprite = hasItem
+                    ? controller.LoadedItem.Icon
+                    : null;
+                laboratorySlotIcon.color = hasItem && controller.LoadedItem.Icon == null
+                    ? MissingIconColor
+                    : Color.white;
+                laboratorySlotIcon.enabled = hasItem;
+            }
+            if (laboratoryStatusLabel != null)
+                laboratoryStatusLabel.text = controller.StatusMessage;
+            if (scanButtonLabel != null)
+            {
+                scanButtonLabel.text = analyzing
+                    ? $"SCANNING {Mathf.RoundToInt(controller.Progress * 100f)}%"
+                    : !hasItem ? "START SCAN"
+                    : !researchable ? "KNOWN ITEM"
+                    : analyzed ? "ANALYZED"
+                    : "START SCAN";
+            }
+            if (scanButton != null)
+                scanButton.interactable = controller.CanStartAnalysis;
+            if (takeButton != null)
+                takeButton.interactable = hasItem && !analyzing;
+            if (laboratorySlotDrag != null)
+            {
+                laboratorySlotDrag.Initialize(
+                    hasItem ? controller.LoadedItem : null,
+                    rootCanvas,
+                    InventorySlotGroup.Backpack,
+                    -1,
+                    true
+                );
+            }
         }
 
         private void RefreshChargingTable()
@@ -690,23 +1088,33 @@ namespace NERA.Inventory
             ItemData item = instance?.ItemData;
             bool hasItem = item != null;
 
-            chargingSlotIcon.sprite = hasItem ? item.Icon : null;
-            chargingSlotIcon.color = hasItem && item.Icon == null
-                ? MissingIconColor
-                : Color.white;
-            chargingSlotIcon.enabled = hasItem;
-            chargingStatusLabel.text = !hasItem
-                ? charger?.StatusMessage ?? "Charging table unavailable."
-                : $"{charger.StatusMessage}\nCHARGE {Mathf.RoundToInt(instance.Charge01 * 100f)}%";
-            chargingTakeButton.interactable = hasItem;
-            chargingSlotDrag.Initialize(
-                item,
-                rootCanvas,
-                InventorySlotGroup.Backpack,
-                -1,
-                false,
-                true
-            );
+            if (chargingSlotIcon != null)
+            {
+                chargingSlotIcon.sprite = hasItem ? item.Icon : null;
+                chargingSlotIcon.color = hasItem && item.Icon == null
+                    ? MissingIconColor
+                    : Color.white;
+                chargingSlotIcon.enabled = hasItem;
+            }
+            if (chargingStatusLabel != null)
+            {
+                chargingStatusLabel.text = !hasItem
+                    ? charger?.StatusMessage ?? "Charging table unavailable."
+                    : $"{charger.StatusMessage}\nCHARGE {Mathf.RoundToInt(instance.Charge01 * 100f)}%";
+            }
+            if (chargingTakeButton != null)
+                chargingTakeButton.interactable = hasItem;
+            if (chargingSlotDrag != null)
+            {
+                chargingSlotDrag.Initialize(
+                    item,
+                    rootCanvas,
+                    InventorySlotGroup.Backpack,
+                    -1,
+                    false,
+                    true
+                );
+            }
         }
 
         private void RefreshSlots(
@@ -948,13 +1356,20 @@ namespace NERA.Inventory
         private void RefreshSelection()
         {
             bool hasSelection = selectedItem != null && selectedIndex >= 0;
-            selectedItemName.text = hasSelection
-                ? selectedItem.DisplayName
-                : "SELECT AN ITEM";
-            selectedItemDescription.text = hasSelection
-                ? selectedItem.Description
-                : string.Empty;
-            dropButton.interactable = hasSelection;
+            if (selectedItemName != null)
+            {
+                selectedItemName.text = hasSelection
+                    ? selectedItem.DisplayName
+                    : "SELECT AN ITEM";
+            }
+            if (selectedItemDescription != null)
+            {
+                selectedItemDescription.text = hasSelection
+                    ? selectedItem.Description
+                    : string.Empty;
+            }
+            if (dropButton != null)
+                dropButton.interactable = hasSelection;
         }
 
         private void SetPlayerInput(bool enabled)

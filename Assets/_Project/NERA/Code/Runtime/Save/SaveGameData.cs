@@ -15,6 +15,7 @@ namespace NERA.Save
     public sealed class StationSystemSaveData
     {
         public int systemType;
+        public string objectId;
         public int upgradeLevel;
         public bool requestedActive;
     }
@@ -22,7 +23,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 8;
+        public int version = 9;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;

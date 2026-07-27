@@ -8,10 +8,10 @@ namespace NERA.Station
 {
     public sealed class StationStorageController : MonoBehaviour
     {
-        [Header("Authored DevicesPanel capacities")]
-        [SerializeField, Min(1)] private int backpackCapacity = 10;
-        [SerializeField, Min(1)] private int quickAccessCapacity = 4;
-        [SerializeField, Min(1)] private int anomalyCapacity = 7;
+        [Header("Authored StorageScreen capacities")]
+        [SerializeField, Min(1)] private int backpackCapacity = 16;
+        [SerializeField, Min(1)] private int quickAccessCapacity = 16;
+        [SerializeField, Min(1)] private int anomalyCapacity = 16;
 
         [SerializeField] private List<ItemInstance> backpackSlots =
             new List<ItemInstance>();
@@ -29,6 +29,18 @@ namespace NERA.Station
         public IReadOnlyList<ItemInstance> BackpackSlots => backpackSlots;
         public IReadOnlyList<ItemInstance> QuickAccessSlots => quickAccessSlots;
         public IReadOnlyList<ItemInstance> AnomalySlots => anomalySlots;
+
+        public void ConfigureCapacities(
+            int backpack,
+            int quickAccess,
+            int anomaly)
+        {
+            backpackCapacity = Mathf.Max(1, backpack);
+            quickAccessCapacity = Mathf.Max(1, quickAccess);
+            anomalyCapacity = Mathf.Max(1, anomaly);
+            EnsureCapacities();
+            StorageChanged?.Invoke();
+        }
 
         private void Awake()
         {

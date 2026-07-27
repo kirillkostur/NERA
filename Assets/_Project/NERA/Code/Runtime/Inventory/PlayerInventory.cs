@@ -15,8 +15,8 @@ namespace NERA.Inventory
 
     public sealed class PlayerInventory : MonoBehaviour
     {
-        public const int AnomalyCapacity = 3;
-        public const int QuickAccessCapacity = 5;
+        public const int AnomalyCapacity = 4;
+        public const int QuickAccessCapacity = 4;
         public const int ActiveQuickAccessStartIndex = 1;
         public const int ActiveQuickAccessCapacity = 3;
 

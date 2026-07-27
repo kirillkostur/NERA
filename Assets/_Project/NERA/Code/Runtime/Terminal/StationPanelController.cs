@@ -409,9 +409,30 @@ namespace NERA.Terminal
                 return string.Empty;
             }
 
-            int available = CountAvailable(definition.RequiredItemId);
-            string itemName = ResolveItemName(definition.RequiredItemId);
-            return $"\nUpgrade: {itemName} {available}/{definition.RequiredItemCount}";
+            StationUpgradeLevelDefinition upgrade =
+                definition.GetUpgradeDefinition(
+                    systems.GetUpgradeLevel(type) + 1);
+            if (upgrade == null)
+                return string.Empty;
+
+            List<string> requirements = new List<string>();
+            foreach (StationUpgradeItemRequirement requirement in
+                     upgrade.RequiredItems)
+            {
+                if (requirement == null)
+                    continue;
+
+                int available = CountAvailable(requirement.ItemId);
+                requirements.Add(
+                    $"{ResolveItemName(requirement.ItemId)} " +
+                    $"{available}/{requirement.Count}");
+            }
+
+            if (upgrade.EnergyCost > 0f)
+                requirements.Add($"Energy {upgrade.EnergyCost:0}");
+            return requirements.Count > 0
+                ? $"\nUpgrade: {string.Join(", ", requirements)}"
+                : string.Empty;
         }
 
         private void RefreshActions()

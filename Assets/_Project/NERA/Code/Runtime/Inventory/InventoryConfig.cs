@@ -8,7 +8,7 @@ namespace NERA.Inventory
     )]
     public sealed class InventoryConfig : ScriptableObject
     {
-        public const int DefaultBackpackCapacity = 5;
+        public const int DefaultBackpackCapacity = 8;
         public const int MaxBackpackCapacity = 12;
         public const string DefaultResourcesPath =
             "Inventory/DefaultInventoryConfig";

@@ -5,6 +5,8 @@ namespace NERA.Energy
 {
     public sealed class SolarPanelInteractable : MonoBehaviour
     {
+        [Tooltip("Leave empty to generate a stable unique ID from the scene hierarchy.")]
+        [SerializeField] private string panelId;
         [SerializeField, Min(0f)] private float outputMultiplier = 1f;
         [SerializeField] private MaintainableObject maintenance;
 
@@ -37,7 +39,9 @@ namespace NERA.Energy
             if (energy == null)
                 return;
 
-            string hierarchyId = StationEnergyDeviceId.Build(this, "solar");
+            string hierarchyId = string.IsNullOrWhiteSpace(panelId)
+                ? StationEnergyDeviceId.Build(this, "solar")
+                : panelId;
             if (energy.RegisterSolarPanel(
                     hierarchyId,
                     EffectiveOutputMultiplier))
@@ -67,7 +71,9 @@ namespace NERA.Energy
 
         private string ActivePanelId =>
             string.IsNullOrWhiteSpace(registeredPanelId)
-                ? StationEnergyDeviceId.Build(this, "solar")
+                ? (string.IsNullOrWhiteSpace(panelId)
+                    ? StationEnergyDeviceId.Build(this, "solar")
+                    : panelId)
                 : registeredPanelId;
 
         private void HandleConditionChanged(float _)

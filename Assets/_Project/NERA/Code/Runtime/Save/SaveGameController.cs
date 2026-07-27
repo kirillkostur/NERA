@@ -237,6 +237,18 @@ namespace NERA.Save
                         requestedActive = states.TryGetValue(pair.Key, out bool active) && active
                     });
                 }
+
+                foreach (StationObjectSystemState objectState in
+                         stationSystems.ObjectStates)
+                {
+                    data.stationSystems.Add(new StationSystemSaveData
+                    {
+                        systemType = (int)objectState.SystemType,
+                        objectId = objectState.ObjectId,
+                        upgradeLevel = objectState.UpgradeLevel,
+                        requestedActive = objectState.RequestedActive
+                    });
+                }
             }
 
             if (research != null)
@@ -353,6 +365,8 @@ namespace NERA.Save
                     new Dictionary<StationSystemType, int>();
                 Dictionary<StationSystemType, bool> states =
                     new Dictionary<StationSystemType, bool>();
+                List<StationObjectSystemState> objectStates =
+                    new List<StationObjectSystemState>();
                 if (data.stationSystems != null)
                 {
                     foreach (StationSystemSaveData saved in data.stationSystems)
@@ -361,12 +375,23 @@ namespace NERA.Save
                                 typeof(StationSystemType), saved.systemType))
                         {
                             StationSystemType type = (StationSystemType)saved.systemType;
-                            levels[type] = saved.upgradeLevel;
-                            states[type] = saved.requestedActive;
+                            if (string.IsNullOrWhiteSpace(saved.objectId))
+                            {
+                                levels[type] = saved.upgradeLevel;
+                                states[type] = saved.requestedActive;
+                            }
+                            else
+                            {
+                                objectStates.Add(new StationObjectSystemState(
+                                    type,
+                                    saved.objectId,
+                                    saved.upgradeLevel,
+                                    saved.requestedActive));
+                            }
                         }
                     }
                 }
-                stationSystems.Restore(levels, states);
+                stationSystems.Restore(levels, states, objectStates);
             }
         }
 

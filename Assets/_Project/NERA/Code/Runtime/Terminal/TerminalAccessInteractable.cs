@@ -21,6 +21,18 @@ namespace NERA.Terminal
                 );
             }
 
+            StationSystemsController systems = StationSystemsController.Instance;
+            if (systems != null &&
+                !systems.IsRequestedActive(StationSystemType.Computer))
+            {
+                return new InteractionPrompt(
+                    "Start Computer",
+                    InteractionMode.Press,
+                    0f,
+                    true,
+                    string.Empty);
+            }
+
             return base.GetPrompt();
         }
 
@@ -30,6 +42,15 @@ namespace NERA.Terminal
 
             if (power == null || !power.IsPowered)
                 return;
+
+            StationSystemsController systems = StationSystemsController.Instance;
+            if (systems != null &&
+                !systems.IsRequestedActive(StationSystemType.Computer))
+            {
+                systems.SetCriticalSystemActive(
+                    StationSystemType.Computer,
+                    true);
+            }
 
             TerminalUIScreen screen = TerminalUIScreen.Instance;
 

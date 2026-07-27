@@ -650,7 +650,6 @@ namespace NERA.Tests
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 2), Is.EqualTo(equipment[1]));
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 3), Is.EqualTo(equipment[2]));
             Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment[3]));
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 4), Is.EqualTo(equipment[4]));
         }
 
         [Test]

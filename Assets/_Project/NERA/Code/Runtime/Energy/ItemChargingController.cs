@@ -16,7 +16,8 @@ namespace NERA.Energy
 
         public ItemInstance LoadedItem { get; private set; }
         public string StatusMessage { get; private set; } = "Charging table ready.";
-        public bool WantsToCharge => LoadedItem != null && !LoadedItem.IsFullyCharged;
+        public bool WantsToCharge =>
+            LoadedItem?.ItemData != null && !LoadedItem.IsFullyCharged;
         public bool IsCharging => WantsToCharge && IsSystemEnabled && HasOperationalPower;
         public bool HasOperationalPower
         {
@@ -137,7 +138,7 @@ namespace NERA.Energy
 
         public void AdvanceCharging(float deltaTime)
         {
-            if (LoadedItem == null || deltaTime <= 0f)
+            if (LoadedItem?.ItemData == null || deltaTime <= 0f)
                 return;
 
             if (!IsSystemEnabled)
@@ -188,8 +189,8 @@ namespace NERA.Energy
 
         public void RestoreLoadedItem(ItemInstance instance, PlayerInventory inventory)
         {
-            LoadedItem = instance;
-            sourceInventory = instance != null ? inventory : null;
+            LoadedItem = instance?.ItemData != null ? instance : null;
+            sourceInventory = LoadedItem != null ? inventory : null;
             RefreshState();
             LoadedItemChanged?.Invoke();
         }
@@ -199,7 +200,7 @@ namespace NERA.Energy
             EnsureEnergyRegistration();
             EnergySystemController energy = EnergySystemController.Instance;
             energy?.SetConsumerActive(ConsumerId, WantsToCharge && IsSystemEnabled);
-            StatusMessage = LoadedItem == null
+            StatusMessage = LoadedItem?.ItemData == null
                 ? "Charging table ready."
                 : !IsSystemEnabled
                     ? "Charging paused - charger is stopped."

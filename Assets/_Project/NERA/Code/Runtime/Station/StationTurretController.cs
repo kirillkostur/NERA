@@ -2,6 +2,8 @@ using NERA.Combat;
 using NERA.Energy;
 using NERA.Enemies;
 using NERA.Maintenance;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NERA.Station
@@ -9,7 +11,7 @@ namespace NERA.Station
     [RequireComponent(typeof(MaintainableObject))]
     public sealed class StationTurretController : MonoBehaviour, IDamageable
     {
-        [SerializeField] private string turretId = "station_turret_01";
+        [SerializeField] private string turretId;
         [SerializeField] private Transform yawPivot;
         [SerializeField] private Transform muzzle;
         [SerializeField, Min(1f)] private float detectionRange = 18f;
@@ -24,14 +26,54 @@ namespace NERA.Station
         private float nextTargetSearchAt;
         private float nextShotAt;
 
+        private static readonly Dictionary<string, StationTurretController>
+            TurretsById = new Dictionary<string, StationTurretController>(
+                StringComparer.OrdinalIgnoreCase);
+
         public static StationTurretController Instance { get; private set; }
+        public string TurretId => turretId;
+        public int InitialUpgradeLevel
+        {
+            get
+            {
+                StationSystemsConfig config =
+                    StationSystemsController.Instance?.Config ??
+                    StationSystemsConfig.LoadDefault();
+                return config.Find(
+                    StationSystemType.Turret,
+                    turretId)?.InitialLevel ?? 0;
+            }
+        }
+        public bool InitiallyActive
+        {
+            get
+            {
+                StationSystemsConfig config =
+                    StationSystemsController.Instance?.Config ??
+                    StationSystemsConfig.LoadDefault();
+                return config.Find(
+                    StationSystemType.Turret,
+                    turretId)?.InitiallyActive ??
+                    InitialUpgradeLevel > 0;
+            }
+        }
+        public float Condition => maintenance != null
+            ? maintenance.Condition
+            : 1f;
         public bool IsAlive => maintenance != null && maintenance.IsOperational;
         public bool HasTarget => target != null && target.IsAlive;
         public bool IsInstalled => StationSystemsController.Instance != null &&
-            StationSystemsController.Instance.IsUnlocked(StationSystemType.Turret);
+            StationSystemsController.Instance.IsUnlocked(
+                StationSystemType.Turret,
+                turretId,
+                InitialUpgradeLevel);
         public bool IsOperational => IsInstalled && IsAlive &&
             (StationSystemsController.Instance == null ||
-             StationSystemsController.Instance.IsRequestedActive(StationSystemType.Turret)) &&
+             StationSystemsController.Instance.IsRequestedActive(
+                 StationSystemType.Turret,
+                 turretId,
+                 InitialUpgradeLevel,
+                 InitiallyActive)) &&
             EnergySystemController.Instance != null &&
             EnergySystemController.Instance.IsConsumerPowered(consumerId);
 
@@ -44,6 +86,12 @@ namespace NERA.Station
             if (muzzle == null)
                 muzzle = yawPivot;
             consumerId = $"turret:{turretId}";
+            RegisterTurret();
+            StationSystemsController.Instance?.RegisterObject(
+                StationSystemType.Turret,
+                turretId,
+                InitialUpgradeLevel,
+                InitiallyActive);
         }
 
         private void Start()
@@ -55,7 +103,11 @@ namespace NERA.Station
         {
             bool available = IsInstalled && IsAlive &&
                 (StationSystemsController.Instance == null ||
-                 StationSystemsController.Instance.IsRequestedActive(StationSystemType.Turret));
+                 StationSystemsController.Instance.IsRequestedActive(
+                     StationSystemType.Turret,
+                     turretId,
+                     InitialUpgradeLevel,
+                     InitiallyActive));
 
             if (!available)
             {
@@ -153,7 +205,11 @@ namespace NERA.Station
 
             bool requested = IsInstalled && IsAlive &&
                 (StationSystemsController.Instance == null ||
-                 StationSystemsController.Instance.IsRequestedActive(StationSystemType.Turret));
+                 StationSystemsController.Instance.IsRequestedActive(
+                     StationSystemType.Turret,
+                     turretId,
+                     InitialUpgradeLevel,
+                     InitiallyActive));
             float rate = firing
                 ? energy.Config.TurretFiringConsumption
                 : energy.Config.TurretIdleConsumption;
@@ -164,8 +220,33 @@ namespace NERA.Station
         private void OnDestroy()
         {
             EnergySystemController.Instance?.UnregisterConsumer(consumerId);
+            if (!string.IsNullOrWhiteSpace(turretId) &&
+                TurretsById.TryGetValue(
+                    turretId,
+                    out StationTurretController registered) &&
+                registered == this)
+            {
+                TurretsById.Remove(turretId);
+            }
             if (Instance == this)
                 Instance = null;
+        }
+
+        public static StationTurretController FindById(string objectId)
+        {
+            if (string.IsNullOrWhiteSpace(objectId))
+                return null;
+
+            TurretsById.TryGetValue(
+                objectId.Trim(),
+                out StationTurretController turret);
+            return turret;
+        }
+
+        private void RegisterTurret()
+        {
+            if (!string.IsNullOrWhiteSpace(turretId))
+                TurretsById[turretId.Trim()] = this;
         }
     }
 }

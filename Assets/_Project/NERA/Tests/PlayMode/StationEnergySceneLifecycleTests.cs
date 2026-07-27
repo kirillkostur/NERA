@@ -73,10 +73,20 @@ namespace NERA.Tests
             environment.SetWeather(StationWeather.Clear);
             energy.AdvanceSimulation(0.1f);
 
-            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+            StationBattery[] batteries = Object.FindObjectsByType<StationBattery>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            SolarPanelInteractable[] solarPanels =
+                Object.FindObjectsByType<SolarPanelInteractable>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None);
+            Assert.That(batteries.Length, Is.EqualTo(2));
+            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
             Assert.That(
                 energy.CurrentGeneration,
-                Is.EqualTo(energy.Config.ClearDayGeneration).Within(0.01f)
+                Is.EqualTo(
+                    energy.Config.ClearDayGeneration * solarPanels.Length)
+                    .Within(0.01f)
             );
 
             SceneManager.LoadScene("Expedition_01");
@@ -90,11 +100,266 @@ namespace NERA.Tests
             environment.SetWeather(StationWeather.Clear);
             energy.AdvanceSimulation(0.1f);
 
-            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+            solarPanels = Object.FindObjectsByType<SolarPanelInteractable>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
             Assert.That(
                 energy.CurrentGeneration,
-                Is.EqualTo(energy.Config.ClearDayGeneration).Within(0.01f)
+                Is.EqualTo(
+                    energy.Config.ClearDayGeneration * solarPanels.Length)
+                    .Within(0.01f)
             );
+        }
+
+        [UnityTest]
+        public IEnumerator StationTabsAndSystemTogglesAreIndependent()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Terminal.TerminalUIScreen terminal = Terminal.TerminalUIScreen.Instance;
+            Terminal.TerminalStationScreenController stationScreen =
+                Object.FindFirstObjectByType<
+                    Terminal.TerminalStationScreenController>(
+                    FindObjectsInactive.Include);
+
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(terminal, Is.Not.Null);
+            Assert.That(stationScreen, Is.Not.Null);
+
+            energy.RestoreState(energy.TotalCapacity, true);
+            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            terminal.Open();
+            terminal.ShowStation();
+
+            Transform statusPanel = stationScreen.transform.Find(
+                "background_Status");
+            Transform upgradePanel = stationScreen.transform.Find(
+                "background_Upgrade");
+            Transform stationStatusTextTransform = Array.Find(
+                statusPanel.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "Text_description");
+            Assert.That(stationStatusTextTransform, Is.Not.Null);
+            Component stationStatusText = stationStatusTextTransform
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(stationStatusText, Is.Not.Null);
+            Assert.That(statusPanel.gameObject.activeSelf, Is.True,
+                "Station must open on the status tab before an object is selected.");
+            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
+
+            Transform powerSwitch = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "Toggle");
+            Assert.That(powerSwitch, Is.Not.Null);
+            Button onButton = powerSwitch.Find("OnButton").GetComponent<Button>();
+            Button offButton = powerSwitch.Find("OffButton").GetComponent<Button>();
+            RectTransform powerHandle =
+                (RectTransform)powerSwitch.Find("Handle");
+            Component powerStatus = powerSwitch.Find("Text_Status")
+                .GetComponent("TextMeshProUGUI");
+
+            stationScreen.SelectSystem(StationSystemType.Laboratory);
+            yield return null;
+            Assert.That(onButton.gameObject.activeSelf, Is.True);
+            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(25f).Within(0.1f));
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Active"));
+            Assert.That(
+                stationStatusText.GetType().GetProperty("text")
+                    ?.GetValue(stationStatusText)?.ToString(),
+                Does.Contain(
+                    $"Consumption - {energy.Config.LaboratoryConsumption:0.0}"));
+            onButton.onClick.Invoke();
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.False);
+            Assert.That(offButton.gameObject.activeSelf, Is.True);
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Inactive"));
+
+            stationScreen.SelectSystem(StationSystemType.Charger);
+            yield return null;
+            Assert.That(onButton.gameObject.activeSelf, Is.True,
+                "Charger must keep its own state when laboratory is stopped.");
+            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(25f).Within(0.1f),
+                "Selecting an active system must move the handle to ON.");
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Active"));
+            Assert.That(
+                stationStatusText.GetType().GetProperty("text")
+                    ?.GetValue(stationStatusText)?.ToString(),
+                Does.Contain(
+                    $"Consumption - {energy.Config.ItemChargingConsumption:0.0}"));
+            stationScreen.SelectSystem(StationSystemType.Laboratory);
+            yield return null;
+            Assert.That(offButton.gameObject.activeSelf, Is.True);
+            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(-25f).Within(0.1f),
+                "Returning to an inactive system must move the handle to OFF.");
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Inactive"));
+
+            Button statusButton = stationScreen.transform.Find(
+                "StatusMapButton").GetComponent<Button>();
+            Button upgradeButton = stationScreen.transform.Find(
+                "UpgradesMapButton").GetComponent<Button>();
+
+            statusButton.onClick.Invoke();
+            Assert.That(statusPanel.gameObject.activeSelf, Is.True);
+            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
+
+            upgradeButton.onClick.Invoke();
+            Assert.That(statusPanel.gameObject.activeSelf, Is.False);
+            Assert.That(upgradePanel.gameObject.activeSelf, Is.True);
+
+            Transform batteryPreview = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "SM_Battery_Room");
+            Assert.That(batteryPreview, Is.Not.Null);
+            Assert.That(
+                stationScreen.SelectPreviewObject(batteryPreview),
+                Is.True);
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_1").gameObject.activeSelf,
+                Is.True);
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_2").gameObject.activeSelf,
+                Is.True);
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_3").gameObject.activeSelf,
+                Is.False,
+                "Battery config contains only two upgrade levels.");
+
+            Transform firstTurret = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "SM_Turret_0");
+            Transform secondTurret = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "SM_Turret_1");
+            Assert.That(firstTurret, Is.Not.Null);
+            Assert.That(secondTurret, Is.Not.Null);
+
+            Assert.That(stationScreen.SelectPreviewObject(firstTurret), Is.True);
+            Assert.That(
+                stationScreen.SelectedObjectId,
+                Is.EqualTo("station_turret_01"));
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    stationScreen.SelectedObjectId,
+                    1),
+                Is.EqualTo(1));
+            for (int level = 1; level <= 3; level++)
+            {
+                Transform slot = upgradePanel.Find($"Slot_LVL_{level}");
+                Assert.That(slot.gameObject.activeSelf, Is.True);
+                Component label = slot.Find("Text_info_LVL")
+                    .GetComponent("TextMeshProUGUI");
+                Assert.That(
+                    label.GetType().GetProperty("text")?.GetValue(label),
+                    Is.EqualTo($"TURRET {level}"));
+            }
+
+            Assert.That(stationScreen.SelectPreviewObject(secondTurret), Is.True);
+            Assert.That(
+                stationScreen.SelectedObjectId,
+                Is.EqualTo("station_turret_02"));
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    stationScreen.SelectedObjectId,
+                    0),
+                Is.Zero,
+                "The second turret must have independent starting progress.");
+
+            terminal.ShowNextScreen();
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));
+            terminal.ShowPreviousScreen();
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(1));
+            Assert.That(statusPanel.gameObject.activeSelf, Is.True,
+                "Returning to Station must restore the status tab.");
+            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
+
+            terminal.ShowMap();
+            terminal.ShowPreviousScreen();
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(3),
+                "Previous-page navigation must wrap from Map to Storage.");
+            terminal.ShowNextScreen();
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(0),
+                "Next-page navigation must wrap from Storage to Map.");
+            terminal.ShowStation();
+
+            Transform solar = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "SM_Solar_Panel");
+            Assert.That(solar, Is.Not.Null);
+            Assert.That(stationScreen.SelectPreviewObject(solar), Is.True);
+            Assert.That(
+                stationScreen.SelectedSystem,
+                Is.EqualTo(StationSystemType.SolarPanel));
+            Assert.That(
+                stationStatusText.GetType().GetProperty("text")
+                    ?.GetValue(stationStatusText)?.ToString(),
+                Does.Not.Contain("Consumption -"),
+                "A solar generator must not be presented as a consumer.");
+            Assert.That(onButton.interactable, Is.False);
+            Assert.That(offButton.interactable, Is.False,
+                "Solar panel remains read-only from the computer.");
+        }
+
+        [UnityTest]
+        public IEnumerator CriticalSystemTogglesCloseTerminalAndCutPower()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Terminal.TerminalUIScreen terminal = Terminal.TerminalUIScreen.Instance;
+            Terminal.TerminalStationScreenController stationScreen =
+                Object.FindFirstObjectByType<
+                    Terminal.TerminalStationScreenController>(
+                    FindObjectsInactive.Include);
+            Transform powerSwitch = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "Toggle");
+            Button onButton = powerSwitch.Find("OnButton").GetComponent<Button>();
+
+            energy.RestoreState(energy.TotalCapacity, true);
+            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            terminal.Open();
+            terminal.ShowStation();
+
+            stationScreen.SelectSystem(StationSystemType.Computer);
+            onButton.onClick.Invoke();
+            Assert.That(terminal.IsOpen, Is.False);
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Computer),
+                Is.False);
+            Assert.That(energy.GridEnabled, Is.True);
+
+            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            terminal.Open();
+            terminal.ShowStation();
+            stationScreen.SelectSystem(StationSystemType.Battery);
+            onButton.onClick.Invoke();
+
+            Assert.That(terminal.IsOpen, Is.False);
+            Assert.That(energy.GridEnabled, Is.False);
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Battery),
+                Is.False);
         }
 
         [UnityTest]
@@ -171,15 +436,15 @@ namespace NERA.Tests
                 ExpeditionDiscoveryController.Instance;
             DroneScanController drone = DroneScanController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
-            Terminal.StationPanelController panel =
-                Object.FindFirstObjectByType<Terminal.StationPanelController>(
+            Terminal.TerminalStationScreenController stationScreen =
+                Object.FindFirstObjectByType<Terminal.TerminalStationScreenController>(
                     FindObjectsInactive.Include);
 
             Assert.That(energy, Is.Not.Null);
             Assert.That(discovery, Is.Not.Null);
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
-            Assert.That(panel, Is.Not.Null);
+            Assert.That(stationScreen, Is.Not.Null);
             Assert.That(discovery.KnownLocations.Count, Is.GreaterThan(0));
 
             ExpeditionLocationData location = discovery.KnownLocations[0];
@@ -191,25 +456,15 @@ namespace NERA.Tests
             drone.RefreshAvailability();
             Assert.That(drone.LaunchScan(location), Is.True);
 
-            Transform systemsTabTransform = panel.transform.Find("SystemsTabButton");
-            Transform droneSlotTransform = Array.Find(
-                panel.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "Slot_Dron");
-            Assert.That(systemsTabTransform, Is.Not.Null, "SystemsTabButton not found.");
-            Assert.That(droneSlotTransform, Is.Not.Null, "Slot_Dron not found.");
-            Button systemsTabButton = systemsTabTransform.GetComponent<Button>();
-            Button droneSlotButton = droneSlotTransform.GetComponent<Button>();
-            Assert.That(systemsTabButton, Is.Not.Null, "Systems tab has no Button.");
-            Assert.That(droneSlotButton, Is.Not.Null, "Drone slot has no Button.");
-            systemsTabButton.onClick.Invoke();
-            droneSlotButton.onClick.Invoke();
-            panel.RefreshAll();
-
-            Button powerButton = Array.Find(
-                panel.GetComponentsInChildren<Button>(true),
-                button => button.name == "Stop\\StartTabButton");
-            Assert.That(powerButton, Is.Not.Null, "Stop/Start button not found.");
-            Assert.That(powerButton.gameObject.activeSelf, Is.False);
+            stationScreen.SelectSystem(StationSystemType.Drone);
+            Transform powerSwitch = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "Toggle");
+            Assert.That(powerSwitch, Is.Not.Null, "Drone power switch not found.");
+            Button onButton = powerSwitch.Find("OnButton").GetComponent<Button>();
+            Button offButton = powerSwitch.Find("OffButton").GetComponent<Button>();
+            Assert.That(onButton.interactable, Is.False);
+            Assert.That(offButton.interactable, Is.False);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Drone, false),
                 Is.False);
@@ -236,26 +491,20 @@ namespace NERA.Tests
             Assert.That(inventory.Config, Is.Not.Null);
 
             Transform content = hud.transform.Find(
-                "InventoryPanel/Backpack/Scroll View/Viewport/Content"
+                "InventoryScreen/ScanScreen/background_Screen_Storage_Slot_Invent"
             );
             Assert.That(content, Is.Not.Null);
 
-            for (int i = 0; i < InventoryConfig.MaxBackpackCapacity; i++)
+            Assert.That(content.childCount, Is.EqualTo(inventory.BackpackCapacity));
+            for (int i = 0; i < inventory.BackpackCapacity; i++)
             {
                 Transform spawnPoint = content.Find($"Slot_{i + 1}");
                 Assert.That(spawnPoint, Is.Not.Null);
+                Assert.That(spawnPoint.gameObject.activeSelf, Is.True);
                 Assert.That(
-                    spawnPoint.gameObject.activeSelf,
-                    Is.EqualTo(i < inventory.BackpackCapacity)
+                    spawnPoint.GetComponent<InventorySlotView>(),
+                    Is.Not.Null
                 );
-
-                if (i < inventory.BackpackCapacity)
-                {
-                    Assert.That(
-                        spawnPoint.GetComponentInChildren<InventorySlotView>(true),
-                        Is.Not.Null
-                    );
-                }
             }
         }
 
@@ -268,26 +517,27 @@ namespace NERA.Tests
             yield return DisablePersistenceForTest();
 
             StationStorageController storage = StationStorageController.Instance;
-            Terminal.StationPanelController panel =
-                Object.FindFirstObjectByType<Terminal.StationPanelController>(
+            Terminal.TerminalStorageScreenController storageScreen =
+                Object.FindFirstObjectByType<Terminal.TerminalStorageScreenController>(
                     FindObjectsInactive.Include);
 
             Assert.That(storage, Is.Not.Null);
-            Assert.That(panel, Is.Not.Null);
-            Assert.That(storage.BackpackSlots.Count, Is.EqualTo(10));
-            Assert.That(storage.QuickAccessSlots.Count, Is.EqualTo(4));
-            Assert.That(storage.AnomalySlots.Count, Is.EqualTo(7));
+            Assert.That(storageScreen, Is.Not.Null);
+            Assert.That(storage.BackpackSlots.Count, Is.EqualTo(16));
+            Assert.That(storage.QuickAccessSlots.Count, Is.EqualTo(16));
+            Assert.That(storage.AnomalySlots.Count, Is.EqualTo(16));
 
-            Transform devices = panel.transform.Find("DevicesPanel");
-            Assert.That(devices, Is.Not.Null);
             Assert.That(
-                CountDirectSlotButtons(devices.Find("Background_Backpack")),
+                CountDirectSlotButtons(storageScreen.transform.Find(
+                    "background_Screen_Storage_Slot")),
                 Is.EqualTo(storage.BackpackSlots.Count));
             Assert.That(
-                CountDirectSlotButtons(devices.Find("Background_QuickAccess")),
+                CountDirectSlotButtons(storageScreen.transform.Find(
+                    "background_Screen_Storage_Slot_Equipment")),
                 Is.EqualTo(storage.QuickAccessSlots.Count));
             Assert.That(
-                CountDirectSlotButtons(devices.Find("Background_Anomaly")),
+                CountDirectSlotButtons(storageScreen.transform.Find(
+                    "background_Screen_Storage_Slot_Anomaly")),
                 Is.EqualTo(storage.AnomalySlots.Count));
         }
 
@@ -299,27 +549,44 @@ namespace NERA.Tests
             yield return null;
             yield return DisablePersistenceForTest();
 
-            Terminal.StationPanelController panel =
-                Object.FindFirstObjectByType<Terminal.StationPanelController>(
+            Terminal.TerminalUIScreen terminal =
+                Object.FindFirstObjectByType<Terminal.TerminalUIScreen>(
                     FindObjectsInactive.Include);
             InventoryLabHUDController inventoryHud = InventoryLabHUDController.Instance;
-            Assert.That(panel, Is.Not.Null);
+            Assert.That(terminal, Is.Not.Null);
             Assert.That(inventoryHud, Is.Not.Null);
 
-            Button devicesButton = panel.transform.Find("DevicesTabButton")
+            EnergySystemController.Instance.RestoreState(
+                EnergySystemController.Instance.TotalCapacity,
+                true);
+            StationSystemsController.Instance.SetCriticalSystemActive(
+                StationSystemType.Computer,
+                true);
+            terminal.Open();
+
+            Button devicesButton = terminal.transform.Find("StorageButton")
                 .GetComponent<Button>();
-            Button statusButton = panel.transform.Find("StatusTabButton")
+            Button statusButton = terminal.transform.Find("StationButton")
                 .GetComponent<Button>();
-            Transform inventoryPanel = inventoryHud.transform.Find("InventoryPanel");
+            Transform storageScreen = terminal.transform.Find("StorageScreen");
 
             devicesButton.onClick.Invoke();
+            Assert.That(storageScreen.gameObject.activeSelf, Is.True);
             Assert.That(
-                panel.transform.Find("DevicesPanel").gameObject.activeSelf,
+                storageScreen.Find("background_Screen_Storage_Slot_Invent")
+                    .gameObject.activeSelf,
                 Is.True);
-            Assert.That(inventoryPanel.gameObject.activeSelf, Is.True);
+            Assert.That(
+                storageScreen.Find("background_Screen_Storage_Slot_Invent_Anomaly")
+                    .gameObject.activeSelf,
+                Is.True);
+            Assert.That(
+                storageScreen.Find("background_Screen_Storage_Slot_Invent_Equipment")
+                    .gameObject.activeSelf,
+                Is.True);
 
             statusButton.onClick.Invoke();
-            Assert.That(inventoryPanel.gameObject.activeSelf, Is.False);
+            Assert.That(storageScreen.gameObject.activeSelf, Is.False);
         }
 
         [UnityTest]
@@ -332,33 +599,37 @@ namespace NERA.Tests
 
             PlayerInventory inventory = Object.FindFirstObjectByType<PlayerInventory>();
             StationStorageController storage = StationStorageController.Instance;
-            Terminal.StationPanelController panel =
-                Object.FindFirstObjectByType<Terminal.StationPanelController>(
+            Terminal.TerminalUIScreen terminal =
+                Object.FindFirstObjectByType<Terminal.TerminalUIScreen>(
                     FindObjectsInactive.Include);
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
             ItemData item = catalog != null ? catalog.Find("servo_drive_01") : null;
 
             Assert.That(inventory, Is.Not.Null);
             Assert.That(storage, Is.Not.Null);
-            Assert.That(panel, Is.Not.Null);
+            Assert.That(terminal, Is.Not.Null);
             Assert.That(item, Is.Not.Null);
             inventory.RestoreItemInstances(Array.Empty<ItemInstance>());
             storage.ResetStorage();
             Assert.That(inventory.AddItem(item), Is.True);
 
-            Transform terminalScreen = panel.transform.parent;
-            terminalScreen.gameObject.SetActive(true);
-            CanvasGroup terminalCanvasGroup = terminalScreen.GetComponent<CanvasGroup>();
-            terminalCanvasGroup.alpha = 1f;
-            terminalCanvasGroup.interactable = true;
-            terminalCanvasGroup.blocksRaycasts = true;
-            panel.transform.Find("DevicesTabButton").GetComponent<Button>().onClick.Invoke();
+            EnergySystemController.Instance.RestoreState(
+                EnergySystemController.Instance.TotalCapacity,
+                true);
+            StationSystemsController.Instance.SetCriticalSystemActive(
+                StationSystemType.Computer,
+                true);
+            terminal.Open();
+            terminal.transform.Find("StorageButton").GetComponent<Button>()
+                .onClick.Invoke();
             yield return null;
             Canvas.ForceUpdateCanvases();
 
+            Transform storageScreenRoot = terminal.transform.Find("StorageScreen");
+            Assert.That(storageScreenRoot, Is.Not.Null, "StorageScreen not found.");
             LaboratoryInventoryItemDrag source = null;
             foreach (LaboratoryInventoryItemDrag drag in
-                     InventoryLabHUDController.Instance.GetComponentsInChildren<
+                     storageScreenRoot.GetComponentsInChildren<
                          LaboratoryInventoryItemDrag>(true))
             {
                 if (drag.Item == item && !drag.IsStationStorageSource)
@@ -368,20 +639,23 @@ namespace NERA.Tests
                 }
             }
 
-            LaboratoryItemDropSlot destination = panel.transform
-                .Find("DevicesPanel/Background_Backpack/Slot_1")
-                .GetComponent<LaboratoryItemDropSlot>();
-            Image destinationIcon = destination.transform.Find("Icon")
-                .GetComponent<Image>();
+            Transform destinationRoot = terminal.transform.Find(
+                "StorageScreen/background_Screen_Storage_Slot/Slot_1");
+            Assert.That(destinationRoot, Is.Not.Null, "Storage Slot_1 not found.");
+            LaboratoryItemDropSlot destination =
+                destinationRoot.GetComponent<LaboratoryItemDropSlot>();
             Assert.That(source, Is.Not.Null, "Occupied inventory slot has no drag source.");
             Assert.That(destination, Is.Not.Null, "Storage slot has no drop target.");
+            Transform destinationIconRoot = destination.transform.Find("RuntimeIcon");
+            Assert.That(destinationIconRoot, Is.Not.Null, "Storage icon not created.");
+            Image destinationIcon = destinationIconRoot.GetComponent<Image>();
             Assert.That(destinationIcon, Is.Not.Null);
             Assert.That(source.SourceGroup, Is.EqualTo(InventorySlotGroup.Backpack));
             Assert.That(source.SourceIndex, Is.GreaterThanOrEqualTo(0));
             Assert.That(source.IsStationStorageSource, Is.False);
             Assert.That(source.IsLaboratorySource, Is.False);
             Assert.That(source.IsChargingSource, Is.False);
-            Assert.That(storage.BackpackSlots.Count, Is.EqualTo(10));
+            Assert.That(storage.BackpackSlots.Count, Is.EqualTo(16));
             Assert.That(
                 PlayerInventory.GetSlotGroup(item.ItemType),
                 Is.EqualTo(InventorySlotGroup.Backpack));
@@ -391,7 +665,7 @@ namespace NERA.Tests
             Assert.That(
                 destination.ItemDropped,
                 Is.Not.Null,
-                "Storage slot was created without StationPanelController callback.");
+                "Storage slot was created without terminal storage callback.");
 
             RectTransform destinationRect = (RectTransform)destination.transform;
             Canvas canvas = destination.GetComponentInParent<Canvas>();

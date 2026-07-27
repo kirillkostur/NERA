@@ -1,8 +1,10 @@
 using NERA.Expeditions;
+using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Station;
 using NUnit.Framework;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,15 +16,27 @@ namespace NERA.Tests
         private GameObject playerRoot;
         private StationStorageController storage;
         private StationSystemsController systems;
+        private EnergySystemController energy;
         private PlayerInventory inventory;
         private ItemData servoDrive;
+        private ItemData signalRelay;
 
         [SetUp]
         public void SetUp()
         {
+            SetSingleton(typeof(EnergySystemController), null);
+            SetSingleton(typeof(StationStorageController), null);
+            SetSingleton(typeof(StationSystemsController), null);
             stationRoot = new GameObject("Test_StationSystems");
+            energy = stationRoot.AddComponent<EnergySystemController>();
+            SetSingleton(typeof(EnergySystemController), energy);
+            energy.RegisterBattery("test_battery", 1000f, 1000f);
+            energy.SetGridEnabled(true);
             storage = stationRoot.AddComponent<StationStorageController>();
             systems = stationRoot.AddComponent<StationSystemsController>();
+            SetSingleton(typeof(StationStorageController), storage);
+            SetSingleton(typeof(StationSystemsController), systems);
+            systems.ResetSystems();
 
             playerRoot = new GameObject("Test_StationPlayer");
             inventory = playerRoot.AddComponent<PlayerInventory>();
@@ -34,14 +48,21 @@ namespace NERA.Tests
             serializedItem.FindProperty("itemType").enumValueIndex =
                 (int)ItemType.EngineeringPart;
             serializedItem.ApplyModifiedPropertiesWithoutUndo();
+            signalRelay = CreateItem(
+                "nera_signal_relay_02",
+                ItemType.EngineeringPart);
         }
 
         [TearDown]
         public void TearDown()
         {
             Object.DestroyImmediate(servoDrive);
+            Object.DestroyImmediate(signalRelay);
             Object.DestroyImmediate(playerRoot);
             Object.DestroyImmediate(stationRoot);
+            SetSingleton(typeof(EnergySystemController), null);
+            SetSingleton(typeof(StationStorageController), null);
+            SetSingleton(typeof(StationSystemsController), null);
         }
 
         [Test]
@@ -131,7 +152,7 @@ namespace NERA.Tests
             ExpeditionLocationData distant =
                 ScriptableObject.CreateInstance<ExpeditionLocationData>();
             SerializedObject serializedLocation = new SerializedObject(distant);
-            serializedLocation.FindProperty("requiredDroneUpgradeLevel").intValue = 1;
+            serializedLocation.FindProperty("requiredDroneUpgradeLevel").intValue = 2;
             serializedLocation.ApplyModifiedPropertiesWithoutUndo();
 
             Assert.That(systems.CanDroneReach(distant), Is.False);
@@ -139,10 +160,371 @@ namespace NERA.Tests
                 systems.TryUpgrade(StationSystemType.Drone, inventory, storage),
                 Is.True);
             Assert.That(storage.Count, Is.Zero);
-            Assert.That(systems.GetUpgradeLevel(StationSystemType.Drone), Is.EqualTo(1));
+            Assert.That(systems.GetUpgradeLevel(StationSystemType.Drone), Is.EqualTo(2));
             Assert.That(systems.CanDroneReach(distant), Is.True);
 
             Object.DestroyImmediate(distant);
+        }
+
+        [Test]
+        public void UpgradesAreSequentialAndConsumeLevelCost()
+        {
+            inventory.AddItem(servoDrive);
+            inventory.AddItem(servoDrive);
+            inventory.AddItem(servoDrive);
+            inventory.AddItem(signalRelay);
+
+            Assert.That(
+                systems.TryUpgradeTo(
+                    StationSystemType.Drone,
+                    3,
+                    inventory,
+                    storage),
+                Is.False,
+                "Level 3 must not be installed before level 2.");
+
+            float energyBefore = energy.CurrentEnergy;
+            Assert.That(
+                systems.CanUpgradeTo(
+                    StationSystemType.Drone,
+                    2,
+                    inventory,
+                    storage,
+                    out string levelTwoReason),
+                Is.True,
+                levelTwoReason);
+            Assert.That(
+                systems.TryUpgradeTo(
+                    StationSystemType.Drone,
+                    2,
+                    inventory,
+                    storage),
+                Is.True,
+                "Level 2 should consume its configured part and energy.");
+            Assert.That(systems.GetUpgradeLevel(StationSystemType.Drone), Is.EqualTo(2));
+            Assert.That(inventory.CountItem("servo_drive_01"), Is.EqualTo(2));
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(energyBefore - 100f));
+
+            Assert.That(
+                systems.CanUpgradeTo(
+                    StationSystemType.Drone,
+                    3,
+                    inventory,
+                    storage,
+                    out string reason),
+                Is.True,
+                reason);
+            Assert.That(
+                systems.TryUpgradeTo(
+                    StationSystemType.Drone,
+                    3,
+                    inventory,
+                    storage),
+                Is.True,
+                "Level 3 should consume every configured item and 200 energy.");
+            Assert.That(systems.GetUpgradeLevel(StationSystemType.Drone), Is.EqualTo(3));
+            Assert.That(inventory.CountItem("servo_drive_01"), Is.Zero);
+            Assert.That(inventory.CountItem("nera_signal_relay_02"), Is.Zero);
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(energyBefore - 300f));
+        }
+
+        [Test]
+        public void TurretInstancesKeepIndependentUpgradeLevels()
+        {
+            const string firstTurret = "station_turret_01";
+            const string secondTurret = "station_turret_02";
+            systems.RegisterObject(
+                StationSystemType.Turret,
+                firstTurret,
+                1,
+                true);
+            systems.RegisterObject(
+                StationSystemType.Turret,
+                secondTurret,
+                0,
+                false);
+
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    firstTurret,
+                    1),
+                Is.EqualTo(1));
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    secondTurret,
+                    0),
+                Is.Zero);
+
+            inventory.AddItem(servoDrive);
+            Assert.That(
+                systems.TryUpgradeTo(
+                    StationSystemType.Turret,
+                    secondTurret,
+                    0,
+                    1,
+                    inventory,
+                    storage),
+                Is.True);
+
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    firstTurret,
+                    1),
+                Is.EqualTo(1),
+                "Upgrading turret 2 must not modify turret 1.");
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    secondTurret,
+                    0),
+                Is.EqualTo(1));
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Turret,
+                    secondTurret,
+                    0,
+                    false),
+                Is.True,
+                "Installing level 1 must activate that turret instance.");
+            Assert.That(
+                systems.SetRequestedActive(
+                    StationSystemType.Turret,
+                    false,
+                    secondTurret,
+                    0,
+                    false),
+                Is.True);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Turret,
+                    firstTurret,
+                    1,
+                    true),
+                Is.True,
+                "Stopping turret 2 must not stop turret 1.");
+        }
+
+        [Test]
+        public void TurretInstancesUseTheirOwnConfiguredParts()
+        {
+            const string thirdTurret = "station_turret_03";
+            StationSystemDefinition configuredTurret =
+                systems.Config.Find(
+                    StationSystemType.Turret,
+                    thirdTurret);
+            Assert.That(configuredTurret, Is.Not.Null);
+            Assert.That(
+                systems.Config.FindByPreviewName("SM_Turret_2"),
+                Is.SameAs(configuredTurret));
+
+            inventory.AddItem(servoDrive);
+            Assert.That(
+                systems.CanUpgradeTo(
+                    StationSystemType.Turret,
+                    thirdTurret,
+                    0,
+                    1,
+                    inventory,
+                    storage,
+                    out string reason),
+                Is.False);
+            Assert.That(reason, Does.Contain("Blue IO Shard"));
+
+            ItemData ioShard = CreateItem(
+                "io_blue_shard_01",
+                ItemType.EngineeringPart);
+            inventory.AddItem(ioShard);
+            inventory.AddItem(ioShard);
+            Assert.That(
+                systems.TryUpgradeTo(
+                    StationSystemType.Turret,
+                    thirdTurret,
+                    0,
+                    1,
+                    inventory,
+                    storage),
+                Is.True);
+            Assert.That(
+                inventory.CountItem("servo_drive_01"),
+                Is.EqualTo(1),
+                "Turret 3 must not consume turret 2's configured part.");
+            Assert.That(
+                inventory.CountItem("io_blue_shard_01"),
+                Is.Zero);
+
+            Object.DestroyImmediate(ioShard);
+        }
+
+        [Test]
+        public void RestoreKeepsPerObjectTurretProgress()
+        {
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Turret,
+                        "station_turret_03",
+                        2,
+                        false)
+                });
+
+            Assert.That(
+                systems.GetUpgradeLevel(
+                    StationSystemType.Turret,
+                    "station_turret_03",
+                    0),
+                Is.EqualTo(2));
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Turret,
+                    "station_turret_03",
+                    0,
+                    false),
+                Is.False);
+        }
+
+        [Test]
+        public void UpgradeLevelsMatchStationDesign()
+        {
+            StationSystemsConfig config = systems.Config;
+            Assert.That(
+                config.Find(StationSystemType.Battery).InitialLevel,
+                Is.EqualTo(1));
+            Assert.That(
+                config.Find(StationSystemType.Battery).MaxLevel,
+                Is.EqualTo(2));
+            Assert.That(
+                config.Find(StationSystemType.Drone).InitialLevel,
+                Is.EqualTo(1));
+            Assert.That(
+                config.Find(StationSystemType.Drone).MaxLevel,
+                Is.EqualTo(3));
+            Assert.That(
+                config.Find(StationSystemType.Antenna).InitialLevel,
+                Is.Zero);
+            Assert.That(
+                config.Find(
+                    StationSystemType.Turret,
+                    "station_turret_01").InitialLevel,
+                Is.EqualTo(1));
+            Assert.That(
+                config.Find(
+                    StationSystemType.Turret,
+                    "station_turret_02").InitialLevel,
+                Is.Zero);
+        }
+
+        [Test]
+        public void RestoreMigratesNonLockedSystemsToTheirConfiguredStartingLevel()
+        {
+            systems.Restore(
+                new[]
+                {
+                    new System.Collections.Generic.KeyValuePair<
+                        StationSystemType, int>(
+                            StationSystemType.Battery, 0),
+                    new System.Collections.Generic.KeyValuePair<
+                        StationSystemType, int>(
+                            StationSystemType.Drone, 0)
+                },
+                null);
+
+            Assert.That(
+                systems.GetUpgradeLevel(StationSystemType.Battery),
+                Is.EqualTo(1));
+            Assert.That(
+                systems.GetUpgradeLevel(StationSystemType.Drone),
+                Is.EqualTo(1));
+        }
+
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/P_StationTurret_Stages.prefab",
+            StationSystemType.Turret,
+            0,
+            3)]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/P_StationBattery_Stages.prefab",
+            StationSystemType.Battery,
+            1,
+            2)]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/P_StationDrone_Stages.prefab",
+            StationSystemType.Drone,
+            1,
+            3)]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/P_StationAntenna_Stages.prefab",
+            StationSystemType.Antenna,
+            0,
+            3)]
+        public void UpgradeStagePrefabHasExpectedStructure(
+            string prefabPath,
+            StationSystemType expectedType,
+            int initialStage,
+            int maximumStage)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                prefabPath);
+            Assert.That(prefab, Is.Not.Null, prefabPath);
+
+            StationUpgradeStageController stageController =
+                prefab.GetComponent<StationUpgradeStageController>();
+            Assert.That(stageController, Is.Not.Null);
+            Assert.That(stageController.SystemType, Is.EqualTo(expectedType));
+            Assert.That(stageController.MaxStage, Is.EqualTo(maximumStage));
+
+            int firstStage = expectedType == StationSystemType.Battery ||
+                expectedType == StationSystemType.Drone
+                ? 1
+                : 0;
+            for (int stage = firstStage; stage <= maximumStage; stage++)
+            {
+                Transform stageRoot = prefab.transform.Find($"Stage_{stage}");
+                Assert.That(stageRoot, Is.Not.Null, $"Missing Stage_{stage}");
+                Assert.That(
+                    stageRoot.gameObject.activeSelf,
+                    Is.EqualTo(stage == initialStage),
+                    $"Unexpected active state for Stage_{stage}");
+            }
+        }
+
+        [Test]
+        public void UpgradeStageControllerTracksInstalledLevel()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Station/" +
+                "P_StationTurret_Stages.prefab");
+            GameObject instance = Object.Instantiate(prefab);
+            StationUpgradeStageController stageController =
+                instance.GetComponent<StationUpgradeStageController>();
+
+            systems.Restore(
+                new[]
+                {
+                    new System.Collections.Generic.KeyValuePair<
+                        StationSystemType, int>(
+                            StationSystemType.Turret, 2)
+                },
+                null);
+            stageController.RefreshVisuals();
+
+            Assert.That(stageController.CurrentStage, Is.EqualTo(2));
+            Assert.That(
+                instance.transform.Find("Stage_0").gameObject.activeSelf,
+                Is.False);
+            Assert.That(
+                instance.transform.Find("Stage_2").gameObject.activeSelf,
+                Is.True);
+            Assert.That(
+                instance.transform.Find("Stage_3").gameObject.activeSelf,
+                Is.False);
+
+            Object.DestroyImmediate(instance);
         }
 
         [Test]
@@ -168,6 +550,14 @@ namespace NERA.Tests
             serialized.FindProperty("itemType").enumValueIndex = (int)type;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return item;
+        }
+
+        private static void SetSingleton(System.Type controllerType, object value)
+        {
+            PropertyInfo instanceProperty = controllerType.GetProperty(
+                "Instance",
+                BindingFlags.Static | BindingFlags.Public);
+            instanceProperty?.GetSetMethod(true)?.Invoke(null, new[] { value });
         }
     }
 }

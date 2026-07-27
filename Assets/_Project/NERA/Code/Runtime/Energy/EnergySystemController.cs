@@ -216,6 +216,25 @@ namespace NERA.Energy
                      consumer.DisableInEmergency);
         }
 
+        public bool CanSpendEnergy(float amount)
+        {
+            return amount <= 0f ||
+                (GridEnabled && CurrentEnergy >= amount);
+        }
+
+        public bool TrySpendEnergy(float amount)
+        {
+            amount = Mathf.Max(0f, amount);
+            if (!CanSpendEnergy(amount))
+                return false;
+
+            currentEnergy = Mathf.Max(0f, currentEnergy - amount);
+            RefreshConsumers();
+            RefreshState();
+            EnergyChanged?.Invoke();
+            return true;
+        }
+
         public bool IsConsumerRequestedActive(string consumerId)
         {
             return consumers.TryGetValue(consumerId, out ConsumerRecord consumer) &&

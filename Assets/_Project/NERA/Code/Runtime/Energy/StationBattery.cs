@@ -4,6 +4,8 @@ namespace NERA.Energy
 {
     public sealed class StationBattery : MonoBehaviour
     {
+        [Tooltip("Leave empty to generate a stable unique ID from the scene hierarchy.")]
+        [SerializeField] private string batteryId;
         [SerializeField, Min(1f)] private float capacity = 1000f;
         [SerializeField, Min(0f)] private float initialCharge = 1000f;
 
@@ -27,7 +29,9 @@ namespace NERA.Energy
                 return;
 
             if (!energy.RegisterBattery(
-                    StationEnergyDeviceId.Build(this, "battery"),
+                    string.IsNullOrWhiteSpace(batteryId)
+                        ? StationEnergyDeviceId.Build(this, "battery")
+                        : batteryId,
                     capacity,
                     initialCharge))
                 return;

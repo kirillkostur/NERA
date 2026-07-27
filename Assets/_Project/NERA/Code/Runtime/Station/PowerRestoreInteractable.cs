@@ -51,6 +51,10 @@ namespace NERA.Station
             if (!power.RestorePower())
                 return;
 
+            StationSystemsController.Instance?.SetCriticalSystemActive(
+                StationSystemType.Battery,
+                true);
+
             base.CompleteInteraction(interactor);
 
             if (runtimeMaterial != null)

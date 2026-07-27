@@ -11,85 +11,264 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1020a5a86307466418c2b0d62ea37950, type: 3}
   m_Name: StationSystems_Default
-  m_EditorClassIdentifier: 
-  systems:
+  m_EditorClassIdentifier:
+  stationObjects:
   - systemType: 0
+    objectId:
+    previewObjectName: SM_Solar_Panel
     displayName: SOLAR PANEL
     description: Generates station power. Clean it outside to restore efficiency.
     controllable: 0
     initiallyActive: 1
-    upgradeable: 0
-    requiresUpgradeToOperate: 0
-    requiredItemId: 
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels: []
   - systemType: 1
+    objectId:
+    previewObjectName: SM_Battery_Room
     displayName: BATTERY
     description: Stores generated energy and supplies all active consumers.
     controllable: 0
     initiallyActive: 1
-    upgradeable: 0
-    requiresUpgradeToOperate: 0
-    requiredItemId: 
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: BATTERY I
+      description: Standard station cell bank.
+      requiredItems: []
+      energyCost: 0
+    - targetLevel: 2
+      displayName: BATTERY II
+      description: Expanded high-capacity cell bank.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 1
+      energyCost: 100
   - systemType: 2
+    objectId:
+    previewObjectName: SM_Central_Room
     displayName: COMPUTER
     description: Central terminal. It cannot be stopped or upgraded from itself.
     controllable: 0
     initiallyActive: 1
-    upgradeable: 0
-    requiresUpgradeToOperate: 0
-    requiredItemId: 
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels: []
   - systemType: 3
+    objectId:
+    previewObjectName: SM_Drone
     displayName: DRONE
     description: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
     controllable: 1
     initiallyActive: 1
-    upgradeable: 1
-    requiresUpgradeToOperate: 0
-    requiredItemId: servo_drive_01
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: DRONE I
+      description: Short-range expedition drive.
+      requiredItems: []
+      energyCost: 0
+    - targetLevel: 2
+      displayName: DRONE II
+      description: Medium-range expedition drive.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      energyCost: 100
+    - targetLevel: 3
+      displayName: DRONE III
+      description: Long-range expedition drive.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      energyCost: 200
   - systemType: 4
+    objectId:
+    previewObjectName:
     displayName: LABORATORY
     description: Analyzes recovered objects and unlocks Library records.
     controllable: 1
     initiallyActive: 1
-    upgradeable: 0
-    requiresUpgradeToOperate: 0
-    requiredItemId: 
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels: []
   - systemType: 5
+    objectId:
+    previewObjectName: SM_Upgrade_Room
     displayName: CHARGER
     description: Restores charge to energy-powered equipment.
     controllable: 1
     initiallyActive: 1
-    upgradeable: 0
-    requiresUpgradeToOperate: 0
-    requiredItemId: 
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 1
+    upgradeLevels: []
   - systemType: 6
+    objectId:
+    previewObjectName: SM_Antenna
     displayName: ANTENNA
     description: Finds unknown signals. Install a replacement drive before first use.
     controllable: 1
     initiallyActive: 0
-    upgradeable: 1
-    requiresUpgradeToOperate: 1
-    requiredItemId: servo_drive_01
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 0
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: ANTENNA I
+      description: Restores short-range signal reception.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      energyCost: 0
+    - targetLevel: 2
+      displayName: ANTENNA II
+      description: Improves signal resolution and range.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      energyCost: 100
+    - targetLevel: 3
+      displayName: ANTENNA III
+      description: Enables deep-range signal acquisition.
+      requiredItems:
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+        count: 1
+      energyCost: 200
   - systemType: 7
-    displayName: TURRET
-    description: Automatic station defense. Install the drive and keep it serviced.
+    objectId: station_turret_01
+    previewObjectName: SM_Turret_0
+    displayName: TURRET 1
+    description: Automatic defense platform for the first station sector.
+    controllable: 1
+    initiallyActive: 1
+    initialLevel: 1
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: TURRET 1 / LEVEL 1
+      description: Factory-installed defensive platform.
+      requiredItems: []
+      energyCost: 0
+    - targetLevel: 2
+      displayName: TURRET 1 / LEVEL 2
+      description: Improves tracking and sustained fire.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 1
+      energyCost: 100
+    - targetLevel: 3
+      displayName: TURRET 1 / LEVEL 3
+      description: Maximum performance for the first defense sector.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+        count: 1
+      energyCost: 200
+  - systemType: 7
+    objectId: station_turret_02
+    previewObjectName: SM_Turret_1
+    displayName: TURRET 2
+    description: Automatic defense platform for the second station sector.
     controllable: 1
     initiallyActive: 0
-    upgradeable: 1
-    requiresUpgradeToOperate: 1
-    requiredItemId: servo_drive_01
-    requiredItemCount: 1
-    maxLevel: 1
+    initialLevel: 0
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: TURRET 2 / LEVEL 1
+      description: Installs the second defensive platform.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      energyCost: 0
+    - targetLevel: 2
+      displayName: TURRET 2 / LEVEL 2
+      description: Reinforces its tracking assembly.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 2
+      energyCost: 100
+    - targetLevel: 3
+      displayName: TURRET 2 / LEVEL 3
+      description: Adds an autonomous long-range control core.
+      requiredItems:
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+        count: 1
+      energyCost: 180
+  - systemType: 7
+    objectId: station_turret_03
+    previewObjectName: SM_Turret_2
+    displayName: TURRET 3
+    description: Automatic defense platform for the third station sector.
+    controllable: 1
+    initiallyActive: 0
+    initialLevel: 0
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: TURRET 3 / LEVEL 1
+      description: Builds the third defensive platform.
+      requiredItems:
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 2
+      energyCost: 0
+    - targetLevel: 2
+      displayName: TURRET 3 / LEVEL 2
+      description: Adds a stabilized drive and processing core.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+        count: 1
+      energyCost: 120
+    - targetLevel: 3
+      displayName: TURRET 3 / LEVEL 3
+      description: Installs redundant signal and targeting channels.
+      requiredItems:
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 2
+      energyCost: 220
+  - systemType: 7
+    objectId: station_turret_04
+    previewObjectName: SM_Turret_3
+    displayName: TURRET 4
+    description: Automatic defense platform for the fourth station sector.
+    controllable: 1
+    initiallyActive: 0
+    initialLevel: 0
+    upgradeLevels:
+    - targetLevel: 1
+      displayName: TURRET 4 / LEVEL 1
+      description: Restores the fourth defense sector.
+      requiredItems:
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      energyCost: 0
+    - targetLevel: 2
+      displayName: TURRET 4 / LEVEL 2
+      description: Upgrades its signal and rotation systems.
+      requiredItems:
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+        count: 1
+      energyCost: 140
+    - targetLevel: 3
+      displayName: TURRET 4 / LEVEL 3
+      description: Installs a high-load command assembly.
+      requiredItems:
+      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+        count: 2
+      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
+        count: 3
+      energyCost: 250
