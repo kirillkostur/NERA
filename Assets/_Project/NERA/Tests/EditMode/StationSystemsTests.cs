@@ -317,7 +317,7 @@ namespace NERA.Tests
                     thirdTurret);
             Assert.That(configuredTurret, Is.Not.Null);
             Assert.That(
-                systems.Config.FindByPreviewName("SM_Turret_2"),
+                systems.Config.FindByPreviewName("SM_Turret_3"),
                 Is.SameAs(configuredTurret));
 
             inventory.AddItem(servoDrive);
@@ -443,22 +443,22 @@ namespace NERA.Tests
         }
 
         [TestCase(
-            "Assets/_Project/NERA/Prefabs/Station/P_StationTurret_Stages.prefab",
+            "Assets/_Project/NERA/Prefabs/StationUpgrade/P_StationTurret_Stages.prefab",
             StationSystemType.Turret,
             0,
             3)]
         [TestCase(
-            "Assets/_Project/NERA/Prefabs/Station/P_StationBattery_Stages.prefab",
+            "Assets/_Project/NERA/Prefabs/StationUpgrade/P_StationBattery_Stages.prefab",
             StationSystemType.Battery,
             1,
             2)]
         [TestCase(
-            "Assets/_Project/NERA/Prefabs/Station/P_StationDrone_Stages.prefab",
+            "Assets/_Project/NERA/Prefabs/StationUpgrade/P_StationDrone_Stages.prefab",
             StationSystemType.Drone,
             1,
             3)]
         [TestCase(
-            "Assets/_Project/NERA/Prefabs/Station/P_StationAntenna_Stages.prefab",
+            "Assets/_Project/NERA/Prefabs/StationUpgrade/P_StationAntenna_Stages.prefab",
             StationSystemType.Antenna,
             0,
             3)]
@@ -497,7 +497,7 @@ namespace NERA.Tests
         public void UpgradeStageControllerTracksInstalledLevel()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Project/NERA/Prefabs/Station/" +
+                "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
                 "P_StationTurret_Stages.prefab");
             GameObject instance = Object.Instantiate(prefab);
             StationUpgradeStageController stageController =

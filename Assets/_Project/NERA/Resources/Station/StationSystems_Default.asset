@@ -147,7 +147,7 @@ MonoBehaviour:
       energyCost: 200
   - systemType: 7
     objectId: station_turret_01
-    previewObjectName: SM_Turret_0
+    previewObjectName: SM_Turret_1
     displayName: TURRET 1
     description: Automatic defense platform for the first station sector.
     controllable: 1
@@ -184,7 +184,7 @@ MonoBehaviour:
       energyCost: 200
   - systemType: 7
     objectId: station_turret_02
-    previewObjectName: SM_Turret_1
+    previewObjectName: SM_Turret_2
     displayName: TURRET 2
     description: Automatic defense platform for the second station sector.
     controllable: 1
@@ -221,7 +221,7 @@ MonoBehaviour:
       energyCost: 180
   - systemType: 7
     objectId: station_turret_03
-    previewObjectName: SM_Turret_2
+    previewObjectName: SM_Turret_3
     displayName: TURRET 3
     description: Automatic defense platform for the third station sector.
     controllable: 1
@@ -258,7 +258,7 @@ MonoBehaviour:
       energyCost: 220
   - systemType: 7
     objectId: station_turret_04
-    previewObjectName: SM_Turret_3
+    previewObjectName: SM_Turret_4
     displayName: TURRET 4
     description: Automatic defense platform for the fourth station sector.
     controllable: 1

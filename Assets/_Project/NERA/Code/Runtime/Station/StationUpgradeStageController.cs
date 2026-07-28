@@ -50,7 +50,10 @@ namespace NERA.Station
                     ResolveObjectId(),
                     ResolveInitialStage())
                 : StationSystemsConfig.LoadDefault()
-                    .Find(systemType)?.InitialLevel ?? 0;
+                    .Find(
+                        systemType,
+                        ResolveObjectId())?.InitialLevel ??
+                    ResolveInitialStage();
             CurrentStage = Mathf.Clamp(level, 0, Mathf.Max(0, maxStage));
 
             Transform container = stageContainer != null

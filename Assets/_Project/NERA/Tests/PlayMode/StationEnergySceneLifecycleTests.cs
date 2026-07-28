@@ -148,6 +148,7 @@ namespace NERA.Tests
             Assert.That(systems, Is.Not.Null);
             Assert.That(terminal, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
+            systems.ResetSystems();
 
             Camera[] previewCameras =
                 terminal.GetComponentsInChildren<Camera>(true);
@@ -272,10 +273,10 @@ namespace NERA.Tests
 
             Transform firstTurret = Array.Find(
                 stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Turret_0");
+                candidate => candidate.name == "SM_Turret_1");
             Transform secondTurret = Array.Find(
                 stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Turret_1");
+                candidate => candidate.name == "SM_Turret_2");
             Assert.That(firstTurret, Is.Not.Null);
             Assert.That(secondTurret, Is.Not.Null);
 
@@ -311,6 +312,35 @@ namespace NERA.Tests
                     0),
                 Is.Zero,
                 "The second turret must have independent starting progress.");
+            Assert.That(
+                firstTurret.Find("Stage_1").gameObject.activeSelf,
+                Is.True,
+                "The first preview turret must show its starting level.");
+            Assert.That(
+                secondTurret.Find("Stage_0").gameObject.activeSelf,
+                Is.True,
+                "A locked preview turret must show level zero.");
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Turret,
+                        "station_turret_02",
+                        2,
+                        true)
+                });
+            yield return null;
+            Assert.That(
+                secondTurret.Find("Stage_0").gameObject.activeSelf,
+                Is.False);
+            Assert.That(
+                secondTurret.Find("Stage_2").gameObject.activeSelf,
+                Is.True,
+                "The station preview must switch immediately when the " +
+                "selected turret upgrade level changes.");
 
             terminal.ShowNextScreen();
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));
