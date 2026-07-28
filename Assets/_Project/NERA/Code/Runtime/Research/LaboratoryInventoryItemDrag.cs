@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,18 +8,25 @@ namespace NERA.Research
 {
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class LaboratoryInventoryItemDrag : MonoBehaviour,
-        IBeginDragHandler, IDragHandler, IEndDragHandler
+        IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public NERA.Items.ItemData Item { get; private set; }
         public InventorySlotGroup SourceGroup { get; private set; }
         public int SourceIndex { get; private set; }
         public bool IsLaboratorySource { get; private set; }
         public bool IsChargingSource { get; private set; }
+        public bool IsUpgradeSource { get; private set; }
         public bool IsStationStorageSource { get; private set; }
+        public event Action<LaboratoryInventoryItemDrag> InteractionStarted;
 
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
         private GameObject dragIcon;
+
+        private void Awake()
+        {
+            canvasGroup = GetComponent<CanvasGroup>();
+        }
 
         public void Initialize(
             NERA.Items.ItemData item,
@@ -27,7 +35,8 @@ namespace NERA.Research
             int sourceIndex = -1,
             bool isLaboratorySource = false,
             bool isChargingSource = false,
-            bool isStationStorageSource = false
+            bool isStationStorageSource = false,
+            bool isUpgradeSource = false
         )
         {
             Item = item;
@@ -36,8 +45,15 @@ namespace NERA.Research
             SourceIndex = sourceIndex;
             IsLaboratorySource = isLaboratorySource;
             IsChargingSource = isChargingSource;
+            IsUpgradeSource = isUpgradeSource;
             IsStationStorageSource = isStationStorageSource;
-            canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = GetComponent<CanvasGroup>();
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            InteractionStarted?.Invoke(this);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -45,6 +61,7 @@ namespace NERA.Research
             if (Item == null || rootCanvas == null)
                 return;
 
+            ClearDragVisual();
             canvasGroup.blocksRaycasts = false;
             dragIcon = new GameObject("DraggedResearchItem", typeof(RectTransform), typeof(Image));
             dragIcon.transform.SetParent(rootCanvas.transform, false);
@@ -69,11 +86,24 @@ namespace NERA.Research
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            ClearDragVisual();
+        }
+
+        private void OnDisable()
+        {
+            ClearDragVisual();
+        }
+
+        private void ClearDragVisual()
+        {
             if (canvasGroup != null)
                 canvasGroup.blocksRaycasts = true;
 
             if (dragIcon != null)
+            {
                 Destroy(dragIcon);
+                dragIcon = null;
+            }
         }
     }
 }

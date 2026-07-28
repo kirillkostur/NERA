@@ -36,6 +36,7 @@ namespace NERA.Terminal
         private readonly Button[] levelButtons = new Button[3];
         private readonly GameObject[] levelRoots = new GameObject[3];
         private readonly TMP_Text[] levelLabels = new TMP_Text[3];
+        private readonly Image[] levelIcons = new Image[3];
 
         private StationSystemType? selectedSystem;
         private string selectedObjectName;
@@ -112,29 +113,41 @@ namespace NERA.Terminal
                 statusPanel.SetActive(false);
             if (upgradePanel != null)
                 upgradePanel.SetActive(false);
-            BindSystemEvents();
             ClearSelection();
+            SetScreenActive(false);
         }
 
         public void SetScreenActive(bool active)
         {
-            if (!active)
-                return;
+            bool shouldRender =
+                active &&
+                terminal != null &&
+                terminal.IsOpen;
+            if (stationCamera != null)
+                stationCamera.enabled = shouldRender;
 
+            if (!shouldRender)
+            {
+                UnbindSystemEvents();
+                TerminalUIUtility.ReleaseCameraTarget(stationCamera);
+                return;
+            }
+
+            BindSystemEvents();
             ShowDetailTab(false);
             RefreshAll();
         }
 
         private void Update()
         {
-            if (!gameObject.activeInHierarchy ||
+            if (terminal?.IsOpen != true ||
+                !gameObject.activeInHierarchy ||
                 Time.unscaledTime < nextRefreshAt)
             {
                 return;
             }
 
             nextRefreshAt = Time.unscaledTime + 0.2f;
-            BindSystemEvents();
             RefreshAll();
         }
 
@@ -200,7 +213,41 @@ namespace NERA.Terminal
                 levelLabels[i] = TerminalUIUtility.FindComponent<TMP_Text>(
                     levelRoot,
                     "Text_info_LVL");
+                levelIcons[i] = EnsureUpgradeIcon(levelRoot);
             }
+        }
+
+        private static Image EnsureUpgradeIcon(Transform levelRoot)
+        {
+            if (levelRoot == null)
+                return null;
+
+            Transform existing = levelRoot.Find("Image_Icon");
+            Image icon = existing != null
+                ? existing.GetComponent<Image>()
+                : null;
+            if (icon == null)
+            {
+                GameObject iconObject = new GameObject(
+                    "Image_Icon",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                RectTransform iconTransform =
+                    iconObject.GetComponent<RectTransform>();
+                iconTransform.SetParent(levelRoot, false);
+                iconTransform.anchorMin = Vector2.zero;
+                iconTransform.anchorMax = Vector2.one;
+                iconTransform.offsetMin = new Vector2(8f, 8f);
+                iconTransform.offsetMax = new Vector2(-8f, -8f);
+                iconTransform.SetAsFirstSibling();
+                icon = iconObject.GetComponent<Image>();
+            }
+
+            icon.raycastTarget = false;
+            icon.preserveAspect = true;
+            icon.enabled = false;
+            return icon;
         }
 
         private void BindButtons()
@@ -626,8 +673,21 @@ namespace NERA.Terminal
 
         private void HandleSystemsChanged()
         {
-            if (this != null)
+            if (this != null &&
+                terminal?.IsOpen == true &&
+                gameObject.activeInHierarchy)
+            {
                 RefreshAll();
+            }
+        }
+
+        private void UnbindSystemEvents()
+        {
+            if (subscribedSystems == null)
+                return;
+
+            subscribedSystems.SystemsChanged -= HandleSystemsChanged;
+            subscribedSystems = null;
         }
 
         private void SelectUpgradeLevel(int targetLevel)
@@ -680,17 +740,22 @@ namespace NERA.Terminal
             {
                 int level = i + 1;
                 Button button = levelButtons[i];
+                StationUpgradeLevelDefinition levelDefinition =
+                    definition?.GetUpgradeDefinition(level);
                 bool configured = definition?.Upgradeable == true &&
                     level <= maxLevel &&
-                    systems.Config.GetUpgradeDefinition(
-                        type,
-                        selectedObjectId,
-                        level) != null;
+                    levelDefinition != null;
                 if (levelRoots[i] != null)
                     levelRoots[i].SetActive(configured);
                 TerminalUIUtility.SetText(
                     levelLabels[i],
                     $"{upgradeSystemName} {level}");
+                if (levelIcons[i] != null)
+                {
+                    levelIcons[i].sprite = levelDefinition?.UpgradeIcon;
+                    levelIcons[i].enabled =
+                        configured && levelIcons[i].sprite != null;
+                }
                 if (button == null || !configured)
                     continue;
 
@@ -826,8 +891,7 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
-            if (subscribedSystems != null)
-                subscribedSystems.SystemsChanged -= HandleSystemsChanged;
+            UnbindSystemEvents();
         }
     }
 }

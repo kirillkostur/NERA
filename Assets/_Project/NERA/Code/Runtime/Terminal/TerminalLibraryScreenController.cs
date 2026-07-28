@@ -29,7 +29,6 @@ namespace NERA.Terminal
         private sealed class SlotView
         {
             public Button Button;
-            public Image Icon;
             public TMP_Text Label;
             public DisplayEntry Entry;
         }
@@ -126,12 +125,9 @@ namespace NERA.Terminal
                     foreach (Transform slotRoot in authored)
                     {
                         Button button = TerminalUIUtility.EnsureButton(slotRoot);
-                        Image icon = TerminalUIUtility.EnsureSlotIcon(slotRoot);
-                        icon?.transform.SetAsFirstSibling();
                         SlotView view = new SlotView
                         {
                             Button = button,
-                            Icon = icon,
                             Label = TerminalUIUtility.FindComponent<TMP_Text>(
                                 slotRoot, "Text_Info")
                         };
@@ -171,15 +167,6 @@ namespace NERA.Terminal
             {
                 SlotView slot = categorySlots[i];
                 slot.Entry = i < entries.Count ? entries[i] : null;
-                TerminalUIUtility.SetItemIcon(
-                    slot.Icon,
-                    null);
-                if (slot.Icon != null)
-                {
-                    slot.Icon.sprite = slot.Entry?.Image;
-                    slot.Icon.color = Color.white;
-                    slot.Icon.enabled = slot.Entry != null;
-                }
                 TerminalUIUtility.SetText(
                     slot.Label,
                     slot.Entry?.Name ?? string.Empty);

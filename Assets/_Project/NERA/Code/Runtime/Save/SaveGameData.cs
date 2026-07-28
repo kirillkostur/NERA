@@ -23,7 +23,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 9;
+        public int version = 10;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;
@@ -45,6 +45,11 @@ namespace NERA.Save
         public List<InventoryItemSaveData> stationQuickAccessItems = new List<InventoryItemSaveData>();
         public List<InventoryItemSaveData> stationAnomalyItems = new List<InventoryItemSaveData>();
         public List<StationSystemSaveData> stationSystems = new List<StationSystemSaveData>();
+        public List<InventoryItemSaveData> laboratoryChargingItems =
+            new List<InventoryItemSaveData>();
+        public List<InventoryItemSaveData> laboratoryUpgradeItems =
+            new List<InventoryItemSaveData>();
+        // Version 9 and older: migrated into laboratoryChargingItems[0].
         public InventoryItemSaveData chargingTableItem;
         public InventoryItemSaveData laboratoryItem;
         public List<string> analyzedResearchIds = new List<string>();

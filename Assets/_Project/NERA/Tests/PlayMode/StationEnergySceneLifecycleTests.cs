@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Reflection;
 using NERA.Core;
 using NERA.Drone;
 using NERA.Energy;
 using NERA.Expeditions;
+using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Research;
@@ -80,12 +82,15 @@ namespace NERA.Tests
                 Object.FindObjectsByType<SolarPanelInteractable>(
                     FindObjectsInactive.Exclude,
                     FindObjectsSortMode.None);
-            Assert.That(batteries.Length, Is.EqualTo(2));
-            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
+            int initialBatteryCount = batteries.Length;
+            int initialSolarPanelCount = solarPanels.Length;
+            float initialCapacity = energy.TotalCapacity;
+            Assert.That(initialBatteryCount, Is.GreaterThan(0));
+            Assert.That(initialCapacity, Is.GreaterThan(0f));
             Assert.That(
                 energy.CurrentGeneration,
                 Is.EqualTo(
-                    energy.Config.ClearDayGeneration * solarPanels.Length)
+                    energy.Config.ClearDayGeneration * initialSolarPanelCount)
                     .Within(0.01f)
             );
 
@@ -103,11 +108,22 @@ namespace NERA.Tests
             solarPanels = Object.FindObjectsByType<SolarPanelInteractable>(
                 FindObjectsInactive.Exclude,
                 FindObjectsSortMode.None);
-            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
+            batteries = Object.FindObjectsByType<StationBattery>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            Assert.That(
+                batteries.Length,
+                Is.EqualTo(initialBatteryCount),
+                "Returning to the station duplicated or lost battery sources.");
+            Assert.That(
+                solarPanels.Length,
+                Is.EqualTo(initialSolarPanelCount),
+                "Returning to the station duplicated or lost solar sources.");
+            Assert.That(energy.TotalCapacity, Is.EqualTo(initialCapacity));
             Assert.That(
                 energy.CurrentGeneration,
                 Is.EqualTo(
-                    energy.Config.ClearDayGeneration * solarPanels.Length)
+                    energy.Config.ClearDayGeneration * initialSolarPanelCount)
                     .Within(0.01f)
             );
         }
@@ -133,10 +149,25 @@ namespace NERA.Tests
             Assert.That(terminal, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
 
+            Camera[] previewCameras =
+                terminal.GetComponentsInChildren<Camera>(true);
+            Camera mapPreviewCamera = Array.Find(
+                previewCameras,
+                camera => camera.name == "MapUICamera");
+            Camera stationPreviewCamera = Array.Find(
+                previewCameras,
+                camera => camera.name == "StationUICamera");
+            Assert.That(mapPreviewCamera, Is.Not.Null);
+            Assert.That(stationPreviewCamera, Is.Not.Null);
+            Assert.That(mapPreviewCamera.enabled, Is.False);
+            Assert.That(stationPreviewCamera.enabled, Is.False);
+
             energy.RestoreState(energy.TotalCapacity, true);
             systems.SetCriticalSystemActive(StationSystemType.Computer, true);
             terminal.Open();
             terminal.ShowStation();
+            Assert.That(stationPreviewCamera.enabled, Is.True);
+            Assert.That(mapPreviewCamera.enabled, Is.False);
 
             Transform statusPanel = stationScreen.transform.Find(
                 "background_Status");
@@ -290,12 +321,17 @@ namespace NERA.Tests
             Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
 
             terminal.ShowMap();
+            Assert.That(mapPreviewCamera.enabled, Is.True);
+            Assert.That(stationPreviewCamera.enabled, Is.False);
             terminal.ShowPreviousScreen();
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(3),
                 "Previous-page navigation must wrap from Map to Storage.");
+            Assert.That(mapPreviewCamera.enabled, Is.False);
+            Assert.That(stationPreviewCamera.enabled, Is.False);
             terminal.ShowNextScreen();
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(0),
                 "Next-page navigation must wrap from Storage to Map.");
+            Assert.That(mapPreviewCamera.enabled, Is.True);
             terminal.ShowStation();
 
             Transform solar = Array.Find(
@@ -314,6 +350,42 @@ namespace NERA.Tests
             Assert.That(onButton.interactable, Is.False);
             Assert.That(offButton.interactable, Is.False,
                 "Solar panel remains read-only from the computer.");
+
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+            ItemData equipment = catalog != null
+                ? catalog.Find("energy_pistol_01")
+                : null;
+            Library.LibraryController library =
+                Library.LibraryController.Instance;
+            Assert.That(equipment, Is.Not.Null);
+            Assert.That(library, Is.Not.Null);
+            library.RegisterKnownItem(equipment);
+
+            terminal.ShowLibrary();
+            Transform libraryScreen = terminal.transform.Find("LibraryScreen");
+            libraryScreen.Find("EquipmentButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Transform equipmentSlot = libraryScreen.Find(
+                "EquipmentSlot/background_Slot_01");
+            Assert.That(equipmentSlot, Is.Not.Null);
+            Assert.That(
+                equipmentSlot.Find("RuntimeIcon"),
+                Is.Null,
+                "Library list slots must remain text-only.");
+            equipmentSlot.GetComponent<Button>().onClick.Invoke();
+            Component libraryInfoName = libraryScreen.Find(
+                    "background_Screen_Lybrary_Info/Text_Name")
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                libraryInfoName.GetType().GetProperty("text")
+                    ?.GetValue(libraryInfoName),
+                Is.EqualTo(equipment.DisplayName),
+                "Clicking a text-only Library slot must show item details.");
+
+            terminal.Close();
+            Assert.That(mapPreviewCamera.enabled, Is.False);
+            Assert.That(stationPreviewCamera.enabled, Is.False);
         }
 
         [UnityTest]
@@ -445,6 +517,19 @@ namespace NERA.Tests
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
+            for (int level = 1; level <= 3; level++)
+            {
+                Transform iconRoot = stationScreen.transform.Find(
+                    $"background_Upgrade/Slot_LVL_{level}/Image_Icon");
+                Assert.That(
+                    iconRoot,
+                    Is.Not.Null,
+                    $"Upgrade level {level} icon layer was not created.");
+                Image icon = iconRoot.GetComponent<Image>();
+                Assert.That(icon, Is.Not.Null);
+                Assert.That(icon.raycastTarget, Is.False);
+                Assert.That(icon.preserveAspect, Is.True);
+            }
             Assert.That(discovery.KnownLocations.Count, Is.GreaterThan(0));
 
             ExpeditionLocationData location = discovery.KnownLocations[0];
@@ -490,9 +575,9 @@ namespace NERA.Tests
             Assert.That(inventory, Is.Not.Null);
             Assert.That(inventory.Config, Is.Not.Null);
 
-            Transform content = hud.transform.Find(
-                "InventoryScreen/ScanScreen/background_Screen_Storage_Slot_Invent"
-            );
+            Transform content = FindDescendant(
+                hud.transform.Find("InventoryScreen"),
+                "background_Screen_Storage_Slot_Invent");
             Assert.That(content, Is.Not.Null);
 
             Assert.That(content.childCount, Is.EqualTo(inventory.BackpackCapacity));
@@ -503,9 +588,418 @@ namespace NERA.Tests
                 Assert.That(spawnPoint.gameObject.activeSelf, Is.True);
                 Assert.That(
                     spawnPoint.GetComponent<InventorySlotView>(),
-                    Is.Not.Null
-                );
+                    Is.Null,
+                    "Slot_N must remain a spawn point, not an inventory slot.");
+                Assert.That(
+                    GetSpawnedInventorySlot(spawnPoint),
+                    Is.Not.Null,
+                    "P_InventorySlot was not spawned inside Slot_N.");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator InventoryScreenSupportsAllSlotsAndDropsSelectedItem()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            InventoryLabHUDController hud = InventoryLabHUDController.Instance;
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+            ItemData item = catalog != null
+                ? catalog.Find("servo_drive_01")
+                : null;
+
+            Assert.That(hud, Is.Not.Null);
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(item, Is.Not.Null);
+            Assert.That(item.WorldPrefab, Is.Not.Null);
+            Assert.That(inventory.BackpackCapacity, Is.EqualTo(8));
+            Assert.That(PlayerInventory.AnomalyCapacity, Is.EqualTo(4));
+            Assert.That(PlayerInventory.QuickAccessCapacity, Is.EqualTo(4));
+            Assert.That(PlayerInventory.ActiveQuickAccessCapacity, Is.EqualTo(4));
+
+            Transform inventoryScreen = hud.transform.Find("InventoryScreen");
+            Transform backpackRoot = FindDescendant(
+                inventoryScreen,
+                "background_Screen_Storage_Slot_Invent");
+            Transform anomalyRoot = FindDescendant(
+                inventoryScreen,
+                "background_Screen_Storage_Slot_Invent_Anomaly");
+            Transform quickRoot = hud.transform.Find("Slot_Invent_Equipment");
+            Button dropButton = FindDescendant(
+                inventoryScreen,
+                "DropButton").GetComponent<Button>();
+
+            Assert.That(backpackRoot.childCount, Is.EqualTo(8));
+            Assert.That(anomalyRoot.childCount, Is.EqualTo(4));
+            Assert.That(quickRoot.childCount, Is.EqualTo(4));
+
+            foreach (Transform root in new[]
+                     {
+                         backpackRoot,
+                         anomalyRoot,
+                         quickRoot
+                     })
+            {
+                for (int index = 0; index < root.childCount; index++)
+                {
+                    InventorySlotView view =
+                        GetSpawnedInventorySlot(root.GetChild(index));
+                    Assert.That(
+                        view,
+                        Is.Not.Null,
+                        $"{root.name} Slot_{index + 1} has no P_InventorySlot.");
+                    Assert.That(
+                        view.GetComponent<InventorySlotDropTarget>(),
+                        Is.Not.Null,
+                        $"{root.name} slot {index + 1} has no drop target.");
+                }
+            }
+
+            inventory.RestoreItemInstances(Array.Empty<ItemInstance>());
+            Assert.That(inventory.AddItem(item), Is.True);
+            hud.OpenInventory();
+            Assert.That(inventoryScreen.gameObject.activeSelf, Is.True);
+
+            Transform sourceSlot =
+                GetSpawnedInventorySlot(backpackRoot.GetChild(0)).transform;
+            Transform destinationSlot =
+                GetSpawnedInventorySlot(backpackRoot.GetChild(7)).transform;
+            LaboratoryInventoryItemDrag sourceDrag =
+                sourceSlot.GetComponent<LaboratoryInventoryItemDrag>();
+            InventorySlotDropTarget destination =
+                destinationSlot.GetComponent<InventorySlotDropTarget>();
+            Assert.That(sourceDrag, Is.Not.Null);
+            Assert.That(sourceDrag.Item, Is.EqualTo(item));
+            Assert.That(EventSystem.current, Is.Not.Null);
+
+            PointerEventData dropEvent =
+                new PointerEventData(EventSystem.current)
+                {
+                    pointerDrag = sourceSlot.gameObject
+                };
+            destination.OnDrop(dropEvent);
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 0),
+                Is.Null);
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 7),
+                Is.EqualTo(item));
+
+            destinationSlot.GetComponent<Button>().onClick.Invoke();
+            Assert.That(dropButton.interactable, Is.True);
+            dropButton.onClick.Invoke();
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.Backpack, 7),
+                Is.Null);
+            Assert.That(inventory.Count, Is.Zero);
+
+            WorldItem[] worldItems = Object.FindObjectsByType<WorldItem>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            WorldItem droppedItem = Array.Find(
+                worldItems,
+                worldItem => worldItem != null &&
+                             worldItem.ItemData == item &&
+                             worldItem.name.StartsWith("Dropped_"));
+            Assert.That(
+                droppedItem,
+                Is.Not.Null,
+                "DropButton did not create the selected world item.");
+
+            Object.Destroy(droppedItem.gameObject);
+            hud.CloseAll();
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator LaboratoryScreenUsesUnifiedInventoryAndWorkflows()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            InventoryLabHUDController hud = InventoryLabHUDController.Instance;
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            ResearchController research = ResearchController.Instance;
+            LaboratoryWorkstationController workstation =
+                LaboratoryWorkstationController.Instance;
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+            ItemData pistol = catalog != null
+                ? catalog.Find("energy_pistol_01")
+                : null;
+            ItemData anomaly = catalog != null
+                ? catalog.Find("io_blue_shard_01")
+                : null;
+            ItemData record = catalog != null
+                ? catalog.Find("ancient_record_02")
+                : null;
+
+            Assert.That(hud, Is.Not.Null);
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(research, Is.Not.Null);
+            Assert.That(workstation, Is.Not.Null);
+            Assert.That(pistol, Is.Not.Null);
+            Assert.That(anomaly, Is.Not.Null);
+            Assert.That(record, Is.Not.Null);
+
+            inventory.RestoreItemInstances(Array.Empty<ItemInstance>());
+            research.RestoreAnalyzed(Array.Empty<string>());
+            research.RestoreLoadedItem(null, null);
+            workstation.RestoreItems(
+                Array.Empty<ItemInstance>(),
+                Array.Empty<ItemInstance>());
+            Assert.That(inventory.AddItem(pistol), Is.True, "Pistol was not added.");
+            Assert.That(inventory.AddItem(anomaly), Is.True, "Anomaly was not added.");
+            Assert.That(inventory.AddItem(record), Is.True, "Record was not added.");
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            Assert.That(energy, Is.Not.Null);
+            energy.RestoreState(energy.TotalCapacity, true);
+            StationSystemsController.Instance.SetRequestedActive(
+                StationSystemType.Laboratory,
+                true);
+
+            hud.OpenLaboratory(inventory.gameObject);
+            yield return null;
+
+            Transform laboratory = hud.transform.Find("LaboratoryScreen");
+            LaboratoryScreenController screen =
+                laboratory.GetComponent<LaboratoryScreenController>();
+            Transform sharedInventory =
+                laboratory.Find("Inventory_and_info_Screen");
+            Transform powerScreen = laboratory.Find("PowerScreen");
+            Transform scanScreen = laboratory.Find("ScanScreen");
+            Transform upgradeScreen = laboratory.Find("UpgradeScreen");
+
+            Assert.That(laboratory.gameObject.activeSelf, Is.True, "LaboratoryScreen is closed.");
+            Assert.That(screen, Is.Not.Null);
+            Assert.That(sharedInventory.gameObject.activeSelf, Is.True, "Shared inventory is hidden.");
+            Assert.That(scanScreen.gameObject.activeSelf, Is.True, "Scan screen is not the default.");
+            Assert.That(powerScreen.gameObject.activeSelf, Is.False);
+            Assert.That(upgradeScreen.gameObject.activeSelf, Is.False);
+
+            AssertLaboratoryInventoryGroup(
+                sharedInventory,
+                "background_Screen_Storage_Slot_Invent",
+                8);
+            AssertLaboratoryInventoryGroup(
+                sharedInventory,
+                "background_Screen_Storage_Slot_Invent_Anomaly",
+                4);
+            AssertLaboratoryInventoryGroup(
+                sharedInventory,
+                "background_Screen_Storage_Slot_Invent_Equipment",
+                4);
+
+            laboratory.Find("PowerMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(powerScreen.gameObject.activeSelf, Is.True, "Power tab did not open.");
+            Assert.That(scanScreen.gameObject.activeSelf, Is.False);
+            Assert.That(upgradeScreen.gameObject.activeSelf, Is.False);
+            Assert.That(sharedInventory.gameObject.activeSelf, Is.True, "Shared inventory hid after tab switch.");
+
+            laboratory.Find("NextButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(screen.ActiveModeIndex, Is.EqualTo(1));
+            Assert.That(scanScreen.gameObject.activeSelf, Is.True);
+            laboratory.Find("BackButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(screen.ActiveModeIndex, Is.EqualTo(0));
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            LaboratoryInventoryItemDrag pistolDrag =
+                FindPlayerInventoryDrag(laboratory, pistol);
+            Transform powerSlotRoot = FindDescendant(
+                powerScreen,
+                "Slot_01");
+            InventorySlotView powerSlot =
+                GetSpawnedInventorySlot(powerSlotRoot);
+            Assert.That(pistolDrag, Is.Not.Null);
+            Assert.That(powerSlot, Is.Not.Null);
+            Button inventorySlotButton =
+                pistolDrag.GetComponent<Button>();
+            Assert.That(inventorySlotButton, Is.Not.Null);
+            ClickThroughUi(inventorySlotButton);
+            Component laboratoryInfoName = FindDescendant(
+                    sharedInventory,
+                    "Text_Name")
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                laboratoryInfoName.GetType().GetProperty("text")
+                    ?.GetValue(laboratoryInfoName)?.ToString(),
+                Is.EqualTo(pistol.DisplayName),
+                "Laboratory inventory slot did not select its item.");
+
+            Canvas.ForceUpdateCanvases();
+            DropThroughUi(
+                pistolDrag,
+                powerSlot.GetComponent<LaboratoryItemDropSlot>());
+
+            Assert.That(
+                workstation.GetChargingItem(0)?.ItemData,
+                Is.SameAs(pistol));
+            Transform progressTransform = FindDescendant(
+                powerScreen,
+                "Text_progress_01");
+            Component progress = progressTransform.GetComponent(
+                "TextMeshProUGUI");
+            Assert.That(progressTransform.gameObject.activeSelf, Is.True, "Charge progress is hidden.");
+            Assert.That(
+                progress.GetType().GetProperty("text")?.GetValue(progress)
+                    ?.ToString(),
+                Does.EndWith("%"));
+
+            FindDescendant(powerScreen, "DropButton")
+                .GetComponent<Button>().onClick.Invoke();
+            Assert.That(workstation.GetChargingItem(0), Is.Null);
+            Assert.That(inventory.Contains(pistol.ItemId), Is.True, "Power Drop did not return pistol.");
+
+            laboratory.Find("UpgradeMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag upgradePistol =
+                FindPlayerInventoryDrag(laboratory, pistol);
+            LaboratoryInventoryItemDrag upgradeAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            Transform upgradeSlot01 = upgradeScreen.transform.Find(
+                "background_Screen_Storage_Slot/Slot_01");
+            Transform upgradeSlot02 = upgradeScreen.transform.Find(
+                "background_Screen_Storage_Slot/Slot_02");
+            GetSpawnedInventorySlot(upgradeSlot01)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(upgradePistol);
+            GetSpawnedInventorySlot(upgradeSlot02)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(upgradeAnomaly);
+
+            Assert.That(
+                workstation.GetUpgradeItem(0)?.ItemData,
+                Is.SameAs(pistol));
+            Assert.That(
+                workstation.GetUpgradeItem(1)?.ItemData,
+                Is.SameAs(anomaly));
+            Assert.That(
+                FindDescendant(upgradeScreen, "UpgradeButton")
+                    .GetComponent<Button>().interactable,
+                Is.False,
+                "Synthesis is intentionally reserved for the next mechanic.");
+
+            FindDescendant(upgradeScreen, "DropButton")
+                .GetComponent<Button>().onClick.Invoke();
+            Assert.That(workstation.GetUpgradeItem(0), Is.Null);
+            Assert.That(workstation.GetUpgradeItem(1), Is.Null);
+
+            laboratory.Find("ScanMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag scanAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            InventorySlotView scanSlot = GetSpawnedInventorySlot(
+                scanScreen.transform.Find(
+                    "background_Screen_Storage_Slot/Slot"));
+            scanSlot.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(scanAnomaly);
+            Assert.That(research.LoadedItem, Is.SameAs(anomaly));
+
+            LaboratoryInventoryItemDrag scanRecord =
+                FindPlayerInventoryDrag(laboratory, record);
+            Assert.That(scanRecord, Is.Not.Null);
+            scanRecord.OnPointerDown(
+                new PointerEventData(EventSystem.current));
+            Assert.That(
+                laboratoryInfoName.GetType().GetProperty("text")
+                    ?.GetValue(laboratoryInfoName)?.ToString(),
+                Is.EqualTo(record.DisplayName),
+                "Starting a drag did not update laboratory item info.");
+            scanSlot.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(scanRecord);
+            Assert.That(
+                research.LoadedItem,
+                Is.SameAs(record),
+                "A different item type did not replace the loaded sample.");
+            Assert.That(
+                inventory.GetItem(
+                    InventorySlotGroup.Anomaly,
+                    0),
+                Is.SameAs(anomaly),
+                "The replaced anomaly did not return to its nearest typed slot.");
+
+            Button scanButton = FindDescendant(
+                scanScreen,
+                "ScanButton").GetComponent<Button>();
+            Button scanDrop = FindDescendant(
+                scanScreen,
+                "DropButton").GetComponent<Button>();
+            Transform scanProgressTransform = FindDescendant(
+                scanScreen,
+                "Text_progress");
+            Component scanProgressText =
+                scanProgressTransform.GetComponent("TextMeshProUGUI");
+            Assert.That(scanProgressTransform, Is.Not.Null);
+            Assert.That(scanProgressText, Is.Not.Null);
+            Assert.That(
+                scanProgressTransform.gameObject.activeSelf,
+                Is.False,
+                "Scan progress must stay hidden before scanning.");
+            Assert.That(scanButton.interactable, Is.True, "Scan button stayed disabled.");
+            scanButton.onClick.Invoke();
+            yield return null;
+
+            Assert.That(
+                research.State,
+                Is.EqualTo(ResearchController.ResearchState.Analyzing));
+            Assert.That(scanDrop.interactable, Is.False);
+            Assert.That(
+                scanSlot.LaboratoryDrag.enabled,
+                Is.False,
+                "The sample must not be draggable while scanning.");
+            Assert.That(
+                scanProgressTransform.gameObject.activeSelf,
+                Is.True,
+                "Scan progress did not appear.");
+            Assert.That(
+                scanProgressText.GetType().GetProperty("text")
+                    ?.GetValue(scanProgressText)?.ToString(),
+                Does.Match(@"^Progress - \d+%$"));
+
+            research.AdvanceAnalysis(
+                record.ResearchDefinition.AnalysisDuration * 0.5f);
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(
+                scanProgressTransform.gameObject.activeSelf,
+                Is.True);
+            Assert.That(
+                scanProgressText.GetType().GetProperty("text")
+                    ?.GetValue(scanProgressText)?.ToString(),
+                Is.Not.EqualTo("Progress - 0%"),
+                "Scan percentage did not change.");
+
+            research.AdvanceAnalysis(999f);
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(scanDrop.interactable, Is.True, "Scan Drop stayed disabled.");
+            Assert.That(scanSlot.LaboratoryDrag.enabled, Is.True, "Scanned sample stayed locked.");
+            Assert.That(
+                scanProgressTransform.gameObject.activeSelf,
+                Is.False,
+                "Scan progress stayed visible after completion.");
+            scanDrop.onClick.Invoke();
+            Assert.That(research.LoadedItem, Is.Null);
+            Assert.That(inventory.Contains(anomaly.ItemId), Is.True);
+            Assert.That(
+                inventory.Contains(record.ItemId),
+                Is.True,
+                "Scan Drop did not return the replacement sample.");
+
+            hud.CloseAll();
+            yield return null;
         }
 
         [UnityTest]
@@ -642,11 +1136,17 @@ namespace NERA.Tests
             Transform destinationRoot = terminal.transform.Find(
                 "StorageScreen/background_Screen_Storage_Slot/Slot_1");
             Assert.That(destinationRoot, Is.Not.Null, "Storage Slot_1 not found.");
+            InventorySlotView destinationView =
+                GetSpawnedInventorySlot(destinationRoot);
+            Assert.That(
+                destinationView,
+                Is.Not.Null,
+                "Storage Slot_1 did not spawn P_InventorySlot.");
             LaboratoryItemDropSlot destination =
-                destinationRoot.GetComponent<LaboratoryItemDropSlot>();
+                destinationView.GetComponent<LaboratoryItemDropSlot>();
             Assert.That(source, Is.Not.Null, "Occupied inventory slot has no drag source.");
             Assert.That(destination, Is.Not.Null, "Storage slot has no drop target.");
-            Transform destinationIconRoot = destination.transform.Find("RuntimeIcon");
+            Transform destinationIconRoot = destination.transform.Find("Icon");
             Assert.That(destinationIconRoot, Is.Not.Null, "Storage icon not created.");
             Image destinationIcon = destinationIconRoot.GetComponent<Image>();
             Assert.That(destinationIcon, Is.Not.Null);
@@ -682,6 +1182,16 @@ namespace NERA.Tests
                 pointerDrag = source.gameObject
             };
 
+            source.OnPointerDown(pointer);
+            Component storageInfoName = FindDescendant(
+                    storageScreenRoot,
+                    "Text_Name")
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                storageInfoName.GetType().GetProperty("text")
+                    ?.GetValue(storageInfoName)?.ToString(),
+                Is.EqualTo(item.DisplayName),
+                "Starting a storage drag did not update item info.");
             source.OnBeginDrag(pointer);
             var hits = new System.Collections.Generic.List<RaycastResult>();
             EventSystem.current.RaycastAll(pointer, hits);
@@ -752,19 +1262,256 @@ namespace NERA.Tests
             Assert.That(storage.Count, Is.EqualTo(storedBefore));
         }
 
+        [UnityTest]
+        public IEnumerator InteractionTargetUsesAimCameraWithoutCombatAim()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            PlayerInteractionController interaction =
+                Object.FindFirstObjectByType<PlayerInteractionController>();
+            PlayerFollowCamera followCamera =
+                Object.FindFirstObjectByType<PlayerFollowCamera>();
+            LaboratoryTableInteractable laboratory =
+                Object.FindFirstObjectByType<LaboratoryTableInteractable>();
+
+            Assert.That(interaction, Is.Not.Null);
+            Assert.That(followCamera, Is.Not.Null);
+            Assert.That(laboratory, Is.Not.Null);
+
+            MethodInfo setCurrentInteractable =
+                typeof(PlayerInteractionController).GetMethod(
+                    "SetCurrentInteractable",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(setCurrentInteractable, Is.Not.Null);
+
+            interaction.enabled = false;
+
+            setCurrentInteractable.Invoke(
+                interaction,
+                new object[] { laboratory });
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            Assert.That(followCamera.IsInteractionFocused, Is.True);
+            Assert.That(followCamera.IsAimCameraActive, Is.True);
+            Assert.That(
+                followCamera.IsAiming,
+                Is.False,
+                "Interaction focus must not enable combat aim or weapon locomotion.");
+
+            setCurrentInteractable.Invoke(
+                interaction,
+                new object[] { null });
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            Assert.That(followCamera.IsInteractionFocused, Is.False);
+            Assert.That(followCamera.IsAimCameraActive, Is.False);
+            Assert.That(
+                followCamera.GetDistance(),
+                Is.EqualTo(followCamera.GetTargetDistance()).Within(0.05f));
+        }
+
         private static int CountDirectSlotButtons(Transform root)
         {
             Assert.That(root, Is.Not.Null);
             int count = 0;
-            foreach (Button button in root.GetComponentsInChildren<Button>(true))
+            for (int index = 0; index < root.childCount; index++)
             {
-                if (button.transform.parent == root &&
-                    button.name.StartsWith("Slot_", StringComparison.Ordinal))
-                {
+                Transform spawnPoint = root.GetChild(index);
+                if (spawnPoint.name.StartsWith("Slot_", StringComparison.Ordinal) &&
+                    GetSpawnedInventorySlot(spawnPoint)?.Button != null)
                     count++;
-                }
             }
             return count;
+        }
+
+        private static InventorySlotView GetSpawnedInventorySlot(
+            Transform spawnPoint)
+        {
+            if (spawnPoint == null)
+                return null;
+
+            for (int index = 0; index < spawnPoint.childCount; index++)
+            {
+                InventorySlotView view =
+                    spawnPoint.GetChild(index).GetComponent<InventorySlotView>();
+                if (view != null)
+                    return view;
+            }
+
+            return null;
+        }
+
+        private static void AssertLaboratoryInventoryGroup(
+            Transform sharedInventory,
+            string groupName,
+            int expectedCount)
+        {
+            Transform root = FindDescendant(sharedInventory, groupName);
+            Assert.That(root, Is.Not.Null);
+            Assert.That(root.childCount, Is.EqualTo(expectedCount));
+            for (int index = 0; index < expectedCount; index++)
+            {
+                Transform spawnPoint = root.GetChild(index);
+                Assert.That(
+                    GetSpawnedInventorySlot(spawnPoint),
+                    Is.Not.Null,
+                    $"{groupName}/{spawnPoint.name} has no P_InventorySlot.");
+            }
+        }
+
+        private static LaboratoryInventoryItemDrag FindPlayerInventoryDrag(
+            Transform root,
+            ItemData item)
+        {
+            foreach (LaboratoryInventoryItemDrag drag in
+                     root.GetComponentsInChildren<
+                         LaboratoryInventoryItemDrag>(true))
+            {
+                if (drag.Item == item &&
+                    drag.SourceIndex >= 0 &&
+                    !drag.IsLaboratorySource &&
+                    !drag.IsChargingSource &&
+                    !drag.IsUpgradeSource &&
+                    !drag.IsStationStorageSource)
+                {
+                    return drag;
+                }
+            }
+
+            return null;
+        }
+
+        private static void DropThroughUi(
+            LaboratoryInventoryItemDrag source,
+            LaboratoryItemDropSlot destination)
+        {
+            Assert.That(source, Is.Not.Null);
+            Assert.That(destination, Is.Not.Null);
+            Assert.That(EventSystem.current, Is.Not.Null);
+
+            RectTransform destinationRect =
+                (RectTransform)destination.transform;
+            Canvas canvas = destination.GetComponentInParent<Canvas>();
+            Camera eventCamera = canvas.renderMode ==
+                RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : canvas.worldCamera;
+            Vector2 screenPoint =
+                RectTransformUtility.WorldToScreenPoint(
+                    eventCamera,
+                    destinationRect.TransformPoint(
+                        destinationRect.rect.center));
+            PointerEventData pointer =
+                new PointerEventData(EventSystem.current)
+                {
+                    button = PointerEventData.InputButton.Left,
+                    position = screenPoint,
+                    pointerDrag = source.gameObject
+                };
+
+            source.OnBeginDrag(pointer);
+            var hits =
+                new System.Collections.Generic.List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, hits);
+            RaycastResult dropHit = hits.Find(hit =>
+                hit.gameObject.GetComponentInParent<
+                    LaboratoryItemDropSlot>() == destination);
+            string raycastStack = string.Join(
+                "\n",
+                hits.ConvertAll(hit =>
+                    GetHierarchyPath(hit.gameObject.transform)));
+            Graphic destinationGraphic =
+                destination.GetComponent<Graphic>();
+            CanvasGroup destinationGroup =
+                destination.GetComponent<CanvasGroup>();
+            string destinationState =
+                $"path={GetHierarchyPath(destination.transform)}, " +
+                $"active={destination.gameObject.activeInHierarchy}, " +
+                $"rect={destinationRect.rect}, " +
+                $"world={destinationRect.position}, " +
+                $"screen={screenPoint}, " +
+                $"graphicEnabled={destinationGraphic != null && destinationGraphic.enabled}, " +
+                $"raycastTarget={destinationGraphic != null && destinationGraphic.raycastTarget}, " +
+                $"depth={(destinationGraphic != null ? destinationGraphic.depth : -999)}, " +
+                $"groupBlocks={destinationGroup != null && destinationGroup.blocksRaycasts}, " +
+                $"groupInteractable={destinationGroup != null && destinationGroup.interactable}";
+            Assert.That(
+                dropHit.gameObject,
+                Is.Not.Null,
+                "Laboratory slot is blocked from UI raycasts. " +
+                destinationState + "\nHits:\n" + raycastStack);
+
+            ExecuteEvents.ExecuteHierarchy(
+                dropHit.gameObject,
+                pointer,
+                ExecuteEvents.dropHandler);
+            source.OnEndDrag(pointer);
+        }
+
+        private static void ClickThroughUi(Button button)
+        {
+            Assert.That(button, Is.Not.Null);
+            Assert.That(EventSystem.current, Is.Not.Null);
+
+            RectTransform rect = (RectTransform)button.transform;
+            Canvas canvas = button.GetComponentInParent<Canvas>();
+            Camera eventCamera = canvas.renderMode ==
+                RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : canvas.worldCamera;
+            Vector2 screenPoint =
+                RectTransformUtility.WorldToScreenPoint(
+                    eventCamera,
+                    rect.TransformPoint(rect.rect.center));
+            PointerEventData pointer =
+                new PointerEventData(EventSystem.current)
+                {
+                    button = PointerEventData.InputButton.Left,
+                    position = screenPoint
+                };
+
+            var hits =
+                new System.Collections.Generic.List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, hits);
+            RaycastResult clickHit = hits.Find(hit =>
+                hit.gameObject.GetComponentInParent<Button>() == button);
+            string raycastStack = string.Join(
+                "\n",
+                hits.ConvertAll(hit =>
+                    GetHierarchyPath(hit.gameObject.transform)));
+            Assert.That(
+                clickHit.gameObject,
+                Is.Not.Null,
+                "Laboratory inventory slot cannot receive clicks. Hits:\n" +
+                raycastStack);
+            ExecuteEvents.ExecuteHierarchy(
+                clickHit.gameObject,
+                pointer,
+                ExecuteEvents.pointerClickHandler);
+        }
+
+        private static Transform FindDescendant(
+            Transform root,
+            string objectName)
+        {
+            if (root == null)
+                return null;
+            if (root.name == objectName)
+                return root;
+
+            for (int index = 0; index < root.childCount; index++)
+            {
+                Transform found = FindDescendant(
+                    root.GetChild(index),
+                    objectName);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
         }
 
         private static string GetHierarchyPath(Transform target)

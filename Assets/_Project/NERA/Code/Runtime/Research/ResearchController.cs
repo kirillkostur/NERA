@@ -143,20 +143,50 @@ namespace NERA.Research
 
             ItemInstance previousLoadedInstance = LoadedItemInstance;
             ItemData previousLoadedItem = previousLoadedInstance?.ItemData;
-            if (previousLoadedItem != null &&
-                PlayerInventory.GetSlotGroup(previousLoadedItem.ItemType) != sourceGroup)
+            if (previousLoadedItem == null)
             {
-                return false;
+                if (!inventory.RemoveInstanceAt(
+                        sourceGroup,
+                        sourceIndex,
+                        out sourceInstance))
+                {
+                    return false;
+                }
             }
-
-            if (!inventory.RemoveInstanceAt(sourceGroup, sourceIndex, out sourceInstance))
-                return false;
-
-            if (previousLoadedItem != null &&
-                !inventory.TrySetInstanceAt(sourceGroup, sourceIndex, previousLoadedInstance))
+            else
             {
-                inventory.TrySetInstanceAt(sourceGroup, sourceIndex, sourceInstance);
-                return false;
+                InventorySlotGroup previousGroup =
+                    PlayerInventory.GetSlotGroup(previousLoadedItem.ItemType);
+                if (previousGroup == sourceGroup)
+                {
+                    if (!inventory.TryReplaceInstanceAt(
+                            sourceGroup,
+                            sourceIndex,
+                            previousLoadedInstance,
+                            out sourceInstance))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!inventory.RemoveInstanceAt(
+                            sourceGroup,
+                            sourceIndex,
+                            out sourceInstance))
+                    {
+                        return false;
+                    }
+
+                    if (!inventory.AddItem(previousLoadedInstance))
+                    {
+                        inventory.TrySetInstanceAt(
+                            sourceGroup,
+                            sourceIndex,
+                            sourceInstance);
+                        return false;
+                    }
+                }
             }
 
             LoadedItemInstance = sourceInstance;

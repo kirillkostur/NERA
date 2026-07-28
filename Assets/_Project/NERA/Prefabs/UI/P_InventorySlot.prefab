@@ -88,8 +88,6 @@ GameObject:
   - component: {fileID: 7784646478850998542}
   - component: {fileID: 772337515104864423}
   - component: {fileID: 7664320636205035510}
-  - component: {fileID: 5771089437586645073}
-  - component: {fileID: 6132245363981091873}
   m_Layer: 0
   m_Name: P_InventorySlot
   m_TagString: Untagged
@@ -116,7 +114,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 80, y: 80}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4530524895308141083
 CanvasRenderer:
@@ -146,7 +144,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1894187539, guid: 775d567966aa3c9438642a7789e55347, type: 3}
+  m_Sprite: {fileID: 875879256, guid: 775d567966aa3c9438642a7789e55347, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -212,36 +210,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &5771089437586645073
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6116278850975268270}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7348667dc268e774d9386c27ae2aeebb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &6132245363981091873
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6116278850975268270}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3eeb04fbe4ede7449cdd54fb4074606, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  button: {fileID: 0}
-  background: {fileID: 0}
-  icon: {fileID: 0}
-  numberLabel: {fileID: 0}
-  canvasGroup: {fileID: 0}
-  laboratoryDrag: {fileID: 0}
 --- !u!1 &8098126478212605502
 GameObject:
   m_ObjectHideFlags: 0
@@ -254,7 +222,7 @@ GameObject:
   - component: {fileID: 7422662061207744729}
   - component: {fileID: 3675923643482559317}
   m_Layer: 0
-  m_Name: Number
+  m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

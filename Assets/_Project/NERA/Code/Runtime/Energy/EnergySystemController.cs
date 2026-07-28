@@ -181,13 +181,19 @@ namespace NERA.Energy
             if (string.IsNullOrWhiteSpace(consumerId))
                 return;
 
+            float clampedRate = Mathf.Max(0f, rate);
             if (!consumers.TryGetValue(consumerId, out ConsumerRecord consumer))
             {
                 consumer = new ConsumerRecord();
                 consumers.Add(consumerId, consumer);
             }
+            else if (Mathf.Approximately(consumer.Rate, clampedRate) &&
+                     consumer.DisableInEmergency == disableInEmergency)
+            {
+                return;
+            }
 
-            consumer.Rate = Mathf.Max(0f, rate);
+            consumer.Rate = clampedRate;
             consumer.DisableInEmergency = disableInEmergency;
             RefreshConsumers();
         }
@@ -195,6 +201,8 @@ namespace NERA.Energy
         public void SetConsumerActive(string consumerId, bool active)
         {
             if (!consumers.TryGetValue(consumerId, out ConsumerRecord consumer))
+                return;
+            if (consumer.RequestedActive == active)
                 return;
 
             consumer.RequestedActive = active;

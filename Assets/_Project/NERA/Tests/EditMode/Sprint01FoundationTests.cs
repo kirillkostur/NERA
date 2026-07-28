@@ -632,12 +632,12 @@ namespace NERA.Tests
 
             Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 0), Is.EqualTo(engineering));
             Assert.That(inventory.GetItem(InventorySlotGroup.Backpack, 1), Is.EqualTo(record));
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 1), Is.EqualTo(equipment));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment));
             Assert.That(inventory.GetItem(InventorySlotGroup.Anomaly, 0), Is.EqualTo(anomaly));
         }
 
         [Test]
-        public void EquipmentFillsActiveQuickSlotsBeforeAuxiliarySlots()
+        public void EquipmentFillsAllQuickAccessSlotsInDisplayOrder()
         {
             ItemData[] equipment = new ItemData[PlayerInventory.QuickAccessCapacity];
             for (int i = 0; i < equipment.Length; i++)
@@ -646,10 +646,10 @@ namespace NERA.Tests
                 Assert.That(inventory.AddItem(equipment[i]), Is.True);
             }
 
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 1), Is.EqualTo(equipment[0]));
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 2), Is.EqualTo(equipment[1]));
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 3), Is.EqualTo(equipment[2]));
-            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment[3]));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 0), Is.EqualTo(equipment[0]));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 1), Is.EqualTo(equipment[1]));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 2), Is.EqualTo(equipment[2]));
+            Assert.That(inventory.GetItem(InventorySlotGroup.QuickAccess, 3), Is.EqualTo(equipment[3]));
         }
 
         [Test]

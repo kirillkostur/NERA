@@ -28,7 +28,7 @@ namespace NERA.Save
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
         private EnergySystemController energySystem;
-        private ItemChargingController itemCharger;
+        private LaboratoryWorkstationController laboratoryWorkstation;
         private AntennaController antenna;
         private PlayerInventory inventory;
         private ResearchController research;
@@ -198,8 +198,15 @@ namespace NERA.Save
                 CaptureInstances(inventory.QuickAccessItemInstances, data.quickAccessItems);
             }
 
-            if (itemCharger?.LoadedItem != null)
-                data.chargingTableItem = CaptureInstance(itemCharger.LoadedItem);
+            if (laboratoryWorkstation != null)
+            {
+                CaptureInstances(
+                    laboratoryWorkstation.ChargingItems,
+                    data.laboratoryChargingItems);
+                CaptureInstances(
+                    laboratoryWorkstation.UpgradeItems,
+                    data.laboratoryUpgradeItems);
+            }
 
             if (research?.LoadedItemInstance != null)
                 data.laboratoryItem = CaptureInstance(research.LoadedItemInstance);
@@ -330,10 +337,21 @@ namespace NERA.Save
                 }
             }
 
-            itemCharger?.RestoreLoadedItem(
-                ResolveInstance(data.chargingTableItem),
-                inventory
-            );
+            if (laboratoryWorkstation != null)
+            {
+                List<ItemInstance> chargingItems =
+                    ResolveInstances(data.laboratoryChargingItems);
+                if (chargingItems.Count == 0 &&
+                    data.chargingTableItem != null)
+                {
+                    chargingItems.Add(
+                        ResolveInstance(data.chargingTableItem));
+                }
+
+                laboratoryWorkstation.RestoreItems(
+                    chargingItems,
+                    ResolveInstances(data.laboratoryUpgradeItems));
+            }
             research?.RestoreLoadedItem(
                 ResolveInstance(data.laboratoryItem),
                 inventory
@@ -540,7 +558,9 @@ namespace NERA.Save
             if (inventory != null)
                 inventory.RestoreItems(Array.Empty<ItemData>());
 
-            itemCharger?.RestoreLoadedItem(null, inventory);
+            laboratoryWorkstation?.RestoreItems(
+                Array.Empty<ItemInstance>(),
+                Array.Empty<ItemInstance>());
             research?.RestoreLoadedItem(null, inventory);
 
             stationStorage?.ResetStorage();
@@ -584,8 +604,9 @@ namespace NERA.Save
             if (energySystem == null)
                 energySystem = GetComponent<EnergySystemController>();
 
-            if (itemCharger == null)
-                itemCharger = GetComponent<ItemChargingController>();
+            if (laboratoryWorkstation == null)
+                laboratoryWorkstation =
+                    GetComponent<LaboratoryWorkstationController>();
 
             if (antenna == null)
                 antenna = GetComponent<AntennaController>();
@@ -658,8 +679,9 @@ namespace NERA.Save
             if (research != null)
                 research.StateChanged += HandleResearchStateChanged;
 
-            if (itemCharger != null)
-                itemCharger.LoadedItemChanged += HandleChargingItemChanged;
+            if (laboratoryWorkstation != null)
+                laboratoryWorkstation.ItemsChanged +=
+                    HandleLaboratoryWorkstationChanged;
 
             if (library != null)
                 library.EntryUnlocked += HandleLibraryEntryUnlocked;
@@ -697,8 +719,9 @@ namespace NERA.Save
             if (research != null)
                 research.StateChanged -= HandleResearchStateChanged;
 
-            if (itemCharger != null)
-                itemCharger.LoadedItemChanged -= HandleChargingItemChanged;
+            if (laboratoryWorkstation != null)
+                laboratoryWorkstation.ItemsChanged -=
+                    HandleLaboratoryWorkstationChanged;
 
             if (library != null)
                 library.EntryUnlocked -= HandleLibraryEntryUnlocked;
@@ -750,7 +773,7 @@ namespace NERA.Save
             RequestAutoSave();
         }
 
-        private void HandleChargingItemChanged()
+        private void HandleLaboratoryWorkstationChanged()
         {
             RequestAutoSave();
         }

@@ -90,6 +90,15 @@ namespace NERA.Terminal
             if (text != null)
                 text.text = value ?? string.Empty;
         }
+
+        public static void ReleaseCameraTarget(Camera camera)
+        {
+            RenderTexture target = camera != null
+                ? camera.targetTexture
+                : null;
+            if (target != null && target.IsCreated())
+                target.Release();
+        }
     }
 
     public sealed class UIPreviewRaycaster : MonoBehaviour, IPointerClickHandler

@@ -17,8 +17,8 @@ namespace NERA.Inventory
     {
         public const int AnomalyCapacity = 4;
         public const int QuickAccessCapacity = 4;
-        public const int ActiveQuickAccessStartIndex = 1;
-        public const int ActiveQuickAccessCapacity = 3;
+        public const int ActiveQuickAccessStartIndex = 0;
+        public const int ActiveQuickAccessCapacity = QuickAccessCapacity;
 
         [SerializeField] private InventoryConfig config;
         [SerializeField] private List<ItemInstance> backpackItemInstances = new List<ItemInstance>();

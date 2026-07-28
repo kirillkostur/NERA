@@ -31,6 +31,8 @@ namespace NERA.Station
     {
         [SerializeField, Min(1)] private int targetLevel = 1;
         [SerializeField] private string displayName;
+        [Tooltip("Icon shown in this upgrade level slot in the station terminal.")]
+        [SerializeField] private Sprite upgradeIcon;
         [SerializeField, TextArea(2, 4)] private string description;
         [SerializeField] private List<StationUpgradeItemRequirement> requiredItems =
             new List<StationUpgradeItemRequirement>();
@@ -38,6 +40,7 @@ namespace NERA.Station
 
         public int TargetLevel => Mathf.Max(1, targetLevel);
         public string DisplayName => displayName ?? string.Empty;
+        public Sprite UpgradeIcon => upgradeIcon;
         public string Description => description ?? string.Empty;
         public IReadOnlyList<StationUpgradeItemRequirement> RequiredItems =>
             requiredItems != null

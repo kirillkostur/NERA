@@ -54,10 +54,13 @@ public class PlayerFollowCamera : MonoBehaviour
     private float defaultDistance;
     private bool inputEnabled = true;
     private bool isAiming;
+    private bool isInteractionFocused;
     private float aimWeight;
     private PlayerController targetPlayerController;
 
     public bool IsAiming => isAiming && aimWeight > 0.5f;
+    public bool IsInteractionFocused => isInteractionFocused;
+    public bool IsAimCameraActive => IsAimCameraRequested() && aimWeight > 0.5f;
     public float Yaw => yaw;
 
     private void Start()
@@ -160,7 +163,7 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void ReadZoomInput()
     {
-        if (isAiming)
+        if (IsAimCameraRequested())
             return;
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -183,6 +186,12 @@ public class PlayerFollowCamera : MonoBehaviour
             && targetPlayerController.IsCrouching;
     }
 
+    private bool IsAimCameraRequested()
+    {
+        return !IsTargetCrouching()
+            && (isAiming || isInteractionFocused);
+    }
+
     private void CacheTargetPlayerController()
     {
         targetPlayerController = target != null
@@ -192,7 +201,7 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void UpdateAimWeight()
     {
-        float targetAimWeight = isAiming ? 1f : 0f;
+        float targetAimWeight = IsAimCameraRequested() ? 1f : 0f;
 
         aimWeight = Mathf.MoveTowards(
             aimWeight,
@@ -203,7 +212,7 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void UpdateDistance()
     {
-        float desiredDistance = isAiming
+        float desiredDistance = IsAimCameraRequested()
             ? Mathf.Clamp(aimDistance, minDistance, maxDistance)
             : targetDistance;
 
@@ -299,6 +308,12 @@ public class PlayerFollowCamera : MonoBehaviour
         target = null;
         targetPlayerController = null;
         isAiming = false;
+        isInteractionFocused = false;
+    }
+
+    public void SetInteractionFocus(bool focused)
+    {
+        isInteractionFocused = focused;
     }
 
     public bool HasTarget()
@@ -376,6 +391,9 @@ public class PlayerFollowCamera : MonoBehaviour
         if (inputEnabled)
             ApplyGameplayCursorState();
         else
+        {
             isAiming = false;
+            isInteractionFocused = false;
+        }
     }
 }

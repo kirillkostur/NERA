@@ -15,6 +15,7 @@ namespace NERA.Station
         private readonly List<Material> runtimeMaterials = new List<Material>();
         private StationPowerController powerController;
         private EnergySystemController energySystem;
+        private bool? renderedPowerState;
 
         private void Awake()
         {
@@ -59,6 +60,10 @@ namespace NERA.Station
                 state == StationPowerState.Online &&
                 (energySystem == null ||
                  energySystem.IsConsumerPowered(LightingConsumerId));
+            if (renderedPowerState == isPowered)
+                return;
+
+            renderedPowerState = isPowered;
 
             foreach (Light poweredLight in poweredLights)
             {

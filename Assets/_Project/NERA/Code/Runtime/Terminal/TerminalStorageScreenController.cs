@@ -51,8 +51,8 @@ namespace NERA.Terminal
                 FindFirstObjectByType<PlayerInventory>();
             CacheHierarchy();
             BindTabs();
+            StationStorageController.Instance?.ConfigureCapacities(16, 16, 16);
             BuildAllSlots();
-            BindSources();
             ShowStorageGroup(InventorySlotGroup.Backpack);
             RefreshAll();
         }
@@ -60,7 +60,10 @@ namespace NERA.Terminal
         public void SetScreenActive(bool active)
         {
             if (!active)
+            {
+                UnbindSources();
                 return;
+            }
 
             inventory = InventoryLabHUDController.Instance?.BoundInventory ??
                 inventory ??
@@ -71,6 +74,7 @@ namespace NERA.Terminal
 
         public void HandleTerminalClosed()
         {
+            UnbindSources();
             selectedSlot = null;
             ClearInfo();
         }
@@ -163,6 +167,17 @@ namespace NERA.Terminal
             if (root == null)
                 return;
 
+            InventoryConfig inventoryConfig =
+                InventoryConfig.Resolve(inventory?.Config);
+            GameObject slotPrefab = inventoryConfig?.SlotPrefab;
+            if (slotPrefab == null)
+            {
+                Debug.LogError(
+                    "TerminalStorageScreenController: P_InventorySlot is missing in InventoryConfig.",
+                    this);
+                return;
+            }
+
             List<Transform> authored = new List<Transform>();
             for (int i = 0; i < root.childCount; i++)
             {
@@ -175,21 +190,31 @@ namespace NERA.Terminal
 
             for (int index = 0; index < authored.Count; index++)
             {
-                Transform slotRoot = authored[index];
+                InventorySlotView inventorySlot =
+                    InventorySlotSpawnUtility.GetOrCreate(
+                        authored[index],
+                        slotPrefab);
+                if (inventorySlot == null)
+                    continue;
+
+                inventorySlot.Initialize(index, false, rootCanvas);
+                Transform slotRoot = inventorySlot.transform;
                 SlotView view = new SlotView
                 {
                     Group = group,
                     Index = index,
                     IsStorage = isStorage,
-                    Button = TerminalUIUtility.EnsureButton(slotRoot),
-                    Icon = TerminalUIUtility.EnsureSlotIcon(slotRoot),
-                    Drag = slotRoot.GetComponent<LaboratoryInventoryItemDrag>() ??
-                        slotRoot.gameObject.AddComponent<
-                            LaboratoryInventoryItemDrag>(),
+                    Button = inventorySlot.Button ??
+                        TerminalUIUtility.EnsureButton(slotRoot),
+                    Icon = inventorySlot.Icon ??
+                        TerminalUIUtility.EnsureSlotIcon(slotRoot),
+                    Drag = inventorySlot.LaboratoryDrag ??
+                        slotRoot.gameObject.AddComponent<LaboratoryInventoryItemDrag>(),
                     Drop = slotRoot.GetComponent<LaboratoryItemDropSlot>() ??
                         slotRoot.gameObject.AddComponent<LaboratoryItemDropSlot>()
                 };
                 view.Button?.onClick.AddListener(() => SelectSlot(view));
+                view.Drag.InteractionStarted += _ => SelectSlot(view);
                 view.Drop.ItemDropped += drag => HandleDrop(view, drag);
                 destination.Add(view);
             }
@@ -230,7 +255,9 @@ namespace NERA.Terminal
                         destination.Group,
                         destination.Index);
                 }
-                else if (!drag.IsLaboratorySource && !drag.IsChargingSource)
+                else if (!drag.IsLaboratorySource &&
+                         !drag.IsChargingSource &&
+                         !drag.IsUpgradeSource)
                 {
                     storage.MoveFromInventory(
                         inventory,
@@ -249,7 +276,9 @@ namespace NERA.Terminal
                     destination.Group,
                     destination.Index);
             }
-            else if (!drag.IsLaboratorySource && !drag.IsChargingSource)
+            else if (!drag.IsLaboratorySource &&
+                     !drag.IsChargingSource &&
+                     !drag.IsUpgradeSource)
             {
                 inventory.TryMoveItem(
                     drag.SourceGroup,
@@ -353,15 +382,21 @@ namespace NERA.Terminal
                 if (subscribedStorage != null)
                     subscribedStorage.StorageChanged += RefreshAll;
             }
-            subscribedStorage?.ConfigureCapacities(16, 16, 16);
         }
 
-        private void OnDestroy()
+        private void UnbindSources()
         {
             if (subscribedInventory != null)
                 subscribedInventory.InventoryChanged -= RefreshAll;
             if (subscribedStorage != null)
                 subscribedStorage.StorageChanged -= RefreshAll;
+            subscribedInventory = null;
+            subscribedStorage = null;
+        }
+
+        private void OnDestroy()
+        {
+            UnbindSources();
         }
 
         private static int GetSlotNumber(string name)

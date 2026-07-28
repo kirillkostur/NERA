@@ -17,6 +17,7 @@ namespace NERA.Interaction
 
         private IInteractable currentInteractable;
         private IInteractable activeInteractable;
+        private PlayerFollowCamera followCamera;
         private float holdElapsed;
         private readonly RaycastHit[] raycastHits = new RaycastHit[8];
 
@@ -29,14 +30,13 @@ namespace NERA.Interaction
 
         private void Awake()
         {
-            if (interactionCamera == null)
-                interactionCamera = Camera.main;
+            ResolveInteractionCamera();
         }
 
         private void Update()
         {
-            if (interactionCamera == null)
-                interactionCamera = Camera.main;
+            if (interactionCamera == null || followCamera == null)
+                ResolveInteractionCamera();
 
             DetectInteractable();
             ProcessInput();
@@ -46,6 +46,27 @@ namespace NERA.Interaction
         {
             CancelActiveInteraction();
             SetCurrentInteractable(null);
+        }
+
+        private void ResolveInteractionCamera()
+        {
+            if (interactionCamera == null)
+                interactionCamera = Camera.main;
+
+            PlayerFollowCamera resolvedCamera = interactionCamera != null
+                ? interactionCamera.GetComponent<PlayerFollowCamera>()
+                : null;
+
+            if (followCamera == resolvedCamera)
+                return;
+
+            if (followCamera != null)
+                followCamera.SetInteractionFocus(false);
+
+            followCamera = resolvedCamera;
+
+            if (followCamera != null)
+                followCamera.SetInteractionFocus(currentInteractable != null);
         }
 
         private void DetectInteractable()
@@ -219,6 +240,7 @@ namespace NERA.Interaction
         private void SetCurrentInteractable(IInteractable interactable)
         {
             currentInteractable = interactable;
+            followCamera?.SetInteractionFocus(currentInteractable != null);
             TargetChanged?.Invoke();
         }
     }

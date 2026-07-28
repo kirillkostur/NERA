@@ -50,19 +50,31 @@ namespace NERA.Terminal
             if (moveConfirmation != null)
                 moveConfirmation.SetActive(false);
             RefreshAll();
+            SetScreenActive(false);
         }
 
         public void SetScreenActive(bool active)
         {
-            if (!active)
+            bool shouldRender =
+                active &&
+                terminal != null &&
+                terminal.IsOpen;
+            if (mapCamera != null)
+                mapCamera.enabled = shouldRender;
+
+            if (!shouldRender)
+            {
+                TerminalUIUtility.ReleaseCameraTarget(mapCamera);
                 return;
+            }
 
             RefreshAll();
         }
 
         private void Update()
         {
-            if (!gameObject.activeInHierarchy ||
+            if (terminal?.IsOpen != true ||
+                !gameObject.activeInHierarchy ||
                 Time.unscaledTime < nextRefreshAt)
             {
                 return;

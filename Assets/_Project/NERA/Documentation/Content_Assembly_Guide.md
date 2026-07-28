@@ -474,7 +474,8 @@ Map Symbol: Unknown
 - `ResearchController`;
 - `ExpeditionProgressController`;
 - `AntennaController`;
-- `ItemChargingController`.
+- `LaboratoryWorkstationController` — четыре зарядных слота и два
+  подготовленных слота синтеза в общем окне лаборатории.
 
 При добавлении контента обычно не нужно создавать второй контроллер в сцене экспедиции. Нужно создать данные и зарегистрировать их в существующей системе.
 
@@ -549,7 +550,7 @@ Map Symbol: Unknown
 6. Проверить переход и spawn.
 7. Подобрать предметы.
 8. Вернуться на станцию.
-9. Проверить inventory, research, Library и charging table.
+9. Проверить inventory, вкладки лаборатории Power/Scan/Upgrade и Library.
 10. Выполнить save/load и повторно открыть сцены.
 
 Контент считается подключённым только после прохождения всей цепочки. Наличие prefab или config в Project window само по себе не означает, что объект участвует в игре.

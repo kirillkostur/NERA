@@ -11,10 +11,10 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1020a5a86307466418c2b0d62ea37950, type: 3}
   m_Name: StationSystems_Default
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   stationObjects:
   - systemType: 0
-    objectId:
+    objectId: 
     previewObjectName: SM_Solar_Panel
     displayName: SOLAR PANEL
     description: Generates station power. Clean it outside to restore efficiency.
@@ -23,7 +23,7 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 1
-    objectId:
+    objectId: 
     previewObjectName: SM_Battery_Room
     displayName: BATTERY
     description: Stores generated energy and supplies all active consumers.
@@ -33,11 +33,13 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: BATTERY I
+      upgradeIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
       description: Standard station cell bank.
       requiredItems: []
       energyCost: 0
     - targetLevel: 2
       displayName: BATTERY II
+      upgradeIcon: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}
       description: Expanded high-capacity cell bank.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -46,7 +48,7 @@ MonoBehaviour:
         count: 1
       energyCost: 100
   - systemType: 2
-    objectId:
+    objectId: 
     previewObjectName: SM_Central_Room
     displayName: COMPUTER
     description: Central terminal. It cannot be stopped or upgraded from itself.
@@ -55,7 +57,7 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 3
-    objectId:
+    objectId: 
     previewObjectName: SM_Drone
     displayName: DRONE
     description: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
@@ -65,11 +67,13 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: DRONE I
+      upgradeIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
       description: Short-range expedition drive.
       requiredItems: []
       energyCost: 0
     - targetLevel: 2
       displayName: DRONE II
+      upgradeIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
       description: Medium-range expedition drive.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -77,6 +81,7 @@ MonoBehaviour:
       energyCost: 100
     - targetLevel: 3
       displayName: DRONE III
+      upgradeIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
       description: Long-range expedition drive.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -85,8 +90,8 @@ MonoBehaviour:
         count: 1
       energyCost: 200
   - systemType: 4
-    objectId:
-    previewObjectName:
+    objectId: 
+    previewObjectName: 
     displayName: LABORATORY
     description: Analyzes recovered objects and unlocks Library records.
     controllable: 1
@@ -94,7 +99,7 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 5
-    objectId:
+    objectId: 
     previewObjectName: SM_Upgrade_Room
     displayName: CHARGER
     description: Restores charge to energy-powered equipment.
@@ -103,16 +108,18 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 6
-    objectId:
+    objectId: 
     previewObjectName: SM_Antenna
     displayName: ANTENNA
-    description: Finds unknown signals. Install a replacement drive before first use.
+    description: Finds unknown signals. Install a replacement drive before first
+      use.
     controllable: 1
     initiallyActive: 0
     initialLevel: 0
     upgradeLevels:
     - targetLevel: 1
       displayName: ANTENNA I
+      upgradeIcon: {fileID: 0}
       description: Restores short-range signal reception.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -120,6 +127,7 @@ MonoBehaviour:
       energyCost: 0
     - targetLevel: 2
       displayName: ANTENNA II
+      upgradeIcon: {fileID: 0}
       description: Improves signal resolution and range.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -129,6 +137,7 @@ MonoBehaviour:
       energyCost: 100
     - targetLevel: 3
       displayName: ANTENNA III
+      upgradeIcon: {fileID: 0}
       description: Enables deep-range signal acquisition.
       requiredItems:
       - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
@@ -147,11 +156,13 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: TURRET 1 / LEVEL 1
+      upgradeIcon: {fileID: 0}
       description: Factory-installed defensive platform.
       requiredItems: []
       energyCost: 0
     - targetLevel: 2
       displayName: TURRET 1 / LEVEL 2
+      upgradeIcon: {fileID: 0}
       description: Improves tracking and sustained fire.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -161,6 +172,7 @@ MonoBehaviour:
       energyCost: 100
     - targetLevel: 3
       displayName: TURRET 1 / LEVEL 3
+      upgradeIcon: {fileID: 0}
       description: Maximum performance for the first defense sector.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -181,6 +193,7 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: TURRET 2 / LEVEL 1
+      upgradeIcon: {fileID: 0}
       description: Installs the second defensive platform.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -188,6 +201,7 @@ MonoBehaviour:
       energyCost: 0
     - targetLevel: 2
       displayName: TURRET 2 / LEVEL 2
+      upgradeIcon: {fileID: 0}
       description: Reinforces its tracking assembly.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -197,6 +211,7 @@ MonoBehaviour:
       energyCost: 100
     - targetLevel: 3
       displayName: TURRET 2 / LEVEL 3
+      upgradeIcon: {fileID: 0}
       description: Adds an autonomous long-range control core.
       requiredItems:
       - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
@@ -215,6 +230,7 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: TURRET 3 / LEVEL 1
+      upgradeIcon: {fileID: 0}
       description: Builds the third defensive platform.
       requiredItems:
       - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
@@ -222,6 +238,7 @@ MonoBehaviour:
       energyCost: 0
     - targetLevel: 2
       displayName: TURRET 3 / LEVEL 2
+      upgradeIcon: {fileID: 0}
       description: Adds a stabilized drive and processing core.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -231,6 +248,7 @@ MonoBehaviour:
       energyCost: 120
     - targetLevel: 3
       displayName: TURRET 3 / LEVEL 3
+      upgradeIcon: {fileID: 0}
       description: Installs redundant signal and targeting channels.
       requiredItems:
       - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
@@ -249,6 +267,7 @@ MonoBehaviour:
     upgradeLevels:
     - targetLevel: 1
       displayName: TURRET 4 / LEVEL 1
+      upgradeIcon: {fileID: 0}
       description: Restores the fourth defense sector.
       requiredItems:
       - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
@@ -256,6 +275,7 @@ MonoBehaviour:
       energyCost: 0
     - targetLevel: 2
       displayName: TURRET 4 / LEVEL 2
+      upgradeIcon: {fileID: 0}
       description: Upgrades its signal and rotation systems.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
@@ -265,6 +285,7 @@ MonoBehaviour:
       energyCost: 140
     - targetLevel: 3
       displayName: TURRET 4 / LEVEL 3
+      upgradeIcon: {fileID: 0}
       description: Installs a high-load command assembly.
       requiredItems:
       - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}

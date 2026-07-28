@@ -61,6 +61,7 @@ namespace NERA.Terminal
             BindButtons();
             AttachScreenControllers();
             RegisterTerminalConsumer();
+            ShowScreen(activeScreenIndex);
             SetVisible(false);
         }
 
@@ -140,6 +141,8 @@ namespace NERA.Terminal
                 false);
             storageController?.HandleTerminalClosed();
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);
+            mapController?.SetScreenActive(false);
+            stationController?.SetScreenActive(false);
             SetVisible(false);
             SetPlayerControl(true);
             Cursor.lockState = CursorLockMode.Locked;

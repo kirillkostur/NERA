@@ -18,14 +18,14 @@ namespace NERA.Inventory
             DefaultBackpackCapacity;
 
         [Header("UI")]
-        [SerializeField] private InventorySlotView slotPrefab;
+        [SerializeField] private GameObject slotPrefab;
 
         public int BackpackCapacity => Mathf.Clamp(
             backpackCapacity,
             1,
             MaxBackpackCapacity
         );
-        public InventorySlotView SlotPrefab => slotPrefab;
+        public GameObject SlotPrefab => slotPrefab;
 
         public static InventoryConfig Resolve(InventoryConfig assigned)
         {

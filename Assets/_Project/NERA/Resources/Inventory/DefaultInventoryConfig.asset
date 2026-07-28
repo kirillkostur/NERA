@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: DefaultInventoryConfig
   m_EditorClassIdentifier: 
   backpackCapacity: 8
-  slotPrefab: {fileID: 6132245363981091873, guid: 379f206bcab694342b8fb56d3ef4be6b, type: 3}
+  slotPrefab: {fileID: 6116278850975268270, guid: 379f206bcab694342b8fb56d3ef4be6b, type: 3}
