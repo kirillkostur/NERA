@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Combat;
 using NERA.Items;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ namespace NERA.Inventory
         private PlayerInventory inventory;
 
         public event Func<ItemInstance, QuickAccessAction, bool> EquipmentUseRequested;
+        public event Func<ItemInstance, AnomalyIntegrationDefinition, bool>
+            AnomalyUseRequested;
 
         public ItemData EquippedItem => FindPreferredQuickAccessItem();
         public bool HasEquippedWeapon => FindEquippedWeapon() != null;
@@ -68,6 +71,15 @@ namespace NERA.Inventory
             if (inventory == null || Cursor.lockState != CursorLockMode.Locked)
                 return;
 
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                if (TryUseIntegratedAnomaly(
+                        FindPreferredIntegratedQuickAccessItem()))
+                {
+                    return;
+                }
+            }
+
             ItemInstance instance = FindPressedQuickAccessItem();
             TryUseItem(instance);
         }
@@ -109,6 +121,50 @@ namespace NERA.Inventory
             return true;
         }
 
+        public bool TryUseIntegratedAnomaly(ItemInstance instance)
+        {
+            if (inventory == null)
+                inventory = GetComponent<PlayerInventory>();
+
+            AnomalyIntegrationDefinition definition =
+                instance?.AnomalyIntegration;
+            if (inventory == null ||
+                definition == null ||
+                !instance.CanUseAnomalyIntegration ||
+                !ContainsQuickAccessInstance(instance))
+            {
+                return false;
+            }
+
+            bool actionSucceeded = false;
+            if (AnomalyUseRequested != null)
+            {
+                foreach (Delegate callback in
+                         AnomalyUseRequested.GetInvocationList())
+                {
+                    actionSucceeded |=
+                        ((Func<
+                            ItemInstance,
+                            AnomalyIntegrationDefinition,
+                            bool>)callback)(instance, definition);
+                }
+            }
+
+            if (!actionSucceeded ||
+                !instance.TryConsumeAnomalyCharge())
+            {
+                return false;
+            }
+
+            inventory.NotifyItemStateChanged(instance);
+            Debug.Log(
+                $"Equipment: {instance.ItemData.DisplayName} activated " +
+                $"'{definition.DisplayName}'. Anomaly charges: " +
+                $"{instance.AnomalyCharges}.",
+                this);
+            return true;
+        }
+
         private ItemInstance FindPressedQuickAccessItem()
         {
             ItemInstance fallbackItem = null;
@@ -123,13 +179,52 @@ namespace NERA.Inventory
                 if (!CanUseItem(item) || !Input.GetKeyDown(item.UseKey))
                     continue;
 
-                if (item.QuickAccessAction == QuickAccessAction.Fire)
-                    return instance;
-
                 fallbackItem ??= instance;
             }
 
             return fallbackItem;
+        }
+
+        private ItemInstance FindPreferredIntegratedQuickAccessItem()
+        {
+            if (inventory == null)
+                return null;
+
+            for (int i = 0;
+                 i < inventory.QuickAccessItemInstances.Count;
+                 i++)
+            {
+                if (!PlayerInventory.IsActiveQuickAccessSlot(i))
+                    continue;
+
+                ItemInstance instance =
+                    inventory.QuickAccessItemInstances[i];
+                if (instance?.CanUseAnomalyIntegration == true)
+                    return instance;
+            }
+
+            return null;
+        }
+
+        private bool ContainsQuickAccessInstance(ItemInstance instance)
+        {
+            if (instance == null || inventory == null)
+                return false;
+
+            for (int i = 0;
+                 i < inventory.QuickAccessItemInstances.Count;
+                 i++)
+            {
+                if (PlayerInventory.IsActiveQuickAccessSlot(i) &&
+                    ReferenceEquals(
+                        inventory.QuickAccessItemInstances[i],
+                        instance))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private ItemData FindPreferredQuickAccessItem()

@@ -1,4 +1,5 @@
 using System;
+using NERA.Combat;
 using UnityEngine;
 
 namespace NERA.Items
@@ -9,6 +10,9 @@ namespace NERA.Items
         [SerializeField] private string instanceId;
         [SerializeField] private ItemData itemData;
         [SerializeField] private float charge;
+        [SerializeField] private bool isScanned;
+        [SerializeField] private ItemData integratedAnomaly;
+        [SerializeField] private int anomalyCharges;
 
         public string InstanceId => instanceId;
         public ItemData ItemData => itemData;
@@ -18,6 +22,17 @@ namespace NERA.Items
         public bool IsChargeable => itemData != null && itemData.EnergyDefinition != null;
         public bool IsDepleted => IsChargeable && Charge <= 0.001f;
         public bool IsFullyCharged => !IsChargeable || Charge >= MaxCharge - 0.001f;
+        public bool IsScanned => isScanned;
+        public ItemData IntegratedAnomaly => integratedAnomaly;
+        public AnomalyIntegrationDefinition AnomalyIntegration =>
+            integratedAnomaly?.AnomalyIntegrationDefinition;
+        public int AnomalyCharges => Mathf.Max(0, anomalyCharges);
+        public bool HasAnomalyIntegration => AnomalyIntegration != null;
+        public bool CanUseAnomalyIntegration =>
+            HasAnomalyIntegration &&
+            AnomalyCharges > 0 &&
+            IsChargeable &&
+            IsFullyCharged;
 
         private ItemInstance() { }
 
@@ -35,6 +50,33 @@ namespace NERA.Items
 
         public static ItemInstance Restore(string id, ItemData data, float savedCharge)
         {
+            return Restore(id, data, savedCharge, null, 0, false);
+        }
+
+        public static ItemInstance Restore(
+            string id,
+            ItemData data,
+            float savedCharge,
+            ItemData savedIntegratedAnomaly,
+            int savedAnomalyCharges)
+        {
+            return Restore(
+                id,
+                data,
+                savedCharge,
+                savedIntegratedAnomaly,
+                savedAnomalyCharges,
+                false);
+        }
+
+        public static ItemInstance Restore(
+            string id,
+            ItemData data,
+            float savedCharge,
+            ItemData savedIntegratedAnomaly,
+            int savedAnomalyCharges,
+            bool savedIsScanned)
+        {
             if (data == null)
                 return null;
 
@@ -43,10 +85,60 @@ namespace NERA.Items
                 instanceId = string.IsNullOrWhiteSpace(id)
                     ? Guid.NewGuid().ToString("N")
                     : id.Trim(),
-                itemData = data
+                itemData = data,
+                integratedAnomaly =
+                    savedIntegratedAnomaly?.AnomalyIntegrationDefinition != null
+                        ? savedIntegratedAnomaly
+                        : null,
+                anomalyCharges = Mathf.Max(0, savedAnomalyCharges),
+                isScanned = savedIsScanned
             };
             instance.SetCharge(savedCharge);
+            if (instance.integratedAnomaly == null)
+                instance.anomalyCharges = 0;
             return instance;
+        }
+
+        public bool MarkScanned()
+        {
+            if (isScanned)
+                return false;
+
+            isScanned = true;
+            return true;
+        }
+
+        public bool TryInstallAnomaly(ItemInstance anomalyInstance)
+        {
+            ItemData anomaly = anomalyInstance?.ItemData;
+            AnomalyIntegrationDefinition definition =
+                anomaly?.AnomalyIntegrationDefinition;
+            if (itemData?.ItemType != ItemType.Equipment ||
+                !itemData.AcceptsAnomalyIntegration ||
+                !IsChargeable ||
+                !IsFullyCharged ||
+                HasAnomalyIntegration ||
+                anomalyInstance?.IsScanned != true ||
+                definition == null ||
+                !definition.Supports(itemData))
+            {
+                return false;
+            }
+
+            integratedAnomaly = anomaly;
+            anomalyCharges = definition.ChargesGranted;
+            return true;
+        }
+
+        public bool TryConsumeAnomalyCharge()
+        {
+            if (!CanUseAnomalyIntegration)
+                return false;
+
+            charge = 0f;
+            integratedAnomaly = null;
+            anomalyCharges = 0;
+            return true;
         }
 
         public bool CanConsume(float amount)

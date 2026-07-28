@@ -478,11 +478,7 @@ namespace NERA.Tests
             Assert.That(stageController.SystemType, Is.EqualTo(expectedType));
             Assert.That(stageController.MaxStage, Is.EqualTo(maximumStage));
 
-            int firstStage = expectedType == StationSystemType.Battery ||
-                expectedType == StationSystemType.Drone
-                ? 1
-                : 0;
-            for (int stage = firstStage; stage <= maximumStage; stage++)
+            for (int stage = 0; stage <= maximumStage; stage++)
             {
                 Transform stageRoot = prefab.transform.Find($"Stage_{stage}");
                 Assert.That(stageRoot, Is.Not.Null, $"Missing Stage_{stage}");

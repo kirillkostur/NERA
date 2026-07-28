@@ -871,7 +871,7 @@ Equipment
 Оборудование.
 Предмет, который может использовать игрок, станция или исследовательский дрон.
 Например:
-Field Scanner;
+IO Integrator;
 Drone Module;
 Portable Battery;
 Signal Beacon.
@@ -930,7 +930,7 @@ Item Config является частью Config System.
 Item State
 Некоторые предметы обладают собственным состоянием.
 Например:
-Field Scanner
+IO Integrator
 Durability: 62%
 Charge: 40%
 Индивидуальное состояние может содержать:
@@ -948,7 +948,7 @@ Item Save Data
 ItemInstanceId;
 Item State.
 Пример:
-ItemId: field_scanner
+ItemId: io_integrator
 ItemInstanceId: item_instance_000341
 Durability: 0.62
 Charge: 0.40
@@ -1118,6 +1118,11 @@ servo_drive
 ItemInstance — это конкретный экземпляр этого предмета.
 Например:
 servo_drive_instance_001
+Индивидуальное состояние исследования также принадлежит ItemInstance.
+Если игрок нашёл два одинаковых аномальных камня, каждый экземпляр должен пройти сканирование отдельно.
+Первый экземпляр открывает описание типа в Library.
+Сканирование следующих экземпляров того же типа не создаёт повторных записей Library, но необходимо для их использования.
+Уже отсканированный экземпляр нельзя сканировать повторно.
 servo_drive_instance_002
 servo_drive_instance_003
 Несколько одинаковых предметов могут существовать одновременно.

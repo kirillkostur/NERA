@@ -66,4 +66,4 @@ Objective System должен реагировать на завершённые
 3. Связь Research Expedition 02 с доступностью антенны.
 4. Полный жизненный цикл неизвестного сигнала.
 5. Death / Respawn / Checkpoint flow.
-6. Реальная механика Field Scanner.
+6. Реальная механика IO Integrator.

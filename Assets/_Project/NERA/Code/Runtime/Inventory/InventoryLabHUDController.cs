@@ -834,7 +834,7 @@ namespace NERA.Inventory
 
             bool analyzing = controller.State == ResearchController.ResearchState.Analyzing;
             bool hasItem = controller.LoadedItem != null;
-            bool analyzed = hasItem && controller.IsAnalyzed(controller.LoadedItem);
+            bool scanned = controller.LoadedItemInstance?.IsScanned == true;
             bool researchable = hasItem && controller.IsResearchable(controller.LoadedItem);
 
             if (laboratorySlotIcon != null)
@@ -855,7 +855,7 @@ namespace NERA.Inventory
                     ? $"SCANNING {Mathf.RoundToInt(controller.Progress * 100f)}%"
                     : !hasItem ? "START SCAN"
                     : !researchable ? "KNOWN ITEM"
-                    : analyzed ? "ANALYZED"
+                    : scanned ? "SCANNED"
                     : "START SCAN";
             }
             if (scanButton != null)

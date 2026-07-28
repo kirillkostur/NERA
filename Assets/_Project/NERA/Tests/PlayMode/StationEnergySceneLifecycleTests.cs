@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using NERA.Core;
 using NERA.Drone;
@@ -484,6 +485,7 @@ namespace NERA.Tests
             Assert.That(systems, Is.Not.Null);
             Assert.That(discovery.KnownLocations.Count, Is.GreaterThanOrEqualTo(2));
 
+            systems.ResetSystems();
             ExpeditionLocationData first = discovery.KnownLocations[0];
             ExpeditionLocationData second = discovery.KnownLocations[1];
             discovery.RestoreDiscovered(Array.Empty<string>());
@@ -766,6 +768,9 @@ namespace NERA.Tests
             ItemData pistol = catalog != null
                 ? catalog.Find("energy_pistol_01")
                 : null;
+            ItemData integrator = catalog != null
+                ? catalog.Find("io_integrator_01")
+                : null;
             ItemData anomaly = catalog != null
                 ? catalog.Find("io_blue_shard_01")
                 : null;
@@ -778,6 +783,7 @@ namespace NERA.Tests
             Assert.That(research, Is.Not.Null);
             Assert.That(workstation, Is.Not.Null);
             Assert.That(pistol, Is.Not.Null);
+            Assert.That(integrator, Is.Not.Null);
             Assert.That(anomaly, Is.Not.Null);
             Assert.That(record, Is.Not.Null);
 
@@ -788,6 +794,10 @@ namespace NERA.Tests
                 Array.Empty<ItemInstance>(),
                 Array.Empty<ItemInstance>());
             Assert.That(inventory.AddItem(pistol), Is.True, "Pistol was not added.");
+            Assert.That(
+                inventory.AddItem(integrator),
+                Is.True,
+                "IO Integrator was not added.");
             Assert.That(inventory.AddItem(anomaly), Is.True, "Anomaly was not added.");
             Assert.That(inventory.AddItem(record), Is.True, "Record was not added.");
 
@@ -896,8 +906,10 @@ namespace NERA.Tests
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
                 .onClick.Invoke();
-            LaboratoryInventoryItemDrag upgradePistol =
+            LaboratoryInventoryItemDrag rejectedPistol =
                 FindPlayerInventoryDrag(laboratory, pistol);
+            LaboratoryInventoryItemDrag upgradeIntegrator =
+                FindPlayerInventoryDrag(laboratory, integrator);
             LaboratoryInventoryItemDrag upgradeAnomaly =
                 FindPlayerInventoryDrag(laboratory, anomaly);
             Transform upgradeSlot01 = upgradeScreen.transform.Find(
@@ -906,14 +918,21 @@ namespace NERA.Tests
                 "background_Screen_Storage_Slot/Slot_02");
             GetSpawnedInventorySlot(upgradeSlot01)
                 .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(upgradePistol);
+                .ItemDropped.Invoke(rejectedPistol);
+            Assert.That(
+                workstation.GetUpgradeItem(0),
+                Is.Null,
+                "Ordinary weapons must not enter the integration slot.");
+            GetSpawnedInventorySlot(upgradeSlot01)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(upgradeIntegrator);
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(upgradeAnomaly);
 
             Assert.That(
                 workstation.GetUpgradeItem(0)?.ItemData,
-                Is.SameAs(pistol));
+                Is.SameAs(integrator));
             Assert.That(
                 workstation.GetUpgradeItem(1)?.ItemData,
                 Is.SameAs(anomaly));
@@ -1027,6 +1046,166 @@ namespace NERA.Tests
                 inventory.Contains(record.ItemId),
                 Is.True,
                 "Scan Drop did not return the replacement sample.");
+
+            LaboratoryInventoryItemDrag firstAnomalyScan =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            scanSlot.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(firstAnomalyScan);
+            Assert.That(research.LoadedItem, Is.SameAs(anomaly));
+            Assert.That(research.LoadedItemInstance.IsScanned, Is.False);
+            Assert.That(scanButton.interactable, Is.True);
+            scanButton.onClick.Invoke();
+            research.AdvanceAnalysis(999f);
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(research.LoadedItemInstance.IsScanned, Is.True);
+            scanDrop.onClick.Invoke();
+
+            laboratory.Find("UpgradeMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag synthesizedIntegrator =
+                FindPlayerInventoryDrag(laboratory, integrator);
+            LaboratoryInventoryItemDrag synthesizedAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            Assert.That(synthesizedIntegrator, Is.Not.Null);
+            Assert.That(synthesizedAnomaly, Is.Not.Null);
+            GetSpawnedInventorySlot(upgradeSlot01)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(synthesizedIntegrator);
+            GetSpawnedInventorySlot(upgradeSlot02)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(synthesizedAnomaly);
+
+            Button synthesisButton =
+                FindDescendant(upgradeScreen, "UpgradeButton")
+                    .GetComponent<Button>();
+            Assert.That(
+                synthesisButton.interactable,
+                Is.True,
+                "UpgradeButton stayed disabled for an analyzed IO shard.");
+            synthesisButton.onClick.Invoke();
+
+            ItemInstance synthesizedTool =
+                workstation.GetUpgradeItem(0);
+            Assert.That(synthesizedTool, Is.Not.Null);
+            Assert.That(
+                synthesizedTool.IntegratedAnomaly,
+                Is.SameAs(anomaly));
+            Assert.That(synthesizedTool.AnomalyCharges, Is.EqualTo(1));
+            Assert.That(synthesizedTool.IsFullyCharged, Is.True);
+            Assert.That(
+                workstation.GetUpgradeItem(1),
+                Is.Null,
+                "Synthesis did not consume the IO shard.");
+
+            FindDescendant(upgradeScreen, "DropButton")
+                .GetComponent<Button>().onClick.Invoke();
+            Assert.That(inventory.Contains(integrator.ItemId), Is.True);
+            Assert.That(inventory.Contains(anomaly.ItemId), Is.False);
+
+            ItemInstance equippedIntegrator =
+                inventory.QuickAccessItemInstances.FirstOrDefault(
+                    instance => instance?.ItemData == integrator);
+            PlayerEquipmentController equipmentController =
+                inventory.GetComponent<PlayerEquipmentController>();
+            Assert.That(equippedIntegrator, Is.Not.Null);
+            Assert.That(equipmentController, Is.Not.Null);
+            Assert.That(
+                equipmentController.TryUseIntegratedAnomaly(
+                    equippedIntegrator),
+                Is.True,
+                "R activation failed for the IO Integrator.");
+            Assert.That(equippedIntegrator.Charge, Is.Zero);
+            Assert.That(equippedIntegrator.IntegratedAnomaly, Is.Null);
+
+            laboratory.Find("PowerMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag dischargedIntegrator =
+                FindPlayerInventoryDrag(laboratory, integrator);
+            powerSlot.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(dischargedIntegrator);
+            Assert.That(
+                workstation.GetChargingItem(0)?.ItemData,
+                Is.SameAs(integrator));
+            workstation.AdvanceCharging(10f);
+            Assert.That(
+                workstation.GetChargingItem(0)?.IsFullyCharged,
+                Is.True,
+                "The IO Integrator did not recharge.");
+            FindDescendant(powerScreen, "DropButton")
+                .GetComponent<Button>().onClick.Invoke();
+
+            Assert.That(
+                inventory.AddItem(anomaly),
+                Is.True,
+                "A second shard was not added.");
+            ItemInstance secondAnomalyInstance =
+                inventory.AnomalyItemInstances.First(
+                    instance => instance?.ItemData == anomaly);
+            Assert.That(
+                secondAnomalyInstance.IsScanned,
+                Is.False,
+                "A new instance must not inherit scan state from its type.");
+
+            laboratory.Find("UpgradeMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag rechargedIntegrator =
+                FindPlayerInventoryDrag(laboratory, integrator);
+            LaboratoryInventoryItemDrag secondAnalyzedAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            GetSpawnedInventorySlot(upgradeSlot01)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(rechargedIntegrator);
+            GetSpawnedInventorySlot(upgradeSlot02)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(secondAnalyzedAnomaly);
+            Assert.That(
+                synthesisButton.interactable,
+                Is.False,
+                "An unscanned second shard incorrectly inherited access.");
+
+            FindDescendant(upgradeScreen, "DropButton")
+                .GetComponent<Button>().onClick.Invoke();
+            laboratory.Find("ScanMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            LaboratoryInventoryItemDrag secondAnomalyScan =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            scanSlot.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(secondAnomalyScan);
+            Assert.That(
+                research.LoadedItemInstance,
+                Is.SameAs(secondAnomalyInstance));
+            Assert.That(scanButton.interactable, Is.True);
+            scanButton.onClick.Invoke();
+            research.AdvanceAnalysis(999f);
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(secondAnomalyInstance.IsScanned, Is.True);
+            Assert.That(
+                research.AnalyzedResearchIds.Count,
+                Is.EqualTo(2),
+                "The known anomaly type must not create a duplicate research id.");
+            scanDrop.onClick.Invoke();
+
+            laboratory.Find("UpgradeMapButton").GetComponent<Button>()
+                .onClick.Invoke();
+            rechargedIntegrator =
+                FindPlayerInventoryDrag(laboratory, integrator);
+            secondAnalyzedAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            GetSpawnedInventorySlot(upgradeSlot01)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(rechargedIntegrator);
+            GetSpawnedInventorySlot(upgradeSlot02)
+                .GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(secondAnalyzedAnomaly);
+            Assert.That(
+                synthesisButton.interactable,
+                Is.True,
+                "The second shard stayed locked after its own scan.");
+            synthesisButton.onClick.Invoke();
+            Assert.That(
+                workstation.GetUpgradeItem(0)?.IntegratedAnomaly,
+                Is.SameAs(anomaly));
+            Assert.That(workstation.GetUpgradeItem(1), Is.Null);
 
             hud.CloseAll();
             yield return null;

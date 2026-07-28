@@ -41,6 +41,11 @@ namespace NERA.Items
         [Header("Research")]
         [SerializeField] private ResearchDefinition researchDefinition;
 
+        [Header("Anomaly Integration")]
+        [SerializeField] private bool acceptsAnomalyIntegration;
+        [SerializeField]
+        private AnomalyIntegrationDefinition anomalyIntegrationDefinition;
+
         [Header("Weapon")]
         [SerializeField] private WeaponDefinition weaponDefinition;
 
@@ -60,6 +65,10 @@ namespace NERA.Items
         public QuickAccessAction QuickAccessAction => quickAccessAction;
         public KeyCode UseKey => useKey;
         public ResearchDefinition ResearchDefinition => researchDefinition;
+        public bool AcceptsAnomalyIntegration =>
+            acceptsAnomalyIntegration;
+        public AnomalyIntegrationDefinition AnomalyIntegrationDefinition =>
+            anomalyIntegrationDefinition;
         public WeaponDefinition WeaponDefinition => weaponDefinition;
         public ItemEnergyDefinition EnergyDefinition => energyDefinition;
 

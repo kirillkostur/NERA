@@ -328,8 +328,7 @@ namespace NERA.Research
             scanButton?.onClick.AddListener(StartScan);
             scanDropButton?.onClick.AddListener(ReturnScanItem);
             upgradeDropButton?.onClick.AddListener(ReturnUpgradeItems);
-            if (upgradeButton != null)
-                upgradeButton.interactable = false;
+            upgradeButton?.onClick.AddListener(SynthesizeUpgrade);
         }
 
         private void ShowNextMode()
@@ -524,6 +523,18 @@ namespace NERA.Research
             RefreshAll();
         }
 
+        private void SynthesizeUpgrade()
+        {
+            LaboratoryWorkstationController workstation =
+                LaboratoryWorkstationController.Instance;
+            if (workstation?.TrySynthesize() == true)
+            {
+                ShowInfo(workstation.GetUpgradeItem(0)?.ItemData);
+            }
+
+            RefreshAll();
+        }
+
         private void RefreshAll()
         {
             if (inventory == null)
@@ -668,7 +679,10 @@ namespace NERA.Research
                     workstation?.IsUpgradeProcessing != true;
             }
             if (upgradeButton != null)
-                upgradeButton.interactable = false;
+            {
+                upgradeButton.interactable =
+                    workstation?.CanSynthesize(out _) == true;
+            }
         }
 
         private void SetSlotItem(

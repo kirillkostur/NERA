@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb98ab7276048ef4aad17c9557da5f66, type: 3}
-  m_Name: ItemEnergy_EnergyScanner_01
+  m_Name: ItemEnergy_IOIntegrator_01
   m_EditorClassIdentifier: 
   capacity: 100
   initialCharge: 100

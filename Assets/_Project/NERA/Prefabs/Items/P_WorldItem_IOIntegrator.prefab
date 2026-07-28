@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3247287945634577963}
   - component: {fileID: 7962635430784054245}
   m_Layer: 7
-  m_Name: P_WorldItem_FieldScanner
+  m_Name: P_WorldItem_IOIntegrator
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

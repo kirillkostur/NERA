@@ -442,7 +442,11 @@ namespace NERA.Save
                     {
                         instanceId = instance.InstanceId,
                         itemId = instance.ItemData.ItemId,
-                        charge = instance.Charge
+                        charge = instance.Charge,
+                        isScanned = instance.IsScanned,
+                        integratedAnomalyItemId =
+                            instance.IntegratedAnomaly?.ItemId,
+                        anomalyCharges = instance.AnomalyCharges
                     });
             }
         }
@@ -455,7 +459,11 @@ namespace NERA.Save
                 {
                     instanceId = instance.InstanceId,
                     itemId = instance.ItemData.ItemId,
-                    charge = instance.Charge
+                    charge = instance.Charge,
+                    isScanned = instance.IsScanned,
+                    integratedAnomalyItemId =
+                        instance.IntegratedAnomaly?.ItemId,
+                    anomalyCharges = instance.AnomalyCharges
                 };
         }
 
@@ -477,7 +485,13 @@ namespace NERA.Save
 
                 ItemData item = FindItem(saved.itemId);
                 resolved.Add(item != null
-                    ? ItemInstance.Restore(saved.instanceId, item, saved.charge)
+                    ? ItemInstance.Restore(
+                        saved.instanceId,
+                        item,
+                        saved.charge,
+                        FindItem(saved.integratedAnomalyItemId),
+                        saved.anomalyCharges,
+                        saved.isScanned)
                     : null);
 
                 if (item == null)
@@ -498,7 +512,13 @@ namespace NERA.Save
                 return null;
             }
 
-            return ItemInstance.Restore(saved.instanceId, item, saved.charge);
+            return ItemInstance.Restore(
+                saved.instanceId,
+                item,
+                saved.charge,
+                FindItem(saved.integratedAnomalyItemId),
+                saved.anomalyCharges,
+                saved.isScanned);
         }
 
         private static void CaptureSlots(

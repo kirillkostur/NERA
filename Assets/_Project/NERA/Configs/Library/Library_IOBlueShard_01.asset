@@ -15,6 +15,8 @@ MonoBehaviour:
   entryId: io_blue_shard_01
   title: BLUE IO SHARD // ANOMALY ANALYSIS
   category: 1
-  description: A condensed energy crystal recovered from a Blue IO entity. Its resonance
-    pattern is unstable, but can be safely catalogued after laboratory analysis.
+  description: A condensed energy crystal recovered from a Blue IO entity. Laboratory
+    analysis identifies a medium-strength destructive resonance. When integrated into
+    compatible equipment, the shard releases one radial pulse that damages nearby IO
+    anomalies.
   illustration: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}

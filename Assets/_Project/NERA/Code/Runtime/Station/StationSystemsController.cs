@@ -74,7 +74,19 @@ namespace NERA.Station
 
         public int GetUpgradeLevel(StationSystemType type)
         {
-            return upgradeLevels.TryGetValue(type, out int level) ? level : 0;
+            StationSystemDefinition definition = GetDefinition(type);
+            if (definition != null &&
+                !string.IsNullOrWhiteSpace(definition.ObjectId))
+            {
+                return GetUpgradeLevel(
+                    type,
+                    definition.ObjectId,
+                    definition.InitialLevel);
+            }
+
+            return upgradeLevels.TryGetValue(type, out int level)
+                ? level
+                : definition?.InitialLevel ?? 0;
         }
 
         public int GetUpgradeLevel(
@@ -83,7 +95,11 @@ namespace NERA.Station
             int initialLevel)
         {
             if (string.IsNullOrWhiteSpace(objectId))
-                return GetUpgradeLevel(type);
+            {
+                return upgradeLevels.TryGetValue(type, out int sharedLevel)
+                    ? sharedLevel
+                    : initialLevel;
+            }
 
             return EnsureObjectState(
                 type,
@@ -94,7 +110,11 @@ namespace NERA.Station
 
         public bool IsUnlocked(StationSystemType type)
         {
-            return IsUnlocked(type, null, 0);
+            StationSystemDefinition definition = GetDefinition(type);
+            return IsUnlocked(
+                type,
+                definition?.ObjectId,
+                definition?.InitialLevel ?? 0);
         }
 
         public bool IsUnlocked(
@@ -110,7 +130,12 @@ namespace NERA.Station
 
         public bool IsRequestedActive(StationSystemType type)
         {
-            return IsRequestedActive(type, null, 0, false);
+            StationSystemDefinition definition = GetDefinition(type);
+            return IsRequestedActive(
+                type,
+                definition?.ObjectId,
+                definition?.InitialLevel ?? 0,
+                definition?.InitiallyActive ?? false);
         }
 
         public bool IsRequestedActive(
@@ -217,7 +242,12 @@ namespace NERA.Station
 
         public bool CanStart(StationSystemType type, out string reason)
         {
-            return CanStart(type, null, 0, out reason);
+            StationSystemDefinition definition = GetDefinition(type);
+            return CanStart(
+                type,
+                definition?.ObjectId,
+                definition?.InitialLevel ?? 0,
+                out reason);
         }
 
         public bool CanStart(
@@ -262,7 +292,7 @@ namespace NERA.Station
             return SetRequestedActive(
                 type,
                 active,
-                null,
+                definition?.ObjectId,
                 definition?.InitialLevel ?? 0,
                 definition?.InitiallyActive ?? false);
         }
@@ -333,10 +363,11 @@ namespace NERA.Station
             StationStorageController storage,
             out string reason)
         {
+            StationSystemDefinition definition = GetDefinition(type);
             return CanUpgradeTo(
                 type,
-                null,
-                0,
+                definition?.ObjectId,
+                definition?.InitialLevel ?? 0,
                 targetLevel,
                 inventory,
                 storage,
@@ -438,10 +469,11 @@ namespace NERA.Station
             PlayerInventory inventory,
             StationStorageController storage)
         {
+            StationSystemDefinition definition = GetDefinition(type);
             return TryUpgradeTo(
                 type,
-                null,
-                0,
+                definition?.ObjectId,
+                definition?.InitialLevel ?? 0,
                 targetLevel,
                 inventory,
                 storage);

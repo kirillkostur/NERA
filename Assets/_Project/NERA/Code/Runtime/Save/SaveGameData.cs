@@ -9,6 +9,9 @@ namespace NERA.Save
         public string instanceId;
         public string itemId;
         public float charge;
+        public bool isScanned;
+        public string integratedAnomalyItemId;
+        public int anomalyCharges;
     }
 
     [Serializable]
@@ -23,7 +26,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 10;
+        public int version = 12;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;

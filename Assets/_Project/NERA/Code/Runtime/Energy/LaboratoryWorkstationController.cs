@@ -172,6 +172,93 @@ namespace NERA.Energy
                 : RetrieveAll(upgradeItems, inventory);
         }
 
+        public bool CanSynthesize(out string reason)
+        {
+            EnsureSlotCounts();
+            if (IsUpgradeProcessing)
+            {
+                reason = "Synthesis is already in progress.";
+                return false;
+            }
+
+            ItemInstance equipment = upgradeItems[0];
+            ItemInstance anomaly = upgradeItems[1];
+            if (equipment?.ItemData == null)
+            {
+                reason = "Place an equipment item in the left slot.";
+                return false;
+            }
+
+            if (anomaly?.ItemData == null)
+            {
+                reason = "Place an IO anomaly in the right slot.";
+                return false;
+            }
+
+            if (!IsValidUpgradeItem(0, equipment) ||
+                !IsValidUpgradeItem(1, anomaly))
+            {
+                reason = "The selected items cannot be synthesized.";
+                return false;
+            }
+
+            if (!anomaly.ItemData.AnomalyIntegrationDefinition.Supports(
+                    equipment.ItemData))
+            {
+                reason = "This anomaly is incompatible with the equipment.";
+                return false;
+            }
+
+            if (!equipment.IsChargeable ||
+                !equipment.IsFullyCharged)
+            {
+                reason = "Fully charge the IO integration tool first.";
+                return false;
+            }
+
+            if (equipment.HasAnomalyIntegration)
+            {
+                reason = "The IO integration tool is already loaded.";
+                return false;
+            }
+
+            if (!anomaly.IsScanned)
+            {
+                reason = "Scan this anomaly sample before synthesis.";
+                return false;
+            }
+
+            if (!IsSystemEnabled)
+            {
+                reason = "Laboratory is stopped.";
+                return false;
+            }
+
+            reason = string.Empty;
+            return true;
+        }
+
+        public bool TrySynthesize()
+        {
+            if (!CanSynthesize(out _))
+                return false;
+
+            ItemInstance equipment = upgradeItems[0];
+            ItemInstance anomalyInstance = upgradeItems[1];
+            ItemData anomaly = anomalyInstance.ItemData;
+            if (!equipment.TryInstallAnomaly(anomalyInstance))
+                return false;
+
+            upgradeItems[1] = null;
+            StateChanged?.Invoke();
+            ItemsChanged?.Invoke();
+            Debug.Log(
+                $"Laboratory: integrated '{anomaly.DisplayName}' into " +
+                $"'{equipment.ItemData.DisplayName}'.",
+                this);
+            return true;
+        }
+
         public void AdvanceCharging(float deltaTime)
         {
             if (deltaTime <= 0f)
@@ -377,8 +464,10 @@ namespace NERA.Energy
 
             return slotIndex switch
             {
-                0 => item.ItemData.ItemType == ItemType.Equipment,
-                1 => item.ItemData.ItemType == ItemType.Anomaly,
+                0 => item.ItemData.ItemType == ItemType.Equipment &&
+                    item.ItemData.AcceptsAnomalyIntegration,
+                1 => item.ItemData.ItemType == ItemType.Anomaly &&
+                    item.ItemData.AnomalyIntegrationDefinition != null,
                 _ => false
             };
         }

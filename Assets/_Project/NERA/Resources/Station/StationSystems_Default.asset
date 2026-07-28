@@ -57,7 +57,7 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 3
-    objectId: 
+    objectId: station_drone
     previewObjectName: SM_Drone
     displayName: DRONE
     description: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
@@ -108,7 +108,7 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 6
-    objectId: 
+    objectId: station_antenna
     previewObjectName: SM_Antenna
     displayName: ANTENNA
     description: Finds unknown signals. Install a replacement drive before first

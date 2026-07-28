@@ -893,6 +893,36 @@ namespace NERA.Tests
             Assert.That(instance.Charge, Is.EqualTo(80f).Within(0.001f));
         }
 
+        [Test]
+        public void OrdinaryEnergyWeaponStillUsesItsFireAction()
+        {
+            ItemData weapon = CreateChargeableItem(
+                "ordinary_energy_weapon",
+                ItemType.Equipment);
+            SerializedObject serializedWeapon = new SerializedObject(weapon);
+            serializedWeapon.FindProperty("quickAccessAction").enumValueIndex =
+                (int)QuickAccessAction.Fire;
+            serializedWeapon.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(inventory.AddItem(weapon), Is.True);
+            ItemInstance instance = inventory.GetItemInstance(
+                InventorySlotGroup.QuickAccess,
+                PlayerInventory.ActiveQuickAccessStartIndex);
+            PlayerEquipmentController equipment =
+                root.AddComponent<PlayerEquipmentController>();
+            bool fireRequested = false;
+            equipment.EquipmentUseRequested += (_, action) =>
+            {
+                fireRequested = action == QuickAccessAction.Fire;
+                return fireRequested;
+            };
+
+            Assert.That(equipment.TryUseItem(instance), Is.True);
+            Assert.That(fireRequested, Is.True);
+            Assert.That(instance.Charge, Is.EqualTo(90f).Within(0.001f));
+            Assert.That(instance.AnomalyIntegration, Is.Null);
+        }
+
         private ItemData CreateChargeableItem(string id, ItemType type)
         {
             ItemEnergyDefinition energy = ScriptableObject.CreateInstance<ItemEnergyDefinition>();
@@ -921,6 +951,277 @@ namespace NERA.Tests
             serialized.ApplyModifiedPropertiesWithoutUndo();
             createdItems.Add(item);
             return item;
+        }
+    }
+
+    public sealed class AnomalyIntegrationTests
+    {
+        private GameObject player;
+        private GameObject systems;
+        private PlayerInventory inventory;
+        private PlayerEquipmentController equipmentController;
+        private ResearchController research;
+        private LaboratoryWorkstationController workstation;
+        private ItemData tool;
+        private ItemData anomaly;
+        private ResearchDefinition researchDefinition;
+        private AnomalyIntegrationDefinition integrationDefinition;
+        private ItemEnergyDefinition toolEnergy;
+
+        [SetUp]
+        public void SetUp()
+        {
+            player = new GameObject("Test_AnomalyToolPlayer");
+            inventory = player.AddComponent<PlayerInventory>();
+            equipmentController =
+                player.AddComponent<PlayerEquipmentController>();
+
+            systems = new GameObject("Test_AnomalyIntegrationSystems");
+            research = systems.AddComponent<ResearchController>();
+            workstation =
+                systems.AddComponent<LaboratoryWorkstationController>();
+            SetSingleton(
+                typeof(ResearchController),
+                research);
+
+            integrationDefinition =
+                ScriptableObject.CreateInstance<
+                    AnomalyIntegrationDefinition>();
+            SerializedObject serializedIntegration =
+                new SerializedObject(integrationDefinition);
+            serializedIntegration.FindProperty("integrationId").stringValue =
+                "test_io_pulse";
+            serializedIntegration.FindProperty("displayName").stringValue =
+                "Test IO Pulse";
+            serializedIntegration.ApplyModifiedPropertiesWithoutUndo();
+
+            researchDefinition =
+                ScriptableObject.CreateInstance<ResearchDefinition>();
+            SerializedObject serializedResearch =
+                new SerializedObject(researchDefinition);
+            serializedResearch.FindProperty("researchId").stringValue =
+                "research_test_io_pulse";
+            serializedResearch.ApplyModifiedPropertiesWithoutUndo();
+
+            toolEnergy =
+                ScriptableObject.CreateInstance<ItemEnergyDefinition>();
+            SerializedObject serializedEnergy =
+                new SerializedObject(toolEnergy);
+            serializedEnergy.FindProperty("capacity").floatValue = 100f;
+            serializedEnergy.FindProperty("initialCharge").floatValue = 100f;
+            serializedEnergy.FindProperty("rechargePerSecond").floatValue =
+                20f;
+            serializedEnergy.ApplyModifiedPropertiesWithoutUndo();
+
+            tool = CreateItem("test_io_integrator", ItemType.Equipment);
+            SerializedObject serializedTool =
+                new SerializedObject(tool);
+            serializedTool.FindProperty("acceptsAnomalyIntegration")
+                .boolValue = true;
+            serializedTool.FindProperty("energyDefinition")
+                .objectReferenceValue = toolEnergy;
+            serializedTool.ApplyModifiedPropertiesWithoutUndo();
+            anomaly = CreateItem("test_io_shard", ItemType.Anomaly);
+            SerializedObject serializedAnomaly =
+                new SerializedObject(anomaly);
+            serializedAnomaly.FindProperty("researchDefinition")
+                .objectReferenceValue = researchDefinition;
+            serializedAnomaly.FindProperty("anomalyIntegrationDefinition")
+                .objectReferenceValue = integrationDefinition;
+            serializedAnomaly.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(inventory.AddItem(tool), Is.True);
+            Assert.That(inventory.AddItem(anomaly), Is.True);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            SetSingleton(
+                typeof(ResearchController),
+                null);
+            Object.DestroyImmediate(systems);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(tool);
+            Object.DestroyImmediate(anomaly);
+            Object.DestroyImmediate(researchDefinition);
+            Object.DestroyImmediate(integrationDefinition);
+            Object.DestroyImmediate(toolEnergy);
+        }
+
+        [Test]
+        public void SynthesisRequiresResearchAndConsumesOnlyTheAnomaly()
+        {
+            Assert.That(
+                workstation.LoadUpgradeItem(
+                    0,
+                    inventory,
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.True);
+            Assert.That(
+                workstation.LoadUpgradeItem(
+                    1,
+                    inventory,
+                    InventorySlotGroup.Anomaly,
+                    0),
+                Is.True);
+
+            Assert.That(
+                workstation.CanSynthesize(out string reason),
+                Is.False);
+            Assert.That(reason, Does.Contain("Scan"));
+
+            research.RestoreAnalyzed(
+                new[] { researchDefinition.ResearchId });
+
+            Assert.That(
+                workstation.CanSynthesize(out reason),
+                Is.False,
+                "Knowing the anomaly type must not scan this instance.");
+            Assert.That(reason, Does.Contain("Scan"));
+
+            ItemInstance anomalyInstance =
+                workstation.GetUpgradeItem(1);
+            Assert.That(anomalyInstance.MarkScanned(), Is.True);
+
+            Assert.That(
+                workstation.CanSynthesize(out reason),
+                Is.True,
+                reason);
+            Assert.That(workstation.TrySynthesize(), Is.True);
+
+            ItemInstance integratedTool =
+                workstation.GetUpgradeItem(0);
+            Assert.That(integratedTool, Is.Not.Null);
+            Assert.That(integratedTool.ItemData, Is.SameAs(tool));
+            Assert.That(
+                integratedTool.IntegratedAnomaly,
+                Is.SameAs(anomaly));
+            Assert.That(integratedTool.AnomalyCharges, Is.EqualTo(1));
+            Assert.That(workstation.GetUpgradeItem(1), Is.Null);
+        }
+
+        [Test]
+        public void IntegratedEffectConsumesItsSingleCharge()
+        {
+            ItemInstance instance = inventory.GetItemInstance(
+                InventorySlotGroup.QuickAccess,
+                0);
+            ItemInstance anomalyInstance = inventory.GetItemInstance(
+                InventorySlotGroup.Anomaly,
+                0);
+            Assert.That(
+                instance.TryInstallAnomaly(anomalyInstance),
+                Is.False,
+                "An unscanned anomaly instance must be rejected.");
+            Assert.That(anomalyInstance.MarkScanned(), Is.True);
+            Assert.That(
+                instance.TryInstallAnomaly(anomalyInstance),
+                Is.True);
+            ItemInstance secondAnomalyInstance =
+                ItemInstance.Create(anomaly);
+            Assert.That(secondAnomalyInstance.MarkScanned(), Is.True);
+            Assert.That(
+                instance.TryInstallAnomaly(secondAnomalyInstance),
+                Is.False,
+                "An installed anomaly must not be replaced before use.");
+            equipmentController.AnomalyUseRequested += (_, _) => true;
+
+            Assert.That(
+                equipmentController.TryUseIntegratedAnomaly(instance),
+                Is.True);
+            Assert.That(instance.AnomalyCharges, Is.Zero);
+            Assert.That(instance.Charge, Is.Zero);
+            Assert.That(instance.IntegratedAnomaly, Is.Null);
+            Assert.That(
+                equipmentController.TryUseIntegratedAnomaly(instance),
+                Is.False);
+
+            instance.Recharge(instance.MaxCharge);
+            Assert.That(
+                instance.TryInstallAnomaly(anomalyInstance),
+                Is.True);
+            Assert.That(instance.AnomalyCharges, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void OrdinaryEquipmentCannotAcceptAnomalyIntegration()
+        {
+            ItemData ordinaryEquipment =
+                CreateItem("test_ordinary_equipment", ItemType.Equipment);
+            try
+            {
+                Assert.That(
+                    integrationDefinition.Supports(ordinaryEquipment),
+                    Is.False);
+                Assert.That(
+                    inventory.AddItem(ordinaryEquipment),
+                    Is.True);
+                Assert.That(
+                    workstation.LoadUpgradeItem(
+                        0,
+                        inventory,
+                        InventorySlotGroup.QuickAccess,
+                        1),
+                    Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(ordinaryEquipment);
+            }
+        }
+
+        [Test]
+        public void RestorePreservesIntegratedAnomalyAndCharges()
+        {
+            ItemInstance instance = ItemInstance.Create(tool);
+            ItemInstance anomalyInstance = ItemInstance.Create(anomaly);
+            Assert.That(anomalyInstance.MarkScanned(), Is.True);
+            Assert.That(
+                instance.TryInstallAnomaly(anomalyInstance),
+                Is.True);
+
+            ItemInstance restored = ItemInstance.Restore(
+                instance.InstanceId,
+                tool,
+                instance.Charge,
+                anomaly,
+                instance.AnomalyCharges,
+                true);
+
+            Assert.That(
+                restored.InstanceId,
+                Is.EqualTo(instance.InstanceId));
+            Assert.That(restored.IntegratedAnomaly, Is.SameAs(anomaly));
+            Assert.That(restored.AnomalyCharges, Is.EqualTo(1));
+            Assert.That(restored.IsScanned, Is.True);
+        }
+
+        private static ItemData CreateItem(
+            string itemId,
+            ItemType itemType)
+        {
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+            SerializedObject serialized = new SerializedObject(item);
+            serialized.FindProperty("itemId").stringValue = itemId;
+            serialized.FindProperty("displayName").stringValue = itemId;
+            serialized.FindProperty("itemType").enumValueIndex =
+                (int)itemType;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return item;
+        }
+
+        private static void SetSingleton(
+            System.Type controllerType,
+            object value)
+        {
+            PropertyInfo instanceProperty = controllerType.GetProperty(
+                "Instance",
+                BindingFlags.Static | BindingFlags.Public);
+            instanceProperty?.GetSetMethod(true)?.Invoke(
+                null,
+                new[] { value });
         }
     }
 
@@ -980,11 +1281,29 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void AnalyzedSampleRemainsInLabAndCannotBeScannedAgain()
+        public void EachSampleMustBeScannedOnceWithoutDuplicateResearch()
         {
+            int researchNotifications = 0;
+            research.ResearchAnalyzed += _ => researchNotifications++;
             power.RestorePower();
-            Assert.That(inventory.AddItem(sample), Is.True, "Sample should enter anomaly storage.");
-            Assert.That(research.LoadItem(sample, inventory), Is.True, "Sample should enter laboratory slot.");
+            Assert.That(inventory.AddItem(sample), Is.True);
+            Assert.That(inventory.AddItem(sample), Is.True);
+            ItemInstance firstSample = inventory.GetItemInstance(
+                InventorySlotGroup.Anomaly,
+                0);
+            ItemInstance secondSample = inventory.GetItemInstance(
+                InventorySlotGroup.Anomaly,
+                1);
+            Assert.That(firstSample.InstanceId, Is.Not.EqualTo(secondSample.InstanceId));
+
+            Assert.That(
+                research.LoadItem(
+                    sample,
+                    inventory,
+                    InventorySlotGroup.Anomaly,
+                    0),
+                Is.True,
+                "First sample should enter the laboratory slot.");
             Assert.That(research.StartAnalysis(), Is.True, "Powered laboratory should start scanning.");
 
             research.AdvanceAnalysis(2f);
@@ -992,13 +1311,50 @@ namespace NERA.Tests
             Assert.That(research.State, Is.EqualTo(ResearchController.ResearchState.Complete));
             Assert.That(research.LoadedItem, Is.EqualTo(sample));
             Assert.That(research.IsAnalyzed(sample), Is.True);
+            Assert.That(firstSample.IsScanned, Is.True);
+            Assert.That(secondSample.IsScanned, Is.False);
+            Assert.That(researchNotifications, Is.EqualTo(1));
 
-            Assert.That(research.RetrieveLoadedItem(), Is.True, "Analyzed sample should return to backpack.");
+            Assert.That(research.RetrieveLoadedItem(), Is.True);
             Assert.That(inventory.Contains(sample.ItemId), Is.True);
 
-            Assert.That(research.LoadItem(sample, inventory), Is.True, "Analyzed sample should still be loadable for inspection.");
-            Assert.That(research.State, Is.EqualTo(ResearchController.ResearchState.Complete));
+            Assert.That(
+                research.LoadItem(
+                    sample,
+                    inventory,
+                    InventorySlotGroup.Anomaly,
+                    0),
+                Is.True,
+                "The scanned sample should remain loadable for inspection.");
+            Assert.That(
+                research.State,
+                Is.EqualTo(ResearchController.ResearchState.ItemLoaded));
+            Assert.That(research.CanStartAnalysis, Is.False);
             Assert.That(research.StartAnalysis(), Is.False);
+            Assert.That(research.StatusMessage, Does.Contain("already scanned"));
+            Assert.That(research.RetrieveLoadedItem(), Is.True);
+
+            Assert.That(
+                research.LoadItem(
+                    sample,
+                    inventory,
+                    InventorySlotGroup.Anomaly,
+                    1),
+                Is.True,
+                "A second instance of the known type must still require scanning.");
+            Assert.That(research.LoadedItemInstance, Is.SameAs(secondSample));
+            Assert.That(research.CanStartAnalysis, Is.True);
+            Assert.That(research.StartAnalysis(), Is.True);
+            research.AdvanceAnalysis(2f);
+
+            Assert.That(
+                research.State,
+                Is.EqualTo(ResearchController.ResearchState.Complete));
+            Assert.That(secondSample.IsScanned, Is.True);
+            Assert.That(researchNotifications, Is.EqualTo(1));
+            Assert.That(
+                research.AnalyzedResearchIds.Count,
+                Is.EqualTo(1));
         }
 
         [Test]

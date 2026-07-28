@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7958252056718004008}
   - component: {fileID: 3247287945634577963}
   m_Layer: 7
-  m_Name: P_Equipped_FieldScanner
+  m_Name: P_Equipped_IOIntegrator
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -193,21 +193,22 @@ namespace NERA.Research
             sourceInventory = inventory;
             ResearchDefinition definition = item.ResearchDefinition;
             bool researchable = IsResearchable(item);
-            bool alreadyAnalyzed = researchable &&
+            bool typeKnown = researchable &&
                 analyzedResearchIds.Contains(definition.ResearchId);
-            Progress = alreadyAnalyzed ? 1f : 0f;
+            bool instanceScanned = sourceInstance.IsScanned;
+            Progress = 0f;
             StatusMessage = !researchable
                 ? item.DisplayName
-                : alreadyAnalyzed
-                ? $"{item.DisplayName} has already been analyzed."
+                : instanceScanned
+                ? $"{item.DisplayName} is already scanned."
+                : typeKnown
+                ? $"{item.DisplayName} type is known. This sample still requires scanning."
                 : $"{item.DisplayName} loaded. Ready to scan.";
 
-            if (alreadyAnalyzed)
+            if (typeKnown)
                 UnlockLibraryEntry(definition);
 
-            SetState(researchable && alreadyAnalyzed
-                ? ResearchState.Complete
-                : ResearchState.ItemLoaded);
+            SetState(ResearchState.ItemLoaded);
             return true;
         }
 
@@ -270,6 +271,11 @@ namespace NERA.Research
                    analyzedResearchIds.Contains(item.ResearchDefinition.ResearchId);
         }
 
+        public bool IsScanned(ItemInstance instance)
+        {
+            return instance?.IsScanned == true;
+        }
+
         public bool HasOperationalPower
         {
             get
@@ -291,9 +297,9 @@ namespace NERA.Research
         public bool CanStartAnalysis =>
             State == ResearchState.ItemLoaded &&
             LoadedItem != null &&
+            LoadedItemInstance.IsScanned == false &&
             IsSystemEnabled &&
             IsResearchable(LoadedItem) &&
-            !IsAnalyzed(LoadedItem) &&
             HasOperationalPower;
 
         public bool StartAnalysis()
@@ -310,6 +316,12 @@ namespace NERA.Research
             if (!IsResearchable(LoadedItem))
             {
                 StatusMessage = "This item is already identified and does not require analysis.";
+                return false;
+            }
+
+            if (LoadedItemInstance.IsScanned)
+            {
+                StatusMessage = $"{LoadedItem.DisplayName} is already scanned.";
                 return false;
             }
 
@@ -337,11 +349,6 @@ namespace NERA.Research
             }
 
             ResearchDefinition definition = LoadedItem.ResearchDefinition;
-            if (analyzedResearchIds.Contains(definition.ResearchId))
-            {
-                StatusMessage = "Sample has already been analyzed.";
-                return false;
-            }
             analysisRemaining = definition.AnalysisDuration;
             Progress = 0f;
             StatusMessage = $"Scanning {LoadedItem.DisplayName}...";
@@ -383,10 +390,26 @@ namespace NERA.Research
 
         private void CompleteAnalysis(ResearchDefinition definition)
         {
-            analyzedResearchIds.Add(definition.ResearchId);
+            if (LoadedItemInstance == null ||
+                !LoadedItemInstance.MarkScanned())
+            {
+                StatusMessage = "This sample is already scanned.";
+                analysisRemaining = 0f;
+                Progress = 1f;
+                SetState(ResearchState.Complete);
+                EnergySystemController.Instance?.SetConsumerActive(
+                    LaboratoryConsumerId,
+                    false);
+                return;
+            }
+
+            bool firstAnalysis =
+                analyzedResearchIds.Add(definition.ResearchId);
             UnlockLibraryEntry(definition);
 
-            StatusMessage = $"Analysis complete: {definition.DisplayName}";
+            StatusMessage = firstAnalysis
+                ? $"Analysis complete: {definition.DisplayName}"
+                : $"Sample scan complete: {definition.DisplayName}";
             string completedId = definition.ResearchId;
             analysisRemaining = 0f;
             Progress = 1f;
@@ -396,8 +419,13 @@ namespace NERA.Research
                 false
             );
 
-            ResearchAnalyzed?.Invoke(completedId);
-            Debug.Log($"Research: analyzed '{completedId}'.", this);
+            if (firstAnalysis)
+                ResearchAnalyzed?.Invoke(completedId);
+            Debug.Log(
+                firstAnalysis
+                    ? $"Research: analyzed '{completedId}'."
+                    : $"Research: scanned another '{completedId}' sample.",
+                this);
         }
 
         private void UnlockLibraryEntry(ResearchDefinition definition)
@@ -472,22 +500,23 @@ namespace NERA.Research
         {
             ResearchDefinition definition = LoadedItem?.ResearchDefinition;
             bool researchable = IsResearchable(LoadedItem);
-            bool alreadyAnalyzed = researchable &&
+            bool typeKnown = researchable &&
                 analyzedResearchIds.Contains(definition.ResearchId);
+            bool instanceScanned = LoadedItemInstance?.IsScanned == true;
 
-            Progress = alreadyAnalyzed ? 1f : 0f;
+            Progress = 0f;
             StatusMessage = !researchable
                 ? LoadedItem.DisplayName
-                : alreadyAnalyzed
-                ? $"{LoadedItem.DisplayName} has already been analyzed."
+                : instanceScanned
+                ? $"{LoadedItem.DisplayName} is already scanned."
+                : typeKnown
+                ? $"{LoadedItem.DisplayName} type is known. This sample still requires scanning."
                 : $"{LoadedItem.DisplayName} loaded. Ready to scan.";
 
-            if (alreadyAnalyzed)
+            if (typeKnown)
                 UnlockLibraryEntry(definition);
 
-            SetState(researchable && alreadyAnalyzed
-                ? ResearchState.Complete
-                : ResearchState.ItemLoaded);
+            SetState(ResearchState.ItemLoaded);
         }
 
         private void SetState(ResearchState newState)
