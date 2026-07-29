@@ -8,8 +8,8 @@ namespace NERA.EditorTools
 {
     public static class SaveGameMenu
     {
-        private const string BootScenePath =
-            "Assets/_Project/NERA/Scenes/Boot/Boot.unity";
+        private const string RuntimeScenePath =
+            "Assets/_Project/NERA/Scenes/MainScene.unity";
 
         [MenuItem("Project/Save/Load", priority = 100)]
         private static void Load()
@@ -34,17 +34,19 @@ namespace NERA.EditorTools
                 return;
             }
 
-            SceneAsset bootScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(
-                BootScenePath
+            SceneAsset runtimeScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(
+                RuntimeScenePath
             );
 
-            if (bootScene == null)
+            if (runtimeScene == null)
             {
-                Debug.LogError($"Save menu: Boot scene not found at '{BootScenePath}'.");
+                Debug.LogError(
+                    $"Save menu: Runtime scene not found at " +
+                    $"'{RuntimeScenePath}'.");
                 return;
             }
 
-            EditorSceneManager.playModeStartScene = bootScene;
+            EditorSceneManager.playModeStartScene = runtimeScene;
             EditorApplication.EnterPlaymode();
         }
 

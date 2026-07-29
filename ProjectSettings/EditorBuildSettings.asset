@@ -6,19 +6,40 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/Boot/Boot.unity
+    path: Assets/_Project/NERA/Scenes/Boot.unity
     guid: 25780f45106d2364b8608b1605ddc67f
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/Station/Player_Station.unity
+    path: Assets/_Project/NERA/Scenes/MainScene.unity
+    guid: f7c1b754f9b555246bc7b5127caad2fc
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Player_Station.unity
     guid: 967ce8479e4d4354c831499d0633f28d
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/Expeditions/Expedition_01.unity
+    path: Assets/_Project/NERA/Scenes/Expedition_01.unity
     guid: d753564efe059ee43a9d56ec0301c496
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/Expeditions/Expedition_02.unity
+    path: Assets/_Project/NERA/Scenes/Expedition_02.unity
     guid: 20af6763e9ad28741aee140805bbfc9a
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/Expeditions/UnknownSignal_01_FirstPlayable.unity
+    path: Assets/_Project/NERA/Scenes/Expedition_03.unity
+    guid: ae011629a764dba4aad1e1c950244051
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expedition_04.unity
+    guid: 6edf6d407fc6b9f42859f60138612210
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expedition_05.unity
+    guid: 2ea22672746658a48a21d82ea0e38fc7
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expedition_06.unity
+    guid: 9ad4328e2f4034e42b807e2bd2d25ea5
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expedition_07.unity
+    guid: 1cd94472147add04eb12613f1bc692a0
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/Expedition_08.unity
+    guid: f1cee509233448749b53ae9e32a2a64a
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_01_FirstPlayable.unity
     guid: 9cc9c69f4e3b41a8a5473f31f5657d2e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

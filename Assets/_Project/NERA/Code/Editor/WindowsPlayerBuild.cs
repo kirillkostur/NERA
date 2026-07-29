@@ -13,6 +13,8 @@ namespace NERA.Editor
         [MenuItem("NERA/Build/Windows x64")]
         public static void Build()
         {
+            ProjectValidator.ValidateOrThrow();
+
             string[] scenes = EditorBuildSettings.scenes
                 .Where(scene => scene.enabled)
                 .Select(scene => scene.path)

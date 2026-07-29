@@ -12,26 +12,29 @@ namespace NERA.Terminal
     public sealed class TerminalMapScreenController : MonoBehaviour
     {
         private TerminalUIScreen terminal;
-        private Button droneTabButton;
-        private Button antennaTabButton;
-        private Button launchButton;
-        private Button calibrationButton;
-        private Button moveYesButton;
-        private Button moveNoButton;
-        private GameObject droneScreen;
-        private GameObject antennaScreen;
-        private GameObject moveConfirmation;
-        private TMP_Text droneDescription;
-        private TMP_Text droneProgress;
-        private TMP_Text antennaDescription;
-        private TMP_Text antennaProgress;
-        private TMP_Text moveText;
-        private RawImage mapImage;
-        private Camera mapCamera;
-        private Transform mapModelRoot;
+        [SerializeField] private Button droneTabButton;
+        [SerializeField] private Button antennaTabButton;
+        [SerializeField] private Button launchButton;
+        [SerializeField] private Button calibrationButton;
+        [SerializeField] private Button moveYesButton;
+        [SerializeField] private Button moveNoButton;
+        [SerializeField] private GameObject droneScreen;
+        [SerializeField] private GameObject antennaScreen;
+        [SerializeField] private GameObject moveConfirmation;
+        [SerializeField] private TMP_Text droneDescription;
+        [SerializeField] private TMP_Text droneProgress;
+        [SerializeField] private TMP_Text antennaDescription;
+        [SerializeField] private TMP_Text antennaProgress;
+        [SerializeField] private TMP_Text moveText;
+        [SerializeField] private RawImage mapImage;
+        [SerializeField] private Camera mapCamera;
+        [SerializeField] private Transform mapModelRoot;
+        [SerializeField] private MapLocationSlotRegistry mapSlotRegistry;
         private GameObject signalMarker;
         private ExpeditionLocationData selectedLocation;
-        private float nextRefreshAt;
+        private DroneScanController subscribedDrone;
+        private AntennaController subscribedAntenna;
+        private ExpeditionDiscoveryController subscribedDiscovery;
         private bool initialized;
 
         public ExpeditionLocationData SelectedLocation => selectedLocation;
@@ -64,48 +67,37 @@ namespace NERA.Terminal
 
             if (!shouldRender)
             {
+                UnbindDataEvents();
                 TerminalUIUtility.ReleaseCameraTarget(mapCamera);
                 return;
             }
 
-            RefreshAll();
-        }
-
-        private void Update()
-        {
-            if (terminal?.IsOpen != true ||
-                !gameObject.activeInHierarchy ||
-                Time.unscaledTime < nextRefreshAt)
-            {
-                return;
-            }
-
-            nextRefreshAt = Time.unscaledTime + 0.15f;
+            BindDataEvents();
             RefreshAll();
         }
 
         private void CacheHierarchy()
         {
-            droneTabButton = TerminalUIUtility.FindComponent<Button>(
+            droneTabButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "DronMapButton");
-            antennaTabButton = TerminalUIUtility.FindComponent<Button>(
+            antennaTabButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "AntennaMapButton");
-            launchButton = TerminalUIUtility.FindComponent<Button>(
+            launchButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "LauncheButton");
-            calibrationButton = TerminalUIUtility.FindComponent<Button>(
+            calibrationButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "CalibrationButton");
-            moveYesButton = TerminalUIUtility.FindComponent<Button>(
+            moveYesButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "MoveYesButton");
-            moveNoButton = TerminalUIUtility.FindComponent<Button>(
+            moveNoButton ??= TerminalUIUtility.FindComponent<Button>(
                 transform, "MoveNoButton");
 
-            droneScreen = TerminalUIUtility.Find(
+            droneScreen ??= TerminalUIUtility.Find(
                 transform, "DronScreen")?.gameObject;
-            antennaScreen = TerminalUIUtility.Find(
+            antennaScreen ??= TerminalUIUtility.Find(
                 transform, "AntennaScreen")?.gameObject;
-            moveConfirmation = TerminalUIUtility.Find(
+            moveConfirmation ??= TerminalUIUtility.Find(
                 transform, "background_info_Move")?.gameObject;
-            moveText = TerminalUIUtility.FindComponent<TMP_Text>(
+            moveText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 moveConfirmation != null
                     ? moveConfirmation.transform
                     : transform,
@@ -113,26 +105,33 @@ namespace NERA.Terminal
 
             if (droneScreen != null)
             {
-                droneDescription = TerminalUIUtility.FindComponent<TMP_Text>(
+                droneDescription ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     droneScreen.transform, "description_update");
-                droneProgress = TerminalUIUtility.FindComponent<TMP_Text>(
+                droneProgress ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     droneScreen.transform, "info_update");
             }
 
             if (antennaScreen != null)
             {
-                antennaDescription = TerminalUIUtility.FindComponent<TMP_Text>(
+                antennaDescription ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     antennaScreen.transform, "description_update");
-                antennaProgress = TerminalUIUtility.FindComponent<TMP_Text>(
+                antennaProgress ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     antennaScreen.transform, "info_progresa");
             }
 
-            mapImage = TerminalUIUtility.FindComponent<RawImage>(
+            mapImage ??= TerminalUIUtility.FindComponent<RawImage>(
                 transform, "Map_RawImage");
-            mapCamera = TerminalUIUtility.FindComponent<Camera>(
+            mapCamera ??= TerminalUIUtility.FindComponent<Camera>(
                 transform, "MapUICamera");
-            mapModelRoot = TerminalUIUtility.Find(
+            mapModelRoot ??= TerminalUIUtility.Find(
                 transform, "SM_UI_3D");
+            if (mapSlotRegistry == null && mapModelRoot != null)
+            {
+                mapSlotRegistry =
+                    mapModelRoot.GetComponent<MapLocationSlotRegistry>();
+            }
+
+            mapSlotRegistry?.Rebuild();
         }
 
         private void BindButtons()
@@ -191,7 +190,7 @@ namespace NERA.Terminal
             }
             else
             {
-                selectedLocation = ResolveLocationForMarker(target.name);
+                selectedLocation = ResolveLocationForMarker(target);
             }
 
             if (selectedLocation == null)
@@ -214,22 +213,14 @@ namespace NERA.Terminal
             RefreshAll();
         }
 
-        private ExpeditionLocationData ResolveLocationForMarker(string markerName)
+        private ExpeditionLocationData ResolveLocationForMarker(Transform target)
         {
-            if (string.IsNullOrWhiteSpace(markerName) ||
-                markerName == "SN_Station")
-            {
+            if (mapSlotRegistry == null ||
+                !mapSlotRegistry.TryGetSlot(
+                    target,
+                    out MapLocationSlot authoredSlot))
                 return null;
-            }
 
-            const string prefix = "SM_Expedition_";
-            if (!markerName.StartsWith(prefix, StringComparison.Ordinal) ||
-                !int.TryParse(markerName.Substring(prefix.Length), out int authored))
-            {
-                return null;
-            }
-
-            int sectorIndex = authored - 1;
             ExpeditionDiscoveryController discovery =
                 ExpeditionDiscoveryController.Instance;
             if (discovery == null)
@@ -238,7 +229,7 @@ namespace NERA.Terminal
             foreach (ExpeditionLocationData location in discovery.KnownLocations)
             {
                 if (location != null &&
-                    location.MapSectorIndex == sectorIndex &&
+                    location.MapSlot == authoredSlot.Slot &&
                     location.DiscoverySource != DiscoverySource.Antenna)
                 {
                     return location;
@@ -293,6 +284,117 @@ namespace NERA.Terminal
             RefreshDrone();
             RefreshAntenna();
             RefreshSignalMarker();
+        }
+
+        private void BindDataEvents()
+        {
+            DroneScanController drone = DroneScanController.Instance;
+            if (subscribedDrone != drone)
+            {
+                UnbindDroneEvents();
+                subscribedDrone = drone;
+                if (subscribedDrone != null)
+                {
+                    subscribedDrone.StateChanged += HandleDroneStateChanged;
+                    subscribedDrone.ScanProgressChanged += HandleDroneProgressChanged;
+                    subscribedDrone.RechargeProgressChanged += HandleDroneProgressChanged;
+                    subscribedDrone.ScanCompleted += HandleDroneScanCompleted;
+                }
+            }
+
+            AntennaController antenna = AntennaController.Instance;
+            if (subscribedAntenna != antenna)
+            {
+                UnbindAntennaEvents();
+                subscribedAntenna = antenna;
+                if (subscribedAntenna != null)
+                {
+                    subscribedAntenna.StateChanged += HandleAntennaStateChanged;
+                    subscribedAntenna.CalibrationProgressChanged +=
+                        HandleAntennaProgressChanged;
+                    subscribedAntenna.ConditionChanged += HandleAntennaProgressChanged;
+                    subscribedAntenna.ActiveSignalChanged +=
+                        HandleActiveSignalChanged;
+                }
+            }
+
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            if (subscribedDiscovery != discovery)
+            {
+                if (subscribedDiscovery != null)
+                {
+                    subscribedDiscovery.LocationDiscovered -=
+                        HandleLocationDiscovered;
+                }
+
+                subscribedDiscovery = discovery;
+                if (subscribedDiscovery != null)
+                {
+                    subscribedDiscovery.LocationDiscovered +=
+                        HandleLocationDiscovered;
+                }
+            }
+        }
+
+        private void UnbindDataEvents()
+        {
+            UnbindDroneEvents();
+            UnbindAntennaEvents();
+            if (subscribedDiscovery != null)
+            {
+                subscribedDiscovery.LocationDiscovered -=
+                    HandleLocationDiscovered;
+                subscribedDiscovery = null;
+            }
+        }
+
+        private void UnbindDroneEvents()
+        {
+            if (subscribedDrone == null)
+                return;
+
+            subscribedDrone.StateChanged -= HandleDroneStateChanged;
+            subscribedDrone.ScanProgressChanged -= HandleDroneProgressChanged;
+            subscribedDrone.RechargeProgressChanged -= HandleDroneProgressChanged;
+            subscribedDrone.ScanCompleted -= HandleDroneScanCompleted;
+            subscribedDrone = null;
+        }
+
+        private void UnbindAntennaEvents()
+        {
+            if (subscribedAntenna == null)
+                return;
+
+            subscribedAntenna.StateChanged -= HandleAntennaStateChanged;
+            subscribedAntenna.CalibrationProgressChanged -=
+                HandleAntennaProgressChanged;
+            subscribedAntenna.ConditionChanged -= HandleAntennaProgressChanged;
+            subscribedAntenna.ActiveSignalChanged -= HandleActiveSignalChanged;
+            subscribedAntenna = null;
+        }
+
+        private void HandleDroneStateChanged(DroneState _) => RefreshIfVisible();
+
+        private void HandleDroneProgressChanged(float _) => RefreshIfVisible();
+
+        private void HandleDroneScanCompleted(DroneScanResult _) =>
+            RefreshIfVisible();
+
+        private void HandleAntennaStateChanged(AntennaState _) =>
+            RefreshIfVisible();
+
+        private void HandleAntennaProgressChanged(float _) => RefreshIfVisible();
+
+        private void HandleActiveSignalChanged(ExpeditionLocationData _) =>
+            RefreshIfVisible();
+
+        private void HandleLocationDiscovered(string _) => RefreshIfVisible();
+
+        private void RefreshIfVisible()
+        {
+            if (terminal?.IsOpen == true && gameObject.activeInHierarchy)
+                RefreshAll();
         }
 
         private void RefreshDrone()
@@ -369,12 +471,17 @@ namespace NERA.Terminal
                 return;
             }
 
-            int sector = antenna.ActiveSignalSectorIndex;
-            Transform parent = TerminalUIUtility.Find(
-                mapModelRoot,
-                $"SM_Expedition_{sector + 1:00}");
-            if (parent == null)
+            if (mapSlotRegistry == null ||
+                !mapSlotRegistry.TryGetSlot(
+                    antenna.ActiveSignalMapSlot,
+                    out MapLocationSlot authoredSlot))
+            {
+                if (signalMarker != null)
+                    signalMarker.SetActive(false);
                 return;
+            }
+
+            Transform parent = authoredSlot.SignalAnchor;
 
             if (signalMarker == null)
             {
@@ -392,6 +499,11 @@ namespace NERA.Terminal
             signalMarker.transform.localRotation = Quaternion.identity;
             signalMarker.transform.localScale = Vector3.one * 0.35f;
             signalMarker.SetActive(true);
+        }
+
+        private void OnDestroy()
+        {
+            UnbindDataEvents();
         }
     }
 }

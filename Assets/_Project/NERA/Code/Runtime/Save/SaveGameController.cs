@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Antenna;
+using NERA.Core;
 using System.IO;
 using NERA.Expeditions;
 using NERA.Energy;
@@ -38,6 +39,7 @@ namespace NERA.Save
         private bool isLoading;
         private bool autoSavePending;
         private float autoSaveAt;
+        private bool sessionInitialized;
 
         private void Awake()
         {
@@ -52,8 +54,20 @@ namespace NERA.Save
 
         private void Start()
         {
+            InitializeSession(GameSessionLaunchState.ConsumeOrDefault());
+        }
+
+        public void InitializeSession(GameLaunchMode launchMode)
+        {
+            if (sessionInitialized)
+                return;
+
+            sessionInitialized = true;
             CacheSystems();
-            Load();
+            if (launchMode == GameLaunchMode.NewGame)
+                ClearSave(true);
+            else
+                Load();
             Subscribe();
         }
 
@@ -163,8 +177,14 @@ namespace NERA.Save
             {
                 data.antennaCondition = antenna.Condition;
                 data.activeAntennaSignalLocationId = antenna.ActiveSignalId;
+                data.activeAntennaSignalMapSlotId =
+                    antenna.ActiveSignalMapSlot != null
+                        ? antenna.ActiveSignalMapSlot.SlotId
+                        : string.Empty;
                 data.activeAntennaSignalSectorIndex =
-                    antenna.ActiveSignalSectorIndex;
+                    antenna.ActiveSignalMapSlot != null
+                        ? antenna.ActiveSignalMapSlot.LegacySectorIndex
+                        : -1;
                 data.consumedAntennaSignalLocationIds.AddRange(
                     antenna.ConsumedSignalIds
                 );
@@ -289,6 +309,7 @@ namespace NERA.Save
             antenna?.RestoreCondition(data.antennaCondition);
             antenna?.RestoreSignalState(
                 data.activeAntennaSignalLocationId,
+                data.activeAntennaSignalMapSlotId,
                 data.activeAntennaSignalSectorIndex,
                 data.consumedAntennaSignalLocationIds
             );
@@ -570,7 +591,11 @@ namespace NERA.Save
 
             energySystem?.ResetForNewGame();
             antenna?.RestoreCondition(1f);
-            antenna?.RestoreSignalState(string.Empty, -1, Array.Empty<string>());
+            antenna?.RestoreSignalState(
+                string.Empty,
+                string.Empty,
+                -1,
+                Array.Empty<string>());
 
             if (discovery != null)
                 discovery.RestoreDiscovered(Array.Empty<string>());

@@ -11,7 +11,7 @@ namespace NERA.Expeditions
             if (progress == null)
             {
                 Debug.LogError(
-                    "ExpeditionSceneBootstrap: ExpeditionProgressController is missing. Start through Boot.",
+                    "ExpeditionSceneBootstrap: ExpeditionProgressController is missing. Start gameplay through MainScene.",
                     this
                 );
                 return;

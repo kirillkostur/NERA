@@ -13,17 +13,18 @@ MonoBehaviour:
   m_Name: Location_Expedition02
   m_EditorClassIdentifier: 
   locationId: Expedition02
-  id: 1
   locationType: 0
   displayName: "Expedition 02 \u2014 Signal Array"
   description: A dormant NERA signal array surrounded by concentrated Blue IO activity.
     Recover the relay core and any surviving records.
-  sceneName: Expedition_02
+  scene:
+    assetGuid: 20af6763e9ad28741aee140805bbfc9a
+    assetPath: Assets/_Project/NERA/Scenes/Expedition_02.unity
   spawnPointId: Expedition02_Start
   discoverySource: 0
   droneScanDuration: 5
-  requiredDroneUpgradeLevel: 2
+  requiredDroneUpgradeLevel: 1
   initialState: 0
   mapSymbol: 0
-  mapSectorIndex: 2
+  mapSlot: {fileID: 11400000, guid: 8f6929a5de1148e1927ae81ec7caa7e3, type: 2}
   mapPreview: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}

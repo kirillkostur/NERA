@@ -1,4 +1,5 @@
 using NERA.Combat;
+using System;
 using UnityEngine;
 
 namespace NERA.Enemies
@@ -11,6 +12,28 @@ namespace NERA.Enemies
         private float damage;
         private float remainingLifetime;
         private GameObject source;
+        private Action<IOEnergyProjectile> releaseAction;
+        private Material runtimeMaterial;
+
+        public void SetReleaseAction(Action<IOEnergyProjectile> release)
+        {
+            releaseAction = release;
+        }
+
+        public void ConfigureVisual(Color color, float emissionIntensity)
+        {
+            Renderer projectileRenderer = GetComponent<Renderer>();
+            if (projectileRenderer == null)
+                return;
+
+            if (runtimeMaterial == null)
+                runtimeMaterial = projectileRenderer.material;
+            runtimeMaterial.color = color;
+            runtimeMaterial.EnableKeyword("_EMISSION");
+            runtimeMaterial.SetColor(
+                "_EmissionColor",
+                color * Mathf.Max(0f, emissionIntensity));
+        }
 
         public void Initialize(
             Vector3 travelDirection,
@@ -24,6 +47,7 @@ namespace NERA.Enemies
             damage = damageAmount;
             remainingLifetime = lifetime;
             source = damageSource;
+            gameObject.SetActive(true);
         }
 
         private void Update()
@@ -40,7 +64,7 @@ namespace NERA.Enemies
                     QueryTriggerInteraction.Ignore))
             {
                 TryDamage(hit.collider);
-                Destroy(gameObject);
+                Release();
                 return;
             }
 
@@ -48,7 +72,7 @@ namespace NERA.Enemies
             remainingLifetime -= Time.deltaTime;
 
             if (remainingLifetime <= 0f)
-                Destroy(gameObject);
+                Release();
         }
 
         private void TryDamage(Collider hitCollider)
@@ -60,6 +84,23 @@ namespace NERA.Enemies
                 hitCollider.GetComponentInParent<IDamageable>();
 
             damageable?.TakeDamage(damage, source);
+        }
+
+        private void Release()
+        {
+            source = null;
+            Action<IOEnergyProjectile> release = releaseAction;
+            releaseAction = null;
+            if (release != null)
+                release(this);
+            else
+                Destroy(gameObject);
+        }
+
+        private void OnDestroy()
+        {
+            if (runtimeMaterial != null)
+                Destroy(runtimeMaterial);
         }
     }
 }

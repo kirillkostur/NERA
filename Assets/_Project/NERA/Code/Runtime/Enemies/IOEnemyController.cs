@@ -1,5 +1,6 @@
 using NERA.Combat;
 using NERA.Expeditions;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NERA.Enemies
@@ -17,6 +18,9 @@ namespace NERA.Enemies
 
         [SerializeField] private IOEnemyConfig config;
 
+        private static readonly HashSet<IOEnemyController> ActiveEnemySet =
+            new HashSet<IOEnemyController>();
+
         private Transform target;
         private PlayerHealth targetHealth;
         private State state;
@@ -25,6 +29,8 @@ namespace NERA.Enemies
         private float baseY;
         private Material runtimeMaterial;
 
+        public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
+            ActiveEnemySet;
         public bool IsAlive => state != State.Dead;
 
         private void Awake()
@@ -43,6 +49,12 @@ namespace NERA.Enemies
                     EnergyColor * EmissionIntensity
                 );
             }
+        }
+
+        private void OnEnable()
+        {
+            if (IsAlive)
+                ActiveEnemySet.Add(this);
         }
 
         private void Update()
@@ -92,6 +104,7 @@ namespace NERA.Enemies
                 return;
 
             state = State.Dead;
+            ActiveEnemySet.Remove(this);
             SpawnResearchDrop();
             Destroy(gameObject);
         }
@@ -172,34 +185,14 @@ namespace NERA.Enemies
             Vector3 origin = transform.position + transform.forward * 0.8f;
             Vector3 direction = (target.position + Vector3.up - origin).normalized;
 
-            GameObject projectile = ProjectilePrefab != null
-                ? Instantiate(ProjectilePrefab)
-                : GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            projectile.name = "IO_Energy_Projectile";
-            projectile.transform.SetPositionAndRotation(
+            IOEnergyProjectile projectile = IOProjectilePool.Spawn(
+                ProjectilePrefab,
                 origin,
-                Quaternion.LookRotation(direction));
-            projectile.transform.localScale = Vector3.one * ProjectileScale;
-
-            Collider projectileCollider = projectile.GetComponent<Collider>();
-            if (projectileCollider != null)
-                Destroy(projectileCollider);
-
-            Renderer projectileRenderer = projectile.GetComponent<Renderer>();
-            if (projectileRenderer != null)
-            {
-                Material projectileMaterial = projectileRenderer.material;
-                projectileMaterial.color = EnergyColor;
-                projectileMaterial.EnableKeyword("_EMISSION");
-                projectileMaterial.SetColor(
-                    "_EmissionColor",
-                    EnergyColor * ProjectileEmissionIntensity
-                );
-            }
-
-            IOEnergyProjectile energyProjectile =
-                projectile.AddComponent<IOEnergyProjectile>();
-            energyProjectile.Initialize(
+                Quaternion.LookRotation(direction),
+                ProjectileScale,
+                EnergyColor,
+                ProjectileEmissionIntensity);
+            projectile.Initialize(
                 direction,
                 ProjectileSpeed,
                 ProjectileDamage,
@@ -244,11 +237,13 @@ namespace NERA.Enemies
 
         private void OnDisable()
         {
+            ActiveEnemySet.Remove(this);
             ClearTarget();
         }
 
         private void OnDestroy()
         {
+            ActiveEnemySet.Remove(this);
             ClearTarget();
 
             if (runtimeMaterial != null)

@@ -15,24 +15,24 @@ namespace NERA.Terminal
     public sealed class TerminalStationScreenController : MonoBehaviour
     {
         private TerminalUIScreen terminal;
-        private RawImage stationImage;
-        private Camera stationCamera;
-        private TMP_Text objectNameText;
-        private TMP_Text objectInfoText;
-        private Image objectImage;
-        private GameObject powerSwitchRoot;
-        private Button powerOnButton;
-        private Button powerOffButton;
-        private RectTransform powerHandle;
-        private Animator powerHandleAnimator;
-        private TMP_Text powerStatusText;
-        private GameObject statusPanel;
-        private TMP_Text statusText;
-        private GameObject upgradePanel;
-        private TMP_Text upgradeTitle;
-        private TMP_Text upgradeInfo;
-        private TMP_Text upgradeRequired;
-        private Button upgradeButton;
+        [SerializeField] private RawImage stationImage;
+        [SerializeField] private Camera stationCamera;
+        [SerializeField] private TMP_Text objectNameText;
+        [SerializeField] private TMP_Text objectInfoText;
+        [SerializeField] private Image objectImage;
+        [SerializeField] private GameObject powerSwitchRoot;
+        [SerializeField] private Button powerOnButton;
+        [SerializeField] private Button powerOffButton;
+        [SerializeField] private RectTransform powerHandle;
+        [SerializeField] private Animator powerHandleAnimator;
+        [SerializeField] private TMP_Text powerStatusText;
+        [SerializeField] private GameObject statusPanel;
+        [SerializeField] private TMP_Text statusText;
+        [SerializeField] private GameObject upgradePanel;
+        [SerializeField] private TMP_Text upgradeTitle;
+        [SerializeField] private TMP_Text upgradeInfo;
+        [SerializeField] private TMP_Text upgradeRequired;
+        [SerializeField] private Button upgradeButton;
         private readonly Button[] levelButtons = new Button[3];
         private readonly GameObject[] levelRoots = new GameObject[3];
         private readonly TMP_Text[] levelLabels = new TMP_Text[3];
@@ -50,8 +50,12 @@ namespace NERA.Terminal
         private StationSystemType? renderedPowerSystem;
         private string renderedPowerObjectId;
         private bool? renderedPowerActive;
-        private float nextRefreshAt;
         private StationSystemsController subscribedSystems;
+        private EnergySystemController subscribedEnergy;
+        private StationStorageController subscribedStorage;
+        private PlayerInventory subscribedInventory;
+        private DroneScanController subscribedDrone;
+        private AntennaController subscribedAntenna;
 
         public StationSystemType? SelectedSystem => selectedSystem;
         public string SelectedObjectId => selectedObjectId;
@@ -128,76 +132,65 @@ namespace NERA.Terminal
 
             if (!shouldRender)
             {
-                UnbindSystemEvents();
+                UnbindDataEvents();
                 TerminalUIUtility.ReleaseCameraTarget(stationCamera);
                 return;
             }
 
-            BindSystemEvents();
+            BindDataEvents();
             ShowDetailTab(false);
-            RefreshAll();
-        }
-
-        private void Update()
-        {
-            if (terminal?.IsOpen != true ||
-                !gameObject.activeInHierarchy ||
-                Time.unscaledTime < nextRefreshAt)
-            {
-                return;
-            }
-
-            nextRefreshAt = Time.unscaledTime + 0.2f;
             RefreshAll();
         }
 
         private void CacheHierarchy()
         {
-            stationImage = TerminalUIUtility.FindComponent<RawImage>(
+            stationImage ??= TerminalUIUtility.FindComponent<RawImage>(
                 transform, "Station_RawImage");
-            stationCamera = TerminalUIUtility.FindComponent<Camera>(
+            stationCamera ??= TerminalUIUtility.FindComponent<Camera>(
                 transform, "StationUICamera");
-            objectNameText = TerminalUIUtility.FindComponent<TMP_Text>(
+            objectNameText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 transform, "Text_nameObj");
-            objectInfoText = TerminalUIUtility.FindComponent<TMP_Text>(
+            objectInfoText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 transform, "Text_info_obj");
-            objectImage = TerminalUIUtility.FindComponent<Image>(
+            objectImage ??= TerminalUIUtility.FindComponent<Image>(
                 transform, "Image_obj");
 
-            Transform toggleRoot = TerminalUIUtility.Find(transform, "Toggle");
+            Transform toggleRoot = powerSwitchRoot != null
+                ? powerSwitchRoot.transform
+                : TerminalUIUtility.Find(transform, "Toggle");
             if (toggleRoot != null)
             {
-                powerSwitchRoot = toggleRoot.gameObject;
-                powerOnButton = TerminalUIUtility.FindComponent<Button>(
+                powerSwitchRoot ??= toggleRoot.gameObject;
+                powerOnButton ??= TerminalUIUtility.FindComponent<Button>(
                     toggleRoot, "OnButton");
-                powerOffButton = TerminalUIUtility.FindComponent<Button>(
+                powerOffButton ??= TerminalUIUtility.FindComponent<Button>(
                     toggleRoot, "OffButton");
-                powerHandle = TerminalUIUtility.FindComponent<RectTransform>(
+                powerHandle ??= TerminalUIUtility.FindComponent<RectTransform>(
                     toggleRoot, "Handle");
-                powerHandleAnimator = powerHandle != null
+                powerHandleAnimator ??= powerHandle != null
                     ? powerHandle.GetComponent<Animator>()
                     : null;
-                powerStatusText = TerminalUIUtility.FindComponent<TMP_Text>(
+                powerStatusText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     toggleRoot, "Text_Status");
             }
 
-            statusPanel = TerminalUIUtility.Find(
+            statusPanel ??= TerminalUIUtility.Find(
                 transform, "background_Status")?.gameObject;
-            statusText = TerminalUIUtility.FindComponent<TMP_Text>(
+            statusText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 statusPanel != null ? statusPanel.transform : transform,
                 "Text_description");
-            upgradePanel = TerminalUIUtility.Find(
+            upgradePanel ??= TerminalUIUtility.Find(
                 transform, "background_Upgrade")?.gameObject;
-            upgradeTitle = TerminalUIUtility.FindComponent<TMP_Text>(
+            upgradeTitle ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 upgradePanel != null ? upgradePanel.transform : transform,
                 "description_update");
-            upgradeInfo = TerminalUIUtility.FindComponent<TMP_Text>(
+            upgradeInfo ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 upgradePanel != null ? upgradePanel.transform : transform,
                 "info_update");
-            upgradeRequired = TerminalUIUtility.FindComponent<TMP_Text>(
+            upgradeRequired ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 upgradePanel != null ? upgradePanel.transform : transform,
                 "info_required");
-            upgradeButton = TerminalUIUtility.FindComponent<Button>(
+            upgradeButton ??= TerminalUIUtility.FindComponent<Button>(
                 upgradePanel != null ? upgradePanel.transform : transform,
                 "UpgradeButton");
 
@@ -658,6 +651,73 @@ namespace NERA.Terminal
             };
         }
 
+        private void BindDataEvents()
+        {
+            BindSystemEvents();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (subscribedEnergy != energy)
+            {
+                if (subscribedEnergy != null)
+                    subscribedEnergy.EnergyChanged -= HandleDataChanged;
+                subscribedEnergy = energy;
+                if (subscribedEnergy != null)
+                    subscribedEnergy.EnergyChanged += HandleDataChanged;
+            }
+
+            StationStorageController storage =
+                StationStorageController.Instance;
+            if (subscribedStorage != storage)
+            {
+                if (subscribedStorage != null)
+                    subscribedStorage.StorageChanged -= HandleDataChanged;
+                subscribedStorage = storage;
+                if (subscribedStorage != null)
+                    subscribedStorage.StorageChanged += HandleDataChanged;
+            }
+
+            PlayerInventory inventory =
+                InventoryLabHUDController.Instance?.BoundInventory ??
+                FindFirstObjectByType<PlayerInventory>();
+            if (subscribedInventory != inventory)
+            {
+                if (subscribedInventory != null)
+                    subscribedInventory.InventoryChanged -= HandleDataChanged;
+                subscribedInventory = inventory;
+                if (subscribedInventory != null)
+                    subscribedInventory.InventoryChanged += HandleDataChanged;
+            }
+
+            DroneScanController drone = DroneScanController.Instance;
+            if (subscribedDrone != drone)
+            {
+                if (subscribedDrone != null)
+                    subscribedDrone.StateChanged -= HandleDroneStateChanged;
+                subscribedDrone = drone;
+                if (subscribedDrone != null)
+                    subscribedDrone.StateChanged += HandleDroneStateChanged;
+            }
+
+            AntennaController antenna = AntennaController.Instance;
+            if (subscribedAntenna != antenna)
+            {
+                if (subscribedAntenna != null)
+                {
+                    subscribedAntenna.StateChanged -= HandleAntennaStateChanged;
+                    subscribedAntenna.ConditionChanged -=
+                        HandleAntennaConditionChanged;
+                }
+
+                subscribedAntenna = antenna;
+                if (subscribedAntenna != null)
+                {
+                    subscribedAntenna.StateChanged += HandleAntennaStateChanged;
+                    subscribedAntenna.ConditionChanged +=
+                        HandleAntennaConditionChanged;
+                }
+            }
+        }
+
         private void BindSystemEvents()
         {
             StationSystemsController current = StationSystemsController.Instance;
@@ -673,11 +733,69 @@ namespace NERA.Terminal
 
         private void HandleSystemsChanged()
         {
-            if (this != null &&
-                terminal?.IsOpen == true &&
-                gameObject.activeInHierarchy)
-            {
+            RefreshIfVisible();
+        }
+
+        private void HandleDataChanged()
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleDroneStateChanged(DroneState _)
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleAntennaStateChanged(AntennaState _)
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleAntennaConditionChanged(float _)
+        {
+            RefreshIfVisible();
+        }
+
+        private void RefreshIfVisible()
+        {
+            if (terminal?.IsOpen == true && gameObject.activeInHierarchy)
                 RefreshAll();
+        }
+
+        private void UnbindDataEvents()
+        {
+            UnbindSystemEvents();
+
+            if (subscribedEnergy != null)
+            {
+                subscribedEnergy.EnergyChanged -= HandleDataChanged;
+                subscribedEnergy = null;
+            }
+
+            if (subscribedStorage != null)
+            {
+                subscribedStorage.StorageChanged -= HandleDataChanged;
+                subscribedStorage = null;
+            }
+
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.InventoryChanged -= HandleDataChanged;
+                subscribedInventory = null;
+            }
+
+            if (subscribedDrone != null)
+            {
+                subscribedDrone.StateChanged -= HandleDroneStateChanged;
+                subscribedDrone = null;
+            }
+
+            if (subscribedAntenna != null)
+            {
+                subscribedAntenna.StateChanged -= HandleAntennaStateChanged;
+                subscribedAntenna.ConditionChanged -=
+                    HandleAntennaConditionChanged;
+                subscribedAntenna = null;
             }
         }
 
@@ -891,7 +1009,7 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
-            UnbindSystemEvents();
+            UnbindDataEvents();
         }
     }
 }

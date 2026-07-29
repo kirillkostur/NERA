@@ -8,13 +8,18 @@ namespace NERA.Expeditions
     public sealed class ExpeditionDiscoveryController : MonoBehaviour
     {
         private readonly HashSet<string> discoveredLocationIds = new HashSet<string>();
+        private readonly Dictionary<string, ExpeditionLocationData>
+            locationsById =
+                new Dictionary<string, ExpeditionLocationData>(
+                    StringComparer.Ordinal);
         [SerializeField] private List<ExpeditionLocationData> knownLocations =
             new List<ExpeditionLocationData>();
 
         public static ExpeditionDiscoveryController Instance { get; private set; }
 
         public event Action<string> LocationDiscovered;
-        public List<ExpeditionLocationData> KnownLocations => knownLocations;
+        public IReadOnlyList<ExpeditionLocationData> KnownLocations =>
+            knownLocations;
         public IEnumerable<string> DiscoveredLocationIds => discoveredLocationIds;
 
         private void Awake()
@@ -26,18 +31,22 @@ namespace NERA.Expeditions
             }
 
             Instance = this;
+            RebuildLocationIndex();
         }
 
         public bool Discover(string locationId)
         {
-            if (string.IsNullOrWhiteSpace(locationId) ||
-                !discoveredLocationIds.Add(locationId))
+            string normalizedId = NormalizeId(locationId);
+            if (string.IsNullOrEmpty(normalizedId) ||
+                !discoveredLocationIds.Add(normalizedId))
             {
                 return false;
             }
 
-            LocationDiscovered?.Invoke(locationId);
-            Debug.Log($"ExpeditionDiscovery: Location '{locationId}' discovered.", this);
+            LocationDiscovered?.Invoke(normalizedId);
+            Debug.Log(
+                $"ExpeditionDiscovery: Location '{normalizedId}' discovered.",
+                this);
             return true;
         }
 
@@ -48,8 +57,9 @@ namespace NERA.Expeditions
 
         public bool IsDiscovered(string locationId)
         {
-            return !string.IsNullOrWhiteSpace(locationId) &&
-                discoveredLocationIds.Contains(locationId);
+            string normalizedId = NormalizeId(locationId);
+            return !string.IsNullOrEmpty(normalizedId) &&
+                discoveredLocationIds.Contains(normalizedId);
         }
 
         public bool IsDiscovered(ExpeditionLocationData location)
@@ -141,6 +151,16 @@ namespace NERA.Expeditions
             return false;
         }
 
+        public bool TryGetKnownLocation(
+            string locationId,
+            out ExpeditionLocationData location)
+        {
+            location = null;
+            string normalizedId = NormalizeId(locationId);
+            return !string.IsNullOrEmpty(normalizedId) &&
+                locationsById.TryGetValue(normalizedId, out location);
+        }
+
         public void RestoreDiscovered(IEnumerable<string> locationIds)
         {
             discoveredLocationIds.Clear();
@@ -150,9 +170,36 @@ namespace NERA.Expeditions
 
             foreach (string locationId in locationIds)
             {
-                if (!string.IsNullOrWhiteSpace(locationId))
-                    discoveredLocationIds.Add(locationId);
+                string normalizedId = NormalizeId(locationId);
+                if (!string.IsNullOrEmpty(normalizedId))
+                    discoveredLocationIds.Add(normalizedId);
             }
+        }
+
+        private void RebuildLocationIndex()
+        {
+            locationsById.Clear();
+            foreach (ExpeditionLocationData location in knownLocations)
+            {
+                if (location == null ||
+                    string.IsNullOrWhiteSpace(location.LocationId))
+                {
+                    continue;
+                }
+
+                if (!locationsById.TryAdd(location.LocationId, location))
+                {
+                    Debug.LogError(
+                        $"ExpeditionDiscovery: Duplicate location ID " +
+                        $"'{location.LocationId}'.",
+                        this);
+                }
+            }
+        }
+
+        private static string NormalizeId(string locationId)
+        {
+            return locationId?.Trim() ?? string.Empty;
         }
 
         private void OnDestroy()

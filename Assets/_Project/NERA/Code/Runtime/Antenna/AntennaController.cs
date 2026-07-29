@@ -4,6 +4,7 @@ using NERA.Expeditions;
 using NERA.Locations;
 using NERA.Maintenance;
 using NERA.Station;
+using NERA.Terminal;
 using UnityEngine;
 
 namespace NERA.Antenna
@@ -27,7 +28,12 @@ namespace NERA.Antenna
         public AntennaState State { get; private set; } = AntennaState.Locked;
         public ExpeditionLocationData CalibrationTarget { get; private set; }
         public ExpeditionLocationData ActiveSignal { get; private set; }
-        public int ActiveSignalSectorIndex { get; private set; } = -1;
+        public MapSlotData ActiveSignalMapSlot { get; private set; }
+        [Obsolete("Use ActiveSignalMapSlot. Kept for old save migration.")]
+        public int ActiveSignalSectorIndex =>
+            ActiveSignalMapSlot != null
+                ? ActiveSignalMapSlot.LegacySectorIndex
+                : -1;
         public float CalibrationProgress =>
             State == AntennaState.SignalFound
                 ? 1f
@@ -243,7 +249,7 @@ namespace NERA.Antenna
             if (target != null && UnityEngine.Random.value <= signalDiscoveryChance)
             {
                 ActiveSignal = target;
-                ActiveSignalSectorIndex = PickRandomDiscoveredExpeditionSector();
+                ActiveSignalMapSlot = PickRandomDiscoveredExpeditionSlot();
                 SetState(AntennaState.SignalFound);
                 SignalFound?.Invoke(target);
                 ActiveSignalChanged?.Invoke(target);
@@ -269,7 +275,7 @@ namespace NERA.Antenna
 
             consumedSignalIds.Add(signal.LocationId);
             ActiveSignal = null;
-            ActiveSignalSectorIndex = -1;
+            ActiveSignalMapSlot = null;
             ActiveSignalChanged?.Invoke(null);
             RefreshAvailability();
             return true;
@@ -277,7 +283,8 @@ namespace NERA.Antenna
 
         public void RestoreSignalState(
             string activeSignalId,
-            int activeSignalSectorIndex,
+            string activeSignalMapSlotId,
+            int legacySignalSectorIndex,
             System.Collections.Generic.IEnumerable<string> consumedSignalIds
         )
         {
@@ -293,11 +300,26 @@ namespace NERA.Antenna
             }
 
             ActiveSignal = FindSignalById(activeSignalId);
-            ActiveSignalSectorIndex = ActiveSignal != null
-                ? activeSignalSectorIndex
-                : -1;
+            ActiveSignalMapSlot = ActiveSignal != null
+                ? FindMapSlot(
+                    activeSignalMapSlotId,
+                    legacySignalSectorIndex)
+                : null;
             RefreshAvailability();
             ActiveSignalChanged?.Invoke(ActiveSignal);
+        }
+
+        [Obsolete("Use the overload with a stable map-slot ID.")]
+        public void RestoreSignalState(
+            string activeSignalId,
+            int legacySignalSectorIndex,
+            System.Collections.Generic.IEnumerable<string> consumedSignalIds)
+        {
+            RestoreSignalState(
+                activeSignalId,
+                string.Empty,
+                legacySignalSectorIndex,
+                consumedSignalIds);
         }
 
         public System.Collections.Generic.IEnumerable<string> ConsumedSignalIds =>
@@ -336,22 +358,13 @@ namespace NERA.Antenna
             if (discovery == null || string.IsNullOrWhiteSpace(signalId))
                 return null;
 
-            foreach (ExpeditionLocationData location in discovery.KnownLocations)
-            {
-                if (location != null &&
-                    location.DiscoverySource == DiscoverySource.Antenna &&
-                    string.Equals(
-                        location.LocationId,
-                        signalId,
-                        StringComparison.Ordinal
-                    ) &&
-                    !IsConsumed(location))
-                {
-                    return location;
-                }
-            }
-
-            return null;
+            return discovery.TryGetKnownLocation(
+                       signalId,
+                       out ExpeditionLocationData location) &&
+                   location.DiscoverySource == DiscoverySource.Antenna &&
+                   !IsConsumed(location)
+                ? location
+                : null;
         }
 
         private bool HasAnyDiscoveredExpeditionSector()
@@ -363,8 +376,7 @@ namespace NERA.Antenna
             {
                 if (location != null &&
                     location.LocationType == LocationType.Expedition &&
-                    location.MapSectorIndex >= 0 &&
-                    location.MapSectorIndex <= 8 &&
+                    location.MapSlot != null &&
                     discovery.IsDiscovered(location))
                 {
                     return true;
@@ -374,30 +386,63 @@ namespace NERA.Antenna
             return false;
         }
 
-        private int PickRandomDiscoveredExpeditionSector()
+        private MapSlotData PickRandomDiscoveredExpeditionSlot()
         {
             if (discovery == null)
-                return -1;
+                return null;
 
-            System.Collections.Generic.List<int> sectors =
-                new System.Collections.Generic.List<int>();
+            System.Collections.Generic.List<MapSlotData> slots =
+                new System.Collections.Generic.List<MapSlotData>();
 
             foreach (ExpeditionLocationData location in discovery.KnownLocations)
             {
                 if (location != null &&
                     location.LocationType == LocationType.Expedition &&
-                    location.MapSectorIndex >= 0 &&
-                    location.MapSectorIndex <= 8 &&
+                    location.MapSlot != null &&
                     discovery.IsDiscovered(location) &&
-                    !sectors.Contains(location.MapSectorIndex))
+                    !slots.Contains(location.MapSlot))
                 {
-                    sectors.Add(location.MapSectorIndex);
+                    slots.Add(location.MapSlot);
                 }
             }
 
-            return sectors.Count > 0
-                ? sectors[UnityEngine.Random.Range(0, sectors.Count)]
-                : -1;
+            return slots.Count > 0
+                ? slots[UnityEngine.Random.Range(0, slots.Count)]
+                : null;
+        }
+
+        private MapSlotData FindMapSlot(
+            string mapSlotId,
+            int legacySectorIndex)
+        {
+            if (discovery == null)
+                return null;
+
+            foreach (ExpeditionLocationData location in discovery.KnownLocations)
+            {
+                MapSlotData slot = location != null
+                    ? location.MapSlot
+                    : null;
+                if (slot == null)
+                    continue;
+
+                if (!string.IsNullOrWhiteSpace(mapSlotId) &&
+                    string.Equals(
+                        slot.SlotId,
+                        mapSlotId.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return slot;
+                }
+
+                if (string.IsNullOrWhiteSpace(mapSlotId) &&
+                    slot.LegacySectorIndex == legacySectorIndex)
+                {
+                    return slot;
+                }
+            }
+
+            return null;
         }
 
         private bool IsConsumed(ExpeditionLocationData signal)

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42a74b2a1d9491a48aa48233ca137a8a, type: 3}
+  m_Name: Location_Expedition07
+  m_EditorClassIdentifier: 
+  locationId: Expedition07
+  locationType: 0
+  displayName: "Expedition 07 \u2014 Signal Array"
+  description: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+    Recover the relay core and any surviving records.
+  scene:
+    assetGuid: 1cd94472147add04eb12613f1bc692a0
+    assetPath: Assets/_Project/NERA/Scenes/Expedition_07.unity
+  spawnPointId: Expedition07_Start
+  discoverySource: 0
+  droneScanDuration: 5
+  requiredDroneUpgradeLevel: 2
+  initialState: 0
+  mapSymbol: 0
+  mapSlot: {fileID: 11400000, guid: b6773b5c1e7b4428bbcb0c1385a8c156, type: 2}
+  mapPreview: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}

@@ -1,7 +1,6 @@
 using NERA.Core;
 using NERA.Expeditions;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace NERA.Interaction
 {
@@ -32,18 +31,34 @@ namespace NERA.Interaction
             }
 
             isLoading = true;
-            if (string.Equals(targetSceneName, "Player_Station", System.StringComparison.Ordinal))
-            {
-                ExpeditionProgressController progress = ExpeditionProgressController.Instance;
-                if (progress != null)
-                    progress.MarkReturned();
-            }
-            SceneTransitionState.SetPendingSpawnPoint(targetSpawnPointId);
-
             if (disableAfterUse)
                 SetAvailable(false, "Loading");
 
-            SceneManager.LoadScene(targetSceneName);
+            BootInitializer runtime = BootInitializer.Instance;
+            if (runtime == null ||
+                !runtime.LoadGameplayScene(
+                    targetSceneName,
+                    targetSpawnPointId))
+            {
+                isLoading = false;
+                if (disableAfterUse)
+                    SetAvailable(true);
+                Debug.LogError(
+                    "SceneTransitionInteractable: MainScene runtime loader " +
+                    "is unavailable or busy.",
+                    this);
+                return;
+            }
+
+            if (string.Equals(
+                    targetSceneName,
+                    "Player_Station",
+                    System.StringComparison.Ordinal))
+            {
+                ExpeditionProgressController progress =
+                    ExpeditionProgressController.Instance;
+                progress?.MarkReturned();
+            }
         }
     }
 }

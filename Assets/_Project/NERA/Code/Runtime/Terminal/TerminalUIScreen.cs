@@ -4,7 +4,6 @@ using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Station;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace NERA.Terminal
@@ -167,10 +166,17 @@ namespace NERA.Terminal
             if (!available)
                 return false;
 
-            SceneTransitionState.SetPendingSpawnPoint(location.SpawnPointId);
+            BootInitializer runtime = BootInitializer.Instance;
+            if (runtime == null ||
+                !runtime.LoadGameplayScene(
+                    location.SceneName,
+                    location.SpawnPointId))
+            {
+                return false;
+            }
+
             antenna?.ConsumeActiveSignal(location);
             Close();
-            SceneManager.LoadScene(location.SceneName);
             return true;
         }
 

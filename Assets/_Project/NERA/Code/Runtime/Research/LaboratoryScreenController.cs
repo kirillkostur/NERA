@@ -40,24 +40,26 @@ namespace NERA.Research
 
         private InventoryLabHUDController owner;
         private PlayerInventory inventory;
-        private Canvas rootCanvas;
-        private GameObject inventoryAndInfoScreen;
-        private GameObject powerScreen;
-        private GameObject scanScreen;
-        private GameObject upgradeScreen;
+        [SerializeField] private Canvas rootCanvas;
+        [SerializeField] private GameObject inventoryAndInfoScreen;
+        [SerializeField] private GameObject powerScreen;
+        [SerializeField] private GameObject scanScreen;
+        [SerializeField] private GameObject upgradeScreen;
         private InventorySlotView scanView;
-        private Button powerDropButton;
-        private Button scanButton;
-        private Button scanDropButton;
-        private TMP_Text scanProgressText;
-        private Button upgradeButton;
-        private Button upgradeDropButton;
-        private TMP_Text infoName;
-        private TMP_Text infoDescription;
-        private Image infoImage;
+        [SerializeField] private Button powerDropButton;
+        [SerializeField] private Button scanButton;
+        [SerializeField] private Button scanDropButton;
+        [SerializeField] private TMP_Text scanProgressText;
+        [SerializeField] private Button upgradeButton;
+        [SerializeField] private Button upgradeDropButton;
+        [SerializeField] private TMP_Text infoName;
+        [SerializeField] private TMP_Text infoDescription;
+        [SerializeField] private Image infoImage;
         private LaboratoryMode activeMode = LaboratoryMode.Scan;
         private int navigationUnlockFrame;
-        private float nextRefreshAt;
+        private ResearchController subscribedResearch;
+        private LaboratoryWorkstationController subscribedWorkstation;
+        private bool dataEventsBound;
         private bool initialized;
 
         public int ActiveModeIndex => (int)activeMode;
@@ -75,7 +77,7 @@ namespace NERA.Research
             }
 
             initialized = true;
-            rootCanvas = GetComponentInParent<Canvas>();
+            rootCanvas ??= GetComponentInParent<Canvas>();
             CacheHierarchy();
             BuildInventoryViews();
             BuildOperationViews();
@@ -87,6 +89,7 @@ namespace NERA.Research
         public void Open(PlayerInventory playerInventory)
         {
             BindInventory(playerInventory);
+            BindDataEvents();
             navigationUnlockFrame = Time.frameCount + 1;
             ShowSharedInventory();
             ShowMode(activeMode);
@@ -95,6 +98,7 @@ namespace NERA.Research
 
         public void Close()
         {
+            UnbindDataEvents();
             ClearInfo();
         }
 
@@ -110,50 +114,44 @@ namespace NERA.Research
                 else if (Input.GetKeyDown(KeyCode.E))
                     ShowNextMode();
             }
-
-            if (Time.unscaledTime < nextRefreshAt)
-                return;
-
-            nextRefreshAt = Time.unscaledTime + 0.1f;
-            RefreshActiveOperationView();
         }
 
         private void CacheHierarchy()
         {
-            inventoryAndInfoScreen = Find(
+            inventoryAndInfoScreen ??= Find(
                 transform,
                 "Inventory_and_info_Screen")?.gameObject;
-            powerScreen = Find(transform, "PowerScreen")?.gameObject;
-            scanScreen = Find(transform, "ScanScreen")?.gameObject;
-            upgradeScreen = Find(transform, "UpgradeScreen")?.gameObject;
+            powerScreen ??= Find(transform, "PowerScreen")?.gameObject;
+            scanScreen ??= Find(transform, "ScanScreen")?.gameObject;
+            upgradeScreen ??= Find(transform, "UpgradeScreen")?.gameObject;
 
             Transform infoRoot = Find(
                 inventoryAndInfoScreen != null
                     ? inventoryAndInfoScreen.transform
                     : null,
                 "background_Screen_Storage_Info");
-            infoName = Find(infoRoot, "Text_Name")?.GetComponent<TMP_Text>();
-            infoDescription = Find(
+            infoName ??= Find(infoRoot, "Text_Name")?.GetComponent<TMP_Text>();
+            infoDescription ??= Find(
                 infoRoot,
                 "Text_Description")?.GetComponent<TMP_Text>();
-            infoImage = Find(infoRoot, "Image_info")?.GetComponent<Image>();
+            infoImage ??= Find(infoRoot, "Image_info")?.GetComponent<Image>();
 
-            powerDropButton = Find(
+            powerDropButton ??= Find(
                 powerScreen != null ? powerScreen.transform : null,
                 "DropButton")?.GetComponent<Button>();
-            scanButton = Find(
+            scanButton ??= Find(
                 scanScreen != null ? scanScreen.transform : null,
                 "ScanButton")?.GetComponent<Button>();
-            scanDropButton = Find(
+            scanDropButton ??= Find(
                 scanScreen != null ? scanScreen.transform : null,
                 "DropButton")?.GetComponent<Button>();
-            scanProgressText = Find(
+            scanProgressText ??= Find(
                 scanScreen != null ? scanScreen.transform : null,
                 "Text_progress")?.GetComponent<TMP_Text>();
-            upgradeButton = Find(
+            upgradeButton ??= Find(
                 upgradeScreen != null ? upgradeScreen.transform : null,
                 "UpgradeButton")?.GetComponent<Button>();
-            upgradeDropButton = Find(
+            upgradeDropButton ??= Find(
                 upgradeScreen != null ? upgradeScreen.transform : null,
                 "DropButton")?.GetComponent<Button>();
         }
@@ -816,11 +814,89 @@ namespace NERA.Research
             if (inventory == playerInventory)
                 return;
 
-            if (inventory != null)
-                inventory.InventoryChanged -= RefreshAll;
+            if (dataEventsBound && inventory != null)
+                inventory.InventoryChanged -= HandleInventoryChanged;
             inventory = playerInventory;
+            if (dataEventsBound && inventory != null)
+                inventory.InventoryChanged += HandleInventoryChanged;
+        }
+
+        private void BindDataEvents()
+        {
+            if (dataEventsBound)
+                return;
+
+            dataEventsBound = true;
             if (inventory != null)
-                inventory.InventoryChanged += RefreshAll;
+                inventory.InventoryChanged += HandleInventoryChanged;
+
+            subscribedResearch = ResearchController.Instance;
+            if (subscribedResearch != null)
+            {
+                subscribedResearch.StateChanged += HandleResearchStateChanged;
+                subscribedResearch.ProgressChanged += HandleResearchProgressChanged;
+            }
+
+            subscribedWorkstation = LaboratoryWorkstationController.Instance;
+            if (subscribedWorkstation != null)
+            {
+                subscribedWorkstation.StateChanged +=
+                    HandleWorkstationChanged;
+                subscribedWorkstation.ItemsChanged +=
+                    HandleWorkstationChanged;
+            }
+        }
+
+        private void UnbindDataEvents()
+        {
+            if (!dataEventsBound)
+                return;
+
+            dataEventsBound = false;
+            if (inventory != null)
+                inventory.InventoryChanged -= HandleInventoryChanged;
+
+            if (subscribedResearch != null)
+            {
+                subscribedResearch.StateChanged -= HandleResearchStateChanged;
+                subscribedResearch.ProgressChanged -=
+                    HandleResearchProgressChanged;
+                subscribedResearch = null;
+            }
+
+            if (subscribedWorkstation != null)
+            {
+                subscribedWorkstation.StateChanged -=
+                    HandleWorkstationChanged;
+                subscribedWorkstation.ItemsChanged -=
+                    HandleWorkstationChanged;
+                subscribedWorkstation = null;
+            }
+        }
+
+        private void HandleInventoryChanged()
+        {
+            if (gameObject.activeInHierarchy)
+                RefreshAll();
+        }
+
+        private void HandleResearchStateChanged(
+            ResearchController.ResearchState _)
+        {
+            if (gameObject.activeInHierarchy)
+                RefreshActiveOperationView();
+        }
+
+        private void HandleResearchProgressChanged(float _)
+        {
+            if (gameObject.activeInHierarchy)
+                RefreshActiveOperationView();
+        }
+
+        private void HandleWorkstationChanged()
+        {
+            if (gameObject.activeInHierarchy)
+                RefreshActiveOperationView();
         }
 
         private static List<Transform> GetSpawnPoints(
@@ -877,8 +953,12 @@ namespace NERA.Research
 
         private void OnDestroy()
         {
-            if (inventory != null)
-                inventory.InventoryChanged -= RefreshAll;
+            UnbindDataEvents();
+        }
+
+        private void OnDisable()
+        {
+            UnbindDataEvents();
         }
     }
 }

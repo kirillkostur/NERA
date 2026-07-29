@@ -23,6 +23,7 @@ namespace NERA.Research
         public static ResearchController Instance { get; private set; }
 
         public event Action<ResearchState> StateChanged;
+        public event Action<float> ProgressChanged;
         public event Action<string> ResearchAnalyzed;
 
         private readonly HashSet<string> analyzedResearchIds = new HashSet<string>();
@@ -97,6 +98,7 @@ namespace NERA.Research
             StatusMessage = $"Scanning {LoadedItem.DisplayName}...";
             analysisRemaining = Mathf.Max(0f, analysisRemaining - deltaTime);
             Progress = 1f - analysisRemaining / definition.AnalysisDuration;
+            ProgressChanged?.Invoke(Progress);
 
             if (analysisRemaining <= 0f)
                 CompleteAnalysis(definition);

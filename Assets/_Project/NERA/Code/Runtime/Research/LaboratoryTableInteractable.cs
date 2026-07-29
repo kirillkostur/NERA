@@ -40,7 +40,7 @@ namespace NERA.Research
             if (hud == null)
             {
                 Debug.LogError(
-                    "Laboratory HUD was not found. Start the game through the Boot scene.",
+                    "Laboratory HUD was not found. Start gameplay through MainScene.",
                     this
                 );
                 return;

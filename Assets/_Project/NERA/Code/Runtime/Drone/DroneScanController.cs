@@ -16,6 +16,7 @@ namespace NERA.Drone
 
         public event Action<DroneState> StateChanged;
         public event Action<float> ScanProgressChanged;
+        public event Action<float> RechargeProgressChanged;
         public event Action<DroneScanResult> ScanCompleted;
 
         public DroneState State { get; private set; } = DroneState.Locked;
@@ -146,6 +147,7 @@ namespace NERA.Drone
             }
 
             RechargeRemaining = Mathf.Max(0f, RechargeRemaining - deltaTime);
+            RechargeProgressChanged?.Invoke(RechargeRemaining);
             if (RechargeRemaining <= 0f)
             {
                 energy?.SetConsumerActive(DroneChargerConsumerId, false);

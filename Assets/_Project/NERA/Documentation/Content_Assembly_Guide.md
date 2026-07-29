@@ -341,9 +341,11 @@ Death drop должен ссылаться на готовый world item prefab
 
 Игровые сцены хранятся в:
 
-`Assets/_Project/NERA/Scenes/Expeditions/`
+`Assets/_Project/NERA/Scenes/`
 
-Имя файла должно точно совпадать со значением `Scene Name` в location config.
+Сцена выбирается в поле `Scene` location config из списка включённых сцен
+Build Settings. Ссылка хранит GUID и путь, поэтому перенос или переименование
+scene asset не требует ручного ввода имени.
 
 Минимальная иерархия:
 
@@ -410,14 +412,13 @@ SceneSpawnPoint.spawnPointId: Expedition02_Start
 
 ```text
 Location Id: Expedition02
-Id: Expedition02
 Location Type: Expedition
-Scene Name: Expedition_02
+Scene: Expedition_02 [Build]
 Spawn Point Id: Expedition02_Start
 Discovery Source: Drone
 Initial State: Unknown
 Map Symbol: Expedition
-Map Sector Index: уникальный сектор 0..8
+Map Slot: ссылка на уникальный MapSlotData asset
 ```
 
 Для неизвестного человеческого сигнала:
@@ -429,40 +430,73 @@ Map Symbol: Unknown
 ```
 
 Дрон не должен открывать Unknown Signal, а антенна — обычную Expedition.
+Для Unknown Signal поле `Map Slot` можно оставить пустым: антенна временно
+показывает сигнал на одном из уже открытых слотов.
 
-### 9.5. Регистрация location config
+### 9.5. 3D-слоты карты
+
+Слоты находятся в `MainScene`:
+
+`MapScreen -> MapUIPreview -> MapUIRoot -> SM_UI_3D`
+
+На `SM_UI_3D` расположен `MapLocationSlotRegistry`. Он автоматически собирает
+все дочерние компоненты `MapLocationSlot`, поэтому количество слотов не
+зафиксировано в коде и имена объектов могут быть любыми.
+
+Чтобы добавить слот:
+
+1. Создать asset через `Create -> NERA -> Terminal Map -> Slot`.
+2. Указать уникальный стабильный `Slot Id`.
+3. Добавить или скопировать 3D-объект под `SM_UI_3D`.
+4. Добавить ему `MapLocationSlot` и назначить созданный asset.
+5. Назначить тот же asset в поле `Map Slot` location config.
+
+`Signal Anchor` необязателен. Если он не назначен, маркер антенны создаётся
+относительно transform самого 3D-слота.
+
+Можно иметь свободные 3D-слоты без location config. Можно удалять лишние слоты
+и location configs — диапазона `1..8` и требования иметь ровно восемь больше
+нет. Один `MapSlotData` нельзя назначать двум обычным экспедициям или двум
+3D-объектам.
+
+### 9.6. Регистрация location config
 
 Открыть:
 
-`Scenes/Boot/Boot.unity`
+`Scenes/MainScene.unity`
 
 Выбрать:
 
 `RuntimeRoot -> ExpeditionDiscoveryController -> Known Locations`
 
-Добавить location config в список. Сейчас там зарегистрированы:
+Добавить нужные location configs в список. Текущее наполнение содержит восемь
+экспедиций и один неизвестный сигнал, но это не архитектурное ограничение:
 
 - `Location_Expedition01`;
 - `Location_Expedition02`;
+- `Location_Expedition03` ... `Location_Expedition08`;
 - `CFG_UnknownSignal_01`.
 
 Без регистрации конфиг существует как asset, но Drone, Antenna, Terminal и Save его не увидят.
 
-### 9.6. Build Settings
+### 9.7. Build Settings
 
-Добавить сцену и включить её. Текущее обязательное ядро:
+Добавить сцену и включить её. Первые три позиции всегда фиксированы:
 
 - `Boot`;
-- `Player_Station`;
-- `Expedition_01`;
-- `Expedition_02`;
-- `UnknownSignal_01_FirstPlayable`.
+- `MainScene`;
+- `Player_Station`.
 
-`SceneTransitionInteractable` проверяет доступность сцены через Build Settings; одной ссылки на имя недостаточно.
+После них должны быть включены все сцены, выбранные в location configs.
+Выпадающий список `Scene` показывает только включённые Build Settings сцены.
+Команда `NERA -> Validate Project` проверяет ссылки, уникальные Location Id,
+стабильные Map Slot Id, соответствие 3D-слотов конфигам и регистрацию configs
+в `MainScene`.
 
 ## 10. Связи через Boot/RuntimeRoot
 
-`RuntimeRoot` — постоянный центр систем. На нём находятся:
+`RuntimeRoot` — постоянный центр систем внутри аддитивно загруженной
+`MainScene`. Он не переносится в `DontDestroyOnLoad`. На нём находятся:
 
 - `BootInitializer`;
 - `StationPowerController`;
@@ -477,13 +511,18 @@ Map Symbol: Unknown
 - `LaboratoryWorkstationController` — четыре зарядных слота и два
   подготовленных слота синтеза в общем окне лаборатории.
 
-При добавлении контента обычно не нужно создавать второй контроллер в сцене экспедиции. Нужно создать данные и зарегистрировать их в существующей системе.
+При добавлении контента обычно не нужно создавать второй контроллер в сцене
+экспедиции. Нужно создать данные и зарегистрировать их в существующей системе.
+Переходы между станцией и экспедициями должны вызывать
+`BootInitializer.LoadGameplayScene`, чтобы не выгрузить `MainScene`.
 
 ### Важное ограничение
 
 Текущий `ExpeditionProgressController` жёстко содержит флаги и текст только для Expedition 01. Не подключать события Expedition 02 к методам `MarkIOTraceSeen` и `MarkResearchSampleCollected`, если они должны означать отдельный прогресс.
 
-Перед полноценной сборкой progression Expedition 02 контроллер нужно обобщить по `LocationId`/ID события либо создать data-driven слой целей. Визуальную сцену, префабы, предметы и configs можно готовить до этого.
+Перед полноценной сборкой progression Expedition 02 контроллер нужно обобщить
+по строковому `Location Id`/ID события либо создать data-driven слой целей.
+Визуальную сцену, префабы, предметы и configs можно готовить до этого.
 
 ## 11. Рекомендуемый порядок сборки Expedition 02
 

@@ -13,16 +13,17 @@ MonoBehaviour:
   m_Name: Location_Expedition01
   m_EditorClassIdentifier: 
   locationId: Expedition_01
-  id: 0
   locationType: 0
   displayName: "Expedition 01 \u2014 Ancient Outpost"
   description: A newly mapped ancient site. Recover artifacts and return to the station.
-  sceneName: Expedition_01
+  scene:
+    assetGuid: d753564efe059ee43a9d56ec0301c496
+    assetPath: Assets/_Project/NERA/Scenes/Expedition_01.unity
   spawnPointId: Expedition01_Start
   discoverySource: 0
   droneScanDuration: 10
-  requiredDroneUpgradeLevel: 0
+  requiredDroneUpgradeLevel: 1
   initialState: 0
   mapSymbol: 0
-  mapSectorIndex: 0
+  mapSlot: {fileID: 11400000, guid: 1d21ae6ca8b54a9a927d1007443b79f0, type: 2}
   mapPreview: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}

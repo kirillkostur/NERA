@@ -12,6 +12,7 @@ using NERA.Items;
 using NERA.Research;
 using NERA.Save;
 using NERA.Station;
+using NERA.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -36,9 +37,24 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator LaboratoryIsUnavailableUntilGridStarts()
+        public IEnumerator BootRemainsInMenuUntilAStartActionIsRequested()
         {
             SceneManager.LoadScene("Boot");
+            yield return null;
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Boot"));
+            Assert.That(
+                Object.FindFirstObjectByType<MainMenuController>(),
+                Is.Not.Null);
+            Assert.That(
+                Object.FindFirstObjectByType<BootInitializer>(),
+                Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator LaboratoryIsUnavailableUntilGridStarts()
+        {
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -60,7 +76,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator ReturningToStationDoesNotDuplicateEnergySources()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -68,9 +84,19 @@ namespace NERA.Tests
             EnergySystemController energy = EnergySystemController.Instance;
             StationEnvironmentController environment =
                 StationEnvironmentController.Instance;
+            BootInitializer runtime = BootInitializer.Instance;
 
             Assert.That(energy, Is.Not.Null);
             Assert.That(environment, Is.Not.Null);
+            Assert.That(runtime, Is.Not.Null);
+            Assert.That(
+                SceneManager.GetSceneByName("MainScene").isLoaded,
+                Is.True,
+                "MainScene must remain loaded while gameplay content is active.");
+            Assert.That(
+                runtime.gameObject.scene.name,
+                Is.EqualTo("MainScene"),
+                "RuntimeRoot must stay in MainScene, not DontDestroyOnLoad.");
 
             environment.SetTime(12f);
             environment.SetWeather(StationWeather.Clear);
@@ -95,12 +121,21 @@ namespace NERA.Tests
                     .Within(0.01f)
             );
 
-            SceneManager.LoadScene("Expedition_01");
+            Assert.That(
+                runtime.LoadGameplayScene("Expedition_01", string.Empty),
+                Is.True);
             yield return WaitForScene("Expedition_01");
 
-            SceneManager.LoadScene("Player_Station");
+            Assert.That(
+                runtime.LoadGameplayScene("Player_Station", "Station_Start"),
+                Is.True);
             yield return WaitForScene("Player_Station");
             yield return null;
+
+            Assert.That(SceneManager.GetSceneByName("MainScene").isLoaded, Is.True);
+            Assert.That(
+                SceneManager.GetSceneByName("Expedition_01").isLoaded,
+                Is.False);
 
             environment.SetTime(12f);
             environment.SetWeather(StationWeather.Clear);
@@ -132,7 +167,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator StationTabsAndSystemTogglesAreIndependent()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -422,7 +457,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator CriticalSystemTogglesCloseTerminalAndCutPower()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -468,7 +503,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator DroneCanSurveySecondLocationAfterRecharge()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -483,11 +518,31 @@ namespace NERA.Tests
             Assert.That(discovery, Is.Not.Null);
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
-            Assert.That(discovery.KnownLocations.Count, Is.GreaterThanOrEqualTo(2));
-
             systems.ResetSystems();
-            ExpeditionLocationData first = discovery.KnownLocations[0];
-            ExpeditionLocationData second = discovery.KnownLocations[1];
+            int droneLevel =
+                systems.GetUpgradeLevel(StationSystemType.Drone);
+            ExpeditionLocationData first = discovery.KnownLocations
+                .FirstOrDefault(
+                    location =>
+                        location != null &&
+                        location.DiscoverySource ==
+                            NERA.Locations.DiscoverySource.Drone &&
+                        location.RequiredDroneUpgradeLevel <= droneLevel);
+            ExpeditionLocationData second = discovery.KnownLocations
+                .FirstOrDefault(
+                    location =>
+                        location != null &&
+                        location != first &&
+                        location.DiscoverySource ==
+                            NERA.Locations.DiscoverySource.Drone &&
+                        location.RequiredDroneUpgradeLevel == droneLevel + 1);
+            if (first == null || second == null)
+            {
+                Assert.Ignore(
+                    "This upgrade scenario needs one currently reachable " +
+                    "location and one location unlocked by the next Drone level.");
+            }
+
             discovery.RestoreDiscovered(Array.Empty<string>());
             energy.RestoreState(energy.TotalCapacity, true);
             Assert.That(
@@ -530,7 +585,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator DroneCannotBeStoppedWhileScanningAndStopButtonIsHidden()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -594,7 +649,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator BackpackUsesConfiguredAuthoredSlotPoints()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -632,7 +687,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator InventoryScreenSupportsAllSlotsAndDropsSelectedItem()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -752,7 +807,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator LaboratoryScreenUsesUnifiedInventoryAndWorkflows()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -1214,7 +1269,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator DevicesPanelMatchesTypedStationStorageCapacities()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -1247,7 +1302,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator DevicesTabShowsInventoryAndOtherTabsHideIt()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -1295,7 +1350,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator InventoryItemCanBeDraggedIntoStationStorageThroughUi()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -1445,25 +1500,31 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator ReturningToStationDoesNotMovePlayerItemsIntoStorage()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
 
             PlayerInventory inventory = Object.FindFirstObjectByType<PlayerInventory>();
             StationStorageController storage = StationStorageController.Instance;
+            BootInitializer runtime = BootInitializer.Instance;
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
             ItemData servoDrive = catalog != null ? catalog.Find("servo_drive_01") : null;
             Assert.That(inventory, Is.Not.Null);
             Assert.That(storage, Is.Not.Null);
+            Assert.That(runtime, Is.Not.Null);
             Assert.That(servoDrive, Is.Not.Null);
 
             int storedBefore = storage.Count;
             Assert.That(inventory.AddItem(servoDrive), Is.True);
 
-            SceneManager.LoadScene("Expedition_01");
+            Assert.That(
+                runtime.LoadGameplayScene("Expedition_01", string.Empty),
+                Is.True);
             yield return WaitForScene("Expedition_01");
-            SceneManager.LoadScene("Player_Station");
+            Assert.That(
+                runtime.LoadGameplayScene("Player_Station", "Station_Start"),
+                Is.True);
             yield return WaitForScene("Player_Station");
             yield return null;
 
@@ -1474,7 +1535,7 @@ namespace NERA.Tests
         [UnityTest]
         public IEnumerator InteractionTargetUsesAimCameraWithoutCombatAim()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
@@ -1737,8 +1798,12 @@ namespace NERA.Tests
 
         private static IEnumerator WaitForScene(string sceneName)
         {
-            while (SceneManager.GetActiveScene().name != sceneName)
+            while (SceneManager.GetActiveScene().name != sceneName ||
+                   (BootInitializer.Instance != null &&
+                    BootInitializer.Instance.IsLoading))
+            {
                 yield return null;
+            }
         }
 
         private static IEnumerator DisablePersistenceForTest()

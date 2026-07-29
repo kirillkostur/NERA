@@ -4,11 +4,15 @@ namespace NERA.Core
 {
     public sealed class SceneSpawnPoint : MonoBehaviour
     {
+        [Tooltip("Stable ID referenced by travel configs and scene exits.")]
         [SerializeField] private string spawnPointId;
+
+        public string SpawnPointId =>
+            spawnPointId?.Trim() ?? string.Empty;
 
         private void Start()
         {
-            if (!SceneTransitionState.TryConsumeSpawnPoint(spawnPointId))
+            if (!SceneTransitionState.TryConsumeSpawnPoint(SpawnPointId))
                 return;
 
             PlayerController player = FindFirstObjectByType<PlayerController>();
@@ -16,7 +20,7 @@ namespace NERA.Core
             if (player == null)
             {
                 Debug.LogError(
-                    $"SceneSpawnPoint '{spawnPointId}': PlayerController not found.",
+                    $"SceneSpawnPoint '{SpawnPointId}': PlayerController not found.",
                     this
                 );
                 return;

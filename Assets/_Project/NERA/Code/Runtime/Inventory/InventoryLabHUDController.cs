@@ -12,7 +12,8 @@ using UnityEngine.UI;
 namespace NERA.Inventory
 {
     /// <summary>
-    /// Single owner of inventory, quick-access and laboratory UI stored in Boot/HUD_Canvas.
+    /// Single owner of inventory, quick-access and laboratory UI stored in
+    /// MainScene/RuntimeRoot/HUD_Canvas.
     /// World objects only request panels to open; they never create canvases.
     /// </summary>
     public sealed class InventoryLabHUDController : MonoBehaviour

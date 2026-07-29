@@ -26,13 +26,15 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 12;
+        public int version = 13;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;
         public bool energyGridEnabled;
         public float antennaCondition = 1f;
         public string activeAntennaSignalLocationId;
+        public string activeAntennaSignalMapSlotId;
+        // Version 12 and older: migrated through MapSlotData.legacySectorIndex.
         public int activeAntennaSignalSectorIndex = -1;
         public List<string> consumedAntennaSignalLocationIds = new List<string>();
         public List<string> discoveredLocationIds = new List<string>();

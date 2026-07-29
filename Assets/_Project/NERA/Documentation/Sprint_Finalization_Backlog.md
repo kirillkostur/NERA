@@ -1,6 +1,6 @@
 # NERA Sprint Finalization Backlog
 
-Updated: 2026-07-17
+Updated: 2026-07-28
 
 This file is the working source of truth for closing Sprint 01-10 in order.
 Status values: `DONE`, `PARTIAL`, `TODO`, `BLOCKED`.
@@ -67,19 +67,21 @@ Status: `PARTIAL`
 
 ## Sprint 05 - Research and Library
 
-Status: `TODO`
+Status: `PARTIAL`
 
-- TODO: research IDs, states and controller.
-- TODO: Memory Core analysis flow.
-- TODO: library entry IDs, unlock state and controller.
-- TODO: Library UI entry selection.
+- DONE: research IDs, states and controller.
+- DONE: item analysis flow with per-instance scanned state.
+- DONE: library entry IDs, unlock state and controller.
+- DONE: Library UI entry selection and known-item catalogue.
+- DONE: EditMode and PlayMode regression coverage.
 - TODO: post-research objective hint.
 
 ## Sprint 06 - Persistent State and Save
 
 Status: `PARTIAL`
 
-- DONE: persistent Boot runtime root.
+- DONE: Boot main-menu scene and additive persistent MainScene runtime root
+  without `DontDestroyOnLoad`.
 - DONE: basic JSON save/load/reset.
 - DONE: editor Save/Clear/Load menu.
 - TODO: unified GameSessionState.
@@ -103,12 +105,19 @@ Status: `PARTIAL`
 
 ## Sprint 08 - QA and Performance Baseline
 
-Status: `TODO`
+Status: `PARTIAL`
 
-- TODO: Editor and standalone full-flow QA.
+- DONE: automated baseline — 61 EditMode and 15 PlayMode tests pass on
+  Unity 6000.0.71f1 (2026-07-30).
+- DONE: permanent editor validation command for required scenes and station
+  upgrade prefabs.
+- DONE: Standalone Low, Medium and High URP quality preset baseline.
+- DONE: IO target registry, projectile pooling and event-driven refresh for the
+  main terminal/laboratory screens.
+- TODO: standalone full-flow QA.
 - TODO: bug list and priorities.
 - TODO: FPS, frame-time, RAM, loading and build-size baseline.
-- TODO: LOW preset review.
+- TODO: hardware profiling and visual review of all three PC presets.
 - TODO: First Playable technical report.
 
 ## Sprint 09 - First Playable Lock
@@ -124,22 +133,24 @@ Status: `TODO`
 
 Status: `PARTIAL`
 
-- DONE: LocationId, LocationType, LocationState and DiscoverySource.
+- DONE: stable string Location Id, serialized SceneReference, LocationType,
+  LocationState and DiscoverySource.
 - DONE: Expedition 02 and Unknown Signal placeholder configs.
 - DONE: Map/Locations presentation foundation.
+- DONE: Research and Library collection foundations.
+- DONE: AntennaState, calibration and maintenance flow.
 - TODO: LocationController and state collection.
-- TODO: Research and Library collection foundations.
-- TODO: AntennaState and locked terminal placeholder.
-- TODO: SaveData collection refactor.
+- PARTIAL: SaveData collection refactor (inventory instances, storage,
+  laboratory, research, library, antenna and station systems are mapped;
+  expedition objective flags remain separate).
 - TODO: First Playable compatibility validation.
 
 ## Current Order
 
-1. Finish Sprint 01 verification.
-2. Finish Sprint 02 build verification.
-3. Implement the missing Sprint 03 drone state flow.
-4. Complete Expedition 01 gameplay content from Sprint 04.
-5. Implement Sprint 05 Research and Library.
-6. Consolidate state and save in Sprint 06.
-7. Complete polish, QA and First Playable Lock.
-8. Return to the remaining Sprint 10 foundation.
+1. Complete Expedition 01 presentation and combat feedback from Sprint 04.
+2. Add the post-research objective hand-off for Sprint 05.
+3. Consolidate expedition objectives into save data for Sprint 06.
+4. Split and event-drive the largest runtime UI controllers.
+5. Record a PlayMode/standalone performance baseline.
+6. Complete polish, QA and First Playable Lock.
+7. Generalize expedition progression before wiring Expedition 02 objectives.

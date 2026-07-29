@@ -1,8 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using NeraInteractionMode = NERA.Interaction.InteractionMode;
 using NERA.Antenna;
 using NERA.Drone;
@@ -17,16 +20,18 @@ using NERA.Locations;
 using NERA.Maintenance;
 using NERA.Research;
 using NERA.Station;
+using NERA.Terminal;
+using NERA.Core;
 
 namespace NERA.Tests
 {
     public sealed class Sprint01FoundationTests
     {
-        private static readonly string[] RequiredBuildScenes =
+        private static readonly string[] RequiredBuildScenePrefix =
         {
-            "Assets/_Project/NERA/Scenes/Boot/Boot.unity",
-            "Assets/_Project/NERA/Scenes/Station/Player_Station.unity",
-            "Assets/_Project/NERA/Scenes/Expeditions/Expedition_01.unity"
+            "Assets/_Project/NERA/Scenes/Boot.unity",
+            "Assets/_Project/NERA/Scenes/MainScene.unity",
+            "Assets/_Project/NERA/Scenes/Player_Station.unity"
         };
 
         [Test]
@@ -37,13 +42,103 @@ namespace NERA.Tests
                 .Select(scene => scene.path)
                 .ToArray();
 
-            foreach (string requiredScene in RequiredBuildScenes)
+            foreach (string requiredScene in RequiredBuildScenePrefix)
             {
                 Assert.That(
                     enabledScenes,
                     Does.Contain(requiredScene),
                     $"Required scene is missing or disabled: {requiredScene}"
                 );
+            }
+
+            CollectionAssert.AreEqual(
+                RequiredBuildScenePrefix,
+                enabledScenes.Take(RequiredBuildScenePrefix.Length).ToArray()
+            );
+        }
+
+        [Test]
+        public void ProjectValidatorAcceptsCurrentProject()
+        {
+            Type validatorType = Type.GetType(
+                "NERA.Editor.ProjectValidator, Assembly-CSharp-Editor");
+            Assert.That(
+                validatorType,
+                Is.Not.Null,
+                "Permanent project validator assembly is unavailable.");
+
+            MethodInfo validateMethod = validatorType.GetMethod(
+                "ValidateOrThrow",
+                BindingFlags.Static | BindingFlags.Public);
+            Assert.That(validateMethod, Is.Not.Null);
+            Assert.DoesNotThrow(() => validateMethod.Invoke(null, null));
+        }
+
+        [Test]
+        public void LocationConfigsUseValidSceneReferencesAndMapSlots()
+        {
+            string[] enabledScenePaths = EditorBuildSettings.scenes
+                .Where(scene => scene.enabled)
+                .Select(scene => scene.path)
+                .ToArray();
+            HashSet<string> enabledScenes = new HashSet<string>(
+                enabledScenePaths,
+                StringComparer.Ordinal);
+            HashSet<string> locationIds =
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> scenePaths =
+                new HashSet<string>(StringComparer.Ordinal);
+            HashSet<MapSlotData> mapSlots = new HashSet<MapSlotData>();
+
+            string[] locationGuids = AssetDatabase.FindAssets(
+                $"t:{nameof(ExpeditionLocationData)}",
+                new[] { "Assets/_Project/NERA/Configs" });
+            Assert.That(locationGuids.Length, Is.GreaterThan(0));
+
+            foreach (string guid in locationGuids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                ExpeditionLocationData location =
+                    AssetDatabase.LoadAssetAtPath<ExpeditionLocationData>(
+                        assetPath);
+                Assert.That(location, Is.Not.Null, assetPath);
+                Assert.That(
+                    locationIds.Add(location.LocationId),
+                    Is.True,
+                    $"Duplicate Location Id in {assetPath}");
+                Assert.That(
+                    location.Scene,
+                    Is.Not.Null,
+                    $"Missing scene reference in {assetPath}");
+                Assert.That(
+                    location.Scene.IsConfigured,
+                    Is.True,
+                    $"Incomplete scene reference in {assetPath}");
+                Assert.That(
+                    enabledScenes,
+                    Does.Contain(location.ScenePath),
+                    $"Scene is missing or disabled for {assetPath}");
+                Assert.That(
+                    scenePaths.Add(location.ScenePath),
+                    Is.True,
+                    $"Duplicate scene reference in {assetPath}");
+                Assert.That(
+                    location.SpawnPointId,
+                    Is.Not.Empty,
+                    $"Missing Spawn Point Id in {assetPath}");
+
+                if (location.LocationType == LocationType.Expedition &&
+                    location.DiscoverySource != DiscoverySource.Antenna)
+                {
+                    Assert.That(
+                        location.MapSlot,
+                        Is.Not.Null,
+                        $"Missing map slot in {assetPath}");
+                    Assert.That(
+                        mapSlots.Add(location.MapSlot),
+                        Is.True,
+                        $"Duplicate map slot in {assetPath}");
+                }
             }
         }
 
@@ -54,6 +149,28 @@ namespace NERA.Tests
                 NeraInteractionMode.Press,
                 Is.Not.EqualTo(NeraInteractionMode.Hold)
             );
+        }
+    }
+
+    public sealed class GameSessionLaunchStateTests
+    {
+        [TearDown]
+        public void TearDown()
+        {
+            GameSessionLaunchState.Clear();
+        }
+
+        [Test]
+        public void RequestedLaunchModeIsConsumedOnlyOnce()
+        {
+            GameSessionLaunchState.Request(GameLaunchMode.NewGame);
+
+            Assert.That(
+                GameSessionLaunchState.ConsumeOrDefault(),
+                Is.EqualTo(GameLaunchMode.NewGame));
+            Assert.That(
+                GameSessionLaunchState.ConsumeOrDefault(),
+                Is.EqualTo(GameLaunchMode.Continue));
         }
     }
 
@@ -423,6 +540,91 @@ namespace NERA.Tests
             Assert.That(controller.IsAlive, Is.True);
             Object.DestroyImmediate(enemy);
         }
+
+        [Test]
+        public void EnabledIOIsPresentOnlyWhileActive()
+        {
+            GameObject enemy = new GameObject("Test_RegisteredIO");
+            IOEnemyController controller =
+                enemy.AddComponent<IOEnemyController>();
+            InvokeLifecycle(controller, "OnEnable");
+
+            Assert.That(
+                IOEnemyController.ActiveEnemies.Contains(controller),
+                Is.True);
+
+            InvokeLifecycle(controller, "OnDisable");
+            Assert.That(
+                IOEnemyController.ActiveEnemies.Contains(controller),
+                Is.False);
+
+            InvokeLifecycle(controller, "OnEnable");
+            Assert.That(
+                IOEnemyController.ActiveEnemies.Contains(controller),
+                Is.True);
+
+            InvokeLifecycle(controller, "OnDestroy");
+            Object.DestroyImmediate(enemy);
+            Assert.That(
+                IOEnemyController.ActiveEnemies.Contains(controller),
+                Is.False);
+        }
+
+        private static void InvokeLifecycle(
+            IOEnemyController controller,
+            string methodName)
+        {
+            MethodInfo method = typeof(IOEnemyController).GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(controller, null);
+        }
+    }
+
+    public sealed class PCQualityPresetTests
+    {
+        [Test]
+        public void StandaloneQualityPresetsUseDedicatedPipelineAssets()
+        {
+            int originalQuality = QualitySettings.GetQualityLevel();
+            try
+            {
+                AssertPreset("Low", "PC_Low_RPAsset", 0);
+                AssertPreset("Medium", "PC_Medium_RPAsset", 2);
+                AssertPreset("High", "PC_High_RPAsset", 4);
+            }
+            finally
+            {
+                QualitySettings.SetQualityLevel(originalQuality, false);
+            }
+        }
+
+        private static void AssertPreset(
+            string presetName,
+            string pipelineName,
+            int expectedMsaa)
+        {
+            int index = System.Array.IndexOf(
+                QualitySettings.names,
+                presetName);
+            Assert.That(index, Is.GreaterThanOrEqualTo(0));
+
+            QualitySettings.SetQualityLevel(index, false);
+            Assert.That(
+                QualitySettings.renderPipeline,
+                Is.Not.Null);
+            Assert.That(
+                QualitySettings.renderPipeline.name,
+                Is.EqualTo(pipelineName));
+            Assert.That(
+                QualitySettings.antiAliasing,
+                Is.EqualTo(expectedMsaa));
+            Assert.That(
+                QualitySettings.maximumLODLevel,
+                Is.EqualTo(0),
+                "LOD0 and LOD1 must remain available in every PC preset.");
+        }
     }
 
     public sealed class AntennaControllerTests
@@ -436,6 +638,7 @@ namespace NERA.Tests
         private AntennaController antenna;
         private ExpeditionLocationData expedition;
         private ExpeditionLocationData signal;
+        private MapSlotData mapSlot;
 
         [SetUp]
         public void SetUp()
@@ -471,10 +674,18 @@ namespace NERA.Tests
             energy.SetGridEnabled(true);
             power.RestorePower();
 
+            mapSlot = ScriptableObject.CreateInstance<MapSlotData>();
+            SerializedObject serializedMapSlot = new SerializedObject(mapSlot);
+            serializedMapSlot.FindProperty("slotId").stringValue =
+                "test_map_slot";
+            serializedMapSlot.FindProperty("legacySectorIndex").intValue = 0;
+            serializedMapSlot.ApplyModifiedPropertiesWithoutUndo();
+
             expedition = CreateLocation(
                 "expedition_01",
                 LocationType.Expedition,
-                DiscoverySource.Drone
+                DiscoverySource.Drone,
+                mapSlot
             );
             signal = CreateLocation(
                 "unknown_signal_01",
@@ -492,6 +703,7 @@ namespace NERA.Tests
         {
             Object.DestroyImmediate(signal);
             Object.DestroyImmediate(expedition);
+            Object.DestroyImmediate(mapSlot);
             Object.DestroyImmediate(root);
             SetSingleton(typeof(StationEnvironmentController), null);
             SetSingleton(typeof(EnergySystemController), null);
@@ -521,7 +733,7 @@ namespace NERA.Tests
 
             Assert.That(antenna.State, Is.EqualTo(AntennaState.SignalFound));
             Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
-            Assert.That(antenna.ActiveSignalSectorIndex, Is.EqualTo(expedition.MapSectorIndex));
+            Assert.That(antenna.ActiveSignalMapSlot, Is.EqualTo(mapSlot));
             Assert.That(discovery.IsDiscovered(signal), Is.False);
         }
 
@@ -568,7 +780,8 @@ namespace NERA.Tests
         private static ExpeditionLocationData CreateLocation(
             string locationId,
             LocationType locationType,
-            DiscoverySource discoverySource
+            DiscoverySource discoverySource,
+            MapSlotData mapSlot = null
         )
         {
             ExpeditionLocationData data =
@@ -579,6 +792,7 @@ namespace NERA.Tests
                 (int)locationType;
             serialized.FindProperty("discoverySource").enumValueIndex =
                 (int)discoverySource;
+            serialized.FindProperty("mapSlot").objectReferenceValue = mapSlot;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return data;
         }

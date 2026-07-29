@@ -156,13 +156,10 @@ namespace NERA.Station
 
         private IOEnemyController FindNearestTarget()
         {
-            IOEnemyController[] enemies = FindObjectsByType<IOEnemyController>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
             IOEnemyController nearest = null;
             float nearestSqr = detectionRange * detectionRange;
 
-            foreach (IOEnemyController enemy in enemies)
+            foreach (IOEnemyController enemy in IOEnemyController.ActiveEnemies)
             {
                 if (enemy == null || !enemy.IsAlive)
                     continue;

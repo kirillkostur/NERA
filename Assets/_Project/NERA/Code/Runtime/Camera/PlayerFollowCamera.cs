@@ -6,6 +6,7 @@ public class PlayerFollowCamera : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private bool autoFindPlayerOnStart = true;
     [SerializeField] private bool autoFindPlayerIfMissing = true;
+    [SerializeField, Min(0.05f)] private float autoFindRetryInterval = 0.5f;
 
     [Header("Follow")]
     [SerializeField] private float height = 1.8f;
@@ -57,6 +58,8 @@ public class PlayerFollowCamera : MonoBehaviour
     private bool isInteractionFocused;
     private float aimWeight;
     private PlayerController targetPlayerController;
+    private float nextAutoFindAt;
+    private bool missingTargetWarningLogged;
 
     public bool IsAiming => isAiming && aimWeight > 0.5f;
     public bool IsInteractionFocused => isInteractionFocused;
@@ -76,8 +79,14 @@ public class PlayerFollowCamera : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (target == null && autoFindPlayerIfMissing)
+        if (target == null &&
+            autoFindPlayerIfMissing &&
+            Time.unscaledTime >= nextAutoFindAt)
+        {
+            nextAutoFindAt =
+                Time.unscaledTime + Mathf.Max(0.05f, autoFindRetryInterval);
             TryFindPlayerTarget();
+        }
 
         if (inputEnabled)
             ApplyGameplayCursorState();
@@ -146,11 +155,18 @@ public class PlayerFollowCamera : MonoBehaviour
 
         if (foundTarget == null)
         {
-            Debug.LogWarning("PlayerFollowCamera: Player target not found.");
+            if (!missingTargetWarningLogged)
+            {
+                missingTargetWarningLogged = true;
+                Debug.LogWarning(
+                    "PlayerFollowCamera: Player target not found. " +
+                    "Automatic lookup will continue at a limited rate.");
+            }
             return;
         }
 
         SetTarget(foundTarget);
+        missingTargetWarningLogged = false;
         Debug.Log($"PlayerFollowCamera: Target auto assigned to '{foundTarget.name}'.");
     }
 
@@ -300,6 +316,7 @@ public class PlayerFollowCamera : MonoBehaviour
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
+        missingTargetWarningLogged = false;
         CacheTargetPlayerController();
     }
 
@@ -309,6 +326,7 @@ public class PlayerFollowCamera : MonoBehaviour
         targetPlayerController = null;
         isAiming = false;
         isInteractionFocused = false;
+        nextAutoFindAt = 0f;
     }
 
     public void SetInteractionFocus(bool focused)
