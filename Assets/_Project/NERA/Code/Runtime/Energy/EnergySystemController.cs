@@ -20,7 +20,7 @@ namespace NERA.Energy
         private sealed class ConsumerRecord
         {
             public float Rate;
-            public bool DisableInEmergency;
+            public float MinimumCharge01;
             public bool RequestedActive;
             public bool Powered;
         }
@@ -125,21 +125,51 @@ namespace NERA.Energy
             if (string.IsNullOrWhiteSpace(batteryId) || capacity <= 0f)
                 return false;
 
-            if (batteries.ContainsKey(batteryId))
+            float clampedInitialCharge = Mathf.Clamp(
+                initialCharge,
+                0f,
+                capacity);
+            if (batteries.TryGetValue(
+                    batteryId,
+                    out BatteryRecord existing))
+            {
+                if (Mathf.Approximately(existing.Capacity, capacity) &&
+                    Mathf.Approximately(
+                        existing.InitialCharge,
+                        clampedInitialCharge))
+                {
+                    return true;
+                }
+
+                TotalCapacity = Mathf.Max(
+                    0f,
+                    TotalCapacity - existing.Capacity + capacity);
+                existing.Capacity = capacity;
+                existing.InitialCharge = clampedInitialCharge;
+                currentEnergy = TotalCapacity > 0f
+                    ? Mathf.Min(currentEnergy, TotalCapacity)
+                    : 0f;
+
+                RefreshState();
+                RefreshConsumers();
+                EnergyChanged?.Invoke();
                 return true;
+            }
 
             batteries.Add(
                 batteryId,
                 new BatteryRecord
                 {
                     Capacity = capacity,
-                    InitialCharge = Mathf.Clamp(initialCharge, 0f, capacity)
+                    InitialCharge = clampedInitialCharge
                 }
             );
             TotalCapacity += capacity;
 
             if (!restoredFromSave)
-                currentEnergy = Mathf.Min(TotalCapacity, currentEnergy + initialCharge);
+                currentEnergy = Mathf.Min(
+                    TotalCapacity,
+                    currentEnergy + clampedInitialCharge);
             else
                 currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
 
@@ -178,23 +208,40 @@ namespace NERA.Energy
             bool disableInEmergency
         )
         {
+            RegisterConsumer(
+                consumerId,
+                rate,
+                disableInEmergency
+                    ? Config.DefaultConsumerMinimumCharge01
+                    : 0f);
+        }
+
+        public void RegisterConsumer(
+            string consumerId,
+            float rate,
+            float minimumCharge01
+        )
+        {
             if (string.IsNullOrWhiteSpace(consumerId))
                 return;
 
             float clampedRate = Mathf.Max(0f, rate);
+            float clampedMinimumCharge = Mathf.Clamp01(minimumCharge01);
             if (!consumers.TryGetValue(consumerId, out ConsumerRecord consumer))
             {
                 consumer = new ConsumerRecord();
                 consumers.Add(consumerId, consumer);
             }
             else if (Mathf.Approximately(consumer.Rate, clampedRate) &&
-                     consumer.DisableInEmergency == disableInEmergency)
+                     Mathf.Approximately(
+                         consumer.MinimumCharge01,
+                         clampedMinimumCharge))
             {
                 return;
             }
 
             consumer.Rate = clampedRate;
-            consumer.DisableInEmergency = disableInEmergency;
+            consumer.MinimumCharge01 = clampedMinimumCharge;
             RefreshConsumers();
         }
 
@@ -219,9 +266,13 @@ namespace NERA.Energy
         public bool CanPowerConsumer(string consumerId)
         {
             return consumers.TryGetValue(consumerId, out ConsumerRecord consumer) &&
-                   HasUsablePower &&
-                   !(state == EnergyState.Emergency &&
-                     consumer.DisableInEmergency);
+                   HasSufficientCharge(consumer.MinimumCharge01);
+        }
+
+        public bool HasSufficientCharge(float minimumCharge01)
+        {
+            return HasUsablePower &&
+                   Charge01 + 0.0001f >= Mathf.Clamp01(minimumCharge01);
         }
 
         public bool CanSpendEnergy(float amount)
@@ -356,8 +407,7 @@ namespace NERA.Energy
             {
                 consumer.Powered =
                     consumer.RequestedActive &&
-                    HasUsablePower &&
-                    !(state == EnergyState.Emergency && consumer.DisableInEmergency);
+                    HasSufficientCharge(consumer.MinimumCharge01);
             }
         }
 

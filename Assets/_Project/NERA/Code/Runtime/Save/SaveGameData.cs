@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Quests;
 
 namespace NERA.Save
 {
@@ -24,9 +25,16 @@ namespace NERA.Save
     }
 
     [Serializable]
+    public sealed class MaintenanceSaveData
+    {
+        public string objectId;
+        public float condition = 1f;
+    }
+
+    [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 13;
+        public int version = 14;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;
@@ -60,5 +68,13 @@ namespace NERA.Save
         public List<string> analyzedResearchIds = new List<string>();
         public List<string> unlockedLibraryEntryIds = new List<string>();
         public List<string> knownLibraryItemIds = new List<string>();
+        public List<QuestInstanceSaveData> activeQuests =
+            new List<QuestInstanceSaveData>();
+        public List<QuestHistorySaveData> questHistory =
+            new List<QuestHistorySaveData>();
+        public List<QuestActivationSaveData> pendingQuestActivations =
+            new List<QuestActivationSaveData>();
+        public List<MaintenanceSaveData> maintenanceObjects =
+            new List<MaintenanceSaveData>();
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Locations;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Expeditions
@@ -44,6 +45,15 @@ namespace NERA.Expeditions
             }
 
             LocationDiscovered?.Invoke(normalizedId);
+            string targetName = locationsById.TryGetValue(
+                    normalizedId,
+                    out ExpeditionLocationData location)
+                ? location.DisplayName
+                : normalizedId;
+            QuestController.Instance?.Report(
+                QuestSignalType.LocationDiscovered,
+                normalizedId,
+                targetName);
             Debug.Log(
                 $"ExpeditionDiscovery: Location '{normalizedId}' discovered.",
                 this);
@@ -159,6 +169,30 @@ namespace NERA.Expeditions
             string normalizedId = NormalizeId(locationId);
             return !string.IsNullOrEmpty(normalizedId) &&
                 locationsById.TryGetValue(normalizedId, out location);
+        }
+
+        public bool TryGetKnownLocationBySceneName(
+            string sceneName,
+            out ExpeditionLocationData location)
+        {
+            location = null;
+            if (string.IsNullOrWhiteSpace(sceneName))
+                return false;
+
+            foreach (ExpeditionLocationData candidate in knownLocations)
+            {
+                if (candidate != null &&
+                    string.Equals(
+                        candidate.SceneName,
+                        sceneName.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    location = candidate;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void RestoreDiscovered(IEnumerable<string> locationIds)

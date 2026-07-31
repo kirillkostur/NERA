@@ -23,12 +23,12 @@ MonoBehaviour:
     initialLevel: 1
     upgradeLevels: []
   - systemType: 1
-    objectId: 
-    previewObjectName: SM_Battery_Room
+    objectId: station_battery
+    previewObjectName: SM_Battery
     displayName: BATTERY
     description: Stores generated energy and supplies all active consumers.
     controllable: 0
-    initiallyActive: 1
+    initiallyActive: 0
     initialLevel: 1
     upgradeLevels:
     - targetLevel: 1

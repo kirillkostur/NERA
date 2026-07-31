@@ -22,6 +22,9 @@ using NERA.Research;
 using NERA.Station;
 using NERA.Terminal;
 using NERA.Core;
+using NERA.Graphics;
+using NERA.Quests;
+using NERA.Save;
 
 namespace NERA.Tests
 {
@@ -72,6 +75,72 @@ namespace NERA.Tests
                 BindingFlags.Static | BindingFlags.Public);
             Assert.That(validateMethod, Is.Not.Null);
             Assert.DoesNotThrow(() => validateMethod.Invoke(null, null));
+        }
+
+        [Test]
+        public void DefaultQuestCatalogIsValidAndDataDriven()
+        {
+            QuestCatalog catalog = QuestCatalog.LoadDefault();
+
+            Assert.That(catalog, Is.Not.Null);
+            Assert.That(catalog.TryValidate(out string error), Is.True, error);
+            Assert.That(catalog.Find("main.expedition_01"), Is.Not.Null);
+            QuestDefinition cleaning =
+                catalog.Find("side.clean_solar_panel");
+            Assert.That(cleaning?.TargetScope,
+                Is.EqualTo(QuestTargetScope.PerTriggeringObject));
+            Assert.That(cleaning?.ActivationConditions[0].Target,
+                Is.EqualTo(QuestConditionTarget.AnyObject));
+            Assert.That(cleaning?.Stages[0].CompletionConditions[0].Target,
+                Is.EqualTo(QuestConditionTarget.QuestTarget));
+            Assert.That(catalog.Find("side.restore_turret")?.Availability,
+                Is.EqualTo(QuestAvailability.Repeatable));
+
+            Assert.That(
+                Type.GetType(
+                    "NERA.Editor.QuestDefinitionEditor, " +
+                    "Assembly-CSharp-Editor"),
+                Is.Not.Null);
+            Assert.That(
+                Type.GetType(
+                    "NERA.Editor.QuestAuthoringWindow, " +
+                    "Assembly-CSharp-Editor"),
+                Is.Not.Null);
+        }
+
+        [Test]
+        public void ItemDataUsesEquipmentConditionalInspector()
+        {
+            Type editorType = Type.GetType(
+                "NERA.Editor.ItemDataEditor, Assembly-CSharp-Editor");
+            Assert.That(editorType, Is.Not.Null);
+
+            MethodInfo equipmentOnlyCheck = editorType.GetMethod(
+                "IsEquipmentOnlyProperty",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(equipmentOnlyCheck, Is.Not.Null);
+
+            foreach (string propertyName in new[]
+                     {
+                         "acceptsAnomalyIntegration",
+                         "anomalyIntegrationDefinition",
+                         "weaponDefinition",
+                         "energyDefinition"
+                     })
+            {
+                Assert.That(
+                    equipmentOnlyCheck.Invoke(
+                        null,
+                        new object[] { propertyName }),
+                    Is.EqualTo(true),
+                    propertyName);
+            }
+
+            Assert.That(
+                equipmentOnlyCheck.Invoke(
+                    null,
+                    new object[] { "researchDefinition" }),
+                Is.EqualTo(false));
         }
 
         [Test]
@@ -149,6 +218,171 @@ namespace NERA.Tests
                 NeraInteractionMode.Press,
                 Is.Not.EqualTo(NeraInteractionMode.Hold)
             );
+        }
+    }
+
+    public sealed class QuestSystemTests
+    {
+        private GameObject root;
+        private QuestController quests;
+
+        [SetUp]
+        public void SetUp()
+        {
+            root = new GameObject("Test_QuestController");
+            quests = root.AddComponent<QuestController>();
+            quests.Configure(QuestCatalog.LoadDefault());
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(root);
+        }
+
+        [Test]
+        public void MainExpeditionQuestAdvancesOnlyFromConfiguredSignals()
+        {
+            Assert.That(
+                quests.Report(
+                    QuestSignalType.LocationDiscovered,
+                    "Expedition_01",
+                    "Ancient Outpost"),
+                Is.True);
+
+            QuestRuntimeState state =
+                quests.FindActive("main.expedition_01");
+            Assert.That(state, Is.Not.Null);
+            Assert.That(state.CurrentStageIndex, Is.Zero);
+            Assert.That(state.ObjectiveTitle,
+                Is.EqualTo("Отправляйтесь в Ancient Outpost"));
+
+            quests.Report(
+                QuestSignalType.LocationDiscovered,
+                "Expedition_01",
+                "Ancient Outpost");
+            Assert.That(quests.ActiveQuests.Count, Is.EqualTo(1));
+
+            quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
+            quests.Report(QuestSignalType.EnemyEncountered, "io_blue_weak");
+            quests.Report(QuestSignalType.ItemCollected, "io_blue_shard_01");
+            quests.Report(QuestSignalType.LocationEntered, "Player_Station");
+            quests.Report(
+                QuestSignalType.ResearchAnalyzed,
+                "research_io_blue_shard_01");
+
+            Assert.That(quests.FindActive("main.expedition_01"), Is.Null);
+            Assert.That(quests.IsCompleted("main.expedition_01"), Is.True);
+            Assert.That(
+                quests.GetCompletionCount("main.expedition_01"),
+                Is.EqualTo(1));
+
+            quests.Report(
+                QuestSignalType.LocationDiscovered,
+                "Expedition_01",
+                "Ancient Outpost");
+            Assert.That(
+                quests.FindActive("main.expedition_01"),
+                Is.Null,
+                "A one-time quest must not appear again after completion.");
+            Assert.That(
+                quests.GetCompletionCount("main.expedition_01"),
+                Is.EqualTo(1));
+        }
+
+        [Test]
+        public void DynamicMaintenanceQuestUsesTargetContextWithoutDuplicates()
+        {
+            quests.ReportDeviceCondition(
+                "station_solar_01",
+                "Solar Panel 01",
+                0.3f);
+
+            const string instanceId =
+                "side.clean_solar_panel:station_solar_01";
+            QuestRuntimeState state = quests.FindActive(instanceId);
+            Assert.That(state, Is.Not.Null);
+            Assert.That(state.Title, Is.EqualTo("Очистите Solar Panel 01"));
+
+            quests.ReportDeviceCondition(
+                "station_solar_01",
+                "Solar Panel 01",
+                0.2f);
+            Assert.That(
+                quests.ActiveQuests.Count(quest =>
+                    quest.InstanceId == instanceId),
+                Is.EqualTo(1));
+
+            quests.ReportDeviceCondition(
+                "station_solar_01",
+                "Solar Panel 01",
+                1f);
+            Assert.That(quests.FindActive(instanceId), Is.Null);
+            Assert.That(quests.GetCompletionCount(instanceId), Is.EqualTo(1));
+
+            quests.ReportDeviceCondition(
+                "station_solar_01",
+                "Solar Panel 01",
+                0.3f);
+            Assert.That(quests.FindActive(instanceId), Is.Not.Null);
+        }
+
+        [Test]
+        public void ActiveQuestStageAndProgressRoundTripThroughSaveData()
+        {
+            quests.Report(
+                QuestSignalType.LocationDiscovered,
+                "Expedition_01",
+                "Ancient Outpost");
+            quests.Report(
+                QuestSignalType.LocationEntered,
+                "Expedition_01",
+                "Ancient Outpost");
+
+            List<QuestInstanceSaveData> active =
+                quests.CaptureActiveQuests();
+            List<QuestHistorySaveData> history = quests.CaptureHistory();
+            List<QuestActivationSaveData> pending =
+                quests.CapturePendingActivations();
+
+            quests.ResetProgress();
+            quests.RestoreProgress(active, history, pending);
+
+            QuestRuntimeState restored =
+                quests.FindActive("main.expedition_01");
+            Assert.That(restored, Is.Not.Null);
+            Assert.That(restored.CurrentStageIndex, Is.EqualTo(1));
+            Assert.That(restored.ObjectiveTitle,
+                Is.EqualTo("Исследуйте Ancient Outpost"));
+        }
+
+        [Test]
+        public void SaveVersion14SerializesQuestAndMaintenanceState()
+        {
+            SaveGameData data = new SaveGameData();
+            data.activeQuests.Add(new QuestInstanceSaveData
+            {
+                instanceId = "main.expedition_01",
+                questId = "main.expedition_01",
+                currentStageIndex = 2,
+                conditionProgress = new List<int> { 1 }
+            });
+            data.maintenanceObjects.Add(new MaintenanceSaveData
+            {
+                objectId = "station_solar_01",
+                condition = 0.25f
+            });
+
+            SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
+                JsonUtility.ToJson(data));
+
+            Assert.That(restored.version, Is.EqualTo(14));
+            Assert.That(restored.activeQuests[0].currentStageIndex,
+                Is.EqualTo(2));
+            Assert.That(restored.maintenanceObjects[0].objectId,
+                Is.EqualTo("station_solar_01"));
+            Assert.That(restored.maintenanceObjects[0].condition,
+                Is.EqualTo(0.25f));
         }
     }
 
@@ -252,6 +486,26 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void ReRegisteringBatteryUpdatesCapacityAndPreservesCharge()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RestoreState(600f, true);
+
+            Assert.That(
+                energy.RegisterBattery("battery_01", 2000f, 2000f),
+                Is.True);
+
+            Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(600f));
+
+            energy.ResetForNewGame();
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(2000f),
+                "The updated stage parameters must become the new-game baseline.");
+        }
+
+        [Test]
         public void ReloadingStationDoesNotDuplicateBatteryOrSolarPanel()
         {
             energy.RegisterBattery("station/battery_01", 1000f, 1000f);
@@ -302,6 +556,23 @@ namespace NERA.Tests
             Assert.That(energy.State, Is.EqualTo(EnergyState.Emergency));
             Assert.That(energy.IsConsumerPowered("laboratory"), Is.False);
             Assert.That(energy.CurrentConsumption, Is.Zero);
+        }
+
+        [Test]
+        public void ConsumerChargeThresholdsAreIndependent()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RegisterConsumer("laboratory", 4f, 0.5f);
+            energy.RegisterConsumer("antenna", 2f, 0.2f);
+            energy.SetConsumerActive("laboratory", true);
+            energy.SetConsumerActive("antenna", true);
+            energy.RestoreState(300f, true);
+
+            energy.AdvanceSimulation(0.1f);
+
+            Assert.That(energy.IsConsumerPowered("laboratory"), Is.False);
+            Assert.That(energy.IsConsumerPowered("antenna"), Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(2f));
         }
 
         [Test]
@@ -584,6 +855,31 @@ namespace NERA.Tests
 
     public sealed class PCQualityPresetTests
     {
+        [Test]
+        public void WindowsPlayerDefaultsUseHighPresetAndOneHundredFpsCap()
+        {
+            int originalQuality = QualitySettings.GetQualityLevel();
+            int originalVSyncCount = QualitySettings.vSyncCount;
+            int originalTargetFrameRate = Application.targetFrameRate;
+            try
+            {
+                Assert.That(
+                    PCQualityRuntimeController.ApplyWindowsPlayerDefaults(),
+                    Is.True);
+                Assert.That(
+                    QualitySettings.names[QualitySettings.GetQualityLevel()],
+                    Is.EqualTo("High"));
+                Assert.That(QualitySettings.vSyncCount, Is.Zero);
+                Assert.That(Application.targetFrameRate, Is.EqualTo(100));
+            }
+            finally
+            {
+                QualitySettings.SetQualityLevel(originalQuality, false);
+                QualitySettings.vSyncCount = originalVSyncCount;
+                Application.targetFrameRate = originalTargetFrameRate;
+            }
+        }
+
         [Test]
         public void StandaloneQualityPresetsUseDedicatedPipelineAssets()
         {

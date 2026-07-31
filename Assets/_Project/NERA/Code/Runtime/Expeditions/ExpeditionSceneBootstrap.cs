@@ -1,3 +1,5 @@
+using NERA.Core;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Expeditions
@@ -6,18 +8,38 @@ namespace NERA.Expeditions
     {
         private void Start()
         {
-            ExpeditionProgressController progress = ExpeditionProgressController.Instance;
+            // BootInitializer reports normal additive scene transitions. This
+            // fallback keeps direct scene play useful during authoring.
+            if (BootInitializer.Instance != null)
+                return;
 
-            if (progress == null)
+            QuestController quests = QuestController.Instance;
+            if (quests == null)
             {
                 Debug.LogError(
-                    "ExpeditionSceneBootstrap: ExpeditionProgressController is missing. Start gameplay through MainScene.",
+                    "ExpeditionSceneBootstrap: QuestController is missing. Start gameplay through MainScene.",
                     this
                 );
                 return;
             }
 
-            progress.MarkVisited();
+            string targetId = gameObject.scene.name;
+            string targetName = gameObject.scene.name;
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            if (discovery != null &&
+                discovery.TryGetKnownLocationBySceneName(
+                    gameObject.scene.name,
+                    out ExpeditionLocationData location))
+            {
+                targetId = location.LocationId;
+                targetName = location.DisplayName;
+            }
+
+            quests.Report(
+                QuestSignalType.LocationEntered,
+                targetId,
+                targetName);
         }
     }
 }

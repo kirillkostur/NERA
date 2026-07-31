@@ -1,7 +1,24 @@
+using System;
+using System.Collections.Generic;
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Energy
 {
+    [Serializable]
+    public sealed class StationObjectPowerCutoff
+    {
+        [SerializeField] private StationSystemType systemType;
+        [SerializeField] private string objectId;
+        [SerializeField, Range(0f, 100f)]
+        private float minimumChargePercent = 25f;
+
+        public StationSystemType SystemType => systemType;
+        public string ObjectId => objectId?.Trim() ?? string.Empty;
+        public float MinimumChargePercent =>
+            Mathf.Clamp(minimumChargePercent, 0f, 100f);
+    }
+
     [CreateAssetMenu(
         fileName = "EnergyBalance_Default",
         menuName = "NERA/Energy/Balance Config"
@@ -28,6 +45,20 @@ namespace NERA.Energy
         [SerializeField, Min(0f)] private float turretIdleConsumption = 2f;
         [SerializeField, Min(0f)] private float turretFiringConsumption = 5f;
 
+        [Header("Power Management")]
+        [Tooltip(
+            "Fallback cutoff for consumers that do not have an object-specific setting.")]
+        [SerializeField, Range(0f, 100f)]
+        private float defaultConsumerMinimumChargePercent = 25f;
+        [Tooltip("Minimum battery charge required to power station lighting.")]
+        [SerializeField, Range(0f, 100f)]
+        private float lightingMinimumChargePercent = 25f;
+        [Tooltip(
+            "Per-object battery cutoffs. Repeated systems use their station object id.")]
+        [SerializeField]
+        private List<StationObjectPowerCutoff> stationObjectCutoffs =
+            new List<StationObjectPowerCutoff>();
+
         [Header("Drone")]
         [SerializeField, Min(0.1f)] private float droneRechargeDuration = 20f;
 
@@ -53,11 +84,58 @@ namespace NERA.Energy
         public float LightingConsumption => lightingConsumption;
         public float TurretIdleConsumption => turretIdleConsumption;
         public float TurretFiringConsumption => turretFiringConsumption;
+        public float DefaultConsumerMinimumCharge01 =>
+            Mathf.Clamp(defaultConsumerMinimumChargePercent, 0f, 100f) / 100f;
+        public float LightingMinimumCharge01 =>
+            Mathf.Clamp(lightingMinimumChargePercent, 0f, 100f) / 100f;
+        public IReadOnlyList<StationObjectPowerCutoff> StationObjectCutoffs =>
+            stationObjectCutoffs != null
+                ? stationObjectCutoffs
+                : Array.Empty<StationObjectPowerCutoff>();
         public float DroneRechargeDuration => droneRechargeDuration;
         public float AntennaCalibrationDuration => antennaCalibrationDuration;
         public float FullDayDurationSeconds => fullDayDurationSeconds;
         public float SunriseHour => sunriseHour;
         public float SunsetHour => sunsetHour;
+
+        public float GetMinimumChargePercent(
+            StationSystemType systemType,
+            string objectId = null)
+        {
+            string requestedId = objectId?.Trim() ?? string.Empty;
+            StationObjectPowerCutoff firstOfType = null;
+            StationObjectPowerCutoff sharedDefault = null;
+
+            foreach (StationObjectPowerCutoff cutoff in StationObjectCutoffs)
+            {
+                if (cutoff == null || cutoff.SystemType != systemType)
+                    continue;
+
+                firstOfType ??= cutoff;
+                if (string.IsNullOrEmpty(cutoff.ObjectId))
+                    sharedDefault ??= cutoff;
+                if (string.Equals(
+                        cutoff.ObjectId,
+                        requestedId,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return cutoff.MinimumChargePercent;
+                }
+            }
+
+            StationObjectPowerCutoff fallback = !string.IsNullOrEmpty(requestedId)
+                ? sharedDefault
+                : sharedDefault ?? firstOfType;
+            return fallback?.MinimumChargePercent ??
+                DefaultConsumerMinimumCharge01 * 100f;
+        }
+
+        public float GetMinimumCharge01(
+            StationSystemType systemType,
+            string objectId = null)
+        {
+            return GetMinimumChargePercent(systemType, objectId) / 100f;
+        }
 
         public static EnergyBalanceConfig LoadDefault()
         {

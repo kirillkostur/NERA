@@ -217,7 +217,8 @@ namespace NERA.Drone
             energy.RegisterConsumer(
                 DroneChargerConsumerId,
                 energy.Config.DroneChargingConsumption,
-                true
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Drone)
             );
             energy.SetConsumerActive(
                 DroneChargerConsumerId,

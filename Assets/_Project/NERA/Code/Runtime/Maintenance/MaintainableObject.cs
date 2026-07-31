@@ -1,12 +1,19 @@
 using System;
+using System.Collections.Generic;
 using NERA.Energy;
 using NERA.Interaction;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Maintenance
 {
     public sealed class MaintainableObject : BaseInteractable
     {
+        [Header("Identity")]
+        [Tooltip("Stable save/quest ID. Device components may assign it at runtime.")]
+        [SerializeField] private string objectId;
+        [SerializeField] private string displayName;
+
         [SerializeField] private MaintenanceRole role = MaintenanceRole.Generic;
         [SerializeField] private bool exposedToWeather;
         [SerializeField, Range(0f, 1f)] private float initialCondition = 1f;
@@ -19,8 +26,18 @@ namespace NERA.Maintenance
         private Material runtimeMaterial;
         private float condition = 1f;
 
-        public event Action<float> ConditionChanged;
+        private static readonly Dictionary<string, MaintainableObject>
+            ObjectsById = new Dictionary<string, MaintainableObject>(
+                StringComparer.Ordinal);
 
+        public event Action<float> ConditionChanged;
+        public static event Action<MaintainableObject> Registered;
+        public static event Action<string, float> AnyConditionChanged;
+
+        public string ObjectId => NormalizeId(objectId);
+        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
+            ? gameObject.name
+            : displayName.Trim();
         public MaintenanceRole Role => role;
         public bool ExposedToWeather => exposedToWeather;
         public float Condition => condition;
@@ -37,6 +54,12 @@ namespace NERA.Maintenance
                 runtimeMaterial = targetRenderer.material;
 
             RefreshVisual();
+            Register();
+        }
+
+        private void OnEnable()
+        {
+            Register();
         }
 
         private void Update()
@@ -78,7 +101,40 @@ namespace NERA.Maintenance
             condition = newCondition;
             RefreshVisual();
             ConditionChanged?.Invoke(condition);
+            if (!string.IsNullOrEmpty(ObjectId))
+            {
+                AnyConditionChanged?.Invoke(ObjectId, condition);
+                QuestController.Instance?.ReportDeviceCondition(
+                    ObjectId,
+                    DisplayName,
+                    condition);
+            }
         }
+
+        public void SetObjectIdentity(string stableId, string name = null)
+        {
+            string normalized = NormalizeId(stableId);
+            if (string.IsNullOrEmpty(normalized))
+                return;
+
+            Unregister();
+            objectId = normalized;
+            if (!string.IsNullOrWhiteSpace(name))
+                displayName = name.Trim();
+            Register();
+        }
+
+        public static bool TryFind(
+            string stableId,
+            out MaintainableObject maintainable)
+        {
+            return ObjectsById.TryGetValue(
+                NormalizeId(stableId),
+                out maintainable);
+        }
+
+        public static IEnumerable<MaintainableObject> ActiveObjects =>
+            ObjectsById.Values;
 
         public bool RestoreCondition()
         {
@@ -130,8 +186,54 @@ namespace NERA.Maintenance
             }
         }
 
+        private void Register()
+        {
+            string id = ObjectId;
+            if (string.IsNullOrEmpty(id) || !isActiveAndEnabled)
+                return;
+
+            if (ObjectsById.TryGetValue(
+                    id,
+                    out MaintainableObject existing) &&
+                existing == this)
+            {
+                return;
+            }
+
+            ObjectsById[id] = this;
+            Registered?.Invoke(this);
+            QuestController.Instance?.ReportDeviceCondition(
+                id,
+                DisplayName,
+                condition);
+        }
+
+        private void Unregister()
+        {
+            string id = ObjectId;
+            if (!string.IsNullOrEmpty(id) &&
+                ObjectsById.TryGetValue(
+                    id,
+                    out MaintainableObject existing) &&
+                existing == this)
+            {
+                ObjectsById.Remove(id);
+            }
+        }
+
+        private static string NormalizeId(string value)
+        {
+            return value?.Trim().ToLowerInvariant() ?? string.Empty;
+        }
+
+        private void OnDisable()
+        {
+            Unregister();
+        }
+
         private void OnDestroy()
         {
+            Unregister();
             if (runtimeMaterial != null)
                 Destroy(runtimeMaterial);
         }

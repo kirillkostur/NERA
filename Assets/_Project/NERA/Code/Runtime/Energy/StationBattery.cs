@@ -9,7 +9,13 @@ namespace NERA.Energy
         [SerializeField, Min(1f)] private float capacity = 1000f;
         [SerializeField, Min(0f)] private float initialCharge = 1000f;
 
-        private bool registered;
+        private EnergySystemController registeredEnergy;
+
+        private void OnEnable()
+        {
+            registeredEnergy = null;
+            Register();
+        }
 
         private void Start()
         {
@@ -18,7 +24,7 @@ namespace NERA.Energy
 
         private void Update()
         {
-            if (!registered)
+            if (registeredEnergy != EnergySystemController.Instance)
                 Register();
         }
 
@@ -36,8 +42,12 @@ namespace NERA.Energy
                     initialCharge))
                 return;
 
-            registered = true;
-            enabled = false;
+            registeredEnergy = energy;
+        }
+
+        private void OnDisable()
+        {
+            registeredEnergy = null;
         }
     }
 }

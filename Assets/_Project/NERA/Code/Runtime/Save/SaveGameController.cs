@@ -8,6 +8,8 @@ using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Library;
+using NERA.Maintenance;
+using NERA.Quests;
 using NERA.Research;
 using NERA.Station;
 using UnityEngine;
@@ -36,6 +38,10 @@ namespace NERA.Save
         private LibraryController library;
         private StationStorageController stationStorage;
         private StationSystemsController stationSystems;
+        private QuestController quests;
+        private readonly Dictionary<string, float> maintenanceConditions =
+            new Dictionary<string, float>(StringComparer.Ordinal);
+        private bool isApplyingMaintenanceState;
         private bool isLoading;
         private bool autoSavePending;
         private float autoSaveAt;
@@ -287,6 +293,37 @@ namespace NERA.Save
                 data.knownLibraryItemIds.AddRange(library.KnownItemIds);
             }
 
+            if (quests != null)
+            {
+                data.activeQuests.AddRange(quests.CaptureActiveQuests());
+                data.questHistory.AddRange(quests.CaptureHistory());
+                data.pendingQuestActivations.AddRange(
+                    quests.CapturePendingActivations());
+            }
+
+            foreach (MaintainableObject maintainable in
+                     MaintainableObject.ActiveObjects)
+            {
+                if (maintainable != null &&
+                    !string.IsNullOrWhiteSpace(maintainable.ObjectId))
+                {
+                    maintenanceConditions[maintainable.ObjectId] =
+                        maintainable.Condition;
+                }
+            }
+
+            List<string> maintenanceIds =
+                new List<string>(maintenanceConditions.Keys);
+            maintenanceIds.Sort(StringComparer.Ordinal);
+            foreach (string objectId in maintenanceIds)
+            {
+                data.maintenanceObjects.Add(new MaintenanceSaveData
+                {
+                    objectId = objectId,
+                    condition = maintenanceConditions[objectId]
+                });
+            }
+
             return data;
         }
 
@@ -432,6 +469,14 @@ namespace NERA.Save
                 }
                 stationSystems.Restore(levels, states, objectStates);
             }
+
+            RestoreMaintenanceState(data.maintenanceObjects);
+            quests?.RestoreProgress(
+                data.activeQuests,
+                data.questHistory,
+                data.pendingQuestActivations);
+            if (data.version < 14)
+                SynchronizeQuestFacts();
         }
 
         private static bool HasStructuredInventory(SaveGameData data)
@@ -610,6 +655,14 @@ namespace NERA.Save
 
             stationStorage?.ResetStorage();
             stationSystems?.ResetSystems();
+            quests?.ResetProgress();
+
+            maintenanceConditions.Clear();
+            foreach (MaintainableObject maintainable in
+                     MaintainableObject.ActiveObjects)
+            {
+                maintainable?.SetCondition(1f);
+            }
 
             research?.RestoreAnalyzed(Array.Empty<string>());
             library?.RestoreUnlocked(Array.Empty<string>());
@@ -670,6 +723,9 @@ namespace NERA.Save
 
             if (stationSystems == null)
                 stationSystems = GetComponent<StationSystemsController>();
+
+            if (quests == null)
+                quests = GetComponent<QuestController>();
 
             RegisterResearchLibraryEntries();
         }
@@ -736,6 +792,13 @@ namespace NERA.Save
 
             if (stationSystems != null)
                 stationSystems.SystemsChanged += HandleStationSystemsChanged;
+
+            if (quests != null)
+                quests.QuestsChanged += HandleQuestsChanged;
+
+            MaintainableObject.Registered += HandleMaintainableRegistered;
+            MaintainableObject.AnyConditionChanged +=
+                HandleMaintainableConditionChanged;
         }
 
         private void Unsubscribe()
@@ -776,6 +839,13 @@ namespace NERA.Save
 
             if (stationSystems != null)
                 stationSystems.SystemsChanged -= HandleStationSystemsChanged;
+
+            if (quests != null)
+                quests.QuestsChanged -= HandleQuestsChanged;
+
+            MaintainableObject.Registered -= HandleMaintainableRegistered;
+            MaintainableObject.AnyConditionChanged -=
+                HandleMaintainableConditionChanged;
         }
 
         private void HandleProgressChanged(string _)
@@ -836,6 +906,123 @@ namespace NERA.Save
         private void HandleStationSystemsChanged()
         {
             RequestAutoSave();
+        }
+
+        private void HandleQuestsChanged()
+        {
+            RequestAutoSave();
+        }
+
+        private void HandleMaintainableRegistered(
+            MaintainableObject maintainable)
+        {
+            if (maintainable == null ||
+                string.IsNullOrWhiteSpace(maintainable.ObjectId))
+            {
+                return;
+            }
+
+            if (!maintenanceConditions.TryGetValue(
+                    maintainable.ObjectId,
+                    out float savedCondition))
+            {
+                maintenanceConditions[maintainable.ObjectId] =
+                    maintainable.Condition;
+                return;
+            }
+
+            isApplyingMaintenanceState = true;
+            maintainable.SetCondition(savedCondition);
+            isApplyingMaintenanceState = false;
+        }
+
+        private void HandleMaintainableConditionChanged(
+            string objectId,
+            float condition)
+        {
+            if (string.IsNullOrWhiteSpace(objectId))
+                return;
+
+            maintenanceConditions[objectId.Trim().ToLowerInvariant()] =
+                Mathf.Clamp01(condition);
+            if (!isApplyingMaintenanceState)
+                RequestAutoSave();
+        }
+
+        private void RestoreMaintenanceState(
+            IEnumerable<MaintenanceSaveData> savedObjects)
+        {
+            maintenanceConditions.Clear();
+            if (savedObjects == null)
+                return;
+
+            foreach (MaintenanceSaveData saved in savedObjects)
+            {
+                if (saved == null ||
+                    string.IsNullOrWhiteSpace(saved.objectId))
+                {
+                    continue;
+                }
+
+                string objectId = saved.objectId.Trim().ToLowerInvariant();
+                float condition = Mathf.Clamp01(saved.condition);
+                maintenanceConditions[objectId] = condition;
+                if (MaintainableObject.TryFind(
+                        objectId,
+                        out MaintainableObject maintainable))
+                {
+                    isApplyingMaintenanceState = true;
+                    maintainable.SetCondition(condition);
+                    isApplyingMaintenanceState = false;
+                }
+            }
+        }
+
+        private void SynchronizeQuestFacts()
+        {
+            if (quests == null)
+                return;
+
+            if (discovery != null)
+            {
+                foreach (string locationId in discovery.DiscoveredLocationIds)
+                {
+                    string displayName = discovery.TryGetKnownLocation(
+                            locationId,
+                            out ExpeditionLocationData location)
+                        ? location.DisplayName
+                        : locationId;
+                    quests.Report(
+                        QuestSignalType.LocationDiscovered,
+                        locationId,
+                        displayName);
+                }
+            }
+
+            if (inventory != null)
+            {
+                foreach (ItemData item in inventory.Items)
+                {
+                    if (item != null)
+                    {
+                        quests.Report(
+                            QuestSignalType.ItemCollected,
+                            item.ItemId,
+                            item.DisplayName);
+                    }
+                }
+            }
+
+            if (research != null)
+            {
+                foreach (string researchId in research.AnalyzedResearchIds)
+                {
+                    quests.Report(
+                        QuestSignalType.ResearchAnalyzed,
+                        researchId,
+                        researchId);
+                }
+            }
         }
 
         private void RequestAutoSave()

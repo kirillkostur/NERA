@@ -229,6 +229,56 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void ConfiguredChargeThresholdBlocksSystemStart()
+        {
+            StationSystemDefinition laboratory =
+                systems.GetDefinition(StationSystemType.Laboratory);
+            Assert.That(laboratory, Is.Not.Null);
+            Assert.That(
+                energy.Config.StationObjectCutoffs.Count,
+                Is.EqualTo(systems.Config.StationObjects.Count),
+                "Every configured station object needs an energy cutoff entry.");
+            bool hasSecondTurretCutoff = false;
+            foreach (StationObjectPowerCutoff cutoff
+                     in energy.Config.StationObjectCutoffs)
+            {
+                if (cutoff.SystemType == StationSystemType.Turret &&
+                    cutoff.ObjectId == "station_turret_02")
+                {
+                    hasSecondTurretCutoff = true;
+                    break;
+                }
+            }
+            Assert.That(
+                hasSecondTurretCutoff,
+                Is.True,
+                "Repeated systems must resolve their cutoff by object id.");
+
+            energy.RestoreState(energy.TotalCapacity * 0.2f, true);
+
+            Assert.That(
+                systems.CanStart(
+                    StationSystemType.Laboratory,
+                    out string lowPowerReason),
+                Is.False);
+            float configuredThreshold =
+                energy.Config.GetMinimumChargePercent(
+                    StationSystemType.Laboratory);
+            Assert.That(
+                lowPowerReason,
+                Does.Contain($"{configuredThreshold:0}%"));
+
+            energy.RestoreState(energy.TotalCapacity * 0.3f, true);
+
+            Assert.That(
+                systems.CanStart(
+                    StationSystemType.Laboratory,
+                    out string recoveredReason),
+                Is.True,
+                recoveredReason);
+        }
+
+        [Test]
         public void TurretInstancesKeepIndependentUpgradeLevels()
         {
             const string firstTurret = "station_turret_01";
@@ -520,6 +570,57 @@ namespace NERA.Tests
                 instance.transform.Find("Stage_3").gameObject.activeSelf,
                 Is.False);
 
+            Object.DestroyImmediate(instance);
+        }
+
+        [Test]
+        public void UpgradeStageControllerBindsWhenSystemsIsCreatedLater()
+        {
+            Object.DestroyImmediate(systems);
+            systems = null;
+            SetSingleton(typeof(StationSystemsController), null);
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
+                "P_StationTurret_Stages.prefab");
+            GameObject instance = Object.Instantiate(prefab);
+            StationUpgradeStageController stageController =
+                instance.GetComponent<StationUpgradeStageController>();
+            MethodInfo stageOnDisable =
+                typeof(StationUpgradeStageController).GetMethod(
+                    "OnDisable",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo stageOnEnable =
+                typeof(StationUpgradeStageController).GetMethod(
+                    "OnEnable",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(stageOnDisable, Is.Not.Null);
+            Assert.That(stageOnEnable, Is.Not.Null);
+            stageOnDisable.Invoke(stageController, null);
+            stageOnEnable.Invoke(stageController, null);
+
+            systems = stationRoot.AddComponent<StationSystemsController>();
+            MethodInfo systemsAwake =
+                typeof(StationSystemsController).GetMethod(
+                    "Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(systemsAwake, Is.Not.Null);
+            systemsAwake.Invoke(systems, null);
+            systems.Restore(
+                new[]
+                {
+                    new System.Collections.Generic.KeyValuePair<
+                        StationSystemType, int>(
+                            StationSystemType.Turret, 2)
+                },
+                null);
+
+            Assert.That(stageController.CurrentStage, Is.EqualTo(2));
+            Assert.That(
+                instance.transform.Find("Stage_2").gameObject.activeSelf,
+                Is.True);
+
+            stageOnDisable.Invoke(stageController, null);
             Object.DestroyImmediate(instance);
         }
 

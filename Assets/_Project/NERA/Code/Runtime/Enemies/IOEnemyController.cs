@@ -1,5 +1,5 @@
 using NERA.Combat;
-using NERA.Expeditions;
+using NERA.Quests;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,6 +28,7 @@ namespace NERA.Enemies
         private float nextAttackTime;
         private float baseY;
         private Material runtimeMaterial;
+        private bool encounterReported;
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
@@ -105,6 +106,10 @@ namespace NERA.Enemies
 
             state = State.Dead;
             ActiveEnemySet.Remove(this);
+            QuestController.Instance?.Report(
+                QuestSignalType.EnemyKilled,
+                config != null ? config.EnemyId : name,
+                config != null ? config.DisplayName : name);
             SpawnResearchDrop();
             Destroy(gameObject);
         }
@@ -218,9 +223,14 @@ namespace NERA.Enemies
 
         private void MarkEncountered()
         {
-            ExpeditionProgressController progress =
-                ExpeditionProgressController.Instance;
-            progress?.MarkIOTraceSeen();
+            if (encounterReported)
+                return;
+
+            encounterReported = true;
+            QuestController.Instance?.Report(
+                QuestSignalType.EnemyEncountered,
+                config != null ? config.EnemyId : name,
+                config != null ? config.DisplayName : name);
         }
 
         private void SpawnResearchDrop()

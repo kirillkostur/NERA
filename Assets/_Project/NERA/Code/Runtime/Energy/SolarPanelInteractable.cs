@@ -42,6 +42,7 @@ namespace NERA.Energy
             string hierarchyId = string.IsNullOrWhiteSpace(panelId)
                 ? StationEnergyDeviceId.Build(this, "solar")
                 : panelId;
+            maintenance?.SetObjectIdentity(hierarchyId, gameObject.name);
             if (energy.RegisterSolarPanel(
                     hierarchyId,
                     EffectiveOutputMultiplier))

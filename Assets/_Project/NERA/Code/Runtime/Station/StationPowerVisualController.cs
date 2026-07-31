@@ -46,7 +46,7 @@ namespace NERA.Station
                 energySystem.RegisterConsumer(
                     LightingConsumerId,
                     energySystem.Config.LightingConsumption,
-                    true
+                    energySystem.Config.LightingMinimumCharge01
                 );
                 energySystem.SetConsumerActive(LightingConsumerId, true);
                 energySystem.EnergyChanged += ApplyEnergyState;

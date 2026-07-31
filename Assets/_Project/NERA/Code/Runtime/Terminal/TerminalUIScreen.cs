@@ -296,7 +296,8 @@ namespace NERA.Terminal
             energy.RegisterConsumer(
                 TerminalConsumerId,
                 energy.Config.TerminalConsumption,
-                false);
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Computer));
             energy.SetConsumerActive(TerminalConsumerId, IsOpen);
         }
 

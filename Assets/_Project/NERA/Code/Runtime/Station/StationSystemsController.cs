@@ -4,6 +4,7 @@ using NERA.Drone;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Maintenance;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Station
@@ -48,6 +49,7 @@ namespace NERA.Station
                 StringComparer.OrdinalIgnoreCase);
 
         public static StationSystemsController Instance { get; private set; }
+        public static event Action<StationSystemsController> InstanceChanged;
         public event Action SystemsChanged;
 
         public StationSystemsConfig Config =>
@@ -63,6 +65,7 @@ namespace NERA.Station
 
             Instance = this;
             InitializeDefaults();
+            InstanceChanged?.Invoke(this);
         }
 
         public StationSystemDefinition GetDefinition(
@@ -70,6 +73,19 @@ namespace NERA.Station
             string objectId = null)
         {
             return Config.Find(type, objectId);
+        }
+
+        public bool HasRequiredCharge(
+            StationSystemType type,
+            string objectId = null)
+        {
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            Energy.EnergySystemController energy =
+                Energy.EnergySystemController.Instance;
+            return definition != null &&
+                   energy != null &&
+                   energy.HasSufficientCharge(
+                       energy.Config.GetMinimumCharge01(type, objectId));
         }
 
         public int GetUpgradeLevel(StationSystemType type)
@@ -163,16 +179,58 @@ namespace NERA.Station
             StationSystemType type,
             bool active)
         {
+            return SetCriticalSystemActive(
+                type,
+                active,
+                false);
+        }
+
+        public bool SetCriticalSystemActive(
+            StationSystemType type,
+            bool active,
+            bool reportActivationWhenAlreadyActive)
+        {
             if (type != StationSystemType.Battery &&
                 type != StationSystemType.Computer)
             {
                 return false;
             }
 
-            if (IsRequestedActive(type) == active)
-                return true;
+            StationSystemDefinition definition = GetDefinition(type);
+            string objectId = definition?.ObjectId;
+            if (!string.IsNullOrWhiteSpace(objectId))
+            {
+                ObjectRuntimeState objectState = EnsureObjectState(
+                    type,
+                    objectId,
+                    definition.InitialLevel,
+                    definition.InitiallyActive);
+                if (objectState.RequestedActive == active)
+                {
+                    if (active && reportActivationWhenAlreadyActive)
+                        ReportSystemActivated(definition, objectId);
+                    return true;
+                }
 
-            requestedStates[type] = active;
+                objectState.RequestedActive = active;
+            }
+            else
+            {
+                if (requestedStates.TryGetValue(
+                        type,
+                        out bool current) &&
+                    current == active)
+                {
+                    if (active && reportActivationWhenAlreadyActive)
+                        ReportSystemActivated(definition, objectId);
+                    return true;
+                }
+
+                requestedStates[type] = active;
+            }
+
+            if (active)
+                ReportSystemActivated(definition, objectId);
             SystemsChanged?.Invoke();
             return true;
         }
@@ -282,6 +340,15 @@ namespace NERA.Station
                 return false;
             }
 
+            float minimumChargePercent =
+                energy.Config.GetMinimumChargePercent(type, objectId);
+            if (!energy.HasSufficientCharge(minimumChargePercent / 100f))
+            {
+                reason =
+                    $"Battery charge below {minimumChargePercent:0}%.";
+                return false;
+            }
+
             reason = string.Empty;
             return true;
         }
@@ -331,6 +398,8 @@ namespace NERA.Station
                     return true;
 
                 objectState.RequestedActive = active;
+                if (active)
+                    ReportSystemActivated(definition, objectId);
                 SystemsChanged?.Invoke();
                 return true;
             }
@@ -339,7 +408,45 @@ namespace NERA.Station
                 return true;
 
             requestedStates[type] = active;
+            if (active)
+                ReportSystemActivated(definition, objectId);
             SystemsChanged?.Invoke();
+            return true;
+        }
+
+        public bool DisableFromFault(
+            StationSystemType type,
+            string objectId,
+            string cause)
+        {
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            if (definition == null)
+                return false;
+
+            bool changed;
+            if (!string.IsNullOrWhiteSpace(objectId))
+            {
+                ObjectRuntimeState objectState = EnsureObjectState(
+                    type,
+                    objectId,
+                    definition.InitialLevel,
+                    definition.InitiallyActive);
+                changed = objectState.RequestedActive;
+                objectState.RequestedActive = false;
+            }
+            else
+            {
+                changed = !requestedStates.TryGetValue(type, out bool current) ||
+                    current;
+                requestedStates[type] = false;
+            }
+
+            QuestController.Instance?.ReportStationFault(
+                ResolveQuestTargetId(type, objectId),
+                definition.DisplayName,
+                cause);
+            if (changed)
+                SystemsChanged?.Invoke();
             return true;
         }
 
@@ -762,6 +869,28 @@ namespace NERA.Station
             return objectId?.Trim().ToLowerInvariant() ?? string.Empty;
         }
 
+        private static void ReportSystemActivated(
+            StationSystemDefinition definition,
+            string objectId)
+        {
+            if (definition == null)
+                return;
+
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemActivated,
+                ResolveQuestTargetId(definition.SystemType, objectId),
+                definition.DisplayName);
+        }
+
+        private static string ResolveQuestTargetId(
+            StationSystemType type,
+            string objectId)
+        {
+            return string.IsNullOrWhiteSpace(objectId)
+                ? type.ToString()
+                : objectId;
+        }
+
         private static MaintainableObject FindMaintenance(MaintenanceRole role)
         {
             MaintainableObject[] candidates = FindObjectsByType<MaintainableObject>(
@@ -777,8 +906,11 @@ namespace NERA.Station
 
         private void OnDestroy()
         {
-            if (Instance == this)
-                Instance = null;
+            if (Instance != this)
+                return;
+
+            Instance = null;
+            InstanceChanged?.Invoke(null);
         }
     }
 }

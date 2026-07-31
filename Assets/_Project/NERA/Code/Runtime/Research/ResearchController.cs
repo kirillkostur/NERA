@@ -5,6 +5,7 @@ using NERA.Inventory;
 using NERA.Items;
 using NERA.Energy;
 using NERA.Station;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Research
@@ -377,7 +378,8 @@ namespace NERA.Research
             energy.RegisterConsumer(
                 LaboratoryConsumerId,
                 energy.Config.LaboratoryConsumption,
-                true
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Laboratory)
             );
             energy.SetConsumerActive(
                 LaboratoryConsumerId,
@@ -422,7 +424,13 @@ namespace NERA.Research
             );
 
             if (firstAnalysis)
+            {
                 ResearchAnalyzed?.Invoke(completedId);
+                QuestController.Instance?.Report(
+                    QuestSignalType.ResearchAnalyzed,
+                    completedId,
+                    definition.DisplayName);
+            }
             Debug.Log(
                 firstAnalysis
                     ? $"Research: analyzed '{completedId}'."

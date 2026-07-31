@@ -526,7 +526,8 @@ namespace NERA.Antenna
             energy.RegisterConsumer(
                 AntennaConsumerId,
                 energy.Config.AntennaCalibrationConsumption,
-                true
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Antenna)
             );
             energy.SetConsumerActive(
                 AntennaConsumerId,

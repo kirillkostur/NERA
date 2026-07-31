@@ -420,7 +420,14 @@ namespace NERA.Terminal
                 systems?.GetDefinition(
                     type,
                     selectedObjectId)?.Controllable == true;
-            bool active = IsSelectedSystemActive(type, systems);
+            bool requestedActive =
+                IsSelectedSystemRequestedActive(type, systems);
+            bool hasRequiredCharge =
+                critical || HasSelectedSystemRequiredCharge(type, systems);
+            bool active = requestedActive && hasRequiredCharge;
+            bool lowPower = !critical &&
+                requestedActive &&
+                !hasRequiredCharge;
             bool canChangeState = active ||
                 critical ||
                 systems?.CanStart(
@@ -459,12 +466,14 @@ namespace NERA.Terminal
 
             TerminalUIUtility.SetText(
                 powerStatusText,
-                active ? "Active" : "Inactive");
+                lowPower ? "Low Power" : active ? "Active" : "Inactive");
             if (powerStatusText != null)
             {
-                powerStatusText.color = active
-                    ? new Color(0.55f, 1f, 0.62f, 1f)
-                    : new Color(1f, 0.48f, 0.42f, 1f);
+                powerStatusText.color = lowPower
+                    ? new Color(1f, 0.76f, 0.28f, 1f)
+                    : active
+                        ? new Color(0.55f, 1f, 0.62f, 1f)
+                        : new Color(1f, 0.48f, 0.42f, 1f);
             }
 
             renderedPowerSystem = selectedSystem;
@@ -494,7 +503,7 @@ namespace NERA.Terminal
             powerHandle.anchoredPosition = position;
         }
 
-        private bool IsSelectedSystemActive(
+        private bool IsSelectedSystemRequestedActive(
             StationSystemType type,
             StationSystemsController systems)
         {
@@ -505,6 +514,21 @@ namespace NERA.Terminal
                     selectedObjectId,
                     selectedObjectInitialLevel,
                     selectedObjectInitiallyActive);
+        }
+
+        private bool HasSelectedSystemRequiredCharge(
+            StationSystemType type,
+            StationSystemsController systems)
+        {
+            if (systems != null)
+                return systems.HasRequiredCharge(type, selectedObjectId);
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            return energy != null &&
+                energy.HasSufficientCharge(
+                    energy.Config.GetMinimumCharge01(
+                        type,
+                        selectedObjectId));
         }
 
         private void HandlePowerSwitchChanged(bool active)
@@ -610,18 +634,20 @@ namespace NERA.Terminal
             }
             else
             {
-                bool active = systems == null ||
-                    systems.IsRequestedActive(
-                        type,
-                        selectedObjectId,
-                        selectedObjectInitialLevel,
-                        selectedObjectInitiallyActive);
+                bool requestedActive =
+                    IsSelectedSystemRequestedActive(type, systems);
+                bool hasRequiredCharge =
+                    HasSelectedSystemRequiredCharge(type, systems);
+                bool active = requestedActive && hasRequiredCharge;
+                string state = requestedActive && !hasRequiredCharge
+                    ? "LOW POWER"
+                    : active ? "ACTIVE" : "STOPPED";
                 float consumption = GetConfiguredConsumption(type, energy);
                 string consumptionLine = consumption > 0f
                     ? $"\nConsumption - {consumption:0.0}"
                     : string.Empty;
                 text =
-                    $"Status - {(active ? "ACTIVE" : "STOPPED")}" +
+                    $"Status - {state}" +
                     consumptionLine + "\n" +
                     $"Condition - {(systems?.GetCondition(type, selectedObjectId) ?? 1f) * 100f:0}%\n" +
                     $"Upgrade level - {GetSelectedUpgradeLevel(systems)}";

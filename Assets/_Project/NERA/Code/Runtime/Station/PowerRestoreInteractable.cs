@@ -53,6 +53,7 @@ namespace NERA.Station
 
             StationSystemsController.Instance?.SetCriticalSystemActive(
                 StationSystemType.Battery,
+                true,
                 true);
 
             base.CompleteInteraction(interactor);

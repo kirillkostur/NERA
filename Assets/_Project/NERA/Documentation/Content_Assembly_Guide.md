@@ -14,7 +14,7 @@
 
 Префабы хранят повторно используемую иерархию компонентов и визуал.
 
-Нельзя хранить важное состояние прохождения только в сценовом GameObject или UI. Состояние должно проходить через контроллеры на `Boot/RuntimeRoot` и сохранение.
+Нельзя хранить важное состояние прохождения только в сценовом GameObject или UI. Состояние должно проходить через контроллеры на `MainScene/RuntimeRoot` и сохранение.
 
 ## 2. Куда класть готовые ассеты
 
@@ -76,10 +76,24 @@ Expedition_02/
 - `Configs/IO/` — параметры IO;
 - `Resources/Library/` — Library entries, которые должны быть доступны глобальной загрузке;
 - `Resources/ItemCatalog_Default.asset` — автоматически синхронизируемый каталог всех `ItemData`;
-- `Resources/Energy/EnergyBalance_Default.asset` — общий баланс энергии;
+- `Resources/Energy/EnergyBalance_Default.asset` — общий баланс энергии,
+  потребление и индивидуальные пороги отключения объектов;
+- `Resources/Station/StationSystems_Default.asset` — объекты станции, их
+  управление и улучшения;
 - `Resources/Inventory/DefaultInventoryConfig.asset` — общий размер инвентаря.
 
 Не редактировать список `ItemCatalog_Default` вручную. `ItemCatalogSynchronizer` автоматически собирает все `ItemData` и останавливает build при повторяющихся `itemId`.
+
+Для каждого объекта станции порог задаётся в
+`EnergyBalance_Default -> Station Object Cutoffs -> Minimum Charge Percent`.
+У повторяющихся систем, например турелей, в соседнем поле указывается их
+`Object Id`.
+Если заряд ниже этого значения, объект автоматически теряет питание, а его
+переключатель в терминале показывает `Low Power` и блокируется. Запрошенное
+игроком состояние сохраняется, поэтому после восстановления заряда объект
+включается автоматически. Порог освещения, которого нет в списке объектов
+терминала, задаётся отдельно в
+`EnergyBalance_Default -> Lighting Minimum Charge Percent`.
 
 ## 3. Именование
 
@@ -393,7 +407,13 @@ SceneSpawnPoint.spawnPointId: Expedition02_Start
 
 ### 9.3. Return transition
 
-Можно использовать `Prefabs/Managers/Expedition_To_Station_Exit.prefab`.
+`Prefabs/Managers/Expedition_To_Station_Exit.prefab` сейчас является выходом
+именно из Expedition 01: он указывает на
+`Station_ReturnFromExpedition01`. Не использовать его как универсальный выход
+для других локаций.
+
+Для новой локации создать вариант с собственным station spawn point либо
+сначала сделать target spawn data-driven.
 
 Проверить `SceneTransitionInteractable`:
 
@@ -493,7 +513,7 @@ Map Symbol: Unknown
 стабильные Map Slot Id, соответствие 3D-слотов конфигам и регистрацию configs
 в `MainScene`.
 
-## 10. Связи через Boot/RuntimeRoot
+## 10. Связи через MainScene/RuntimeRoot
 
 `RuntimeRoot` — постоянный центр систем внутри аддитивно загруженной
 `MainScene`. Он не переносится в `DontDestroyOnLoad`. На нём находятся:
@@ -506,7 +526,7 @@ Map Symbol: Unknown
 - `EnergySystemController`;
 - `LibraryController`;
 - `ResearchController`;
-- `ExpeditionProgressController`;
+- `QuestController`;
 - `AntennaController`;
 - `LaboratoryWorkstationController` — четыре зарядных слота и два
   подготовленных слота синтеза в общем окне лаборатории.
@@ -516,13 +536,19 @@ Map Symbol: Unknown
 Переходы между станцией и экспедициями должны вызывать
 `BootInitializer.LoadGameplayScene`, чтобы не выгрузить `MainScene`.
 
-### Важное ограничение
+### Квесты и состояние сцены
 
-Текущий `ExpeditionProgressController` жёстко содержит флаги и текст только для Expedition 01. Не подключать события Expedition 02 к методам `MarkIOTraceSeen` и `MarkResearchSampleCollected`, если они должны означать отдельный прогресс.
+Квесты создаются через `NERA -> Quests -> Open Quest Editor`. Есть два варианта:
+одноразовый и повторяемый. `QuestCatalog_Default` синхронизируется
+автоматически, поэтому вручную регистрировать конфиг не нужно. Полное описание
+окна списка, Inspector, каждого поля, игровых сигналов, объектных экземпляров,
+компактного HUD, валидации и сохранения находится в
+`Quest_System_Guide.md`.
 
-Перед полноценной сборкой progression Expedition 02 контроллер нужно обобщить
-по строковому `Location Id`/ID события либо создать data-driven слой целей.
-Визуальную сцену, префабы, предметы и configs можно готовить до этого.
+`SaveGameData` версии 14 хранит квестовый прогресс и состояние обслуживаемых
+объектов. Обычный `WorldItem` всё ещё уничтожает или отключает только текущий
+scene instance: для одноразового контента нужен отдельный стабильный object ID
+и восстановление consumed/completed state при загрузке сцены.
 
 ## 11. Рекомендуемый порядок сборки Expedition 02
 
@@ -541,9 +567,10 @@ Map Symbol: Unknown
 13. Добавить `SceneSpawnPoint` с ID `Expedition02_Start`.
 14. Добавить return transition на `Player_Station`.
 15. Проверить `Location_Expedition02.asset`.
-16. Проверить регистрацию config на `Boot/RuntimeRoot`.
+16. Проверить регистрацию config на `MainScene/RuntimeRoot`.
 17. Проверить Build Settings.
-18. После обобщения progression связать события сцены с целями и сохранением.
+18. Создать одноразовый `QuestDefinition` через окно квестов и связать authored
+    события сцены через `QuestSignalEmitter` или существующие runtime-сигналы.
 
 ## 12. Чек-лист одного предмета
 

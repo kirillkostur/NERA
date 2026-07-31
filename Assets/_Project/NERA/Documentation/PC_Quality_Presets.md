@@ -25,6 +25,12 @@ requirements.
 Standalone defaults to High. Mobile remains a separate quality level excluded
 from Standalone.
 
+The `NERA -> Build -> Windows x64` command additionally embeds the
+`NERA_WINDOWS_HIGH_100_FPS` build define. On player startup it explicitly
+selects High, disables VSync and sets `Application.targetFrameRate = 100`.
+This keeps the menu build on the intended preset even if the active Editor
+quality level was Low or Medium before building.
+
 The split follows Unity's URP quality guidance: shadow support and distance,
 additional lights, MSAA, LOD bias, particle budget and LUT size are the primary
 scalers. Render scale was added as a PC fallback because it has a predictable

@@ -1,5 +1,4 @@
 using NERA.Core;
-using NERA.Expeditions;
 using UnityEngine;
 
 namespace NERA.Interaction
@@ -48,16 +47,6 @@ namespace NERA.Interaction
                     "is unavailable or busy.",
                     this);
                 return;
-            }
-
-            if (string.Equals(
-                    targetSceneName,
-                    "Player_Station",
-                    System.StringComparison.Ordinal))
-            {
-                ExpeditionProgressController progress =
-                    ExpeditionProgressController.Instance;
-                progress?.MarkReturned();
             }
         }
     }

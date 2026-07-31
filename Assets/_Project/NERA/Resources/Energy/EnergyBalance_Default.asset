@@ -27,6 +27,42 @@ MonoBehaviour:
   lightingConsumption: 3
   turretIdleConsumption: 2
   turretFiringConsumption: 5
+  defaultConsumerMinimumChargePercent: 25
+  lightingMinimumChargePercent: 25
+  stationObjectCutoffs:
+  - systemType: 0
+    objectId:
+    minimumChargePercent: 0
+  - systemType: 1
+    objectId:
+    minimumChargePercent: 0
+  - systemType: 2
+    objectId:
+    minimumChargePercent: 0
+  - systemType: 3
+    objectId: station_drone
+    minimumChargePercent: 25
+  - systemType: 4
+    objectId:
+    minimumChargePercent: 25
+  - systemType: 5
+    objectId:
+    minimumChargePercent: 25
+  - systemType: 6
+    objectId: station_antenna
+    minimumChargePercent: 25
+  - systemType: 7
+    objectId: station_turret_01
+    minimumChargePercent: 25
+  - systemType: 7
+    objectId: station_turret_02
+    minimumChargePercent: 25
+  - systemType: 7
+    objectId: station_turret_03
+    minimumChargePercent: 25
+  - systemType: 7
+    objectId: station_turret_04
+    minimumChargePercent: 25
   droneRechargeDuration: 20
   antennaCalibrationDuration: 8
   fullDayDurationSeconds: 600

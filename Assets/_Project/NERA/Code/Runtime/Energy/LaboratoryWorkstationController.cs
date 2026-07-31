@@ -447,13 +447,14 @@ namespace NERA.Energy
             energy.RegisterConsumer(
                 ChargingConsumerId,
                 energy.Config.ItemChargingConsumption,
-                true);
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Charger));
         }
 
         private bool IsSystemEnabled =>
             StationSystemsController.Instance == null ||
             StationSystemsController.Instance.IsRequestedActive(
-                StationSystemType.Laboratory);
+                StationSystemType.Charger);
 
         private static bool IsValidUpgradeItem(
             int slotIndex,

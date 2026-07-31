@@ -13,6 +13,9 @@ namespace NERA.Graphics
     /// </summary>
     public static class PCQualityRuntimeController
     {
+        public const string WindowsBuildQualityPreset = "High";
+        public const int WindowsBuildTargetFrameRate = 100;
+
         private sealed class ParticleBaseline
         {
             public ParticleSystem System;
@@ -41,6 +44,26 @@ namespace NERA.Graphics
         {
             SceneManager.sceneLoaded -= HandleSceneLoaded;
             SceneManager.sceneLoaded += HandleSceneLoaded;
+#if NERA_WINDOWS_HIGH_100_FPS
+            ApplyWindowsPlayerDefaults();
+#endif
+        }
+
+        public static bool ApplyWindowsPlayerDefaults()
+        {
+            bool qualityApplied = SetQualityLevel(
+                WindowsBuildQualityPreset,
+                true);
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = WindowsBuildTargetFrameRate;
+
+            if (!qualityApplied)
+            {
+                Debug.LogError(
+                    $"PC quality preset '{WindowsBuildQualityPreset}' is missing.");
+            }
+
+            return qualityApplied;
         }
 
         public static bool SetQualityLevel(

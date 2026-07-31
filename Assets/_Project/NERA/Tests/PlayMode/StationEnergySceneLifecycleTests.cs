@@ -10,6 +10,7 @@ using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Research;
+using NERA.Quests;
 using NERA.Save;
 using NERA.Station;
 using NERA.UI;
@@ -244,6 +245,38 @@ namespace NERA.Tests
                     ?.GetValue(stationStatusText)?.ToString(),
                 Does.Contain(
                     $"Consumption - {energy.Config.LaboratoryConsumption:0.0}"));
+
+            energy.RestoreState(
+                energy.TotalCapacity *
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Laboratory) *
+                0.5f,
+                true);
+            yield return null;
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.True,
+                "Automatic load shedding must preserve the user's preference.");
+            Assert.That(offButton.gameObject.activeSelf, Is.True);
+            Assert.That(offButton.interactable, Is.False,
+                "The system cannot be restarted below its configured threshold.");
+            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(-25f).Within(0.1f));
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Low Power"));
+            Assert.That(
+                stationStatusText.GetType().GetProperty("text")
+                    ?.GetValue(stationStatusText)?.ToString(),
+                Does.Contain("Status - LOW POWER"));
+
+            energy.RestoreState(energy.TotalCapacity, true);
+            yield return null;
+            Assert.That(onButton.gameObject.activeSelf, Is.True);
+            Assert.That(onButton.interactable, Is.True);
+            Assert.That(
+                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
+                Is.EqualTo("Active"));
+
             onButton.onClick.Invoke();
             Assert.That(
                 systems.IsRequestedActive(StationSystemType.Laboratory),
@@ -481,10 +514,14 @@ namespace NERA.Tests
 
             stationScreen.SelectSystem(StationSystemType.Computer);
             onButton.onClick.Invoke();
-            Assert.That(terminal.IsOpen, Is.False);
+            Assert.That(
+                terminal.IsOpen,
+                Is.False,
+                "Computer shutdown must close the terminal.");
             Assert.That(
                 systems.IsRequestedActive(StationSystemType.Computer),
-                Is.False);
+                Is.False,
+                "Computer must be inactive after pressing its active toggle.");
             Assert.That(energy.GridEnabled, Is.True);
 
             systems.SetCriticalSystemActive(StationSystemType.Computer, true);
@@ -493,11 +530,252 @@ namespace NERA.Tests
             stationScreen.SelectSystem(StationSystemType.Battery);
             onButton.onClick.Invoke();
 
-            Assert.That(terminal.IsOpen, Is.False);
-            Assert.That(energy.GridEnabled, Is.False);
+            Assert.That(
+                terminal.IsOpen,
+                Is.False,
+                "Battery shutdown must close the terminal.");
+            Assert.That(
+                energy.GridEnabled,
+                Is.False,
+                "Battery shutdown must disable the energy grid.");
             Assert.That(
                 systems.IsRequestedActive(StationSystemType.Battery),
-                Is.False);
+                Is.False,
+                "Battery must be inactive after pressing its active toggle.");
+        }
+
+        [UnityTest]
+        public IEnumerator BatteryUpgradeAppliesStageCapacityImmediately()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            StationStorageController storage = StationStorageController.Instance;
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(catalog, Is.Not.Null);
+
+            systems.ResetSystems();
+            yield return null;
+            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+
+            StationUpgradeLevelDefinition upgrade =
+                systems.Config.GetUpgradeDefinition(
+                    StationSystemType.Battery,
+                    "station_battery",
+                    2);
+            Assert.That(upgrade, Is.Not.Null);
+            foreach (StationUpgradeItemRequirement requirement in
+                     upgrade.RequiredItems)
+            {
+                for (int count = 0; count < requirement.Count; count++)
+                {
+                    Assert.That(
+                        inventory.AddItem(requirement.Item),
+                        Is.True,
+                        $"Could not add '{requirement.ItemId}' for the test upgrade.");
+                }
+            }
+
+            energy.RestoreState(750f, true);
+            float expectedEnergy = 750f - upgrade.EnergyCost;
+
+            Assert.That(
+                systems.TryUpgrade(
+                    StationSystemType.Battery,
+                    inventory,
+                    storage),
+                Is.True);
+            Assert.That(
+                energy.TotalCapacity,
+                Is.EqualTo(2000f),
+                "Stage_2 capacity must be active in the same upgrade call.");
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(expectedEnergy),
+                "Increasing capacity must not add free stored energy.");
+
+            StationUpgradeStageController[] stages =
+                Object.FindObjectsByType<StationUpgradeStageController>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            StationUpgradeStageController batteryStages = Array.Find(
+                stages,
+                stage =>
+                    stage.SystemType == StationSystemType.Battery &&
+                    stage.ObjectId == "station_battery");
+            Assert.That(batteryStages, Is.Not.Null);
+            Assert.That(batteryStages.CurrentStage, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator MainExpeditionQuestRunsFromRuntimeSignals()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            QuestController quests = QuestController.Instance;
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            QuestHUDController questHud =
+                Object.FindFirstObjectByType<QuestHUDController>(
+                    FindObjectsInactive.Include);
+            Assert.That(quests, Is.Not.Null);
+            Assert.That(discovery, Is.Not.Null);
+            Assert.That(questHud, Is.Not.Null);
+
+            quests.ResetProgress();
+            discovery.RestoreDiscovered(Array.Empty<string>());
+            Assert.That(questHud.IsVisible, Is.False);
+
+            Assert.That(
+                quests.Report(
+                    QuestSignalType.LocationEntered,
+                    "Player_Station"),
+                Is.True);
+            Assert.That(
+                quests.FindActive("main.restore_battery"),
+                Is.Not.Null,
+                "Restoring station power is the first one-time main quest.");
+            Assert.That(
+                quests.Report(
+                    QuestSignalType.StationSystemActivated,
+                    "station_battery",
+                    "BATTERY"),
+                Is.True);
+            Assert.That(
+                quests.IsCompleted("main.restore_battery"),
+                Is.True);
+            Assert.That(questHud.IsVisible, Is.False);
+
+            Assert.That(discovery.Discover("Expedition_01"), Is.True);
+            Assert.That(
+                quests.FindActive("main.expedition_01")?.CurrentStageIndex,
+                Is.Zero);
+            Assert.That(
+                questHud.DisplayedMainText,
+                Does.Contain("ОСНОВНОЕ ЗАДАНИЕ"));
+            Assert.That(
+                questHud.DisplayedMainText,
+                Does.Contain("Отправляйтесь в Ancient Outpost"));
+            Assert.That(questHud.DisplayedSideText, Is.Empty);
+
+            quests.ReportDeviceCondition(
+                "test_solar_panel",
+                "Test Solar Panel",
+                0.3f);
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("Очистите Test Solar Panel"));
+
+            quests.ReportStationFault(
+                "test_turret",
+                "Test Turret",
+                "EnemySabotage");
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("Перезапустите Test Turret"),
+                "The higher-priority side quest must be displayed.");
+
+            quests.Report(
+                QuestSignalType.StationSystemActivated,
+                "test_turret",
+                "Test Turret");
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("Очистите Test Solar Panel"),
+                "HUD must fall back to the next active side quest.");
+
+            quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
+            quests.Report(QuestSignalType.EnemyEncountered, "io_blue_weak");
+            quests.Report(QuestSignalType.ItemCollected, "io_blue_shard_01");
+            quests.Report(QuestSignalType.LocationEntered, "Player_Station");
+            quests.Report(
+                QuestSignalType.ResearchAnalyzed,
+                "research_io_blue_shard_01");
+
+            Assert.That(quests.IsCompleted("main.expedition_01"), Is.True);
+            Assert.That(questHud.DisplayedMainText, Is.Empty);
+            Assert.That(questHud.IsVisible, Is.True);
+
+            quests.ReportDeviceCondition(
+                "test_solar_panel",
+                "Test Solar Panel",
+                1f);
+            Assert.That(quests.ActiveQuests.Count, Is.Zero);
+            Assert.That(questHud.DisplayedSideText, Is.Empty);
+            Assert.That(questHud.IsVisible, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator FirstPhysicalPowerRestoreCompletesBatteryQuest()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            QuestController quests = QuestController.Instance;
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            StationPowerController power = StationPowerController.Instance;
+            PowerRestoreInteractable restore =
+                Object.FindFirstObjectByType<PowerRestoreInteractable>();
+
+            Assert.That(quests, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(power, Is.Not.Null);
+            Assert.That(restore, Is.Not.Null);
+
+            quests.ResetProgress();
+            systems.ResetSystems();
+            power.SetState(StationPowerState.Offline);
+
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Battery),
+                Is.False,
+                "A new game must start with the station battery disabled.");
+
+            Assert.That(
+                systems.SetCriticalSystemActive(
+                    StationSystemType.Battery,
+                    true),
+                Is.True);
+            quests.ResetProgress();
+            Assert.That(
+                quests.Report(
+                    QuestSignalType.LocationEntered,
+                    "Player_Station"),
+                Is.True);
+            Assert.That(
+                quests.FindActive("main.restore_battery"),
+                Is.Not.Null);
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Battery),
+                Is.True,
+                "The test reproduces an old save with RequestedActive=true.");
+            Assert.That(power.IsPowered, Is.False);
+
+            restore.CompleteInteraction(null);
+
+            Assert.That(power.IsPowered, Is.True);
+            Assert.That(
+                quests.IsCompleted("main.restore_battery"),
+                Is.True,
+                "The first physical power restore must complete the quest " +
+                "even when RequestedActive was already true.");
         }
 
         [UnityTest]

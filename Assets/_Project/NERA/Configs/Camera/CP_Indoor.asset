@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 801df41816ff9f44e98d4a0b1ce61c71, type: 3}
   m_Name: CP_Indoor
   m_EditorClassIdentifier: 
-  minDistance: 2
-  maxDistance: 3
+  minDistance: 1
+  maxDistance: 2
   defaultDistance: 2

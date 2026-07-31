@@ -4,6 +4,7 @@ using System.Linq;
 using NERA.Core;
 using NERA.Expeditions;
 using NERA.Locations;
+using NERA.Quests;
 using NERA.Station;
 using NERA.Terminal;
 using UnityEditor;
@@ -93,6 +94,7 @@ namespace NERA.Editor
             List<string> errors = new List<string>();
             ValidateBuildScenes(errors);
             ValidateExpeditionLocations(errors);
+            ValidateQuestCatalog(errors);
             ValidateUpgradePrefabs(errors);
             ValidatePCQualityPresets(errors);
 
@@ -336,6 +338,7 @@ namespace NERA.Editor
             {
                 ExpeditionDiscoveryController discovery = null;
                 MapLocationSlotRegistry mapSlotRegistry = null;
+                QuestController questController = null;
                 foreach (GameObject root in mainScene.GetRootGameObjects())
                 {
                     discovery ??= root.GetComponentInChildren<
@@ -343,8 +346,18 @@ namespace NERA.Editor
                     mapSlotRegistry ??=
                         root.GetComponentInChildren<
                             MapLocationSlotRegistry>(true);
-                    if (discovery != null && mapSlotRegistry != null)
+                    questController ??=
+                        root.GetComponentInChildren<QuestController>(true);
+                    if (discovery != null &&
+                        mapSlotRegistry != null &&
+                        questController != null)
                         break;
+                }
+
+                if (questController == null)
+                {
+                    errors.Add(
+                        $"{MainScenePath} has no {nameof(QuestController)}.");
                 }
 
                 if (discovery == null)
@@ -452,6 +465,20 @@ namespace NERA.Editor
                 if (openedByValidator && mainScene.IsValid())
                     EditorSceneManager.CloseScene(mainScene, true);
             }
+        }
+
+        private static void ValidateQuestCatalog(List<string> errors)
+        {
+            QuestCatalog catalog = QuestCatalog.LoadDefault();
+            if (catalog == null)
+            {
+                errors.Add(
+                    "Resources/Quests/QuestCatalog_Default is missing.");
+                return;
+            }
+
+            if (!catalog.TryValidate(out string error))
+                errors.Add($"Quest catalog: {error}");
         }
 
         private static void ValidateUpgradePrefabs(List<string> errors)

@@ -4,6 +4,7 @@ using NERA.Interaction;
 using NERA.Expeditions;
 using NERA.Inventory;
 using NERA.Library;
+using NERA.Quests;
 using NERA.Research;
 using NERA.Save;
 using NERA.Station;
@@ -61,13 +62,12 @@ namespace NERA.Core
             LibraryController library = GetComponent<LibraryController>();
             ResearchController research = GetComponent<ResearchController>();
             AntennaController antenna = GetComponent<AntennaController>();
-            ExpeditionProgressController expeditionProgress =
-                GetComponent<ExpeditionProgressController>();
+            QuestController quests = GetComponent<QuestController>();
 
             if (library == null ||
                 research == null ||
                 antenna == null ||
-                expeditionProgress == null)
+                quests == null)
             {
                 Debug.LogError(
                     "BootInitializer: RuntimeRoot is missing one or more persistent progression services.",
@@ -194,6 +194,7 @@ namespace NERA.Core
 
             SceneManager.SetActiveScene(targetScene);
             currentGameplaySceneName = sceneName;
+            ReportSceneEntered(sceneName);
 
             if (!string.IsNullOrWhiteSpace(previousSceneName) &&
                 !string.Equals(
@@ -208,6 +209,27 @@ namespace NERA.Core
             }
 
             SetGameplayPresentationActive(true);
+        }
+
+        private void ReportSceneEntered(string sceneName)
+        {
+            string targetId = sceneName;
+            string targetName = sceneName;
+            ExpeditionDiscoveryController discovery =
+                GetComponent<ExpeditionDiscoveryController>();
+            if (discovery != null &&
+                discovery.TryGetKnownLocationBySceneName(
+                    sceneName,
+                    out ExpeditionLocationData location))
+            {
+                targetId = location.LocationId;
+                targetName = location.DisplayName;
+            }
+
+            QuestController.Instance?.Report(
+                QuestSignalType.LocationEntered,
+                targetId,
+                targetName);
         }
 
         public void ReturnToMainMenu()

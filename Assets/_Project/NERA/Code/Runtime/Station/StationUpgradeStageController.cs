@@ -24,20 +24,8 @@ namespace NERA.Station
 
         private void OnEnable()
         {
-            BindSystems();
-            RefreshVisuals();
-        }
-
-        private void Start()
-        {
-            BindSystems();
-            RefreshVisuals();
-        }
-
-        private void Update()
-        {
-            if (subscribedSystems != StationSystemsController.Instance)
-                BindSystems();
+            StationSystemsController.InstanceChanged += HandleInstanceChanged;
+            BindSystems(StationSystemsController.Instance);
         }
 
         public void RefreshVisuals()
@@ -67,12 +55,17 @@ namespace NERA.Station
             }
         }
 
-        private void BindSystems()
+        private void HandleInstanceChanged(StationSystemsController systems)
+        {
+            BindSystems(systems);
+        }
+
+        private void BindSystems(StationSystemsController systems)
         {
             if (subscribedSystems != null)
                 subscribedSystems.SystemsChanged -= RefreshVisuals;
 
-            subscribedSystems = StationSystemsController.Instance;
+            subscribedSystems = systems;
             if (subscribedSystems != null)
                 subscribedSystems.SystemsChanged += RefreshVisuals;
             RefreshVisuals();
@@ -99,6 +92,7 @@ namespace NERA.Station
 
         private void OnDisable()
         {
+            StationSystemsController.InstanceChanged -= HandleInstanceChanged;
             if (subscribedSystems != null)
                 subscribedSystems.SystemsChanged -= RefreshVisuals;
             subscribedSystems = null;

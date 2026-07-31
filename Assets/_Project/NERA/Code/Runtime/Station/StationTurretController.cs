@@ -85,6 +85,18 @@ namespace NERA.Station
                 yawPivot = transform;
             if (muzzle == null)
                 muzzle = yawPivot;
+            StationSystemsConfig fallbackConfig =
+                StationSystemsConfig.LoadDefault();
+            StationSystemDefinition definition =
+                StationSystemsController.Instance?.Config.Find(
+                    StationSystemType.Turret,
+                    turretId) ??
+                fallbackConfig?.Find(
+                    StationSystemType.Turret,
+                    turretId);
+            maintenance.SetObjectIdentity(
+                turretId,
+                definition?.DisplayName ?? gameObject.name);
             consumerId = $"turret:{turretId}";
             RegisterTurret();
             StationSystemsController.Instance?.RegisterObject(
@@ -210,7 +222,12 @@ namespace NERA.Station
             float rate = firing
                 ? energy.Config.TurretFiringConsumption
                 : energy.Config.TurretIdleConsumption;
-            energy.RegisterConsumer(consumerId, rate, true);
+            energy.RegisterConsumer(
+                consumerId,
+                rate,
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Turret,
+                    turretId));
             energy.SetConsumerActive(consumerId, requested);
         }
 
