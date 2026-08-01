@@ -22,22 +22,28 @@ MonoBehaviour:
     \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
   priority: 100
   showInHud: 1
+  activationLogic: 0
   activationConditions:
   - signalType: 1
+    evaluation: 0
     target: 0
     targetId: Player_Station
     cause: 
     requiredCount: 1
+    comparison: 3
     threshold: 0.5
   stages:
   - title: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C
       \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
     description: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C
       \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+    completionLogic: 0
     completionConditions:
     - signalType: 10
+      evaluation: 0
       target: 0
       targetId: station_battery
       cause: 
       requiredCount: 1
+      comparison: 3
       threshold: 0.5

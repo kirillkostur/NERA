@@ -291,6 +291,49 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void DroneExpeditionQuestAppearsOnceAndCompletesAfterReturn()
+        {
+            quests.Report(
+                QuestSignalType.LocationEntered,
+                "Player_Station");
+            quests.Report(
+                QuestSignalType.StationSystemActivated,
+                "station_battery",
+                "BATTERY");
+
+            const string questId =
+                "main.launch_drone_expedition_01";
+            Assert.That(quests.FindActive(questId), Is.Not.Null);
+
+            quests.Report(
+                QuestSignalType.LocationDiscovered,
+                "Expedition_01",
+                "Ancient Outpost");
+            Assert.That(
+                quests.FindActive(questId),
+                Is.Not.Null,
+                "Location discovery happens before the drone return " +
+                "signal and must not close this quest early.");
+
+            quests.Report(
+                QuestSignalType.DroneScanCompleted,
+                "Expedition_01",
+                "Ancient Outpost",
+                cause: "new_location");
+
+            Assert.That(quests.FindActive(questId), Is.Null);
+            Assert.That(quests.GetCompletionCount(questId), Is.EqualTo(1));
+
+            quests.Report(
+                QuestSignalType.DroneScanCompleted,
+                "Expedition_01",
+                "Ancient Outpost",
+                cause: "new_location");
+            Assert.That(quests.FindActive(questId), Is.Null);
+            Assert.That(quests.GetCompletionCount(questId), Is.EqualTo(1));
+        }
+
+        [Test]
         public void DynamicMaintenanceQuestUsesTargetContextWithoutDuplicates()
         {
             quests.ReportDeviceCondition(
@@ -357,6 +400,369 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void CompletingQuestActivatesConfiguredFollowUpByQuestId()
+        {
+            QuestDefinition followUp =
+                ScriptableObject.CreateInstance<QuestDefinition>();
+            QuestCatalog temporaryCatalog =
+                ScriptableObject.CreateInstance<QuestCatalog>();
+
+            try
+            {
+                SerializedObject definition =
+                    new SerializedObject(followUp);
+                definition.FindProperty("questId").stringValue =
+                    "main.inspect_station";
+                definition.FindProperty("category").enumValueIndex =
+                    (int)QuestCategory.Main;
+                definition.FindProperty("availability").enumValueIndex =
+                    (int)QuestAvailability.Once;
+                definition.FindProperty("targetScope").enumValueIndex =
+                    (int)QuestTargetScope.Single;
+                definition.FindProperty("title").stringValue =
+                    "Осмотрите станцию";
+                definition.FindProperty("description").stringValue =
+                    "Познакомьтесь с основными системами станции.";
+
+                SerializedProperty activation =
+                    definition.FindProperty("activationConditions");
+                activation.arraySize = 1;
+                ConfigureQuestCondition(
+                    activation.GetArrayElementAtIndex(0),
+                    QuestSignalType.QuestCompleted,
+                    "main.restore_battery");
+
+                SerializedProperty stages =
+                    definition.FindProperty("stages");
+                stages.arraySize = 1;
+                SerializedProperty stage = stages.GetArrayElementAtIndex(0);
+                stage.FindPropertyRelative("title").stringValue =
+                    "Осмотрите станцию";
+                stage.FindPropertyRelative("description").stringValue =
+                    "Посетите основные помещения.";
+                SerializedProperty completion =
+                    stage.FindPropertyRelative("completionConditions");
+                completion.arraySize = 1;
+                ConfigureQuestCondition(
+                    completion.GetArrayElementAtIndex(0),
+                    QuestSignalType.AreaExplored,
+                    "station_introduction");
+                definition.ApplyModifiedPropertiesWithoutUndo();
+
+                QuestCatalog defaults = QuestCatalog.LoadDefault();
+                SerializedObject catalog =
+                    new SerializedObject(temporaryCatalog);
+                SerializedProperty definitions =
+                    catalog.FindProperty("definitions");
+                definitions.arraySize = defaults.Definitions.Count + 1;
+                for (int index = 0;
+                     index < defaults.Definitions.Count;
+                     index++)
+                {
+                    definitions.GetArrayElementAtIndex(index)
+                        .objectReferenceValue = defaults.Definitions[index];
+                }
+
+                definitions.GetArrayElementAtIndex(definitions.arraySize - 1)
+                    .objectReferenceValue = followUp;
+                catalog.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(temporaryCatalog);
+
+                Assert.That(
+                    quests.FindActive("main.inspect_station"),
+                    Is.Null);
+                Assert.That(
+                    quests.Report(
+                        QuestSignalType.LocationEntered,
+                        "Player_Station"),
+                    Is.True);
+                Assert.That(
+                    quests.FindActive("main.restore_battery"),
+                    Is.Not.Null);
+                Assert.That(
+                    quests.FindActive("main.inspect_station"),
+                    Is.Null);
+
+                Assert.That(
+                    quests.Report(
+                        QuestSignalType.StationSystemActivated,
+                        "station_battery",
+                        "BATTERY"),
+                    Is.True);
+
+                Assert.That(
+                    quests.IsCompleted("main.restore_battery"),
+                    Is.True);
+                Assert.That(
+                    quests.FindActive("main.inspect_station"),
+                    Is.Not.Null,
+                    "The configured follow-up must activate immediately.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(temporaryCatalog);
+                Object.DestroyImmediate(followUp);
+            }
+        }
+
+        [Test]
+        public void CurrentStateConditionUsesFactReportedBeforeQuestActivation()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "main.energy_ready",
+                1,
+                1);
+            QuestCatalog catalog = CreateQuestCatalog(definition);
+
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                ConfigureQuestCondition(
+                    serialized.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.LocationEntered,
+                    "Player_Station");
+                ConfigureQuestCondition(
+                    serialized.FindProperty("stages")
+                        .GetArrayElementAtIndex(0)
+                        .FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.EnergyChargeChanged,
+                    "station_energy",
+                    QuestConditionEvaluation.CurrentState,
+                    0.5f,
+                    QuestValueComparison.GreaterOrEqual);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(catalog);
+
+                quests.Report(
+                    QuestSignalType.EnergyChargeChanged,
+                    "station_energy",
+                    value: 0.75f);
+                Assert.That(quests.IsCompleted("main.energy_ready"), Is.False);
+
+                quests.Report(
+                    QuestSignalType.LocationEntered,
+                    "Player_Station");
+
+                Assert.That(quests.IsCompleted("main.energy_ready"), Is.True);
+                Assert.That(quests.FindActive("main.energy_ready"), Is.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void AnyConditionLogicActivatesQuestFromEitherConfiguredEvent()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "side.any_discovery",
+                2,
+                1,
+                QuestConditionLogic.Any);
+            QuestCatalog catalog = CreateQuestCatalog(definition);
+
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                SerializedProperty activation =
+                    serialized.FindProperty("activationConditions");
+                ConfigureQuestCondition(
+                    activation.GetArrayElementAtIndex(0),
+                    QuestSignalType.LocationDiscovered,
+                    "expedition_01");
+                ConfigureQuestCondition(
+                    activation.GetArrayElementAtIndex(1),
+                    QuestSignalType.LocationDiscovered,
+                    "expedition_02");
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(catalog);
+
+                quests.Report(
+                    QuestSignalType.LocationDiscovered,
+                    "expedition_02");
+
+                Assert.That(
+                    quests.FindActive("side.any_discovery"),
+                    Is.Not.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void OppositeStationStateClearsRememberedCurrentState()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "main.power_terminal",
+                1,
+                1);
+            QuestCatalog catalog = CreateQuestCatalog(definition);
+
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                ConfigureQuestCondition(
+                    serialized.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.LocationDiscovered,
+                    "station_intro");
+                ConfigureQuestCondition(
+                    serialized.FindProperty("stages")
+                        .GetArrayElementAtIndex(0)
+                        .FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.StationSystemActivated,
+                    "station_terminal",
+                    QuestConditionEvaluation.CurrentState);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(catalog);
+
+                quests.Report(
+                    QuestSignalType.StationSystemActivated,
+                    "station_terminal");
+                quests.Report(
+                    QuestSignalType.StationSystemDeactivated,
+                    "station_terminal");
+                quests.Report(
+                    QuestSignalType.LocationDiscovered,
+                    "station_intro");
+
+                Assert.That(
+                    quests.FindActive("main.power_terminal"),
+                    Is.Not.Null);
+                Assert.That(
+                    quests.IsCompleted("main.power_terminal"),
+                    Is.False);
+
+                quests.Report(
+                    QuestSignalType.StationSystemActivated,
+                    "station_terminal");
+                Assert.That(
+                    quests.IsCompleted("main.power_terminal"),
+                    Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void StateSynchronizationDoesNotImitateNewGameplayEvent()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "main.wait_for_power_event",
+                1,
+                1);
+            QuestCatalog catalog = CreateQuestCatalog(definition);
+
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                ConfigureQuestCondition(
+                    serialized.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.StationPowerOnline,
+                    "station_power");
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(catalog);
+
+                quests.SynchronizeState(
+                    QuestSignalType.StationPowerOnline,
+                    "station_power");
+                Assert.That(
+                    quests.FindActive("main.wait_for_power_event"),
+                    Is.Null);
+
+                quests.Report(
+                    QuestSignalType.StationPowerOnline,
+                    "station_power");
+                Assert.That(
+                    quests.FindActive("main.wait_for_power_event"),
+                    Is.Not.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void CompletedQuestCurrentStateIsRebuiltFromSaveHistory()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "main.after_saved_quest",
+                1,
+                1);
+            QuestDefinition prerequisite = CreateQuestDefinition(
+                "main.saved_prerequisite",
+                1,
+                1);
+            QuestCatalog catalog = CreateQuestCatalog(
+                definition,
+                prerequisite);
+
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                ConfigureQuestCondition(
+                    serialized.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.QuestCompleted,
+                    "main.saved_prerequisite",
+                    QuestConditionEvaluation.CurrentState);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                quests.Configure(catalog);
+
+                quests.RestoreProgress(
+                    Array.Empty<QuestInstanceSaveData>(),
+                    new[]
+                    {
+                        new QuestHistorySaveData
+                        {
+                            instanceId = "main.saved_prerequisite",
+                            questId = "main.saved_prerequisite",
+                            completionCount = 1
+                        }
+                    },
+                    Array.Empty<QuestActivationSaveData>());
+
+                Assert.That(
+                    quests.FindActive("main.after_saved_quest"),
+                    Is.Not.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(prerequisite);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
+        public void LegacyQuestSignalEnumValuesRemainStable()
+        {
+            Assert.That((int)QuestSignalType.LocationDiscovered, Is.EqualTo(0));
+            Assert.That((int)QuestSignalType.StationSystemActivated, Is.EqualTo(10));
+            Assert.That((int)QuestSignalType.QuestCompleted, Is.EqualTo(11));
+            Assert.That((int)QuestSignalType.LocationExited, Is.EqualTo(12));
+        }
+
+        [Test]
         public void SaveVersion14SerializesQuestAndMaintenanceState()
         {
             SaveGameData data = new SaveGameData();
@@ -383,6 +789,88 @@ namespace NERA.Tests
                 Is.EqualTo("station_solar_01"));
             Assert.That(restored.maintenanceObjects[0].condition,
                 Is.EqualTo(0.25f));
+        }
+
+        private static void ConfigureQuestCondition(
+            SerializedProperty condition,
+            QuestSignalType signalType,
+            string targetId,
+            QuestConditionEvaluation evaluation =
+                QuestConditionEvaluation.Event,
+            float threshold = 0.5f,
+            QuestValueComparison comparison =
+                QuestValueComparison.GreaterOrEqual)
+        {
+            condition.FindPropertyRelative("signalType").enumValueIndex =
+                (int)signalType;
+            condition.FindPropertyRelative("evaluation").enumValueIndex =
+                (int)evaluation;
+            condition.FindPropertyRelative("target").enumValueIndex =
+                (int)QuestConditionTarget.SpecificObject;
+            condition.FindPropertyRelative("targetId").stringValue = targetId;
+            condition.FindPropertyRelative("cause").stringValue = string.Empty;
+            condition.FindPropertyRelative("requiredCount").intValue = 1;
+            condition.FindPropertyRelative("comparison").enumValueIndex =
+                (int)comparison;
+            condition.FindPropertyRelative("threshold").floatValue =
+                threshold;
+        }
+
+        private static QuestDefinition CreateQuestDefinition(
+            string questId,
+            int activationConditionCount,
+            int completionConditionCount,
+            QuestConditionLogic activationConditionLogic =
+                QuestConditionLogic.All,
+            QuestConditionLogic completionConditionLogic =
+                QuestConditionLogic.All)
+        {
+            QuestDefinition definition =
+                ScriptableObject.CreateInstance<QuestDefinition>();
+            SerializedObject serialized = new SerializedObject(definition);
+            serialized.FindProperty("questId").stringValue = questId;
+            serialized.FindProperty("category").enumValueIndex =
+                (int)QuestCategory.Main;
+            serialized.FindProperty("availability").enumValueIndex =
+                (int)QuestAvailability.Once;
+            serialized.FindProperty("targetScope").enumValueIndex =
+                (int)QuestTargetScope.Single;
+            serialized.FindProperty("title").stringValue = questId;
+            serialized.FindProperty("description").stringValue = questId;
+            serialized.FindProperty("activationLogic").enumValueIndex =
+                (int)activationConditionLogic;
+            serialized.FindProperty("activationConditions").arraySize =
+                activationConditionCount;
+
+            SerializedProperty stages = serialized.FindProperty("stages");
+            stages.arraySize = 1;
+            SerializedProperty stage = stages.GetArrayElementAtIndex(0);
+            stage.FindPropertyRelative("title").stringValue = "Test objective";
+            stage.FindPropertyRelative("description").stringValue =
+                "Test objective";
+            stage.FindPropertyRelative("completionLogic").enumValueIndex =
+                (int)completionConditionLogic;
+            stage.FindPropertyRelative("completionConditions").arraySize =
+                completionConditionCount;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return definition;
+        }
+
+        private static QuestCatalog CreateQuestCatalog(
+            params QuestDefinition[] definitions)
+        {
+            QuestCatalog catalog =
+                ScriptableObject.CreateInstance<QuestCatalog>();
+            SerializedObject serialized = new SerializedObject(catalog);
+            SerializedProperty items = serialized.FindProperty("definitions");
+            items.arraySize = definitions.Length;
+            for (int index = 0; index < definitions.Length; index++)
+            {
+                items.GetArrayElementAtIndex(index).objectReferenceValue =
+                    definitions[index];
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return catalog;
         }
     }
 

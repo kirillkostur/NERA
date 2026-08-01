@@ -475,6 +475,7 @@ namespace NERA.Save
                 data.activeQuests,
                 data.questHistory,
                 data.pendingQuestActivations);
+            SynchronizeQuestStates();
             if (data.version < 14)
                 SynchronizeQuestFacts();
         }
@@ -667,6 +668,7 @@ namespace NERA.Save
             research?.RestoreAnalyzed(Array.Empty<string>());
             library?.RestoreUnlocked(Array.Empty<string>());
             library?.RestoreKnownItems(Array.Empty<string>());
+            SynchronizeQuestStates();
 
             isLoading = false;
         }
@@ -1021,6 +1023,144 @@ namespace NERA.Save
                         QuestSignalType.ResearchAnalyzed,
                         researchId,
                         researchId);
+                }
+            }
+        }
+
+        private void SynchronizeQuestStates()
+        {
+            if (quests == null)
+                return;
+
+            if (discovery != null)
+            {
+                foreach (string locationId in discovery.DiscoveredLocationIds)
+                {
+                    string displayName = discovery.TryGetKnownLocation(
+                            locationId,
+                            out ExpeditionLocationData location)
+                        ? location.DisplayName
+                        : locationId;
+                    quests.SynchronizeState(
+                        QuestSignalType.LocationDiscovered,
+                        locationId,
+                        displayName);
+                }
+            }
+
+            if (inventory != null)
+            {
+                Dictionary<string, ItemData> itemsById =
+                    new Dictionary<string, ItemData>(StringComparer.Ordinal);
+                foreach (ItemData item in inventory.Items)
+                {
+                    if (item != null &&
+                        !string.IsNullOrWhiteSpace(item.ItemId))
+                    {
+                        itemsById[item.ItemId] = item;
+                    }
+                }
+
+                foreach (KeyValuePair<string, ItemData> pair in itemsById)
+                {
+                    quests.SynchronizeState(
+                        QuestSignalType.InventoryItemCountChanged,
+                        pair.Key,
+                        pair.Value.DisplayName,
+                        value: inventory.CountItem(pair.Key));
+                }
+            }
+
+            if (research != null)
+            {
+                foreach (string researchId in research.AnalyzedResearchIds)
+                {
+                    quests.SynchronizeState(
+                        QuestSignalType.ResearchAnalyzed,
+                        researchId,
+                        researchId);
+                }
+            }
+
+            if (stationSystems != null)
+            {
+                foreach (StationSystemDefinition definition in
+                         stationSystems.Config.StationObjects)
+                {
+                    if (definition == null)
+                        continue;
+
+                    string objectId = definition.ObjectId;
+                    string targetId = string.IsNullOrWhiteSpace(objectId)
+                        ? definition.SystemType.ToString()
+                        : objectId;
+                    bool active = stationSystems.IsRequestedActive(
+                        definition.SystemType,
+                        objectId,
+                        definition.InitialLevel,
+                        definition.InitiallyActive);
+                    quests.SynchronizeState(
+                        active
+                            ? QuestSignalType.StationSystemActivated
+                            : QuestSignalType.StationSystemDeactivated,
+                        targetId,
+                        definition.DisplayName);
+                    quests.SynchronizeState(
+                        QuestSignalType.StationSystemUpgraded,
+                        targetId,
+                        definition.DisplayName,
+                        value: stationSystems.GetUpgradeLevel(
+                            definition.SystemType,
+                            objectId,
+                            definition.InitialLevel));
+                }
+            }
+
+            if (stationPower != null)
+            {
+                quests.SynchronizeState(
+                    stationPower.IsPowered
+                        ? QuestSignalType.StationPowerOnline
+                        : QuestSignalType.StationPowerOffline,
+                    "station_power",
+                    "Station Power");
+            }
+
+            if (energySystem != null)
+            {
+                quests.SynchronizeState(
+                    QuestSignalType.EnergyChargeChanged,
+                    "station_energy",
+                    "Station Energy",
+                    value: energySystem.Charge01);
+            }
+
+            StationEnvironmentController environment =
+                StationEnvironmentController.Instance;
+            if (environment != null)
+            {
+                quests.SynchronizeState(
+                    QuestSignalType.WeatherChanged,
+                    environment.Weather.ToString().ToLowerInvariant(),
+                    environment.Weather.ToString());
+            }
+
+            foreach (MaintainableObject maintainable in
+                     MaintainableObject.ActiveObjects)
+            {
+                if (maintainable != null &&
+                    !string.IsNullOrWhiteSpace(maintainable.ObjectId))
+                {
+                    quests.SynchronizeState(
+                        QuestSignalType.DeviceConditionBelow,
+                        maintainable.ObjectId,
+                        maintainable.DisplayName,
+                        value: maintainable.Condition);
+                    quests.SynchronizeState(
+                        QuestSignalType.DeviceConditionRestored,
+                        maintainable.ObjectId,
+                        maintainable.DisplayName,
+                        value: maintainable.Condition);
                 }
             }
         }

@@ -161,6 +161,8 @@ namespace NERA.Editor
             serialized.FindProperty("description").stringValue =
                 "Опишите задачу игрока.";
             serialized.FindProperty("showInHud").boolValue = true;
+            serialized.FindProperty("activationLogic").enumValueIndex =
+                (int)QuestConditionLogic.All;
 
             SerializedProperty activation =
                 serialized.FindProperty("activationConditions");
@@ -177,6 +179,8 @@ namespace NERA.Editor
             stage.FindPropertyRelative("title").stringValue = "Новый этап";
             stage.FindPropertyRelative("description").stringValue =
                 "Опишите, что нужно сделать.";
+            stage.FindPropertyRelative("completionLogic").enumValueIndex =
+                (int)QuestConditionLogic.All;
             SerializedProperty completion =
                 stage.FindPropertyRelative("completionConditions");
             completion.arraySize = 1;
@@ -202,6 +206,8 @@ namespace NERA.Editor
         {
             condition.FindPropertyRelative("signalType").enumValueIndex =
                 (int)QuestSignalType.LocationDiscovered;
+            condition.FindPropertyRelative("evaluation").enumValueIndex =
+                (int)QuestConditionEvaluation.Event;
             condition.FindPropertyRelative("target").enumValueIndex =
                 (int)target;
             condition.FindPropertyRelative("targetId").stringValue =
@@ -209,6 +215,8 @@ namespace NERA.Editor
             condition.FindPropertyRelative("cause").stringValue =
                 string.Empty;
             condition.FindPropertyRelative("requiredCount").intValue = 1;
+            condition.FindPropertyRelative("comparison").enumValueIndex =
+                (int)QuestValueComparison.GreaterOrEqual;
             condition.FindPropertyRelative("threshold").floatValue = 0.5f;
         }
 

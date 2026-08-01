@@ -1,4 +1,5 @@
 using System;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Energy
@@ -42,6 +43,11 @@ namespace NERA.Energy
             currentHour = Mathf.Repeat(currentHour + hoursPerSecond * Time.deltaTime, 24f);
         }
 
+        private void Start()
+        {
+            SynchronizeQuestWeather();
+        }
+
         public void SetTime(float hour)
         {
             currentHour = Mathf.Repeat(hour, 24f);
@@ -55,6 +61,23 @@ namespace NERA.Energy
 
             weather = newWeather;
             EnvironmentChanged?.Invoke();
+            ReportQuestWeather();
+        }
+
+        private void ReportQuestWeather()
+        {
+            QuestController.Instance?.Report(
+                QuestSignalType.WeatherChanged,
+                weather.ToString().ToLowerInvariant(),
+                weather.ToString());
+        }
+
+        private void SynchronizeQuestWeather()
+        {
+            QuestController.Instance?.SynchronizeState(
+                QuestSignalType.WeatherChanged,
+                weather.ToString().ToLowerInvariant(),
+                weather.ToString());
         }
 
         private void OnDestroy()

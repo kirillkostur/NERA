@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Items;
+using NERA.Quests;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -31,6 +32,9 @@ namespace NERA.Inventory
         private List<ItemData> legacyAnomalySlots = new List<ItemData>();
         [SerializeField, HideInInspector, FormerlySerializedAs("quickAccessSlots")]
         private List<ItemData> legacyQuickAccessSlots = new List<ItemData>();
+
+        private readonly HashSet<string> reportedQuestItemIds =
+            new HashSet<string>(StringComparer.Ordinal);
 
         public event Action<ItemData> ItemAdded;
         public event Action<ItemData> ItemRemoved;
@@ -88,12 +92,18 @@ namespace NERA.Inventory
             EnsureSlotCapacities();
         }
 
+        private void Start()
+        {
+            ReportAllQuestItemCounts();
+        }
+
         public void Configure(InventoryConfig inventoryConfig)
         {
             config = InventoryConfig.Resolve(inventoryConfig);
             MigrateLegacySlots();
             EnsureSlotCapacities();
             InventoryChanged?.Invoke();
+            ReportAllQuestItemCounts();
         }
 
         public bool AddItem(ItemData item)
@@ -121,6 +131,7 @@ namespace NERA.Inventory
             slots[emptySlot] = instance;
             ItemAdded?.Invoke(item);
             InventoryChanged?.Invoke();
+            ReportQuestItemCount(item);
             return true;
         }
 
@@ -221,6 +232,8 @@ namespace NERA.Inventory
             slots[index] = null;
             ItemRemoved?.Invoke(removedInstance.ItemData);
             InventoryChanged?.Invoke();
+            ReportQuestItemRemoved(removedInstance.ItemData);
+            ReportQuestItemCount(removedInstance.ItemData);
             return true;
         }
 
@@ -269,6 +282,7 @@ namespace NERA.Inventory
             RestoreSlotGroup(anomalyItemInstances, anomalies, Mathf.Max(AnomalyCapacity, anomalies?.Count ?? 0));
             RestoreSlotGroup(quickAccessItemInstances, quickAccess, Mathf.Max(QuickAccessCapacity, quickAccess?.Count ?? 0));
             InventoryChanged?.Invoke();
+            ReportAllQuestItemCounts();
         }
 
         public ItemData GetItem(InventorySlotGroup group, int index)
@@ -378,6 +392,7 @@ namespace NERA.Inventory
             slots[index] = instance;
             ItemAdded?.Invoke(instance.ItemData);
             InventoryChanged?.Invoke();
+            ReportQuestItemCount(instance.ItemData);
             return true;
         }
 
@@ -419,7 +434,61 @@ namespace NERA.Inventory
             if (replacedInstance?.ItemData != null)
                 ItemRemoved?.Invoke(replacedInstance.ItemData);
             InventoryChanged?.Invoke();
+            if (replacedInstance?.ItemData != null)
+            {
+                ReportQuestItemRemoved(replacedInstance.ItemData);
+                ReportQuestItemCount(replacedInstance.ItemData);
+            }
+            ReportQuestItemCount(instance.ItemData);
             return true;
+        }
+
+        private void ReportQuestItemRemoved(ItemData item)
+        {
+            if (item == null)
+                return;
+
+            QuestController.Instance?.Report(
+                QuestSignalType.ItemRemoved,
+                item.ItemId,
+                item.DisplayName);
+        }
+
+        private void ReportQuestItemCount(ItemData item)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.ItemId))
+                return;
+
+            reportedQuestItemIds.Add(item.ItemId);
+            QuestController.Instance?.Report(
+                QuestSignalType.InventoryItemCountChanged,
+                item.ItemId,
+                item.DisplayName,
+                value: CountItem(item.ItemId));
+        }
+
+        private void ReportAllQuestItemCounts()
+        {
+            Dictionary<string, ItemData> itemsById =
+                new Dictionary<string, ItemData>(StringComparer.Ordinal);
+            foreach (ItemData item in Items)
+            {
+                if (item == null || string.IsNullOrWhiteSpace(item.ItemId))
+                    continue;
+
+                itemsById[item.ItemId] = item;
+                reportedQuestItemIds.Add(item.ItemId);
+            }
+
+            foreach (string itemId in reportedQuestItemIds)
+            {
+                itemsById.TryGetValue(itemId, out ItemData item);
+                QuestController.Instance?.Report(
+                    QuestSignalType.InventoryItemCountChanged,
+                    itemId,
+                    item != null ? item.DisplayName : itemId,
+                    value: CountItem(itemId));
+            }
         }
 
         public static bool IsActiveQuickAccessSlot(int index)

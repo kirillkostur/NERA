@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Energy
@@ -38,6 +39,7 @@ namespace NERA.Energy
 
         private bool restoredFromSave;
         private EnergyState state = EnergyState.Offline;
+        private float lastQuestReportedCharge01 = float.NaN;
 
         public static EnergySystemController Instance { get; private set; }
 
@@ -53,6 +55,7 @@ namespace NERA.Energy
         public float Charge01 =>
             TotalCapacity > 0f ? Mathf.Clamp01(currentEnergy / TotalCapacity) : 0f;
         public bool GridEnabled => gridEnabled;
+        public bool IsRestoringState { get; private set; }
         public bool HasUsablePower =>
             gridEnabled && currentEnergy > 0.001f && TotalCapacity > 0f;
         public EnergyState State => state;
@@ -114,6 +117,7 @@ namespace NERA.Energy
             RefreshState();
             RefreshConsumers();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
         }
 
         public bool RegisterBattery(
@@ -153,6 +157,7 @@ namespace NERA.Energy
                 RefreshState();
                 RefreshConsumers();
                 EnergyChanged?.Invoke();
+                ReportQuestCharge();
                 return true;
             }
 
@@ -175,6 +180,7 @@ namespace NERA.Energy
 
             RefreshState();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
             return true;
         }
 
@@ -255,6 +261,7 @@ namespace NERA.Energy
             consumer.RequestedActive = active;
             RefreshConsumers();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
         }
 
         public bool IsConsumerPowered(string consumerId)
@@ -291,6 +298,7 @@ namespace NERA.Energy
             RefreshConsumers();
             RefreshState();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
             return true;
         }
 
@@ -317,6 +325,7 @@ namespace NERA.Energy
 
             RefreshConsumers();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
         }
 
         public void SetGridEnabled(bool enabled)
@@ -325,20 +334,30 @@ namespace NERA.Energy
             RefreshState();
             RefreshConsumers();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
         }
 
         public void RestoreState(float savedEnergy, bool savedGridEnabled)
         {
-            restoredFromSave = true;
-            currentEnergy = Mathf.Max(0f, savedEnergy);
-            gridEnabled = savedGridEnabled;
+            IsRestoringState = true;
+            try
+            {
+                restoredFromSave = true;
+                currentEnergy = Mathf.Max(0f, savedEnergy);
+                gridEnabled = savedGridEnabled;
 
-            if (TotalCapacity > 0f)
-                currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
+                if (TotalCapacity > 0f)
+                    currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
 
-            RefreshState();
-            RefreshConsumers();
-            EnergyChanged?.Invoke();
+                RefreshState();
+                RefreshConsumers();
+                EnergyChanged?.Invoke();
+                ReportQuestCharge();
+            }
+            finally
+            {
+                IsRestoringState = false;
+            }
         }
 
         public void ResetForNewGame()
@@ -355,6 +374,28 @@ namespace NERA.Energy
             RefreshState();
             RefreshConsumers();
             EnergyChanged?.Invoke();
+            ReportQuestCharge();
+        }
+
+        private void ReportQuestCharge()
+        {
+            QuestController quests = QuestController.Instance;
+            if (quests == null)
+                return;
+
+            float charge = Charge01;
+            if (!float.IsNaN(lastQuestReportedCharge01) &&
+                Mathf.Abs(lastQuestReportedCharge01 - charge) < 0.0001f)
+            {
+                return;
+            }
+
+            lastQuestReportedCharge01 = charge;
+            quests.Report(
+                QuestSignalType.EnergyChargeChanged,
+                "station_energy",
+                "Station Energy",
+                value: charge);
         }
 
         private float CalculateGeneration()

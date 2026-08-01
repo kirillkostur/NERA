@@ -416,6 +416,8 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
+  questInteractionId: station_terminal
+  questInteractionName: 
 --- !u!23 &84075193
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -560,6 +562,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6903757456902814300, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: objectId
+      value: station_turret_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 7501967234013005690, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
+      propertyPath: questInteractionId
       value: station_turret_01
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -1376,6 +1382,8 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
+  questInteractionId: 
+  questInteractionName: 
 --- !u!23 &482209751
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2370,6 +2378,8 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
+  questInteractionId: 
+  questInteractionName: 
   objectId: 
   displayName: 
   role: 1

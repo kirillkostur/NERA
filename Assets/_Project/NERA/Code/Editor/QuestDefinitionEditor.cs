@@ -39,7 +39,47 @@ namespace NERA.Editor
             "Состояние объекта упало ниже значения",
             "Состояние объекта восстановлено",
             "На станции возникла неисправность",
-            "Система станции включена"
+            "Система станции включена",
+            "После завершения квеста",
+            "Игрок покинул локацию",
+            "Взаимодействие с объектом завершено",
+            "Предмет покинул инвентарь",
+            "Предмет передан в цель",
+            "Количество предмета в инвентаре",
+            "Система станции выключена",
+            "Система станции улучшена",
+            "Питание станции восстановлено",
+            "Питание станции потеряно",
+            "Уровень заряда станции",
+            "Неисправность станции устранена",
+            "Нападение на станцию началось",
+            "Нападение на станцию отражено",
+            "Сканирование дроном завершено",
+            "Антенной обнаружен сигнал",
+            "Погода изменилась",
+            "Таймер завершён",
+            "Пользовательское событие"
+        };
+
+        private static readonly string[] ConditionLogicLabels =
+        {
+            "Нужно выполнить все условия",
+            "Достаточно любого условия"
+        };
+
+        private static readonly string[] EvaluationLabels =
+        {
+            "Только после нового события",
+            "Если уже выполнено — засчитать сразу"
+        };
+
+        private static readonly string[] ComparisonLabels =
+        {
+            "Меньше",
+            "Не больше",
+            "Равно",
+            "Не меньше",
+            "Больше"
         };
 
         private SerializedProperty questId;
@@ -50,6 +90,7 @@ namespace NERA.Editor
         private SerializedProperty description;
         private SerializedProperty priority;
         private SerializedProperty showInHud;
+        private SerializedProperty activationLogic;
         private SerializedProperty activationConditions;
         private SerializedProperty stages;
 
@@ -63,6 +104,8 @@ namespace NERA.Editor
             description = serializedObject.FindProperty("description");
             priority = serializedObject.FindProperty("priority");
             showInHud = serializedObject.FindProperty("showInHud");
+            activationLogic = serializedObject.FindProperty(
+                "activationLogic");
             activationConditions =
                 serializedObject.FindProperty("activationConditions");
             stages = serializedObject.FindProperty("stages");
@@ -190,9 +233,17 @@ namespace NERA.Editor
                 EditorGUILayout.HelpBox(
                     activationConditions.arraySize == 1
                         ? "Квест появится, когда произойдёт это событие."
-                        : "Квест появится после выполнения всех условий ниже.",
+                        : activationLogic.enumValueIndex ==
+                            (int)QuestConditionLogic.All
+                            ? "Квест появится после выполнения всех " +
+                              "условий ниже."
+                            : "Квест появится после выполнения любого " +
+                              "условия ниже.",
                     MessageType.None);
             }
+
+            if (activationConditions.arraySize > 1)
+                DrawConditionLogic(activationLogic);
 
             DrawConditionList(activationConditions, true);
         }
@@ -202,7 +253,7 @@ namespace NERA.Editor
             DrawSection("4. Этапы квеста");
             EditorGUILayout.HelpBox(
                 "Этапы выполняются по порядку. Если у этапа несколько " +
-                "условий, игрок должен выполнить их все.",
+                "условий, способ их объединения задаётся внутри этапа.",
                 MessageType.None);
 
             for (int index = 0; index < stages.arraySize; index++)
@@ -213,6 +264,8 @@ namespace NERA.Editor
                     stage.FindPropertyRelative("title");
                 SerializedProperty stageDescription =
                     stage.FindPropertyRelative("description");
+                SerializedProperty completionLogic =
+                    stage.FindPropertyRelative("completionLogic");
                 SerializedProperty completionConditions =
                     stage.FindPropertyRelative("completionConditions");
 
@@ -240,6 +293,8 @@ namespace NERA.Editor
                     EditorGUILayout.LabelField(
                         "Условия завершения этапа",
                         EditorStyles.boldLabel);
+                    if (completionConditions.arraySize > 1)
+                        DrawConditionLogic(completionLogic);
                     DrawConditionList(completionConditions, false);
                 }
 
@@ -287,6 +342,8 @@ namespace NERA.Editor
         {
             SerializedProperty signal =
                 condition.FindPropertyRelative("signalType");
+            SerializedProperty evaluation =
+                condition.FindPropertyRelative("evaluation");
             SerializedProperty conditionTarget =
                 condition.FindPropertyRelative("target");
             SerializedProperty targetId =
@@ -295,35 +352,102 @@ namespace NERA.Editor
                 condition.FindPropertyRelative("cause");
             SerializedProperty requiredCount =
                 condition.FindPropertyRelative("requiredCount");
+            SerializedProperty comparison =
+                condition.FindPropertyRelative("comparison");
             SerializedProperty threshold =
                 condition.FindPropertyRelative("threshold");
 
+            int previousSignal = signal.enumValueIndex;
             signal.enumValueIndex = EditorGUILayout.Popup(
                 "Игровое событие",
                 signal.enumValueIndex,
                 SignalLabels);
 
-            DrawTargetSelector(conditionTarget, activation);
-            if (conditionTarget.enumValueIndex ==
-                (int)QuestConditionTarget.SpecificObject)
-            {
-                EditorGUILayout.PropertyField(
-                    targetId,
-                    new GUIContent(
-                        "ID объекта",
-                        "Стабильный ID локации, предмета, исследования, " +
-                        "врага или устройства."));
-            }
-
             QuestSignalType signalType =
                 (QuestSignalType)signal.enumValueIndex;
-            if (signalType == QuestSignalType.StationFaultStarted)
+            if (signal.enumValueIndex != previousSignal)
+            {
+                evaluation.enumValueIndex =
+                    (int)QuestConditionEvaluation.Event;
+                comparison.enumValueIndex =
+                    (int)QuestValueComparison.GreaterOrEqual;
+                requiredCount.intValue = 1;
+                threshold.floatValue =
+                    signalType ==
+                            QuestSignalType.InventoryItemCountChanged ||
+                        signalType == QuestSignalType.StationSystemUpgraded
+                        ? 1f
+                        : 0.5f;
+            }
+
+            bool numericState = UsesNumericState(signalType);
+            if (numericState)
+            {
+                evaluation.enumValueIndex =
+                    (int)QuestConditionEvaluation.CurrentState;
+                EditorGUILayout.LabelField(
+                    "Когда засчитывать условие",
+                    "По текущему значению");
+            }
+            else if (QuestConditionDefinition.SupportsCurrentState(signalType))
+            {
+                evaluation.enumValueIndex = EditorGUILayout.Popup(
+                    new GUIContent(
+                        "Когда засчитывать условие",
+                        "Можно ждать новое событие или сразу учесть уже " +
+                        "выполненное состояние."),
+                    evaluation.enumValueIndex,
+                    EvaluationLabels);
+
+                bool useCurrentState = evaluation.enumValueIndex ==
+                    (int)QuestConditionEvaluation.CurrentState;
+                EditorGUILayout.HelpBox(
+                    useCurrentState
+                        ? "Если условие уже выполнено, оно засчитается " +
+                          "сразу. Иначе система будет ждать его выполнения."
+                        : "Засчитается только событие, произошедшее после " +
+                          "начала этого условия. Выполненное раньше не " +
+                          "учитывается.",
+                    MessageType.Info);
+            }
+            else
+            {
+                evaluation.enumValueIndex =
+                    (int)QuestConditionEvaluation.Event;
+            }
+
+            if (TryGetFixedTarget(
+                    signalType,
+                    out string fixedTargetId,
+                    out string fixedTargetLabel))
+            {
+                conditionTarget.enumValueIndex =
+                    (int)QuestConditionTarget.SpecificObject;
+                targetId.stringValue = fixedTargetId;
+                EditorGUILayout.LabelField("Объект", fixedTargetLabel);
+            }
+            else
+            {
+                DrawTargetSelector(
+                    conditionTarget,
+                    activation,
+                    signalType);
+                if (conditionTarget.enumValueIndex ==
+                    (int)QuestConditionTarget.SpecificObject)
+                {
+                    EditorGUILayout.PropertyField(
+                        targetId,
+                        GetTargetIdContent(signalType));
+                }
+            }
+
+            if (UsesCauseFilter(signalType))
             {
                 EditorGUILayout.PropertyField(
                     cause,
                     new GUIContent(
-                        "Причина (необязательно)",
-                        "Пусто — любая причина."));
+                        "Причина или тег (необязательно)",
+                        "Пусто — принимать событие с любой причиной."));
             }
 
             if (signalType == QuestSignalType.DeviceConditionBelow ||
@@ -340,18 +464,70 @@ namespace NERA.Editor
                     $"{Mathf.RoundToInt(threshold.floatValue * 100f)}%",
                     EditorStyles.miniLabel);
             }
+            else if (numericState)
+            {
+                comparison.enumValueIndex = EditorGUILayout.Popup(
+                    "Сравнение",
+                    comparison.enumValueIndex,
+                    ComparisonLabels);
 
-            EditorGUILayout.PropertyField(
-                requiredCount,
-                new GUIContent(
-                    "Сколько раз",
-                    "Например, исследовать 3 точки или уничтожить 5 врагов."));
-            requiredCount.intValue = Mathf.Max(1, requiredCount.intValue);
+                if (signalType == QuestSignalType.EnergyChargeChanged)
+                {
+                    threshold.floatValue = EditorGUILayout.Slider(
+                        "Уровень заряда",
+                        threshold.floatValue,
+                        0f,
+                        1f);
+                    EditorGUILayout.LabelField(
+                        $"{Mathf.RoundToInt(threshold.floatValue * 100f)}%",
+                        EditorStyles.miniLabel);
+                }
+                else
+                {
+                    int value = Mathf.Max(
+                        0,
+                        Mathf.RoundToInt(threshold.floatValue));
+                    threshold.floatValue = EditorGUILayout.IntField(
+                        signalType ==
+                            QuestSignalType.InventoryItemCountChanged
+                            ? "Количество предметов"
+                            : "Уровень улучшения",
+                        value);
+                    threshold.floatValue = Mathf.Max(
+                        0f,
+                        threshold.floatValue);
+                }
+            }
+
+            if (!numericState)
+            {
+                bool currentState = evaluation.enumValueIndex ==
+                    (int)QuestConditionEvaluation.CurrentState;
+                EditorGUILayout.PropertyField(
+                    requiredCount,
+                    new GUIContent(
+                        currentState
+                            ? "Сколько объектов"
+                            : "Сколько раз",
+                        currentState
+                            ? "Сколько подходящих объектов должно сейчас " +
+                              "соответствовать условию."
+                            : "Например, исследовать 3 точки или уничтожить " +
+                              "5 врагов."));
+                requiredCount.intValue = Mathf.Max(
+                    1,
+                    requiredCount.intValue);
+            }
+            else
+            {
+                requiredCount.intValue = 1;
+            }
         }
 
         private void DrawTargetSelector(
             SerializedProperty conditionTarget,
-            bool activation)
+            bool activation,
+            QuestSignalType signalType)
         {
             List<QuestConditionTarget> values =
                 new List<QuestConditionTarget>();
@@ -364,9 +540,12 @@ namespace NERA.Editor
             }
 
             values.Add(QuestConditionTarget.SpecificObject);
-            labels.Add("Конкретный объект по ID");
+            labels.Add(GetSpecificTargetLabel(signalType));
             values.Add(QuestConditionTarget.AnyObject);
-            labels.Add("Любой объект этого события");
+            labels.Add(
+                signalType == QuestSignalType.QuestCompleted
+                    ? "Завершение любого квеста"
+                    : "Любой объект этого события");
 
             QuestConditionTarget current =
                 (QuestConditionTarget)conditionTarget.enumValueIndex;
@@ -379,6 +558,108 @@ namespace NERA.Editor
                 selected,
                 labels.ToArray());
             conditionTarget.enumValueIndex = (int)values[next];
+        }
+
+        private static void DrawConditionLogic(
+            SerializedProperty logic)
+        {
+            logic.enumValueIndex = EditorGUILayout.Popup(
+                new GUIContent(
+                    "Как объединять",
+                    "Все — логика И. Любое — логика ИЛИ."),
+                logic.enumValueIndex,
+                ConditionLogicLabels);
+        }
+
+        private static bool UsesNumericState(QuestSignalType signalType)
+        {
+            return signalType ==
+                    QuestSignalType.InventoryItemCountChanged ||
+                signalType == QuestSignalType.StationSystemUpgraded ||
+                signalType == QuestSignalType.EnergyChargeChanged;
+        }
+
+        private static bool TryGetFixedTarget(
+            QuestSignalType signalType,
+            out string targetId,
+            out string label)
+        {
+            if (signalType == QuestSignalType.StationPowerOnline ||
+                signalType == QuestSignalType.StationPowerOffline)
+            {
+                targetId = "station_power";
+                label = "Питание станции (station_power)";
+                return true;
+            }
+
+            if (signalType == QuestSignalType.EnergyChargeChanged)
+            {
+                targetId = "station_energy";
+                label = "Энергосистема станции (station_energy)";
+                return true;
+            }
+
+            targetId = string.Empty;
+            label = string.Empty;
+            return false;
+        }
+
+        private static bool UsesCauseFilter(QuestSignalType signalType)
+        {
+            return signalType == QuestSignalType.StationFaultStarted ||
+                signalType == QuestSignalType.StationFaultResolved ||
+                signalType == QuestSignalType.ItemDelivered ||
+                signalType == QuestSignalType.StationAttackStarted ||
+                signalType == QuestSignalType.StationAttackRepelled ||
+                signalType == QuestSignalType.Custom;
+        }
+
+        private static string GetSpecificTargetLabel(
+            QuestSignalType signalType)
+        {
+            return signalType switch
+            {
+                QuestSignalType.QuestCompleted =>
+                    "Конкретный квест по Quest ID",
+                QuestSignalType.ItemCollected or
+                QuestSignalType.ItemRemoved or
+                QuestSignalType.ItemDelivered or
+                QuestSignalType.InventoryItemCountChanged =>
+                    "Конкретный предмет по Item ID",
+                QuestSignalType.WeatherChanged =>
+                    "Конкретная погода по ID",
+                QuestSignalType.Custom =>
+                    "Конкретное событие по Event ID",
+                _ => "Конкретный объект по ID"
+            };
+        }
+
+        private static GUIContent GetTargetIdContent(
+            QuestSignalType signalType)
+        {
+            return signalType switch
+            {
+                QuestSignalType.QuestCompleted => new GUIContent(
+                    "Quest ID",
+                    "Quest ID задания, после завершения которого должно " +
+                    "сработать условие."),
+                QuestSignalType.ItemCollected or
+                QuestSignalType.ItemRemoved or
+                QuestSignalType.ItemDelivered or
+                QuestSignalType.InventoryItemCountChanged => new GUIContent(
+                    "Item ID",
+                    "Стабильный Item ID предмета."),
+                QuestSignalType.WeatherChanged => new GUIContent(
+                    "Weather ID",
+                    "clear, cloudy или sandstorm."),
+                QuestSignalType.Custom => new GUIContent(
+                    "Event ID",
+                    "Стабильный ID пользовательского события."),
+                _ => new GUIContent(
+                    "ID объекта",
+                    "Стабильный ID локации, исследования, врага или " +
+                    "устройства.")
+            };
         }
 
         private static void DrawMoveButtons(
@@ -409,6 +690,8 @@ namespace NERA.Editor
             SerializedProperty condition = list.GetArrayElementAtIndex(index);
             condition.FindPropertyRelative("signalType").enumValueIndex =
                 (int)QuestSignalType.LocationDiscovered;
+            condition.FindPropertyRelative("evaluation").enumValueIndex =
+                (int)QuestConditionEvaluation.Event;
             condition.FindPropertyRelative("target").enumValueIndex =
                 activation
                     ? perObject
@@ -422,6 +705,8 @@ namespace NERA.Editor
             condition.FindPropertyRelative("cause").stringValue =
                 string.Empty;
             condition.FindPropertyRelative("requiredCount").intValue = 1;
+            condition.FindPropertyRelative("comparison").enumValueIndex =
+                (int)QuestValueComparison.GreaterOrEqual;
             condition.FindPropertyRelative("threshold").floatValue = 0.5f;
         }
 
@@ -435,6 +720,8 @@ namespace NERA.Editor
             stage.FindPropertyRelative("title").stringValue = "Новый этап";
             stage.FindPropertyRelative("description").stringValue =
                 string.Empty;
+            stage.FindPropertyRelative("completionLogic").enumValueIndex =
+                (int)QuestConditionLogic.All;
             SerializedProperty conditions =
                 stage.FindPropertyRelative("completionConditions");
             conditions.arraySize = 0;

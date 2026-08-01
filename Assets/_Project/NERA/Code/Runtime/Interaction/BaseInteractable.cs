@@ -1,3 +1,4 @@
+using NERA.Quests;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -18,6 +19,11 @@ namespace NERA.Interaction
         [SerializeField] private UnityEvent onInteractionStarted;
         [SerializeField] private UnityEvent onInteractionCancelled;
         [SerializeField] private UnityEvent onInteractionCompleted;
+
+        [Header("Quest (Optional)")]
+        [Tooltip("Stable object ID. Leave empty if this interaction is not used by quests.")]
+        [SerializeField] private string questInteractionId;
+        [SerializeField] private string questInteractionName;
 
         public Transform InteractionTransform => transform;
 
@@ -45,6 +51,15 @@ namespace NERA.Interaction
         public virtual void CompleteInteraction(GameObject interactor)
         {
             onInteractionCompleted?.Invoke();
+            if (!string.IsNullOrWhiteSpace(questInteractionId))
+            {
+                QuestController.Instance?.Report(
+                    QuestSignalType.ObjectInteractionCompleted,
+                    questInteractionId,
+                    string.IsNullOrWhiteSpace(questInteractionName)
+                        ? gameObject.name
+                        : questInteractionName);
+            }
         }
 
         public void SetAvailable(bool available, string reason = null)

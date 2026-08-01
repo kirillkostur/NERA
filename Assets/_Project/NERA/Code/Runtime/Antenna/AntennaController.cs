@@ -3,6 +3,7 @@ using NERA.Energy;
 using NERA.Expeditions;
 using NERA.Locations;
 using NERA.Maintenance;
+using NERA.Quests;
 using NERA.Station;
 using NERA.Terminal;
 using UnityEngine;
@@ -252,6 +253,10 @@ namespace NERA.Antenna
                 ActiveSignalMapSlot = PickRandomDiscoveredExpeditionSlot();
                 SetState(AntennaState.SignalFound);
                 SignalFound?.Invoke(target);
+                QuestController.Instance?.Report(
+                    QuestSignalType.AntennaSignalFound,
+                    target.LocationId,
+                    target.DisplayName);
                 ActiveSignalChanged?.Invoke(target);
                 return;
             }

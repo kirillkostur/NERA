@@ -192,6 +192,11 @@ namespace NERA.Core
                 yield break;
             }
 
+            if (!string.IsNullOrWhiteSpace(previousSceneName))
+                ReportSceneSignal(
+                    QuestSignalType.LocationExited,
+                    previousSceneName);
+
             SceneManager.SetActiveScene(targetScene);
             currentGameplaySceneName = sceneName;
             ReportSceneEntered(sceneName);
@@ -213,6 +218,13 @@ namespace NERA.Core
 
         private void ReportSceneEntered(string sceneName)
         {
+            ReportSceneSignal(QuestSignalType.LocationEntered, sceneName);
+        }
+
+        private void ReportSceneSignal(
+            QuestSignalType signalType,
+            string sceneName)
+        {
             string targetId = sceneName;
             string targetName = sceneName;
             ExpeditionDiscoveryController discovery =
@@ -227,7 +239,7 @@ namespace NERA.Core
             }
 
             QuestController.Instance?.Report(
-                QuestSignalType.LocationEntered,
+                signalType,
                 targetId,
                 targetName);
         }

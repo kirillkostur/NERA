@@ -8,6 +8,8 @@ namespace NERA.Quests
     public sealed class QuestConditionDefinition
     {
         [SerializeField] private QuestSignalType signalType;
+        [SerializeField] private QuestConditionEvaluation evaluation =
+            QuestConditionEvaluation.Event;
         [SerializeField] private QuestConditionTarget target =
             QuestConditionTarget.SpecificObject;
         [Tooltip("Stable ID of the object required by this condition.")]
@@ -15,17 +17,59 @@ namespace NERA.Quests
         [Tooltip("Optional cause filter, for example EnemySabotage.")]
         [SerializeField] private string cause;
         [SerializeField, Min(1)] private int requiredCount = 1;
-        [Tooltip("Used by DeviceConditionBelow and DeviceConditionRestored.")]
-        [SerializeField, Range(0f, 1f)] private float threshold = 0.5f;
+        [SerializeField] private QuestValueComparison comparison =
+            QuestValueComparison.GreaterOrEqual;
+        [Tooltip("Numeric value used by state and threshold conditions.")]
+        [SerializeField, Min(0f)] private float threshold = 0.5f;
 
         public QuestSignalType SignalType => signalType;
+        public QuestConditionEvaluation Evaluation => evaluation;
         public QuestConditionTarget Target => target;
         public string TargetId => targetId?.Trim() ?? string.Empty;
         public string Cause => cause?.Trim() ?? string.Empty;
         public int RequiredCount => Mathf.Max(1, requiredCount);
-        public float Threshold => Mathf.Clamp01(threshold);
+        public QuestValueComparison Comparison => comparison;
+        public float Threshold => UsesNormalizedValue
+            ? Mathf.Clamp01(threshold)
+            : Mathf.Max(0f, threshold);
+        public bool UsesCurrentState =>
+            evaluation == QuestConditionEvaluation.CurrentState;
+        public bool UsesValueComparison => signalType ==
+                QuestSignalType.InventoryItemCountChanged ||
+            signalType == QuestSignalType.StationSystemUpgraded ||
+            signalType == QuestSignalType.EnergyChargeChanged;
+        public bool UsesNormalizedValue =>
+            signalType == QuestSignalType.DeviceConditionBelow ||
+            signalType == QuestSignalType.DeviceConditionRestored ||
+            signalType == QuestSignalType.EnergyChargeChanged;
+
+        public static bool SupportsCurrentState(QuestSignalType type)
+        {
+            return type == QuestSignalType.LocationDiscovered ||
+                type == QuestSignalType.LocationEntered ||
+                type == QuestSignalType.ResearchAnalyzed ||
+                type == QuestSignalType.DeviceConditionBelow ||
+                type == QuestSignalType.DeviceConditionRestored ||
+                type == QuestSignalType.StationSystemActivated ||
+                type == QuestSignalType.QuestCompleted ||
+                type == QuestSignalType.InventoryItemCountChanged ||
+                type == QuestSignalType.StationSystemDeactivated ||
+                type == QuestSignalType.StationSystemUpgraded ||
+                type == QuestSignalType.StationPowerOnline ||
+                type == QuestSignalType.StationPowerOffline ||
+                type == QuestSignalType.EnergyChargeChanged ||
+                type == QuestSignalType.WeatherChanged;
+        }
 
         internal bool Matches(
+            QuestSignal signal,
+            string contextTargetId)
+        {
+            return MatchesIdentity(signal, contextTargetId) &&
+                IsSatisfiedBy(signal);
+        }
+
+        internal bool MatchesIdentity(
             QuestSignal signal,
             string contextTargetId)
         {
@@ -49,20 +93,43 @@ namespace NERA.Quests
             }
 
             string expectedCause = QuestIdUtility.Normalize(Cause);
-            if (signalType == QuestSignalType.StationFaultStarted &&
-                !string.IsNullOrEmpty(expectedCause) &&
+            if (!string.IsNullOrEmpty(expectedCause) &&
                 !QuestIdUtility.Equals(signal.Cause, expectedCause))
             {
                 return false;
             }
 
+            return true;
+        }
+
+        internal bool IsSatisfiedBy(QuestSignal signal)
+        {
             return signalType switch
             {
                 QuestSignalType.DeviceConditionBelow =>
                     signal.Value <= Threshold,
                 QuestSignalType.DeviceConditionRestored =>
                     signal.Value >= Threshold,
+                QuestSignalType.InventoryItemCountChanged =>
+                    Compare(signal.Value, Threshold),
+                QuestSignalType.StationSystemUpgraded =>
+                    Compare(signal.Value, Threshold),
+                QuestSignalType.EnergyChargeChanged =>
+                    Compare(signal.Value, Threshold),
                 _ => true
+            };
+        }
+
+        private bool Compare(float actual, float expected)
+        {
+            return comparison switch
+            {
+                QuestValueComparison.Less => actual < expected,
+                QuestValueComparison.LessOrEqual => actual <= expected,
+                QuestValueComparison.Equal =>
+                    Mathf.Approximately(actual, expected),
+                QuestValueComparison.Greater => actual > expected,
+                _ => actual >= expected
             };
         }
 
@@ -92,6 +159,12 @@ namespace NERA.Quests
                 return false;
             }
 
+            if (UsesCurrentState && !SupportsCurrentState(signalType))
+            {
+                error = $"event '{signalType}' cannot check current state";
+                return false;
+            }
+
             error = string.Empty;
             return true;
         }
@@ -102,11 +175,14 @@ namespace NERA.Quests
     {
         [SerializeField] private string title;
         [SerializeField, TextArea] private string description;
+        [SerializeField] private QuestConditionLogic completionLogic =
+            QuestConditionLogic.All;
         [SerializeField] private List<QuestConditionDefinition>
             completionConditions = new List<QuestConditionDefinition>();
 
         public string Title => title?.Trim() ?? string.Empty;
         public string Description => description?.Trim() ?? string.Empty;
+        public QuestConditionLogic CompletionLogic => completionLogic;
         public IReadOnlyList<QuestConditionDefinition> CompletionConditions =>
             completionConditions ??
             (IReadOnlyList<QuestConditionDefinition>)
@@ -132,6 +208,8 @@ namespace NERA.Quests
         [SerializeField] private bool showInHud = true;
 
         [Header("Lifecycle")]
+        [SerializeField] private QuestConditionLogic activationLogic =
+            QuestConditionLogic.All;
         [SerializeField] private List<QuestConditionDefinition>
             activationConditions = new List<QuestConditionDefinition>();
         [SerializeField] private List<QuestStageDefinition> stages =
@@ -148,6 +226,7 @@ namespace NERA.Quests
         public bool CanRepeat => availability == QuestAvailability.Repeatable;
         public bool UsesTriggeringObject =>
             targetScope == QuestTargetScope.PerTriggeringObject;
+        public QuestConditionLogic ActivationLogic => activationLogic;
         public IReadOnlyList<QuestConditionDefinition> ActivationConditions =>
             activationConditions ??
             (IReadOnlyList<QuestConditionDefinition>)

@@ -11,9 +11,10 @@ namespace NERA.Quests
         [SerializeField] private string targetName;
         [SerializeField] private string cause;
         [SerializeField, Min(1)] private int amount = 1;
-        [SerializeField, Range(0f, 1f)] private float value;
+        [SerializeField, Min(0f)] private float value;
         [SerializeField] private bool emitOnStart;
         [SerializeField] private bool emitOnPlayerTrigger = true;
+        [SerializeField] private bool emitOnPlayerExit;
         [SerializeField] private bool oneShot = true;
 
         private bool emitted;
@@ -27,6 +28,16 @@ namespace NERA.Quests
         private void OnTriggerEnter(Collider other)
         {
             if (emitOnPlayerTrigger &&
+                other != null &&
+                other.CompareTag("Player"))
+            {
+                Emit();
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (emitOnPlayerExit &&
                 other != null &&
                 other.CompareTag("Player"))
             {

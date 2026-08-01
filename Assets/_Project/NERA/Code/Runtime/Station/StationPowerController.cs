@@ -1,5 +1,6 @@
 using System;
 using NERA.Energy;
+using NERA.Quests;
 using UnityEngine;
 
 namespace NERA.Station
@@ -7,6 +8,8 @@ namespace NERA.Station
     public sealed class StationPowerController : MonoBehaviour
     {
         [SerializeField] private StationPowerState initialState = StationPowerState.Offline;
+
+        private StationPowerState? lastReportedQuestState;
 
         public static StationPowerController Instance { get; private set; }
 
@@ -31,10 +34,13 @@ namespace NERA.Station
         {
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy == null)
+            {
+                ReportQuestState(State, true);
                 return;
+            }
 
             energy.StateChanged += HandleEnergyStateChanged;
-            SyncFromEnergy(energy);
+            SyncFromEnergy(energy, true);
         }
 
         public bool RestorePower()
@@ -67,18 +73,27 @@ namespace NERA.Station
                 energy.SetGridEnabled(newState == StationPowerState.Online);
 
             if (State == newState)
+            {
+                ReportQuestState(State, true);
                 return;
+            }
 
             State = newState;
             StateChanged?.Invoke(State);
+            ReportQuestState(State);
         }
 
         private void HandleEnergyStateChanged(EnergyState _)
         {
-            SyncFromEnergy(EnergySystemController.Instance);
+            EnergySystemController energy = EnergySystemController.Instance;
+            SyncFromEnergy(
+                energy,
+                energy != null && energy.IsRestoringState);
         }
 
-        private void SyncFromEnergy(EnergySystemController energy)
+        private void SyncFromEnergy(
+            EnergySystemController energy,
+            bool synchronizeOnly = false)
         {
             if (energy == null)
                 return;
@@ -89,10 +104,44 @@ namespace NERA.Station
                     : StationPowerState.Offline;
 
             if (State == target)
+            {
+                if (synchronizeOnly)
+                    ReportQuestState(State, true);
                 return;
+            }
 
             State = target;
             StateChanged?.Invoke(State);
+            ReportQuestState(State, synchronizeOnly);
+        }
+
+        private void ReportQuestState(
+            StationPowerState state,
+            bool synchronizeOnly = false)
+        {
+            QuestController quests = QuestController.Instance;
+            if (quests == null)
+            {
+                return;
+            }
+
+            QuestSignalType signalType = state == StationPowerState.Online
+                ? QuestSignalType.StationPowerOnline
+                : QuestSignalType.StationPowerOffline;
+            if (synchronizeOnly)
+            {
+                quests.SynchronizeState(
+                    signalType,
+                    "station_power",
+                    "Station Power");
+                return;
+            }
+
+            if (lastReportedQuestState == state)
+                return;
+
+            lastReportedQuestState = state;
+            quests.Report(signalType, "station_power", "Station Power");
         }
 
         private void OnDestroy()

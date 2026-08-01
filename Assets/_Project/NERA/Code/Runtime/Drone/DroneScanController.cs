@@ -1,6 +1,7 @@
 using System;
 using NERA.Expeditions;
 using NERA.Energy;
+using NERA.Quests;
 using NERA.Station;
 using UnityEngine;
 
@@ -196,6 +197,18 @@ namespace NERA.Drone
             ScanCompleted?.Invoke(
                 new DroneScanResult(scanLocation, newlyDiscovered)
             );
+            QuestController.Instance?.Report(
+                QuestSignalType.DroneScanCompleted,
+                scanLocation != null
+                    ? scanLocation.LocationId
+                    : "drone_scan",
+                scanLocation != null
+                    ? scanLocation.DisplayName
+                    : "Drone Scan",
+                value: newlyDiscovered ? 1f : 0f,
+                cause: newlyDiscovered
+                    ? "new_location"
+                    : "known_location");
             Debug.Log("DroneScanController: Scan complete.", this);
         }
 

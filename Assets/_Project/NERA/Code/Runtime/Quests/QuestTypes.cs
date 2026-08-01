@@ -28,6 +28,27 @@ namespace NERA.Quests
         QuestTarget
     }
 
+    public enum QuestConditionLogic
+    {
+        All,
+        Any
+    }
+
+    public enum QuestConditionEvaluation
+    {
+        Event,
+        CurrentState
+    }
+
+    public enum QuestValueComparison
+    {
+        Less,
+        LessOrEqual,
+        Equal,
+        GreaterOrEqual,
+        Greater
+    }
+
     public enum QuestSignalType
     {
         LocationDiscovered,
@@ -40,7 +61,26 @@ namespace NERA.Quests
         DeviceConditionBelow,
         DeviceConditionRestored,
         StationFaultStarted,
-        StationSystemActivated
+        StationSystemActivated,
+        QuestCompleted,
+        LocationExited,
+        ObjectInteractionCompleted,
+        ItemRemoved,
+        ItemDelivered,
+        InventoryItemCountChanged,
+        StationSystemDeactivated,
+        StationSystemUpgraded,
+        StationPowerOnline,
+        StationPowerOffline,
+        EnergyChargeChanged,
+        StationFaultResolved,
+        StationAttackStarted,
+        StationAttackRepelled,
+        DroneScanCompleted,
+        AntennaSignalFound,
+        WeatherChanged,
+        TimerElapsed,
+        Custom
     }
 
     public readonly struct QuestSignal
@@ -169,24 +209,46 @@ namespace NERA.Quests
             return true;
         }
 
+        internal bool SetConditionProgress(
+            int index,
+            bool complete,
+            int requiredCount)
+        {
+            if (index < 0 || index >= conditionProgress.Length)
+                return false;
+
+            int next = complete ? Math.Max(1, requiredCount) : 0;
+            if (conditionProgress[index] == next)
+                return false;
+
+            conditionProgress[index] = next;
+            return true;
+        }
+
         internal bool IsStageComplete()
         {
             QuestStageDefinition stage = CurrentStage;
             if (stage == null || stage.CompletionConditions.Count == 0)
                 return false;
 
+            bool anyComplete = false;
             for (int index = 0;
                  index < stage.CompletionConditions.Count;
                  index++)
             {
-                if (GetConditionProgress(index) <
-                    stage.CompletionConditions[index].RequiredCount)
+                bool complete = GetConditionProgress(index) >=
+                    stage.CompletionConditions[index].RequiredCount;
+                if (stage.CompletionLogic == QuestConditionLogic.All &&
+                    !complete)
                 {
                     return false;
                 }
+
+                anyComplete |= complete;
             }
 
-            return true;
+            return stage.CompletionLogic == QuestConditionLogic.All ||
+                anyComplete;
         }
 
         internal bool AdvanceStage()

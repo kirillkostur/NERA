@@ -68,6 +68,11 @@ namespace NERA.Station
             InstanceChanged?.Invoke(this);
         }
 
+        private void Start()
+        {
+            SynchronizeQuestStates();
+        }
+
         public StationSystemDefinition GetDefinition(
             StationSystemType type,
             string objectId = null)
@@ -400,6 +405,8 @@ namespace NERA.Station
                 objectState.RequestedActive = active;
                 if (active)
                     ReportSystemActivated(definition, objectId);
+                else
+                    ReportSystemDeactivated(definition, objectId);
                 SystemsChanged?.Invoke();
                 return true;
             }
@@ -410,6 +417,8 @@ namespace NERA.Station
             requestedStates[type] = active;
             if (active)
                 ReportSystemActivated(definition, objectId);
+            else
+                ReportSystemDeactivated(definition, objectId);
             SystemsChanged?.Invoke();
             return true;
         }
@@ -445,6 +454,7 @@ namespace NERA.Station
                 ResolveQuestTargetId(type, objectId),
                 definition.DisplayName,
                 cause);
+            ReportSystemDeactivated(definition, objectId, cause);
             if (changed)
                 SystemsChanged?.Invoke();
             return true;
@@ -665,6 +675,11 @@ namespace NERA.Station
                     requestedStates[type] = true;
             }
 
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemUpgraded,
+                ResolveQuestTargetId(type, objectId),
+                definition.DisplayName,
+                value: targetLevel);
             SystemsChanged?.Invoke();
             return true;
         }
@@ -780,12 +795,14 @@ namespace NERA.Station
             }
 
             SystemsChanged?.Invoke();
+            SynchronizeQuestStates();
         }
 
         public void ResetSystems()
         {
             InitializeDefaults();
             SystemsChanged?.Invoke();
+            SynchronizeQuestStates();
         }
 
         private void InitializeDefaults()
@@ -880,6 +897,59 @@ namespace NERA.Station
                 QuestSignalType.StationSystemActivated,
                 ResolveQuestTargetId(definition.SystemType, objectId),
                 definition.DisplayName);
+        }
+
+        private static void ReportSystemDeactivated(
+            StationSystemDefinition definition,
+            string objectId,
+            string cause = null)
+        {
+            if (definition == null)
+                return;
+
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemDeactivated,
+                ResolveQuestTargetId(definition.SystemType, objectId),
+                definition.DisplayName,
+                cause: cause);
+        }
+
+        private void SynchronizeQuestStates()
+        {
+            QuestController quests = QuestController.Instance;
+            if (quests == null)
+                return;
+
+            foreach (StationSystemDefinition definition in
+                     Config.StationObjects)
+            {
+                if (definition == null)
+                    continue;
+
+                string objectId = definition.ObjectId;
+                string targetId = ResolveQuestTargetId(
+                    definition.SystemType,
+                    objectId);
+                bool active = IsRequestedActive(
+                    definition.SystemType,
+                    objectId,
+                    definition.InitialLevel,
+                    definition.InitiallyActive);
+                quests.SynchronizeState(
+                    active
+                        ? QuestSignalType.StationSystemActivated
+                        : QuestSignalType.StationSystemDeactivated,
+                    targetId,
+                    definition.DisplayName);
+                quests.SynchronizeState(
+                    QuestSignalType.StationSystemUpgraded,
+                    targetId,
+                    definition.DisplayName,
+                    value: GetUpgradeLevel(
+                        definition.SystemType,
+                        objectId,
+                        definition.InitialLevel));
+            }
         }
 
         private static string ResolveQuestTargetId(
