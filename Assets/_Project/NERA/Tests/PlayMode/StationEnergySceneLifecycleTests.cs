@@ -658,9 +658,29 @@ namespace NERA.Tests
             Assert.That(
                 quests.IsCompleted("main.restore_battery"),
                 Is.True);
-            Assert.That(questHud.IsVisible, Is.False);
+            Assert.That(
+                quests.FindActive("main.first_terminal"),
+                Is.Not.Null,
+                "The terminal introduction follows the battery quest.");
+            Assert.That(questHud.IsVisible, Is.True);
+
+            quests.Report(
+                QuestSignalType.ObjectInteractionCompleted,
+                "station_terminal",
+                "Station Terminal");
+            Assert.That(
+                quests.IsCompleted("main.first_terminal"),
+                Is.True);
+            Assert.That(
+                quests.FindActive("main.launch_drone_expedition_01"),
+                Is.Not.Null);
 
             Assert.That(discovery.Discover("Expedition_01"), Is.True);
+            quests.Report(
+                QuestSignalType.DroneScanCompleted,
+                "Expedition_01",
+                "Ancient Outpost",
+                cause: "new_location");
             Assert.That(
                 quests.FindActive("main.expedition_01")?.CurrentStageIndex,
                 Is.Zero);

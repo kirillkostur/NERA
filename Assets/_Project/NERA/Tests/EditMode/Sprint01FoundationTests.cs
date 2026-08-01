@@ -294,12 +294,9 @@ namespace NERA.Tests
         public void DroneExpeditionQuestAppearsOnceAndCompletesAfterReturn()
         {
             quests.Report(
-                QuestSignalType.LocationEntered,
-                "Player_Station");
-            quests.Report(
-                QuestSignalType.StationSystemActivated,
-                "station_battery",
-                "BATTERY");
+                QuestSignalType.ObjectInteractionCompleted,
+                "station_terminal",
+                "Station Terminal");
 
             const string questId =
                 "main.launch_drone_expedition_01";
