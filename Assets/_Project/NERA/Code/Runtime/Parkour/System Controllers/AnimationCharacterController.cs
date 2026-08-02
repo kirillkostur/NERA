@@ -105,9 +105,14 @@ namespace Climbing
             animator.SetBool("Hanging", true);
         }
 
-        public void LedgeToLedge(ClimbController.ClimbState state, Vector3 direction, ref float startTime, ref float endTime)
+        public void LedgeToLedge(
+            ClimbController.ClimbState sourceState,
+            ClimbController.ClimbState targetState,
+            Vector3 direction,
+            ref float startTime,
+            ref float endTime)
         {
-            if (state == ClimbController.ClimbState.BHanging)
+            if (sourceState == ClimbController.ClimbState.BHanging)
             {
                 if (direction.x == -1 && direction.y == 0 ||
                     direction.x == -1 && direction.y == 1 ||
@@ -140,7 +145,7 @@ namespace Climbing
                 }
             }
 
-            animator.SetInteger("Climb State", (int)state);
+            animator.SetInteger("Climb State", (int)targetState);
             animator.SetBool("Hanging", true);
         }
         public void BracedClimb()
@@ -225,7 +230,7 @@ namespace Climbing
 
         public void SetMatchTarget(AvatarTarget avatarTarget, Vector3 targetPos, Quaternion targetRot, Vector3 offset, float startnormalizedTime, float targetNormalizedTime)
         {
-            if (animator.isMatchingTarget)
+            if (animator.IsInTransition(0) || animator.isMatchingTarget)
                 return;
 
             float normalizeTime = Mathf.Repeat(animState.normalizedTime, 1f);
