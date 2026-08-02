@@ -3,6 +3,7 @@ using NERA.Items;
 using NERA.Research;
 using NERA.Energy;
 using NERA.Station;
+using NERA.Player;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -58,9 +59,7 @@ namespace NERA.Inventory
         private ItemData selectedItem;
         private InventorySlotGroup selectedGroup;
         private int selectedIndex = -1;
-        private PlayerController playerController;
-        private PlayerInteractionController interactionController;
-        private PlayerFollowCamera followCamera;
+        private ParkourPlayerBridge playerController;
         private bool inventoryOpen;
         private bool laboratoryOpen;
         private bool chargingOpen;
@@ -198,6 +197,7 @@ namespace NERA.Inventory
             selectedIndex = -1;
             inventoryPanel.SetActive(false);
             SetQuickAccessVisible(!externalUiLocked);
+            SetPlayerInput(true);
         }
 
         public void SetExternalUiLock(bool locked)
@@ -215,6 +215,7 @@ namespace NERA.Inventory
                 laboratoryPanel.SetActive(false);
                 if (!authoredHud && chargingPanel != null)
                     chargingPanel.SetActive(false);
+                SetPlayerInput(true);
             }
 
             SetQuickAccessVisible(!locked && !laboratoryOpen && !chargingOpen);
@@ -727,10 +728,9 @@ namespace NERA.Inventory
             if (inventory != null)
             {
                 inventory.InventoryChanged += RefreshAll;
-                playerController = inventory.GetComponent<PlayerController>();
-                interactionController = inventory.GetComponent<PlayerInteractionController>();
+                playerController =
+                    inventory.GetComponent<ParkourPlayerBridge>();
             }
-            followCamera = FindFirstObjectByType<PlayerFollowCamera>();
         }
 
         private void SelectItem(InventorySlotGroup group, int index)
@@ -1163,11 +1163,7 @@ namespace NERA.Inventory
         private void SetPlayerInput(bool enabled)
         {
             if (playerController != null)
-                playerController.SetInputEnabled(enabled);
-            if (interactionController != null)
-                interactionController.enabled = enabled;
-            if (followCamera != null)
-                followCamera.SetInputEnabled(enabled);
+                playerController.SetInputEnabled(this, enabled);
 
             Cursor.lockState = enabled ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !enabled;
@@ -1175,6 +1171,8 @@ namespace NERA.Inventory
 
         private void OnDestroy()
         {
+            if (playerController != null)
+                playerController.SetInputEnabled(this, true);
             if (inventory != null)
                 inventory.InventoryChanged -= RefreshAll;
             if (Instance == this)

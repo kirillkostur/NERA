@@ -19,6 +19,6 @@ MonoBehaviour:
   cooldown: 0.65
   hitMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 53185
   beamColor: {r: 0.1, g: 0.8, b: 1, a: 1}
   debugBeamDuration: 0.08

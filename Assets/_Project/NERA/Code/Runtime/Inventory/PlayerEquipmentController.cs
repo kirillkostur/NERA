@@ -20,6 +20,7 @@ namespace NERA.Inventory
         private readonly Dictionary<int, GameObject> equippedVisuals =
             new Dictionary<int, GameObject>();
         private PlayerInventory inventory;
+        private bool inputEnabled = true;
 
         public event Func<ItemInstance, QuickAccessAction, bool> EquipmentUseRequested;
         public event Func<ItemInstance, AnomalyIntegrationDefinition, bool>
@@ -68,7 +69,9 @@ namespace NERA.Inventory
 
         private void Update()
         {
-            if (inventory == null || Cursor.lockState != CursorLockMode.Locked)
+            if (!inputEnabled ||
+                inventory == null ||
+                Cursor.lockState != CursorLockMode.Locked)
                 return;
 
             if (Input.GetKeyDown(KeyCode.R))
@@ -119,6 +122,11 @@ namespace NERA.Inventory
                 this
             );
             return true;
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            inputEnabled = enabled;
         }
 
         public bool TryUseIntegratedAnomaly(ItemInstance instance)
@@ -304,12 +312,11 @@ namespace NERA.Inventory
                 if (item == null || item.EquippedVisualPrefab == null)
                     continue;
 
-                Transform anchor = FindChildRecursive(
-                    transform,
+                string anchorName =
                     string.IsNullOrWhiteSpace(item.EquipmentAnchorName)
                         ? fallbackAnchorName
-                        : item.EquipmentAnchorName
-                );
+                        : item.EquipmentAnchorName;
+                Transform anchor = FindEquipmentAnchor(anchorName);
                 if (anchor == null)
                 {
                     Debug.LogWarning(
@@ -367,6 +374,33 @@ namespace NERA.Inventory
             }
 
             return null;
+        }
+
+        private Transform FindEquipmentAnchor(string anchorName)
+        {
+            Transform exact = FindChildRecursive(transform, anchorName);
+            if (exact != null)
+                return exact;
+
+            int separatorIndex = anchorName.LastIndexOf(':');
+            string unprefixedName = separatorIndex >= 0
+                ? anchorName.Substring(separatorIndex + 1)
+                : anchorName;
+
+            Animator animator = GetComponentInChildren<Animator>();
+            if (animator != null && animator.isHuman &&
+                string.Equals(
+                    unprefixedName,
+                    "RightHand",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                Transform humanoidHand =
+                    animator.GetBoneTransform(HumanBodyBones.RightHand);
+                if (humanoidHand != null)
+                    return humanoidHand;
+            }
+
+            return FindChildRecursive(transform, unprefixedName);
         }
     }
 }

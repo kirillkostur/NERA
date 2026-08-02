@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using Climbing;
+using NERA.Combat;
 using NERA.Core;
 using NERA.Drone;
 using NERA.Energy;
@@ -9,6 +11,7 @@ using NERA.Expeditions;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Player;
 using NERA.Research;
 using NERA.Quests;
 using NERA.Save;
@@ -1831,54 +1834,226 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator InteractionTargetUsesAimCameraWithoutCombatAim()
+        public IEnumerator InteractionTargetUsesProximityFromAnySide()
+        {
+            GameObject player = new GameObject("ProximityPlayer");
+            PlayerInteractionController interaction =
+                player.AddComponent<PlayerInteractionController>();
+            GameObject target = GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
+            target.name = "ProximityTarget";
+            target.layer = 6;
+            ProximityTestInteractable interactable =
+                target.AddComponent<ProximityTestInteractable>();
+
+            Vector3[] approachDirections =
+            {
+                Vector3.forward,
+                Vector3.back,
+                Vector3.left,
+                Vector3.right,
+            };
+
+            foreach (Vector3 direction in approachDirections)
+            {
+                player.transform.SetPositionAndRotation(
+                    target.transform.position + direction * 1.25f,
+                    Quaternion.LookRotation(direction));
+                Physics.SyncTransforms();
+                yield return null;
+
+                Assert.That(
+                    interaction.CurrentInteractable,
+                    Is.SameAs(interactable),
+                    $"Interaction was not detected from {direction}.");
+            }
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "InteractionObstruction";
+            wall.transform.SetPositionAndRotation(
+                target.transform.position + Vector3.forward * 0.65f,
+                Quaternion.identity);
+            wall.transform.localScale = new Vector3(2f, 2f, 0.1f);
+            player.transform.position = target.transform.position +
+                                        Vector3.forward * 1.25f;
+            Physics.SyncTransforms();
+            yield return null;
+
+            Assert.That(
+                interaction.CurrentInteractable,
+                Is.Null,
+                "A wall must block interaction without reintroducing aim/facing.");
+            Object.Destroy(wall);
+            yield return null;
+
+            interactable.IsAvailable = false;
+            yield return null;
+
+            Assert.That(
+                interaction.CurrentInteractable,
+                Is.SameAs(interactable),
+                "Unavailable targets must remain visible so HUD can show " +
+                "the reason, while input remains blocked.");
+
+            player.transform.position = target.transform.position +
+                                        Vector3.forward * 4f;
+            Physics.SyncTransforms();
+            yield return null;
+
+            Assert.That(interaction.CurrentInteractable, Is.Null);
+            Object.Destroy(player);
+            Object.Destroy(target);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerDeathSwitchesMotorToSeparateRagdoll()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
             yield return null;
             yield return DisablePersistenceForTest();
 
-            PlayerInteractionController interaction =
-                Object.FindFirstObjectByType<PlayerInteractionController>();
-            PlayerFollowCamera followCamera =
-                Object.FindFirstObjectByType<PlayerFollowCamera>();
-            LaboratoryTableInteractable laboratory =
-                Object.FindFirstObjectByType<LaboratoryTableInteractable>();
-
-            Assert.That(interaction, Is.Not.Null);
-            Assert.That(followCamera, Is.Not.Null);
-            Assert.That(laboratory, Is.Not.Null);
-
-            MethodInfo setCurrentInteractable =
-                typeof(PlayerInteractionController).GetMethod(
-                    "SetCurrentInteractable",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.That(setCurrentInteractable, Is.Not.Null);
-
-            interaction.enabled = false;
-
-            setCurrentInteractable.Invoke(
-                interaction,
-                new object[] { laboratory });
-            yield return new WaitForSecondsRealtime(0.5f);
-
-            Assert.That(followCamera.IsInteractionFocused, Is.True);
-            Assert.That(followCamera.IsAimCameraActive, Is.True);
+            PlayerHealth health =
+                Object.FindFirstObjectByType<PlayerHealth>();
+            ParkourPlayerBridge bridge =
+                Object.FindFirstObjectByType<ParkourPlayerBridge>();
+            AnimationCharacterController parkourAnimation =
+                Object.FindFirstObjectByType<AnimationCharacterController>();
+            Assert.That(health, Is.Not.Null);
+            Assert.That(bridge, Is.Not.Null);
+            Assert.That(parkourAnimation, Is.Not.Null);
+            Assert.That(parkourAnimation.switchCameras, Is.Not.Null);
             Assert.That(
-                followCamera.IsAiming,
+                parkourAnimation.switchCameras.transform.IsChildOf(
+                    bridge.transform.parent),
+                Is.True,
+                "Parkour camera switcher must belong to the Player rig.");
+
+            ThirdPersonController parkour =
+                bridge.GetComponent<ThirdPersonController>();
+            parkour.characterAnimation.switchCameras.SlideCam();
+            parkour.SetSlidingCollider(true);
+            parkour.characterMovement.enableFeetIK = false;
+            parkour.characterAnimation.animator.SetFloat("AnimSpeed", 2f);
+            parkour.characterAnimation.animator.SetBool(
+                "PredictedJump",
+                true);
+            parkour.characterAnimation.animator.SetBool("Crouch", true);
+            parkour.characterAnimation.animator.Play(
+                "Running Slide",
+                0,
+                0f);
+            parkour.characterAnimation.animator.Update(0f);
+            parkour.cameraController.newOffset(true);
+            yield return null;
+
+            parkour.isVaulting = true;
+            bridge.LocomotionBody.isKinematic = true;
+            bridge.Teleport(
+                bridge.transform.position + Vector3.right * 0.25f,
+                bridge.transform.rotation);
+            Assert.That(
+                bridge.LocomotionBody.isKinematic,
                 Is.False,
-                "Interaction focus must not enable combat aim or weapon locomotion.");
-
-            setCurrentInteractable.Invoke(
-                interaction,
-                new object[] { null });
-            yield return new WaitForSecondsRealtime(0.5f);
-
-            Assert.That(followCamera.IsInteractionFocused, Is.False);
-            Assert.That(followCamera.IsAimCameraActive, Is.False);
+                "A scene teleport during vault must restore the live motor.");
+            Assert.That(parkour.isVaulting, Is.False);
+            Assert.That(bridge.LocomotionBody.useGravity, Is.True);
+            Assert.That(bridge.LocomotionBody.detectCollisions, Is.True);
+            Assert.That(parkour.characterMovement.enableFeetIK, Is.True);
             Assert.That(
-                followCamera.GetDistance(),
-                Is.EqualTo(followCamera.GetTargetDistance()).Within(0.05f));
+                bridge.GetComponents<CapsuleCollider>()
+                    .Single(collider => collider.enabled),
+                Is.SameAs(parkour.normalCapsuleCollider));
+            Assert.That(
+                parkour.characterAnimation.switchCameras.IsFreeLookActive,
+                Is.True);
+            Assert.That(parkour.cameraController.IsAtDefaultOffset, Is.True);
+            Assert.That(
+                parkour.characterAnimation.animator.GetFloat("AnimSpeed"),
+                Is.EqualTo(1f).Within(0.001f));
+            Assert.That(
+                parkour.characterAnimation.animator.GetBool("PredictedJump"),
+                Is.False);
+            Assert.That(
+                parkour.characterAnimation.animator.GetBool("Crouch"),
+                Is.False);
+            Assert.That(
+                parkour.characterAnimation.animator.GetBool("Released"),
+                Is.True);
+            Assert.That(
+                parkour.characterAnimation.animator.applyRootMotion,
+                Is.False);
+            Assert.That(
+                parkour.characterAnimation.animator
+                    .GetCurrentAnimatorStateInfo(0)
+                    .IsName("Idle"),
+                Is.True,
+                "Teleport must cancel root motion from an interrupted action.");
+            Assert.That(health.RagdollBodies.Count, Is.GreaterThanOrEqualTo(12));
+            Assert.That(
+                health.RagdollBodies.All(body => body.isKinematic),
+                Is.True);
+            Assert.That(
+                health.RagdollBodies.All(body => !body.detectCollisions),
+                Is.True);
+
+            bridge.LocomotionBody.linearVelocity =
+                new Vector3(3f, 0f, 0f);
+            Transform hips = health.GetComponent<Animator>()
+                .GetBoneTransform(HumanBodyBones.Hips);
+
+            LogAssert.Expect(
+                LogType.Warning,
+                "Player died and ragdoll was enabled.");
+            health.Kill();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(bridge.IsDead, Is.True);
+            Assert.That(bridge.LocomotionBody.isKinematic, Is.True);
+            Assert.That(bridge.LocomotionBody.detectCollisions, Is.False);
+            Assert.That(
+                bridge.GetComponents<CapsuleCollider>()
+                    .All(collider => !collider.enabled),
+                Is.True);
+            Assert.That(
+                health.GetComponent<Animator>().enabled,
+                Is.False);
+            Assert.That(
+                health.RagdollBodies.All(body => !body.isKinematic),
+                Is.True);
+            Assert.That(
+                health.RagdollBodies.All(body => body.detectCollisions),
+                Is.True);
+            Assert.That(
+                health.RagdollBodies.All(body => body.useGravity),
+                Is.True);
+            Assert.That(
+                health.RagdollBodies.Average(body => body.linearVelocity.x),
+                Is.GreaterThan(1f),
+                "Ragdoll must inherit the moving player's momentum.");
+
+            var cameraFollowTargets = bridge.transform.parent
+                .GetComponentsInChildren<MonoBehaviour>(true)
+                .Select(behaviour => new
+                {
+                    Behaviour = behaviour,
+                    Follow = behaviour.GetType().GetProperty(
+                        "Follow",
+                        BindingFlags.Instance | BindingFlags.Public),
+                })
+                .Where(entry => entry.Follow != null &&
+                                entry.Follow.PropertyType == typeof(Transform))
+                .Select(entry =>
+                    entry.Follow.GetValue(entry.Behaviour) as Transform)
+                .Where(targetTransform => targetTransform != null)
+                .ToArray();
+            Assert.That(cameraFollowTargets.Length, Is.GreaterThanOrEqualTo(2));
+            Assert.That(
+                cameraFollowTargets.All(targetTransform =>
+                    targetTransform == hips),
+                Is.True,
+                "Gameplay cameras must follow the moving ragdoll hips.");
         }
 
         private static int CountDirectSlotButtons(Transform root)
@@ -2112,6 +2287,35 @@ namespace NERA.Tests
                 Object.Destroy(save);
 
             yield return null;
+        }
+    }
+
+    public sealed class ProximityTestInteractable : MonoBehaviour, IInteractable
+    {
+        public bool IsAvailable { get; set; } = true;
+
+        public Transform InteractionTransform => transform;
+
+        public InteractionPrompt GetPrompt()
+        {
+            return new InteractionPrompt(
+                "Test",
+                InteractionMode.Press,
+                0f,
+                IsAvailable,
+                IsAvailable ? string.Empty : "Unavailable for test");
+        }
+
+        public void BeginInteraction(GameObject interactor)
+        {
+        }
+
+        public void CancelInteraction(GameObject interactor)
+        {
+        }
+
+        public void CompleteInteraction(GameObject interactor)
+        {
         }
     }
 }

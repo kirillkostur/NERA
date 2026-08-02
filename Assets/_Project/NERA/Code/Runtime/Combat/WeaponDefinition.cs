@@ -16,7 +16,12 @@ namespace NERA.Combat
         [SerializeField, Min(0.1f)] private float damage = 10f;
         [SerializeField, Min(0.1f)] private float range = 18f;
         [SerializeField, Min(0.01f)] private float cooldown = 0.55f;
-        [SerializeField] private LayerMask hitMask = ~0;
+        [Tooltip("Layers hit by the beam. Include Enemy and blocking geometry, " +
+                 "but exclude Player so the camera ray cannot hit its owner.")]
+        [SerializeField] private LayerMask hitMask =
+            (1 << 0) | (1 << 6) | (1 << 7) | (1 << 8) |
+            (1 << 9) | (1 << 10) | (1 << 11) |
+            (1 << 14) | (1 << 15);
 
         [Header("Debug Visual")]
         [SerializeField] private Color beamColor = new Color(0.1f, 0.8f, 1f);

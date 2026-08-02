@@ -3,6 +3,7 @@ using NERA.Enemies;
 using NERA.Inventory;
 using NERA.Items;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NERA.Combat
 {
@@ -10,7 +11,8 @@ namespace NERA.Combat
     [RequireComponent(typeof(PlayerEquipmentController))]
     public sealed class PlayerEnergyWeaponController : MonoBehaviour
     {
-        [SerializeField] private Transform aimOrigin;
+        [FormerlySerializedAs("aimOrigin")]
+        [SerializeField] private Transform fireOrigin;
         [SerializeField] private bool useMainCameraWhenAvailable = true;
 
         private PlayerEquipmentController equipment;
@@ -173,7 +175,7 @@ namespace NERA.Combat
 
             nextFireTime = Time.time + weapon.Cooldown;
 
-            Transform origin = ResolveAimOrigin();
+            Transform origin = ResolveFireOrigin();
             Vector3 start = origin.position;
             Vector3 direction = origin.forward;
             float beamDistance = weapon.Range;
@@ -208,13 +210,13 @@ namespace NERA.Combat
             return true;
         }
 
-        private Transform ResolveAimOrigin()
+        private Transform ResolveFireOrigin()
         {
             if (useMainCameraWhenAvailable && Camera.main != null)
                 return Camera.main.transform;
 
-            if (aimOrigin != null)
-                return aimOrigin;
+            if (fireOrigin != null)
+                return fireOrigin;
 
             return transform;
         }

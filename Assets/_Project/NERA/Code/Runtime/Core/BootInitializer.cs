@@ -4,6 +4,7 @@ using NERA.Interaction;
 using NERA.Expeditions;
 using NERA.Inventory;
 using NERA.Library;
+using NERA.Player;
 using NERA.Quests;
 using NERA.Research;
 using NERA.Save;
@@ -31,8 +32,7 @@ namespace NERA.Core
         private bool isLoading;
         private string currentGameplaySceneName;
 
-        private PlayerController player;
-        private PlayerFollowCamera followCamera;
+        private ParkourPlayerBridge player;
         private PlayerInteractionController interactionController;
         private Camera playerCamera;
         private AudioListener playerAudio;
@@ -298,13 +298,11 @@ namespace NERA.Core
 
         private void ConnectRuntimeReferences()
         {
-            player = GetComponentInChildren<PlayerController>(true);
+            player = GetComponentInChildren<ParkourPlayerBridge>(true);
             interactionController =
                 GetComponentInChildren<PlayerInteractionController>(true);
-            followCamera =
-                GetComponentInChildren<PlayerFollowCamera>(true);
-            playerCamera = followCamera != null
-                ? followCamera.GetComponent<Camera>()
+            playerCamera = player != null && player.GameplayCamera != null
+                ? player.GameplayCamera
                 : GetComponentInChildren<Camera>(true);
             playerAudio = playerCamera != null
                 ? playerCamera.GetComponent<AudioListener>()
@@ -316,9 +314,6 @@ namespace NERA.Core
                 GetComponentInChildren<EventSystem>(true);
             InteractionPromptView promptView =
                 GetComponentInChildren<InteractionPromptView>(true);
-
-            if (player != null && playerCamera != null)
-                player.SetCameraTransform(playerCamera.transform);
 
             if (promptView != null)
                 promptView.SetInteractionController(interactionController);
@@ -343,9 +338,8 @@ namespace NERA.Core
 
         private void SetGameplayInputActive(bool active)
         {
-            player?.SetInputEnabled(active);
-            followCamera?.SetInputEnabled(active);
-            if (interactionController != null)
+            player?.SetInputEnabled(this, active);
+            if (player == null && interactionController != null)
                 interactionController.enabled = active;
         }
 

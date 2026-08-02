@@ -2,6 +2,7 @@ using NERA.Core;
 using NERA.Energy;
 using NERA.Interaction;
 using NERA.Inventory;
+using NERA.Player;
 using NERA.Station;
 using UnityEngine;
 using UnityEngine.UI;
@@ -37,9 +38,7 @@ namespace NERA.Terminal
         private int activeScreenIndex = 1;
         private int navigationInputUnlockFrame;
 
-        private PlayerController playerController;
-        private PlayerInteractionController interactionController;
-        private PlayerFollowCamera followCamera;
+        private ParkourPlayerBridge playerController;
 
         private TerminalMapScreenController mapController;
         private TerminalStationScreenController stationController;
@@ -304,24 +303,14 @@ namespace NERA.Terminal
         private void CachePlayerControllers()
         {
             if (playerController == null)
-                playerController = FindFirstObjectByType<PlayerController>();
-            if (interactionController == null)
-            {
-                interactionController =
-                    FindFirstObjectByType<PlayerInteractionController>();
-            }
-            if (followCamera == null)
-                followCamera = FindFirstObjectByType<PlayerFollowCamera>();
+                playerController =
+                    FindFirstObjectByType<ParkourPlayerBridge>();
         }
 
         private void SetPlayerControl(bool enabled)
         {
             if (playerController != null)
-                playerController.SetInputEnabled(enabled);
-            if (interactionController != null)
-                interactionController.enabled = enabled;
-            if (followCamera != null)
-                followCamera.SetInputEnabled(enabled);
+                playerController.SetInputEnabled(this, enabled);
         }
 
         private void SetVisible(bool visible)
@@ -336,6 +325,9 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            if (playerController != null)
+                playerController.SetInputEnabled(this, true);
+            InventoryLabHUDController.Instance?.SetExternalUiLock(false);
             EnergySystemController.Instance?.SetConsumerActive(
                 TerminalConsumerId,
                 false);

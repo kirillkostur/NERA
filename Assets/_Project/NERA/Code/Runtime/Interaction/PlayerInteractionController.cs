@@ -1,25 +1,38 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NERA.Interaction
 {
+    [DisallowMultipleComponent]
     public sealed class PlayerInteractionController : MonoBehaviour
     {
-        [Header("Detection")]
-        [SerializeField] private Camera interactionCamera;
+        [Header("Proximity Detection")]
+        [SerializeField] private Vector3 detectionOffset =
+            new Vector3(0f, 0.9f, 0f);
         [SerializeField, Min(0.1f)] private float interactionDistance = 2.5f;
-        [SerializeField] private LayerMask raycastMask = Physics.DefaultRaycastLayers;
+        [SerializeField, Min(0.1f)] private float releaseDistance = 2.8f;
+        [Tooltip("Layers containing IInteractable colliders.")]
+        [SerializeField] private LayerMask overlapMask =
+            (1 << 6) | (1 << 7);
         [SerializeField] private QueryTriggerInteraction triggerInteraction =
             QueryTriggerInteraction.Collide;
+        [Tooltip("Environment layers that can block proximity interaction. " +
+                 "Facing direction is never required.")]
+        [SerializeField] private LayerMask obstructionMask =
+            (1 << 0) | (1 << 9) | (1 << 10) | (1 << 11) |
+            (1 << 14) | (1 << 15);
 
         [Header("Input")]
         [SerializeField] private KeyCode interactionKey = KeyCode.E;
 
+        private readonly Collider[] overlapBuffer = new Collider[128];
+        private readonly RaycastHit[] obstructionBuffer = new RaycastHit[16];
+        private readonly List<MonoBehaviour> componentBuffer =
+            new List<MonoBehaviour>(16);
         private IInteractable currentInteractable;
         private IInteractable activeInteractable;
-        private PlayerFollowCamera followCamera;
         private float holdElapsed;
-        private readonly RaycastHit[] raycastHits = new RaycastHit[8];
 
         public event Action TargetChanged;
         public event Action InteractionStateChanged;
@@ -28,16 +41,16 @@ namespace NERA.Interaction
         public bool IsInteracting => activeInteractable != null;
         public float HoldProgress { get; private set; }
 
-        private void Awake()
+        private void OnValidate()
         {
-            ResolveInteractionCamera();
+            interactionDistance = Mathf.Max(0.1f, interactionDistance);
+            releaseDistance = Mathf.Max(
+                interactionDistance,
+                releaseDistance);
         }
 
         private void Update()
         {
-            if (interactionCamera == null || followCamera == null)
-                ResolveInteractionCamera();
-
             DetectInteractable();
             ProcessInput();
         }
@@ -48,64 +61,75 @@ namespace NERA.Interaction
             SetCurrentInteractable(null);
         }
 
-        private void ResolveInteractionCamera()
-        {
-            if (interactionCamera == null)
-                interactionCamera = Camera.main;
-
-            PlayerFollowCamera resolvedCamera = interactionCamera != null
-                ? interactionCamera.GetComponent<PlayerFollowCamera>()
-                : null;
-
-            if (followCamera == resolvedCamera)
-                return;
-
-            if (followCamera != null)
-                followCamera.SetInteractionFocus(false);
-
-            followCamera = resolvedCamera;
-
-            if (followCamera != null)
-                followCamera.SetInteractionFocus(currentInteractable != null);
-        }
-
         private void DetectInteractable()
         {
-            IInteractable detected = null;
+            Vector3 origin = transform.TransformPoint(detectionOffset);
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                origin,
+                releaseDistance,
+                overlapBuffer,
+                overlapMask,
+                triggerInteraction);
 
-            if (interactionCamera != null)
+            IInteractable closestAvailable = null;
+            IInteractable closestUnavailable = null;
+            float closestAvailableDistance = float.PositiveInfinity;
+            float closestUnavailableDistance = float.PositiveInfinity;
+
+            for (int i = 0; i < hitCount; i++)
             {
-                Ray ray = interactionCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-                float cameraOffset = Vector3.Distance(
-                    interactionCamera.transform.position,
-                    transform.position
-                );
-                float raycastDistance = cameraOffset + interactionDistance;
-
-                int hitCount = Physics.RaycastNonAlloc(
-                    ray,
-                    raycastHits,
-                    raycastDistance,
-                    raycastMask,
-                    triggerInteraction
-                );
-
-                Collider closestCollider = GetClosestNonPlayerCollider(hitCount);
-
-                if (closestCollider != null)
+                Collider candidateCollider = overlapBuffer[i];
+                if (candidateCollider == null ||
+                    candidateCollider.transform.IsChildOf(transform))
                 {
-                    detected = FindInteractable(closestCollider);
+                    continue;
+                }
 
-                    if (detected != null &&
-                        Vector3.Distance(
-                            transform.position,
-                            detected.InteractionTransform.position
-                        ) > interactionDistance)
-                    {
-                        detected = null;
-                    }
+                IInteractable interactable =
+                    FindInteractable(candidateCollider);
+                if (interactable == null)
+                    continue;
+
+                InteractionPrompt prompt = interactable.GetPrompt();
+                if (!HasClearPath(
+                        origin,
+                        candidateCollider,
+                        interactable))
+                    continue;
+
+                float allowedDistance =
+                    ReferenceEquals(interactable, currentInteractable)
+                        ? releaseDistance
+                        : interactionDistance;
+                float distance = Vector3.Distance(
+                    origin,
+                    candidateCollider.ClosestPoint(origin));
+                if (distance > allowedDistance)
+                    continue;
+
+                if (prompt.IsAvailable)
+                {
+                    if (distance >= closestAvailableDistance)
+                        continue;
+
+                    closestAvailable = interactable;
+                    closestAvailableDistance = distance;
+                }
+                else
+                {
+                    if (distance >= closestUnavailableDistance)
+                        continue;
+
+                    closestUnavailable = interactable;
+                    closestUnavailableDistance = distance;
                 }
             }
+
+            // Prefer an object that can be used now. If there is none, keep
+            // the nearest unavailable object selected so the HUD can explain
+            // why it cannot yet be used (for example, missing station power).
+            IInteractable detected =
+                closestAvailable ?? closestUnavailable;
 
             if (ReferenceEquals(detected, currentInteractable))
                 return;
@@ -114,37 +138,55 @@ namespace NERA.Interaction
             SetCurrentInteractable(detected);
         }
 
-        private Collider GetClosestNonPlayerCollider(int hitCount)
+        private bool HasClearPath(
+            Vector3 origin,
+            Collider targetCollider,
+            IInteractable target)
         {
-            Collider closestCollider = null;
-            float closestDistance = float.MaxValue;
+            if (obstructionMask.value == 0)
+                return true;
 
-            for (int i = 0; i < hitCount; i++)
+            Vector3 targetPoint = targetCollider.ClosestPoint(origin);
+            Vector3 offset = targetPoint - origin;
+            float distance = offset.magnitude;
+            if (distance <= 0.01f)
+                return true;
+
+            int count = Physics.RaycastNonAlloc(
+                origin,
+                offset / distance,
+                obstructionBuffer,
+                distance,
+                obstructionMask,
+                QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
             {
-                RaycastHit hit = raycastHits[i];
-
-                if (hit.collider == null ||
-                    hit.collider.transform.IsChildOf(transform) ||
-                    hit.distance >= closestDistance)
-                {
+                Collider blocker = obstructionBuffer[i].collider;
+                if (blocker == null)
                     continue;
-                }
 
-                closestCollider = hit.collider;
-                closestDistance = hit.distance;
+                IInteractable blockerInteractable = FindInteractable(blocker);
+                if (ReferenceEquals(blockerInteractable, target))
+                    continue;
+
+                return false;
             }
 
-            return closestCollider;
+            return true;
         }
 
-        private static IInteractable FindInteractable(Collider hitCollider)
+        private IInteractable FindInteractable(Collider hitCollider)
         {
-            MonoBehaviour[] behaviours = hitCollider.GetComponentsInParent<MonoBehaviour>(true);
+            componentBuffer.Clear();
+            hitCollider.GetComponentsInParent(true, componentBuffer);
 
-            foreach (MonoBehaviour behaviour in behaviours)
+            foreach (MonoBehaviour behaviour in componentBuffer)
             {
-                if (behaviour is IInteractable interactable && behaviour.isActiveAndEnabled)
+                if (behaviour is IInteractable interactable &&
+                    behaviour.isActiveAndEnabled)
+                {
                     return interactable;
+                }
             }
 
             return null;
@@ -156,12 +198,10 @@ namespace NERA.Interaction
                 return;
 
             InteractionPrompt prompt = currentInteractable.GetPrompt();
-
             if (!prompt.IsAvailable)
             {
                 if (activeInteractable != null)
                     CancelActiveInteraction();
-
                 return;
             }
 
@@ -169,7 +209,6 @@ namespace NERA.Interaction
             {
                 if (Input.GetKeyDown(interactionKey))
                     CompletePressInteraction(currentInteractable);
-
                 return;
             }
 
@@ -191,14 +230,16 @@ namespace NERA.Interaction
             if (activeInteractable == null)
                 return;
 
-            if (Input.GetKeyUp(interactionKey) || !Input.GetKey(interactionKey))
+            if (Input.GetKeyUp(interactionKey) ||
+                !Input.GetKey(interactionKey))
             {
                 CancelActiveInteraction();
                 return;
             }
 
             holdElapsed += Time.deltaTime;
-            HoldProgress = Mathf.Clamp01(holdElapsed / Mathf.Max(0.1f, prompt.HoldDuration));
+            HoldProgress = Mathf.Clamp01(
+                holdElapsed / Mathf.Max(0.1f, prompt.HoldDuration));
             InteractionStateChanged?.Invoke();
 
             if (HoldProgress < 1f)
@@ -240,8 +281,15 @@ namespace NERA.Interaction
         private void SetCurrentInteractable(IInteractable interactable)
         {
             currentInteractable = interactable;
-            followCamera?.SetInteractionFocus(currentInteractable != null);
             TargetChanged?.Invoke();
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = new Color(0.2f, 0.85f, 1f, 0.3f);
+            Gizmos.DrawWireSphere(
+                transform.TransformPoint(detectionOffset),
+                interactionDistance);
         }
     }
 }

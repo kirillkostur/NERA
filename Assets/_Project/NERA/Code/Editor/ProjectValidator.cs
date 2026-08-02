@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Climbing;
+using NERA.Combat;
 using NERA.Core;
 using NERA.Expeditions;
+using NERA.Interaction;
+using NERA.Inventory;
 using NERA.Locations;
+using NERA.Player;
 using NERA.Quests;
 using NERA.Station;
 using NERA.Terminal;
@@ -23,6 +28,8 @@ namespace NERA.Editor
     {
         private const string MainScenePath =
             "Assets/_Project/NERA/Scenes/MainScene.unity";
+        private const string PlayerPrefabPath =
+            "Assets/_Project/NERA/Prefabs/Player/Player.prefab";
         private const string LocationConfigRoot =
             "Assets/_Project/NERA/Configs";
 
@@ -93,6 +100,7 @@ namespace NERA.Editor
         {
             List<string> errors = new List<string>();
             ValidateBuildScenes(errors);
+            ValidatePlayerPrefab(errors);
             ValidateExpeditionLocations(errors);
             ValidateQuestCatalog(errors);
             ValidateUpgradePrefabs(errors);
@@ -137,6 +145,147 @@ namespace NERA.Editor
                     errors.Add(
                         $"Build scene index {index} must be {scenePath}.");
                 }
+            }
+
+            foreach (string scenePath in enabledScenePaths)
+                ValidateSceneHasNoMissingScripts(scenePath, errors);
+        }
+
+        private static void ValidatePlayerPrefab(List<string> errors)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                PlayerPrefabPath);
+            if (prefab == null)
+            {
+                errors.Add($"Player prefab is missing: {PlayerPrefabPath}");
+                return;
+            }
+
+            ParkourPlayerBridge bridge =
+                prefab.GetComponentInChildren<ParkourPlayerBridge>(true);
+            if (bridge == null)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath} has no {nameof(ParkourPlayerBridge)}.");
+                return;
+            }
+
+            GameObject model = bridge.gameObject;
+            if (!model.CompareTag("Player") || model.layer != 3)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath}/PlayerModel must use tag Player " +
+                    "and layer Player (3).");
+            }
+
+            RequirePlayerComponent<InputCharacterController>(model, errors);
+            RequirePlayerComponent<ThirdPersonController>(model, errors);
+            RequirePlayerComponent<PlayerInteractionController>(model, errors);
+            RequirePlayerComponent<PlayerInventory>(model, errors);
+            RequirePlayerComponent<PlayerEquipmentController>(model, errors);
+            RequirePlayerComponent<PlayerEnergyWeaponController>(model, errors);
+            RequirePlayerComponent<PlayerHealth>(model, errors);
+
+            Camera[] cameras = prefab.GetComponentsInChildren<Camera>(true);
+            if (cameras.Length != 1 || !cameras[0].CompareTag("MainCamera"))
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath} must contain exactly one MainCamera.");
+            }
+
+            Animator animator = model.GetComponent<Animator>();
+            if (animator == null || animator.runtimeAnimatorController == null)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath}/PlayerModel has no configured Animator.");
+            }
+
+            CapsuleCollider[] motorColliders =
+                model.GetComponents<CapsuleCollider>();
+            if (motorColliders.Length != 2 ||
+                motorColliders.Count(collider => collider.enabled) != 1)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath}/PlayerModel must have two motor " +
+                    "capsules with exactly one enabled.");
+            }
+
+            Rigidbody motor = model.GetComponent<Rigidbody>();
+            Rigidbody[] ragdollBodies = prefab
+                .GetComponentsInChildren<Rigidbody>(true)
+                .Where(body => body != motor)
+                .ToArray();
+            if (ragdollBodies.Length < 12 ||
+                prefab.GetComponentsInChildren<CharacterJoint>(true).Length < 11)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath} ragdoll is incomplete: expected at " +
+                    "least 12 bodies and 11 joints.");
+            }
+
+            foreach (Transform child in
+                     prefab.GetComponentsInChildren<Transform>(true))
+            {
+                int missingCount =
+                    GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(
+                        child.gameObject);
+                if (missingCount > 0)
+                {
+                    errors.Add(
+                        $"{PlayerPrefabPath}/{child.name} has {missingCount} " +
+                        "missing script component(s).");
+                }
+            }
+        }
+
+        private static void RequirePlayerComponent<T>(
+            GameObject model,
+            List<string> errors) where T : Component
+        {
+            if (model.GetComponent<T>() == null)
+            {
+                errors.Add(
+                    $"{PlayerPrefabPath}/PlayerModel has no {typeof(T).Name}.");
+            }
+        }
+
+        private static void ValidateSceneHasNoMissingScripts(
+            string scenePath,
+            List<string> errors)
+        {
+            Scene scene = SceneManager.GetSceneByPath(scenePath);
+            bool openedByValidator = !scene.IsValid() || !scene.isLoaded;
+            if (openedByValidator)
+            {
+                scene = EditorSceneManager.OpenScene(
+                    scenePath,
+                    OpenSceneMode.Additive);
+            }
+
+            try
+            {
+                foreach (GameObject root in scene.GetRootGameObjects())
+                {
+                    foreach (Transform child in
+                             root.GetComponentsInChildren<Transform>(true))
+                    {
+                        int missingCount =
+                            GameObjectUtility
+                                .GetMonoBehavioursWithMissingScriptCount(
+                                    child.gameObject);
+                        if (missingCount > 0)
+                        {
+                            errors.Add(
+                                $"{scenePath}: {child.name} has " +
+                                $"{missingCount} missing script component(s).");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (openedByValidator && scene.IsValid())
+                    EditorSceneManager.CloseScene(scene, true);
             }
         }
 

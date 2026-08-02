@@ -1,4 +1,5 @@
 using UnityEngine;
+using NERA.Player;
 
 namespace NERA.Core
 {
@@ -15,26 +16,19 @@ namespace NERA.Core
             if (!SceneTransitionState.TryConsumeSpawnPoint(SpawnPointId))
                 return;
 
-            PlayerController player = FindFirstObjectByType<PlayerController>();
+            ParkourPlayerBridge player =
+                FindFirstObjectByType<ParkourPlayerBridge>();
 
             if (player == null)
             {
                 Debug.LogError(
-                    $"SceneSpawnPoint '{SpawnPointId}': PlayerController not found.",
+                    $"SceneSpawnPoint '{SpawnPointId}': parkour player not found.",
                     this
                 );
                 return;
             }
 
-            CharacterController controller = player.GetComponent<CharacterController>();
-
-            if (controller != null)
-                controller.enabled = false;
-
-            player.transform.SetPositionAndRotation(transform.position, transform.rotation);
-
-            if (controller != null)
-                controller.enabled = true;
+            player.Teleport(transform.position, transform.rotation);
         }
     }
 }

@@ -59,8 +59,8 @@ Expedition_02/
 - `Prefabs/IO/` — сущности IO;
 - `Prefabs/Interaction/` — общие интерактивные объекты;
 - `Prefabs/Managers/` — переходы и сценовые служебные объекты;
-- `Prefabs/Player/` — игрок;
-- `Prefabs/Camera/` — камера;
+- `Prefabs/Player/` — игрок вместе с gameplay-камерой и Cinemachine rig;
+- `Prefabs/Parkour/` — настраиваемые parkour-поверхности и точки;
 - `Prefabs/UI/` — общий UI.
 
 Локальный hero prop одной сцены хранится в папке конкретной экспедиции, а не в общей `Prefabs`.
@@ -149,7 +149,8 @@ P_WorldItem_<Name>
 На корне:
 
 - `WorldItem`;
-- Collider, по которому попадает interaction raycast;
+- Collider на слое `Interactable` (6) или `Item` (7), попадающий в радиус
+  взаимодействия игрока;
 - Rigidbody только если предмет должен участвовать в физике;
 - корректный interaction layer;
 - масштаб корня `(1,1,1)`.
@@ -267,7 +268,9 @@ P_WorldItem_<Name>
 - назначить `Energy Definition`;
 - назначить world и equipped prefabs.
 
-На Player должен оставаться `PlayerEquipmentController` и `PlayerEnergyWeaponController`.
+На `Player/PlayerModel` должны оставаться `PlayerEquipmentController` и
+`PlayerEnergyWeaponController`. Отдельного aim-режима нет: оружие стреляет по
+направлению `MainCamera`, не меняя положение камеры и Animator.
 
 ## 7. Исследуемый предмет
 
@@ -384,7 +387,8 @@ Expedition_02
 В сцене должны быть:
 
 - `SceneSpawnPoint` со стабильным `Spawn Point Id`;
-- экземпляр Player или предусмотренный текущей архитектурой способ его наличия;
+- без локального Player и gameplay Camera: постоянный Player с камерой уже
+  загружен из `MainScene/RuntimeRoot`;
 - проходимая геометрия и colliders;
 - NavMesh для навигационных сущностей;
 - возврат на станцию;
@@ -420,7 +424,8 @@ SceneSpawnPoint.spawnPointId: Expedition02_Start
 - `Target Scene Name = Player_Station`;
 - `Target Spawn Point Id` совпадает с ID точки на станции;
 - сцена `Player_Station` включена в Build Settings;
-- interaction collider доступен лучу игрока.
+- interaction collider находится на слое `Interactable`/`Item`, доступен по
+  дистанции и не закрыт стеной из obstruction mask.
 
 ### 9.4. Location config
 
@@ -597,7 +602,8 @@ scene instance: для одноразового контента нужен от
 - [ ] Location config зарегистрирован в `Known Locations`.
 - [ ] Правильно выбраны `Location Type` и `Discovery Source`.
 - [ ] Player появляется в ожидаемой точке.
-- [ ] Все interactables имеют colliders и доступны interaction raycast.
+- [ ] Все interactables имеют colliders на слое `Interactable`/`Item`, доступны
+  по дистанции и не закрыты геометрией.
 - [ ] Все world items ссылаются на правильные `ItemData`.
 - [ ] Return transition ведёт в существующую сцену и spawn point.
 - [ ] NavMesh построен, если в сцене есть навигационные сущности.

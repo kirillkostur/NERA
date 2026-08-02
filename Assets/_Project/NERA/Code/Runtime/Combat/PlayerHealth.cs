@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Player;
 using UnityEngine;
 
 namespace NERA.Combat
@@ -11,16 +12,18 @@ namespace NERA.Combat
         [SerializeField, Min(1f)] private float maxHealth = 100f;
 
         [Header("Ragdoll")]
-        [Tooltip("Animator controlling the character model. Found automatically when empty.")]
+        [Tooltip("Animator controlling the parkour character model.")]
         [SerializeField] private Animator animator;
-
-        [Tooltip("Optional impulse applied to the ragdoll when the player dies.")]
+        [Tooltip("Root containing only skeleton ragdoll bodies.")]
+        [SerializeField] private Transform ragdollRoot;
+        [Tooltip("Root Rigidbody used by parkour locomotion; never treated as ragdoll.")]
+        [SerializeField] private Rigidbody locomotionBody;
+        [SerializeField] private Collider[] locomotionColliders;
         [SerializeField, Min(0f)] private float deathImpulse = 2.5f;
-
         [Tooltip("Rigidbody that receives the death impulse. Hips are recommended.")]
         [SerializeField] private Rigidbody impulseBody;
 
-        private PlayerController playerController;
+        private ParkourPlayerBridge playerBridge;
         private Rigidbody[] ragdollBodies = Array.Empty<Rigidbody>();
         private Collider[] ragdollColliders = Array.Empty<Collider>();
         private bool deathProcessed;
@@ -31,17 +34,21 @@ namespace NERA.Combat
         public float CurrentHealth { get; private set; }
         public float MaxHealth => maxHealth;
         public bool IsAlive => !deathProcessed && CurrentHealth > 0f;
+        public bool IsRagdollActive => deathProcessed;
+        public IReadOnlyList<Rigidbody> RagdollBodies => ragdollBodies;
 
         private void Awake()
         {
-            playerController = GetComponent<PlayerController>();
+            playerBridge = GetComponent<ParkourPlayerBridge>();
+            animator ??= GetComponent<Animator>();
+            animator ??= GetComponentInChildren<Animator>();
+            locomotionBody ??= GetComponent<Rigidbody>();
 
-            if (animator == null)
-                animator = GetComponentInChildren<Animator>();
+            if (locomotionColliders == null || locomotionColliders.Length == 0)
+                locomotionColliders = GetComponents<CapsuleCollider>();
 
             CacheRagdollParts();
             SetRagdollActive(false);
-
             CurrentHealth = maxHealth;
         }
 
@@ -95,12 +102,23 @@ namespace NERA.Combat
 
             deathProcessed = true;
             CurrentHealth = 0f;
+            Vector3 inheritedVelocity = locomotionBody != null
+                ? locomotionBody.linearVelocity
+                : Vector3.zero;
+            Vector3 inheritedAngularVelocity = locomotionBody != null
+                ? locomotionBody.angularVelocity
+                : Vector3.zero;
+            playerBridge?.HandleDeath(
+                impulseBody != null ? impulseBody.transform : ragdollRoot);
 
-            if (playerController != null)
-                playerController.HandleDeath();
+            if (playerBridge == null)
+                DisableLocomotionBody();
 
             Vector3 impulseDirection = GetDeathImpulseDirection(source);
             SetRagdollActive(true);
+            ApplyInheritedVelocity(
+                inheritedVelocity,
+                inheritedAngularVelocity);
 
             if (deathImpulse > 0f && impulseBody != null)
             {
@@ -113,29 +131,50 @@ namespace NERA.Combat
             Debug.LogWarning("Player died and ragdoll was enabled.", this);
         }
 
-        private void CacheRagdollParts()
+        private void ApplyInheritedVelocity(
+            Vector3 linearVelocity,
+            Vector3 angularVelocity)
         {
-            ragdollBodies = GetComponentsInChildren<Rigidbody>(true);
-
-            var foundColliders = new List<Collider>();
-
             foreach (Rigidbody body in ragdollBodies)
             {
                 if (body == null)
                     continue;
 
-                Collider[] bodyColliders = body.GetComponents<Collider>();
+                body.linearVelocity = linearVelocity;
+                body.angularVelocity = angularVelocity;
+            }
+        }
 
-                foreach (Collider bodyCollider in bodyColliders)
+        private void CacheRagdollParts()
+        {
+            Transform searchRoot = ragdollRoot != null
+                ? ragdollRoot
+                : transform;
+            Rigidbody[] foundBodies =
+                searchRoot.GetComponentsInChildren<Rigidbody>(true);
+            var validBodies = new List<Rigidbody>();
+            var foundColliders = new List<Collider>();
+
+            foreach (Rigidbody body in foundBodies)
+            {
+                if (body == null || body == locomotionBody)
+                    continue;
+
+                validBodies.Add(body);
+                foreach (Collider bodyCollider in body.GetComponents<Collider>())
                 {
-                    if (bodyCollider == null || bodyCollider is CharacterController)
+                    if (bodyCollider == null ||
+                        Array.IndexOf(locomotionColliders, bodyCollider) >= 0)
+                    {
                         continue;
+                    }
 
                     if (!foundColliders.Contains(bodyCollider))
                         foundColliders.Add(bodyCollider);
                 }
             }
 
+            ragdollBodies = validBodies.ToArray();
             ragdollColliders = foundColliders.ToArray();
 
             if (impulseBody == null && animator != null && animator.isHuman)
@@ -148,10 +187,13 @@ namespace NERA.Combat
             if (impulseBody == null && ragdollBodies.Length > 0)
                 impulseBody = ragdollBodies[0];
 
-            Debug.Log(
-                $"Ragdoll cached: {ragdollBodies.Length} rigidbodies, " +
-                $"{ragdollColliders.Length} colliders.",
-                this);
+            if (ragdollBodies.Length == 0)
+            {
+                Debug.LogError(
+                    "PlayerHealth: no skeleton ragdoll bodies were found. " +
+                    "The locomotion Rigidbody was intentionally excluded.",
+                    this);
+            }
         }
 
         private void SetRagdollActive(bool active)
@@ -161,10 +203,8 @@ namespace NERA.Combat
 
             foreach (Collider ragdollCollider in ragdollColliders)
             {
-                if (ragdollCollider == null)
-                    continue;
-
-                ragdollCollider.enabled = active;
+                if (ragdollCollider != null)
+                    ragdollCollider.enabled = active;
             }
 
             foreach (Rigidbody body in ragdollBodies)
@@ -172,38 +212,40 @@ namespace NERA.Combat
                 if (body == null)
                     continue;
 
-                if (active)
+                if (!body.isKinematic)
                 {
-                    body.isKinematic = false;
                     body.linearVelocity = Vector3.zero;
                     body.angularVelocity = Vector3.zero;
-                    body.useGravity = true;
-                    body.detectCollisions = true;
-                    body.WakeUp();
                 }
-                else
-                {
-                    if (!body.isKinematic)
-                    {
-                        body.linearVelocity = Vector3.zero;
-                        body.angularVelocity = Vector3.zero;
-                    }
 
-                    body.useGravity = false;
-                    body.detectCollisions = false;
-                    body.isKinematic = true;
+                body.useGravity = active;
+                body.detectCollisions = active;
+                body.isKinematic = !active;
+                if (active)
+                    body.WakeUp();
+                else
                     body.Sleep();
-                }
             }
 
             if (active)
-            {
                 Physics.SyncTransforms();
+        }
 
-                Debug.Log(
-                    $"Ragdoll enabled: {ragdollBodies.Length} rigidbodies, " +
-                    $"{ragdollColliders.Length} colliders.",
-                    this);
+        private void DisableLocomotionBody()
+        {
+            if (locomotionBody != null)
+            {
+                locomotionBody.linearVelocity = Vector3.zero;
+                locomotionBody.angularVelocity = Vector3.zero;
+                locomotionBody.useGravity = false;
+                locomotionBody.detectCollisions = false;
+                locomotionBody.isKinematic = true;
+            }
+
+            foreach (Collider collider in locomotionColliders)
+            {
+                if (collider != null)
+                    collider.enabled = false;
             }
         }
 
@@ -214,7 +256,6 @@ namespace NERA.Combat
 
             Vector3 direction = transform.position - source.transform.position;
             direction.y = Mathf.Max(direction.y, 0.2f);
-
             return direction.sqrMagnitude > 0.001f
                 ? direction.normalized
                 : -transform.forward;
