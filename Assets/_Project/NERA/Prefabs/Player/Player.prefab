@@ -1525,7 +1525,7 @@ MonoBehaviour:
   curSpeed: 6
   walkSpeed: 4
   JogSpeed: 4
-  RunSpeed: 4.5
+  RunSpeed: 6
   fallForce: 2.5
   enableFeetIK: 1
   heightFromGroundRaycast: 0.7
