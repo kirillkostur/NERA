@@ -42,6 +42,10 @@ namespace Climbing
         private bool onLedge = false;
         private bool toLedge = false;
         private bool jumping = false;
+        private bool leftHandIKFound = false;
+        private bool rightHandIKFound = false;
+        private bool leftFootIKFound = false;
+        private bool rightFootIKFound = false;
 
         private float startTime = 0.0f;
         private float endTime = 0.0f;
@@ -140,6 +144,10 @@ namespace Climbing
             onLedge = false;
             toLedge = false;
             jumping = false;
+            leftHandIKFound = false;
+            rightHandIKFound = false;
+            leftFootIKFound = false;
+            rightFootIKFound = false;
             curLedge = null;
             targetPoint = null;
             currentPoint = null;
@@ -159,34 +167,46 @@ namespace Climbing
         }
         public void onAnimatorIK(int layerIndex)
         {
+            Animator animator = characterAnimation?.animator;
+            if (animator == null)
+                return;
+
             //Reset IK Weight Position to default if not on Ledge
             if (!onLedge)
             {
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0);
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0);
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0);
+                animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0);
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
+                animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
                 return;
             }
 
             //IK Position of Feet and Hands
-            characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
-            CalculateIKPositions(AvatarIKGoal.LeftHand, ref leftHandPosition);
-            characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1);
-            CalculateIKPositions(AvatarIKGoal.RightHand, ref rightHandPosition);
+            animator.SetIKPositionWeight(
+                AvatarIKGoal.LeftHand,
+                leftHandIKFound ? 1f : 0f);
+            if (leftHandIKFound)
+                CalculateIKPositions(AvatarIKGoal.LeftHand, ref leftHandPosition);
 
-            if (wallFound && curClimbState == ClimbState.BHanging) //Activate Foot IK if Braced Hang
-            {
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1);
+            animator.SetIKPositionWeight(
+                AvatarIKGoal.RightHand,
+                rightHandIKFound ? 1f : 0f);
+            if (rightHandIKFound)
+                CalculateIKPositions(AvatarIKGoal.RightHand, ref rightHandPosition);
+
+            bool useFootIK =
+                wallFound && curClimbState == ClimbState.BHanging;
+            animator.SetIKPositionWeight(
+                AvatarIKGoal.LeftFoot,
+                useFootIK && leftFootIKFound ? 1f : 0f);
+            if (useFootIK && leftFootIKFound)
                 CalculateIKPositions(AvatarIKGoal.LeftFoot, ref leftFootPosition);
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 1);
+
+            animator.SetIKPositionWeight(
+                AvatarIKGoal.RightFoot,
+                useFootIK && rightFootIKFound ? 1f : 0f);
+            if (useFootIK && rightFootIKFound)
                 CalculateIKPositions(AvatarIKGoal.RightFoot, ref rightFootPosition);
-            }
-            else if (!wallFound) //Disable Foot IK if Free Hang
-            {
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0);
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0);
-            }
         }
 
         /// <summary>
@@ -425,28 +445,38 @@ namespace Climbing
 
             characterAnimation.HangMovement(direction.x, (int)curClimbState); //Move on Ledge Animations
 
-            //Only allow to jump to another ledge if is on Hanging Movement
-            if ((characterController.characterInput.jump || characterController.characterInput.drop) && characterAnimation.animState.IsName("Hanging Movement"))
-            {
-                bool drop = false;
-                if (characterController.characterInput.jump)
-                {
-                    drop = false;
-                }
-                if (characterController.characterInput.drop)
-                {
-                    drop = true;
-                }
+            bool wantsToDescend = WantsToDescend(direction);
 
+            // Space moves up between ledges. Backward movement alone moves
+            // down, including the diagonal S+A and S+D directions.
+            if ((characterController.characterInput.jump || wantsToDescend) &&
+                characterAnimation.animState.IsName("Hanging Movement"))
+            {
                 //Check if can climb on surface
                 bool climbing = false;
-                if (characterController.characterInput.movement.y > 0.8f && characterController.characterInput.movement.x < 0.3 && characterController.characterInput.movement.x > -0.3 && onLedge)
+                if (!wantsToDescend &&
+                    characterController.characterInput.movement.y > 0.8f &&
+                    characterController.characterInput.movement.x < 0.3 &&
+                    characterController.characterInput.movement.x > -0.3 &&
+                    onLedge)
+                {
                     climbing = ClimbFromLedge();
+                }
 
                 if (wallFound && !climbing)
-                    JumpToLedge(characterController.characterInput.movement.x, characterController.characterInput.movement.y, drop);
+                {
+                    JumpToLedge(
+                        characterController.characterInput.movement.x,
+                        characterController.characterInput.movement.y,
+                        wantsToDescend);
+                }
 
             }
+        }
+
+        public static bool WantsToDescend(Vector2 direction)
+        {
+            return direction.y < -0.5f;
         }
 
         /// <summary>
@@ -635,33 +665,64 @@ namespace Climbing
             origin1.y = transform.position.y + curOriginGrabOffset.y;
             origin2.y = origin1.y;
 
-            leftFootPosition = Vector3.zero;
-            rightFootPosition = Vector3.zero;
-
-            if (characterController.characterDetection.ThrowHandRayToLedge(origin1, new Vector3(0.25f, -0.15f, 1).normalized, IKHandRayLength, out hit1))
+            leftHandIKFound = characterController.characterDetection
+                .ThrowHandRayToLedge(
+                    origin1,
+                    new Vector3(0.25f, -0.15f, 1).normalized,
+                    IKHandRayLength,
+                    out hit1);
+            if (leftHandIKFound)
             {
                 leftHandPosition = hit1.point;
             }
-            if (characterController.characterDetection.ThrowHandRayToLedge(origin2, new Vector3(-0.25f, -0.15f, 1).normalized, IKHandRayLength, out hit2))
+            else
+            {
+                leftHandPosition = Vector3.zero;
+            }
+
+            rightHandIKFound = characterController.characterDetection
+                .ThrowHandRayToLedge(
+                    origin2,
+                    new Vector3(-0.25f, -0.15f, 1).normalized,
+                    IKHandRayLength,
+                    out hit2);
+            if (rightHandIKFound)
             {
                 rightHandPosition = hit2.point;
             }
+            else
+            {
+                rightHandPosition = Vector3.zero;
+            }
 
-            if (characterController.characterDetection.ThrowFootRayToLedge(origin3, Vector3.forward, IKFootRayLength, out hit3))
+            leftFootIKFound = characterController.characterDetection
+                .ThrowFootRayToLedge(
+                    origin3,
+                    Vector3.forward,
+                    IKFootRayLength,
+                    out hit3);
+            if (leftFootIKFound)
             {
                 leftFootPosition = hit3.point + hit3.normal * 0.15f;
             }
             else
             {
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0);
+                leftFootPosition = Vector3.zero;
             }
-            if (characterController.characterDetection.ThrowFootRayToLedge(origin4, Vector3.forward, IKFootRayLength, out hit4))
+
+            rightFootIKFound = characterController.characterDetection
+                .ThrowFootRayToLedge(
+                    origin4,
+                    Vector3.forward,
+                    IKFootRayLength,
+                    out hit4);
+            if (rightFootIKFound)
             {
                 rightFootPosition = hit4.point + hit4.normal * 0.15f;
             }
             else
             {
-                characterAnimation.animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0);
+                rightFootPosition = Vector3.zero;
             }
         }
 

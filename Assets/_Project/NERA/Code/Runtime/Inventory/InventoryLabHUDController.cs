@@ -110,7 +110,7 @@ namespace NERA.Inventory
             if (stationStorageOpen || externalUiLocked)
                 return;
 
-            if (Input.GetKeyDown(KeyCode.I))
+            if (Input.GetKeyDown(KeyCode.Tab))
             {
                 if (laboratoryOpen || chargingOpen)
                     return;

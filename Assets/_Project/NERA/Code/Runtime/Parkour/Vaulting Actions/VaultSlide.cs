@@ -31,6 +31,9 @@ namespace Climbing
 {
     public class VaultSlide : VaultAction
     {
+        public const float MinimumForwardSpeed = 1f;
+        public const float MaximumUpwardHeight = 0.05f;
+
         private float dis;
         public VaultSlide(ThirdPersonController _vaultingController, Action _actionInfo) : base(_vaultingController, _actionInfo)
         {
@@ -42,7 +45,11 @@ namespace Climbing
         /// </summary>
         public override bool CheckAction()
         {
-            if (controller.characterInput.drop && !controller.isVaulting)
+            if (controller.characterInput.drop &&
+                !controller.isVaulting &&
+                HasForwardMomentum(
+                    controller.characterMovement.GetVelocity(),
+                    controller.transform.forward))
             {
                 RaycastHit hit;
                 Vector3 origin = controller.transform.position + kneeRaycastOrigin;
@@ -67,6 +74,9 @@ namespace Climbing
                         if (hit2.collider)
                         {
                             startPos = controller.transform.position;
+                            if (!IsNonAscendingDestination(startPos, hit2.point))
+                                return false;
+
                             startRot = controller.transform.rotation;
                             targetPos = hit2.point;
                             targetRot = Quaternion.LookRotation(targetPos - startPos);
@@ -89,6 +99,26 @@ namespace Climbing
             }
 
             return false;
+        }
+
+        public static bool HasForwardMomentum(
+            Vector3 velocity,
+            Vector3 forward)
+        {
+            velocity.y = 0f;
+            forward.y = 0f;
+            if (forward.sqrMagnitude <= Mathf.Epsilon)
+                return false;
+
+            return Vector3.Dot(velocity, forward.normalized) >=
+                   MinimumForwardSpeed;
+        }
+
+        public static bool IsNonAscendingDestination(
+            Vector3 start,
+            Vector3 destination)
+        {
+            return destination.y <= start.y + MaximumUpwardHeight;
         }
 
         /// <summary>

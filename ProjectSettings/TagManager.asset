@@ -8,7 +8,6 @@ TagManager:
   - Item
   - Station
   - ExpeditionExit
-  - Spider
   layers:
   - Default
   - TransparentFX

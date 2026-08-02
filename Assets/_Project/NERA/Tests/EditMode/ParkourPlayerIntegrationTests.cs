@@ -213,5 +213,86 @@ namespace NERA.Tests
             foreach (string legacyTag in legacyTags)
                 Assert.That(sceneText, Does.Not.Contain(legacyTag));
         }
+
+        [Test]
+        public void SlideRequiresForwardMomentumAndRejectsAscendingTravel()
+        {
+            Assert.That(
+                VaultSlide.HasForwardMomentum(
+                    Vector3.zero,
+                    Vector3.forward),
+                Is.False);
+            Assert.That(
+                VaultSlide.HasForwardMomentum(
+                    Vector3.back * 4f,
+                    Vector3.forward),
+                Is.False);
+            Assert.That(
+                VaultSlide.HasForwardMomentum(
+                    Vector3.forward * VaultSlide.MinimumForwardSpeed,
+                    Vector3.forward),
+                Is.True);
+
+            Assert.That(
+                VaultSlide.IsNonAscendingDestination(
+                    Vector3.zero,
+                    Vector3.forward * 3f),
+                Is.True);
+            Assert.That(
+                VaultSlide.IsNonAscendingDestination(
+                    Vector3.zero,
+                    Vector3.forward * 3f +
+                    Vector3.up * (VaultSlide.MaximumUpwardHeight + 0.01f)),
+                Is.False);
+        }
+
+        [Test]
+        public void LedgeDescentUsesBackwardMovementWithoutDropModifier()
+        {
+            Assert.That(
+                ClimbController.WantsToDescend(Vector2.down),
+                Is.True);
+            Assert.That(
+                ClimbController.WantsToDescend(
+                    new Vector2(-1f, -1f).normalized),
+                Is.True);
+            Assert.That(
+                ClimbController.WantsToDescend(
+                    new Vector2(1f, -1f).normalized),
+                Is.True);
+            Assert.That(
+                ClimbController.WantsToDescend(Vector2.left),
+                Is.False);
+        }
+
+        [Test]
+        public void InventoryToggleUsesTabAndClimbSolverDoesNotWriteIk()
+        {
+            string inventorySource = System.IO.File.ReadAllText(
+                "Assets/_Project/NERA/Code/Runtime/Inventory/" +
+                "InventoryLabHUDController.cs");
+            Assert.That(
+                inventorySource,
+                Does.Contain("Input.GetKeyDown(KeyCode.Tab)"));
+            Assert.That(
+                inventorySource,
+                Does.Not.Contain("Input.GetKeyDown(KeyCode.I)"));
+
+            string climbSource = System.IO.File.ReadAllText(
+                "Assets/_Project/NERA/Code/Runtime/Parkour/" +
+                "System Controllers/ClimbController.cs");
+            int solverStart = climbSource.IndexOf(
+                "void IKSolver()",
+                System.StringComparison.Ordinal);
+            int solverEnd = climbSource.IndexOf(
+                "bool CheckValidMovement",
+                solverStart,
+                System.StringComparison.Ordinal);
+            Assert.That(solverStart, Is.GreaterThanOrEqualTo(0));
+            Assert.That(solverEnd, Is.GreaterThan(solverStart));
+            Assert.That(
+                climbSource.Substring(solverStart, solverEnd - solverStart),
+                Does.Not.Contain("SetIK"));
+        }
     }
 }
