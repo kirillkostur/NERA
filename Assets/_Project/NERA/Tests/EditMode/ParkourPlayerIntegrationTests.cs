@@ -7,7 +7,6 @@ using NERA.Inventory;
 using NERA.Player;
 using NUnit.Framework;
 using UnityEditor;
-using UnityEditor.Animations;
 using UnityEngine;
 
 namespace NERA.Tests
@@ -267,65 +266,6 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void TargetLedgeStateFollowsFootSupport()
-        {
-            Assert.That(
-                ClimbController.ResolveTargetClimbState(true),
-                Is.EqualTo(ClimbController.ClimbState.BHanging));
-            Assert.That(
-                ClimbController.ResolveTargetClimbState(false),
-                Is.EqualTo(ClimbController.ClimbState.FHanging));
-        }
-
-        [Test]
-        public void BracedHopsUseTargetStateForFastFreeHangTransitions()
-        {
-            AnimatorController controller =
-                AssetDatabase.LoadAssetAtPath<AnimatorController>(
-                    "Assets/_Project/NERA/Art/Parkour/" +
-                    "Animator Controller.controller");
-            Assert.That(controller, Is.Not.Null);
-
-            AnimatorStateMachine root = controller.layers[0].stateMachine;
-            AnimatorState freeHangConversion =
-                FindAnimatorState(root, "Braced To FreeHang");
-            Assert.That(freeHangConversion, Is.Not.Null);
-
-            string[] hopNames =
-            {
-                "Braced Hang Hop Up",
-                "Braced Hang Hop Down",
-                "Braced Hang Hop Left",
-                "Braced Hang Hop Right",
-            };
-
-            foreach (string hopName in hopNames)
-            {
-                AnimatorState hop = FindAnimatorState(root, hopName);
-                Assert.That(hop, Is.Not.Null, hopName);
-
-                AnimatorStateTransition freeTransition = hop.transitions
-                    .SingleOrDefault(transition =>
-                        transition.destinationState == freeHangConversion);
-                AnimatorStateTransition bracedTransition = hop.transitions
-                    .SingleOrDefault(transition =>
-                        transition.destinationState != null &&
-                        transition.destinationState.name ==
-                        "Hanging Movement");
-
-                Assert.That(freeTransition, Is.Not.Null, hopName);
-                Assert.That(bracedTransition, Is.Not.Null, hopName);
-                AssertClimbStateCondition(freeTransition, 2f, hopName);
-                AssertClimbStateCondition(bracedTransition, 1f, hopName);
-                Assert.That(
-                    freeTransition.exitTime,
-                    Is.LessThan(bracedTransition.exitTime),
-                    $"{hopName} should switch to free hanging before " +
-                    "the regular braced hop finishes.");
-            }
-        }
-
-        [Test]
         public void InventoryToggleUsesTabAndClimbSolverDoesNotWriteIk()
         {
             string inventorySource = System.IO.File.ReadAllText(
@@ -353,52 +293,6 @@ namespace NERA.Tests
             Assert.That(
                 climbSource.Substring(solverStart, solverEnd - solverStart),
                 Does.Not.Contain("SetIK"));
-            Assert.That(
-                climbSource,
-                Does.Contain("GetNextAnimatorStateInfo(0)"));
-
-            string animationSource = System.IO.File.ReadAllText(
-                "Assets/_Project/NERA/Code/Runtime/Parkour/" +
-                "System Controllers/AnimationCharacterController.cs");
-            Assert.That(
-                animationSource,
-                Does.Contain("animator.IsInTransition(0) || " +
-                             "animator.isMatchingTarget"));
-        }
-
-        private static AnimatorState FindAnimatorState(
-            AnimatorStateMachine stateMachine,
-            string stateName)
-        {
-            foreach (ChildAnimatorState child in stateMachine.states)
-            {
-                if (child.state.name == stateName)
-                    return child.state;
-            }
-
-            foreach (ChildAnimatorStateMachine child in
-                     stateMachine.stateMachines)
-            {
-                AnimatorState state =
-                    FindAnimatorState(child.stateMachine, stateName);
-                if (state != null)
-                    return state;
-            }
-
-            return null;
-        }
-
-        private static void AssertClimbStateCondition(
-            AnimatorStateTransition transition,
-            float expectedValue,
-            string message)
-        {
-            AnimatorCondition condition = transition.conditions
-                .SingleOrDefault(candidate =>
-                    candidate.parameter == "Climb State");
-            Assert.That(condition.parameter, Is.EqualTo("Climb State"), message);
-            Assert.That(condition.mode, Is.EqualTo(AnimatorConditionMode.Equals));
-            Assert.That(condition.threshold, Is.EqualTo(expectedValue));
         }
     }
 }

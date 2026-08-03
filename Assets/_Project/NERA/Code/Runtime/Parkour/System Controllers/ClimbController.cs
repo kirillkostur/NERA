@@ -54,7 +54,6 @@ namespace Climbing
         private float smallHopMaxDistance = 0.35f; 
         private float distanceToLedgeBraced = 0.3f;
         private float distanceToLedgeFree = 0.1f;
-        private const float FreeHangConversionMatchEndTime = 0.75f;
 
         private ThirdPersonController characterController;
         private DetectionCharacterController characterDetection;
@@ -337,35 +336,13 @@ namespace Climbing
                         characterAnimation.SetMatchTarget(AvatarTarget.LeftHand, target, targetRot, targetRot * FreeHangOffset, startTime, 0.56f);
                 }
 
-                // Match only the ledge-hop states. A braced-to-free jump uses
-                // the dedicated conversion clip configured in the Animator,
-                // so it receives a second alignment pass after that clip starts.
-                bool isLedgeHop = IsBracedHangHop(characterAnimation.animState);
-                bool isFreeHangConversion =
-                    jumping &&
-                    curClimbState == ClimbState.FHanging &&
-                    characterAnimation.animState.IsName("Braced To FreeHang");
-
-                if (jumping && (isLedgeHop || isFreeHangConversion))
+                //Jump Ledge to Ledge 
+                if (!characterAnimation.animState.IsName("Hanging Movement") && jumping == true)
                 {
                     matchingTarget = true;
                     rotTime = 0;
 
-                    Vector3 targetOffset = curClimbState == ClimbState.FHanging
-                        ? FreeHangOffset
-                        : BracedHangOffset;
-                    float matchStartTime = isFreeHangConversion ? 0f : startTime;
-                    float matchEndTime = isFreeHangConversion
-                        ? FreeHangConversionMatchEndTime
-                        : endTime;
-
-                    characterAnimation.SetMatchTarget(
-                        AvatarTarget.LeftHand,
-                        target,
-                        targetRot,
-                        targetRot * targetOffset,
-                        matchStartTime,
-                        matchEndTime);
+                    characterAnimation.SetMatchTarget(AvatarTarget.LeftHand, target, targetRot, targetRot * BracedHangOffset, startTime, endTime);
                 }
 
                 //Climb 
@@ -409,21 +386,8 @@ namespace Climbing
                         }
                     }
 
-                    // A braced-to-free jump has an intermediate transition
-                    // (hop -> conversion clip). Keep controlling the player
-                    // until the Animator actually enters Hanging Movement.
-                    bool reachedDestinationState =
-                        characterAnimation.animator.IsInTransition(0);
-                    if (jumping && reachedDestinationState)
-                    {
-                        AnimatorStateInfo nextState =
-                            characterAnimation.animator.GetNextAnimatorStateInfo(0);
-                        reachedDestinationState =
-                            nextState.IsName("Hanging Movement");
-                    }
-
                     //If MatchTarget animation ends, reset default values
-                    if (reachedDestinationState)
+                    if (characterAnimation.animator.IsInTransition(0)) 
                     {
                         onLedge = true;
                         toLedge = false;
@@ -515,19 +479,6 @@ namespace Climbing
             return direction.y < -0.5f;
         }
 
-        public static ClimbState ResolveTargetClimbState(bool hasFootSupport)
-        {
-            return hasFootSupport ? ClimbState.BHanging : ClimbState.FHanging;
-        }
-
-        private static bool IsBracedHangHop(AnimatorStateInfo state)
-        {
-            return state.IsName("Braced Hang Hop Up") ||
-                   state.IsName("Braced Hang Hop Down") ||
-                   state.IsName("Braced Hang Hop Left") ||
-                   state.IsName("Braced Hang Hop Right");
-        }
-
         /// <summary>
         /// Climbs From Ledge to Upwards Surface
         /// </summary>
@@ -616,21 +567,9 @@ namespace Climbing
                     if ((xDistance < smallHopMaxDistance && xDistance > -smallHopMaxDistance) && direction.y != 0)
                         direction.x = 0;
 
-                    ClimbState sourceClimbState = curClimbState;
-                    wallFound = characterDetection.FindFootCollision(
-                        target,
-                        targetRot,
-                        -toPoint.target.transform.forward);
-                    ClimbState targetClimbState =
-                        ResolveTargetClimbState(wallFound);
+                    wallFound = characterDetection.FindFootCollision(target, targetRot, -toPoint.target.transform.forward);
 
-                    characterController.characterAnimation.LedgeToLedge(
-                        sourceClimbState,
-                        targetClimbState,
-                        direction,
-                        ref startTime,
-                        ref endTime);
-                    curClimbState = targetClimbState;
+                    characterController.characterAnimation.LedgeToLedge(curClimbState, direction, ref startTime, ref endTime);
                 }
             }
         }
