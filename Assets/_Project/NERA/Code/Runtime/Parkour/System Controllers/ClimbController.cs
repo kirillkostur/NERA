@@ -179,7 +179,7 @@ namespace Climbing
             ledgeFound = false;
             wallFound = false;
             reachedEnd = false;
-            onLedge = false;
+            SetOnLedge(false);
             toLedge = false;
             jumping = false;
             leftHandIKFound = false;
@@ -274,7 +274,7 @@ namespace Climbing
 
             if (!characterController.dummy && characterController.isGrounded)
             {
-                onLedge = false;
+                SetOnLedge(false);
                 RaycastHit hit;
                 if (characterController.characterInput.jump && !toLedge && !onLedge)
                 {
@@ -515,7 +515,7 @@ namespace Climbing
                     //If MatchTarget animation ends, reset default values
                     if (characterAnimation.animator.IsInTransition(0)) 
                     {
-                        onLedge = true;
+                        SetOnLedge(true);
                         toLedge = false;
                         jumping = false;
                         leftHandPosition = characterAnimation.animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
@@ -527,7 +527,7 @@ namespace Climbing
                         if (curClimbState == ClimbState.None)
                         {
                             active = false;
-                            onLedge = false;
+                            SetOnLedge(false);
                         }
                     }
                 }
@@ -648,7 +648,7 @@ namespace Climbing
                 target = hit.point;
                 targetRot = transform.rotation;
                 toLedge = true;
-                onLedge = false;
+                SetOnLedge(false);
                 characterController.cameraController.newOffset(false);
                 return true;
             }
@@ -738,7 +738,7 @@ namespace Climbing
                 return;
             }
 
-            onLedge = false;
+            SetOnLedge(false, animationDrivenBetweenLedges: true);
             toLedge = true;
             jumping = true;
 
@@ -1287,7 +1287,7 @@ namespace Climbing
             active = false;
             wallFound = false;
             reachedEnd = false;
-            onLedge = false;
+            SetOnLedge(false);
             toLedge = false;
             jumping = false;
             curLedge = null;
@@ -1300,6 +1300,19 @@ namespace Climbing
             ResetIKSmoothing();
             characterAnimation.DropLedge((int)curClimbState);
             characterController.cameraController?.newOffset(false);
+        }
+
+        private void SetOnLedge(
+            bool attached,
+            bool animationDrivenBetweenLedges = false)
+        {
+            onLedge = attached;
+
+            MovementCharacterController movement =
+                characterController?.characterMovement ??
+                GetComponent<MovementCharacterController>();
+            movement?.SetAnimationDrivenClimb(
+                attached || animationDrivenBetweenLedges);
         }
 
         private void SetCurrentLedgeFromCollider(Collider collider)

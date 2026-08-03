@@ -91,6 +91,44 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void KinematicKeepsInterpolationUntilClimbAnimationOwnsMotion()
+        {
+            GameObject prefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            GameObject instance = Object.Instantiate(prefab);
+
+            try
+            {
+                ParkourPlayerBridge bridge =
+                    instance.GetComponentInChildren<ParkourPlayerBridge>(true);
+                MovementCharacterController movement =
+                    bridge.GetComponent<MovementCharacterController>();
+                Rigidbody body = bridge.GetComponent<Rigidbody>();
+                movement.rb = body;
+                body.interpolation = RigidbodyInterpolation.Interpolate;
+
+                movement.SetKinematic(true);
+                Assert.That(
+                    body.interpolation,
+                    Is.EqualTo(RigidbodyInterpolation.Interpolate));
+
+                movement.SetAnimationDrivenClimb(true);
+                Assert.That(
+                    body.interpolation,
+                    Is.EqualTo(RigidbodyInterpolation.None));
+
+                movement.SetAnimationDrivenClimb(false);
+                Assert.That(
+                    body.interpolation,
+                    Is.EqualTo(RigidbodyInterpolation.Interpolate));
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
+        }
+
+        [Test]
         public void EnergyWeaponHitsEnemiesButStopsAtWorldGeometry()
         {
             WeaponDefinition weapon =

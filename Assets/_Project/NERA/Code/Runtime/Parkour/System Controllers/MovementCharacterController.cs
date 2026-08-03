@@ -47,6 +47,8 @@ namespace Climbing
         private Animator anim;
         private Vector3 velocity;
         private float smoothSpeed;
+        private readonly RigidbodyInterpolation movementInterpolation =
+            RigidbodyInterpolation.Interpolate;
 
         private const float AirMovementSweepPadding = 0.03f;
 
@@ -82,6 +84,7 @@ namespace Climbing
         {
             controller = GetComponent<ThirdPersonController>();
             rb = GetComponent<Rigidbody>();
+            rb.interpolation = movementInterpolation;
             anim = controller.characterAnimation.animator;
             SetCurrentState(MovementState.Walking);
         }
@@ -366,6 +369,17 @@ namespace Climbing
         public void SetKinematic(bool active)
         {
             rb.isKinematic = active;
+        }
+
+        public void SetAnimationDrivenClimb(bool active)
+        {
+            rb ??= GetComponent<Rigidbody>();
+            if (rb == null)
+                return;
+
+            rb.interpolation = active
+                ? RigidbodyInterpolation.None
+                : movementInterpolation;
         }
 
         public void EnableFeetIK()
