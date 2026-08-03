@@ -33,6 +33,12 @@ namespace Climbing
     [RequireComponent(typeof(Animator))]
     public class AnimationCharacterController : MonoBehaviour
     {
+        private const string BracedHangHopStateName = "Braced Hang Hop";
+        private static readonly int HopHorizontalParameter =
+            Animator.StringToHash("HopHorizontal");
+        private static readonly int HopVerticalParameter =
+            Animator.StringToHash("HopVertical");
+
         private ThirdPersonController controller;
         private Vector3 animVelocity;
 
@@ -123,32 +129,35 @@ namespace Climbing
         {
             if (state == ClimbController.ClimbState.BHanging)
             {
-                if (direction.x == -1 && direction.y == 0 ||
-                    direction.x == -1 && direction.y == 1 ||
-                    direction.x == -1 && direction.y == -1)
+                Vector2 hopDirection = new Vector2(
+                    direction.x,
+                    direction.y);
+                if (hopDirection.sqrMagnitude > 1f)
+                    hopDirection.Normalize();
+
+                animator.SetFloat(
+                    HopHorizontalParameter,
+                    hopDirection.x);
+                animator.SetFloat(
+                    HopVerticalParameter,
+                    hopDirection.y);
+                animator.CrossFade(BracedHangHopStateName, 0.2f);
+
+                // Preserve the original MatchTarget windows. Diagonal hops
+                // used the side clip before the Blend Tree, so they continue
+                // to use the side timing while the pose can now blend in Y.
+                if (Mathf.Abs(direction.x) > 0.01f)
                 {
-                    animator.CrossFade("Braced Hang Hop Left", 0.2f);
                     startTime = 0.2f;
                     endTime = 0.49f;
                 }
-                else if (direction.x == 1 && direction.y == 0 ||
-                        direction.x == 1 && direction.y == -1 ||
-                        direction.x == 1 && direction.y == 1)
+                else if (direction.y > 0.01f)
                 {
-                    animator.CrossFade("Braced Hang Hop Right", 0.2f);
-                    startTime = 0.2f;
-                    endTime = 0.49f;
-                }
-                else if (direction.x == 0 && direction.y == 1)
-                {
-                    animator.CrossFade("Braced Hang Hop Up", 0.2f);
                     startTime = 0.3f;
                     endTime = 0.48f;
                 }
-                else if (direction.x == 0 && direction.y == -1)
+                else if (direction.y < -0.01f)
                 {
-
-                    animator.CrossFade("Braced Hang Hop Down", 0.2f);
                     startTime = 0.3f;
                     endTime = 0.7f;
                 }
@@ -206,6 +215,8 @@ namespace Climbing
             animVelocity = Vector3.zero;
             animator.SetFloat("Velocity", 0f);
             animator.SetFloat("Horizontal", 0f);
+            animator.SetFloat(HopHorizontalParameter, 0f);
+            animator.SetFloat(HopVerticalParameter, 0f);
             animator.SetFloat("AnimSpeed", 1f);
             animator.SetBool("Released", true);
             animator.SetBool("Run", false);

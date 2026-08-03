@@ -205,6 +205,72 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void BracedHopsUseSingleDirectionalBlendTree()
+        {
+            AnimatorController controller =
+                AssetDatabase.LoadAssetAtPath<AnimatorController>(
+                    "Assets/_Project/NERA/Art/Parkour/" +
+                    "Animator Controller.controller");
+            Assert.That(controller, Is.Not.Null);
+            Assert.That(
+                controller.parameters.Select(parameter => parameter.name),
+                Does.Contain("HopHorizontal"));
+            Assert.That(
+                controller.parameters.Select(parameter => parameter.name),
+                Does.Contain("HopVertical"));
+
+            AnimatorStateMachine root = controller.layers[0].stateMachine;
+            AnimatorState hopState = FindAnimatorState(
+                root,
+                "Braced Hang Hop");
+            Assert.That(hopState, Is.Not.Null);
+            Assert.That(hopState.tag, Is.EqualTo("Root"));
+
+            BlendTree tree = hopState.motion as BlendTree;
+            Assert.That(tree, Is.Not.Null);
+            Assert.That(
+                tree.blendType,
+                Is.EqualTo(BlendTreeType.SimpleDirectional2D));
+            Assert.That(tree.blendParameter, Is.EqualTo("HopHorizontal"));
+            Assert.That(tree.blendParameterY, Is.EqualTo("HopVertical"));
+            Assert.That(tree.children, Has.Length.EqualTo(4));
+            Assert.That(
+                tree.children.Select(child => child.position),
+                Is.EquivalentTo(new[]
+                {
+                    Vector2.left,
+                    Vector2.right,
+                    Vector2.up,
+                    Vector2.down,
+                }));
+
+            foreach (string legacyState in new[]
+                     {
+                         "Braced Hang Hop Left",
+                         "Braced Hang Hop Right",
+                         "Braced Hang Hop Up",
+                         "Braced Hang Hop Down",
+                     })
+            {
+                Assert.That(
+                    FindAnimatorState(root, legacyState),
+                    Is.Null,
+                    legacyState);
+            }
+
+            string source = System.IO.File.ReadAllText(
+                "Assets/_Project/NERA/Code/Runtime/Parkour/" +
+                "System Controllers/AnimationCharacterController.cs");
+            Assert.That(
+                source,
+                Does.Contain("CrossFade(BracedHangHopStateName"));
+            Assert.That(source, Does.Not.Contain("Braced Hang Hop Left\""));
+            Assert.That(source, Does.Not.Contain("Braced Hang Hop Right\""));
+            Assert.That(source, Does.Not.Contain("Braced Hang Hop Up\""));
+            Assert.That(source, Does.Not.Contain("Braced Hang Hop Down\""));
+        }
+
+        [Test]
         public void PoleColliderFindsNestedParkourPoints()
         {
             GameObject playerPrefab =

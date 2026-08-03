@@ -107,7 +107,7 @@ GameObject:
   - component: {fileID: 5556358532959275492}
   - component: {fileID: 5556358532959275491}
   - component: {fileID: 5556358532959275488}
-  - component: {fileID: 5388398359011734684}
+  - component: {fileID: 2012602565693552688}
   m_Layer: 3
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -123,8 +123,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5556358532959275495}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.09699432, y: 0.00160753, z: -0.00015666014, w: 0.99528366}
-  m_LocalPosition: {x: 0, y: 2.76, z: -5.5}
+  m_LocalRotation: {x: 0.09698131, y: 0.0016082005, z: -0.00015670426, w: 0.9952849}
+  m_LocalPosition: {x: 0, y: 2.7599998, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -235,7 +235,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FreeLook: {fileID: 5556358533377525087}
   Slide: {fileID: 5556358534259412710}
---- !u!114 &5388398359011734684
+--- !u!114 &2012602565693552688
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -613,7 +613,7 @@ Transform:
   m_GameObject: {fileID: 5556358533377525086}
   serializedVersion: 2
   m_LocalRotation: {x: 0.05183023, y: 0.066304006, z: -0.0034488074, w: 0.9964465}
-  m_LocalPosition: {x: 0, y: 2.76, z: -5.5}
+  m_LocalPosition: {x: 0, y: 2.7600002, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1125,7 +1125,7 @@ Transform:
   m_GameObject: {fileID: 5556358534259412728}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.36, y: 0.5, z: -1.86}
+  m_LocalPosition: {x: 0.36, y: 0.5, z: -1.8600006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1431,7 +1431,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.32
+  m_Radius: 0.22
   m_Height: 1.7326691
   m_Direction: 1
   m_Center: {x: 0, y: 0.86576736, z: 0}
@@ -1454,7 +1454,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Radius: 0.34
+  m_Radius: 0.22
   m_Height: 1.39
   m_Direction: 1
   m_Center: {x: 0, y: 0.86576736, z: 0}
@@ -1585,6 +1585,8 @@ MonoBehaviour:
   FeetRayLength: 0.6
   FindLedgeNumRays: 7
   DropLedgeNumRays: 8
+  airborneLedgeVerticalOffset: -1.2
+  airborneLedgeNumRays: 4
 --- !u!114 &5556358534646836589
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1629,12 +1631,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debug: 0
   FreeHangOffset: {x: 0, y: 0.02, z: -0.2}
-  BracedHangOffset: {x: 0, y: 0.12, z: -0.15}
+  BracedHangOffset: {x: 0, y: 0.1, z: -0.2}
+  airGrabMatchStart: 0.05
+  airGrabMatchEnd: 0.72
+  ledgeEndpointPadding: 0.3
   originHandIKBracedOffset: {x: 0.08, y: 1.65, z: -0.25}
   originHandIKFreeOffset: {x: 0.04, y: 2.31, z: -0.25}
   originFootIKOffset: {x: 0, y: 0, z: -0.41}
   IKHandRayLength: 0.73
   IKFootRayLength: 0.85
+  ikPositionSmoothing: 10
+  ledgeRootAlignmentSmoothing: 15
+  wallContactGraceTime: 0.1
   AutoSearchBones: 0
   LHand: {fileID: 4528514021992781122}
   RHand: {fileID: 3054051763170762762}
