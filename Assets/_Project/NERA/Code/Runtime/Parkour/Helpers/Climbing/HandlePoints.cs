@@ -199,6 +199,9 @@ namespace Climbing
 
         public Point GetClosestPoint(Vector3 playerPos)
         {
+            if (pointsInOrder == null)
+                return null;
+
             Point ret = null;
             float minDist = float.PositiveInfinity;
             for (int i = 0; i < pointsInOrder.Count; i++)

@@ -53,6 +53,8 @@ namespace Climbing
 
         private List<VaultAction> actions = new List<VaultAction>();
         private VaultAction curAction;
+        private VaultClimbLedge climbLedgeAction;
+        private VaultJumpPrediction jumpPredictionAction;
 
         public void Start()
         {
@@ -86,11 +88,13 @@ namespace Climbing
             }
             if (vaultActions.HasFlag(VaultActions.Climb_Ledge))
             {
-                Add(new VaultClimbLedge(controller));
+                climbLedgeAction = new VaultClimbLedge(controller);
+                Add(climbLedgeAction);
             }
             if (vaultActions.HasFlag(VaultActions.Jump_Prediction))
             {
-                Add(new VaultJumpPrediction(controller));
+                jumpPredictionAction = new VaultJumpPrediction(controller);
+                Add(jumpPredictionAction);
             }
             if (vaultActions.HasFlag(VaultActions.Vault_Down))
             {
@@ -100,6 +104,8 @@ namespace Climbing
 
         void Update()
         {
+            TryInterruptJumpWithLedgeGrab();
+
             if (!controller.isVaulting)
             {
                 curAction = null;
@@ -174,6 +180,19 @@ namespace Climbing
                 controller.SetSlidingCollider(false);
                 controller.characterAnimation?.switchCameras?.FreeLookCam();
             }
+        }
+
+        private void TryInterruptJumpWithLedgeGrab()
+        {
+            if (climbLedgeAction == null ||
+                !climbLedgeAction.TryAirborneGrab())
+            {
+                return;
+            }
+
+            jumpPredictionAction?.CancelForLedgeGrab();
+            curAction = climbLedgeAction;
+            controller.isVaulting = true;
         }
 
         private void AddConfiguredAction(

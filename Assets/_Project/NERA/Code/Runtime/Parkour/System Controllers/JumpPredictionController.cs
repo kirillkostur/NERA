@@ -341,6 +341,19 @@ namespace Climbing
             return !move;
         }
 
+        public void CancelForLedgeGrab()
+        {
+            move = false;
+            newPoint = false;
+            actualSpeed = 0f;
+            delay = 0f;
+            curPoint = null;
+
+            Animator animator = controller.characterAnimation.animator;
+            animator.SetBool("PredictedJump", false);
+            animator.SetBool("Crouch", false);
+        }
+
         /// <summary>
         /// Checks if the startPos, endPos and maxHeight is valid to make the jump
         /// </summary>

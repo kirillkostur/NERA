@@ -105,6 +105,20 @@ namespace Climbing
             animator.SetBool("Hanging", true);
         }
 
+        public void HangLedgeFromAir(ClimbController.ClimbState state)
+        {
+            animator.SetBool("Jump", false);
+            animator.SetBool("onAir", false);
+            animator.SetBool("Land", false);
+            animator.SetInteger("Climb State", (int)state);
+            animator.SetBool("Hanging", true);
+
+            if (state == ClimbController.ClimbState.BHanging)
+                animator.CrossFade("Braced Hang", 0.08f);
+            else if (state == ClimbController.ClimbState.FHanging)
+                animator.CrossFade("Idle To Freehang", 0.1f);
+        }
+
         public void LedgeToLedge(ClimbController.ClimbState state, Vector3 direction, ref float startTime, ref float endTime)
         {
             if (state == ClimbController.ClimbState.BHanging)

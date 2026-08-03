@@ -7,6 +7,7 @@ using NERA.Inventory;
 using NERA.Player;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace NERA.Tests
@@ -163,6 +164,47 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void AirborneBracedHangHasGuardedAnimatorChain()
+        {
+            AnimatorController controller =
+                AssetDatabase.LoadAssetAtPath<AnimatorController>(
+                    "Assets/_Project/NERA/Art/Parkour/" +
+                    "Animator Controller.controller");
+            Assert.That(controller, Is.Not.Null);
+
+            AnimatorState bracedHang = FindAnimatorState(
+                controller.layers[0].stateMachine,
+                "Braced Hang");
+            Assert.That(bracedHang, Is.Not.Null);
+            Assert.That(bracedHang.tag, Is.EqualTo("Root"));
+            Assert.That(
+                bracedHang.transitions.Any(
+                    transition => transition.destinationState != null &&
+                                  transition.destinationState.name ==
+                                  "Hanging Movement"),
+                Is.True);
+
+            foreach (string sourceName in new[] { "Fall Idle", "Predicted Jump" })
+            {
+                AnimatorState source = FindAnimatorState(
+                    controller.layers[0].stateMachine,
+                    sourceName);
+                AnimatorStateTransition transition = source.transitions
+                    .FirstOrDefault(candidate =>
+                        candidate.destinationState == bracedHang);
+
+                Assert.That(transition, Is.Not.Null, sourceName);
+                Assert.That(transition.hasExitTime, Is.False, sourceName);
+                Assert.That(
+                    transition.conditions.Any(condition =>
+                        condition.parameter == "Hanging" &&
+                        condition.mode == AnimatorConditionMode.If),
+                    Is.True,
+                    sourceName);
+            }
+        }
+
+        [Test]
         public void PoleColliderFindsNestedParkourPoints()
         {
             GameObject playerPrefab =
@@ -194,6 +236,214 @@ namespace NERA.Tests
                 Object.DestroyImmediate(player);
                 Object.DestroyImmediate(pole);
             }
+        }
+
+        [Test]
+        public void AirborneGrabUsesLowerSweepForThinLedge()
+        {
+            GameObject playerPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            GameObject ledgePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Parkour/Climb/Ledge.prefab");
+            GameObject player = Object.Instantiate(playerPrefab);
+            GameObject ledge = Object.Instantiate(ledgePrefab);
+
+            try
+            {
+                DetectionCharacterController detection =
+                    player.GetComponentInChildren<
+                        DetectionCharacterController>(true);
+                detection.transform.SetPositionAndRotation(
+                    Vector3.zero,
+                    Quaternion.identity);
+                ledge.transform.SetPositionAndRotation(
+                    new Vector3(0f, 0.9f, 1.1f),
+                    Quaternion.identity);
+                ledge.transform.localScale = new Vector3(2f, 0.2f, 0.2f);
+                Physics.SyncTransforms();
+
+                Assert.That(
+                    detection.FindLedgeCollision(out _),
+                    Is.False,
+                    "The ground ray sweep starts above this thin ledge.");
+                Assert.That(
+                    detection.FindAirborneLedgeCollision(out RaycastHit hit),
+                    Is.True,
+                    "The airborne sweep must include thin ledges below the " +
+                    "normal shoulder-height origin.");
+                Assert.That(hit.collider.gameObject, Is.EqualTo(ledge));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(ledge);
+            }
+        }
+
+        [Test]
+        public void SingleLedgePointsProvideMovementBounds()
+        {
+            GameObject ledgePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Parkour/Climb/Ledge.prefab");
+            GameObject ledge = Object.Instantiate(ledgePrefab);
+
+            try
+            {
+                HandlePoints handle =
+                    ledge.GetComponentInChildren<HandlePoints>(true);
+                Assert.That(handle, Is.Not.Null);
+                Assert.That(handle.furthestLeft, Is.Not.Null);
+                Assert.That(handle.furthestRight, Is.Not.Null);
+
+                Vector3 left = handle.furthestLeft.transform.position;
+                Vector3 right = handle.furthestRight.transform.position;
+                Vector3 centre = (left + right) * 0.5f;
+                Vector3 axis = (right - left).normalized;
+
+                Assert.That(
+                    ClimbController.CanMoveWithinPointSpan(
+                        handle,
+                        centre,
+                        axis),
+                    Is.True);
+                Assert.That(
+                    ClimbController.CanMoveWithinPointSpan(
+                        handle,
+                        centre,
+                        -axis),
+                    Is.True);
+                Assert.That(
+                    ClimbController.CanMoveWithinPointSpan(
+                        handle,
+                        right,
+                        axis),
+                    Is.False);
+                Assert.That(
+                    ClimbController.CanMoveWithinPointSpan(
+                        handle,
+                        left,
+                        -axis),
+                    Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(ledge);
+            }
+        }
+
+        [Test]
+        public void InitialGrabAndLedgeJumpSharePointAnchor()
+        {
+            GameObject ledgePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Parkour/Climb/Ledge.prefab");
+            GameObject ledge = Object.Instantiate(ledgePrefab);
+
+            try
+            {
+                HandlePoints handle =
+                    ledge.GetComponentInChildren<HandlePoints>(true);
+                Assert.That(handle, Is.Not.Null);
+                Assert.That(handle.pointsInOrder, Has.Count.GreaterThan(2));
+
+                Point centrePoint = handle.pointsInOrder[1];
+                Assert.That(
+                    ClimbController.TryGetPointGrabTarget(
+                        handle,
+                        centrePoint,
+                        out Vector3 centreTarget),
+                    Is.True);
+                Assert.That(
+                    centreTarget,
+                    Is.EqualTo(centrePoint.transform.position));
+
+                Assert.That(
+                    ClimbController.TryGetPointGrabTarget(
+                        handle,
+                        handle.furthestRight,
+                        out Vector3 rightTarget),
+                    Is.True);
+                Assert.That(
+                    rightTarget,
+                    Is.EqualTo(
+                        handle.furthestRight.transform.position -
+                        handle.transform.right * 0.5f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(ledge);
+            }
+        }
+
+        [Test]
+        public void ManualReleaseBlocksOnlyTheReleasedHandleUntilLanding()
+        {
+            GameObject ledgePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Parkour/Climb/Ledge.prefab");
+            GameObject releasedLedge = Object.Instantiate(ledgePrefab);
+            GameObject otherLedge = Object.Instantiate(ledgePrefab);
+
+            try
+            {
+                HandlePoints released =
+                    releasedLedge.GetComponentInChildren<HandlePoints>(true);
+                HandlePoints other =
+                    otherLedge.GetComponentInChildren<HandlePoints>(true);
+
+                Assert.That(
+                    ClimbController.ShouldBlockLedgeRegrab(
+                        released,
+                        released,
+                        false),
+                    Is.True);
+                Assert.That(
+                    ClimbController.ShouldBlockLedgeRegrab(
+                        released,
+                        other,
+                        false),
+                    Is.False,
+                    "A different lower ledge must remain grabbable.");
+                Assert.That(
+                    ClimbController.ShouldBlockLedgeRegrab(
+                        released,
+                        released,
+                        true),
+                    Is.False,
+                    "Landing must unlock the released ledge.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(releasedLedge);
+                Object.DestroyImmediate(otherLedge);
+            }
+        }
+
+        [Test]
+        public void ClimbIkBlendIsFrameRateIndependentAndBounded()
+        {
+            float oneFrame = ClimbController.ExponentialBlend(18f, 1f / 60f);
+            float twoFrames = 1f - Mathf.Pow(1f - oneFrame, 2f);
+            float combined = ClimbController.ExponentialBlend(18f, 2f / 60f);
+
+            Assert.That(oneFrame, Is.GreaterThan(0f).And.LessThan(1f));
+            Assert.That(twoFrames, Is.EqualTo(combined).Within(0.0001f));
+            Assert.That(ClimbController.ExponentialBlend(0f, 1f), Is.Zero);
+        }
+
+        [Test]
+        public void ClimbTargetCannotJumpFromLedgeToWorldOrigin()
+        {
+            Vector3 playerPosition = new Vector3(-2f, 5f, 76f);
+
+            Assert.That(
+                ClimbController.IsLocalClimbTarget(
+                    playerPosition,
+                    Vector3.zero),
+                Is.False);
+            Assert.That(
+                ClimbController.IsLocalClimbTarget(
+                    playerPosition,
+                    playerPosition + Vector3.up * 2f),
+                Is.True);
         }
 
         [Test]
@@ -293,6 +543,27 @@ namespace NERA.Tests
             Assert.That(
                 climbSource.Substring(solverStart, solverEnd - solverStart),
                 Does.Not.Contain("SetIK"));
+        }
+
+        private static AnimatorState FindAnimatorState(
+            AnimatorStateMachine stateMachine,
+            string stateName)
+        {
+            AnimatorState state = stateMachine.states
+                .Select(child => child.state)
+                .FirstOrDefault(candidate => candidate.name == stateName);
+            if (state != null)
+                return state;
+
+            foreach (ChildAnimatorStateMachine child in
+                     stateMachine.stateMachines)
+            {
+                state = FindAnimatorState(child.stateMachine, stateName);
+                if (state != null)
+                    return state;
+            }
+
+            return null;
         }
     }
 }

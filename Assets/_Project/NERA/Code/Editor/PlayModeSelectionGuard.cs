@@ -26,7 +26,8 @@ namespace NERA.EditorTools
             PlayModeStateChange state
         )
         {
-            if (state != PlayModeStateChange.ExitingPlayMode)
+            if (state != PlayModeStateChange.ExitingEditMode &&
+                state != PlayModeStateChange.ExitingPlayMode)
                 return;
 
             ClearSelection();
@@ -44,6 +45,33 @@ namespace NERA.EditorTools
         {
             Selection.objects = Array.Empty<UnityEngine.Object>();
             Selection.activeObject = null;
+
+            RemoveInvalidAnimatorStateEditors();
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
+        }
+
+        private static void RemoveInvalidAnimatorStateEditors()
+        {
+            UnityEditor.Editor[] editors =
+                UnityEngine.Resources.FindObjectsOfTypeAll<UnityEditor.Editor>();
+
+            foreach (UnityEditor.Editor editor in editors)
+            {
+                if (editor == null ||
+                    editor.GetType().FullName !=
+                    "UnityEditor.Graphs.AnimationStateMachine.StateEditor")
+                {
+                    continue;
+                }
+
+                UnityEngine.Object[] targets = editor.targets;
+                if (targets == null ||
+                    targets.Length == 0 ||
+                    Array.Exists(targets, target => target == null))
+                {
+                    UnityEngine.Object.DestroyImmediate(editor);
+                }
+            }
         }
     }
 }

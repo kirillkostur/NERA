@@ -46,19 +46,28 @@ namespace Climbing
         private bool rightHandIKFound = false;
         private bool leftFootIKFound = false;
         private bool rightFootIKFound = false;
+        private bool leftHandIKInitialized = false;
+        private bool rightHandIKInitialized = false;
+        private bool leftFootIKInitialized = false;
+        private bool rightFootIKInitialized = false;
 
         private float startTime = 0.0f;
         private float endTime = 0.0f;
         private float rotTime = 0.0f;
         private float horizontalMovement = 0.0f;
+        private float wallContactTime = 0.0f;
+        private float wallMissTime = 0.0f;
         private float smallHopMaxDistance = 0.35f; 
         private float distanceToLedgeBraced = 0.3f;
         private float distanceToLedgeFree = 0.1f;
+        private const float MaxClimbTargetDistance = 4f;
+        private const float RightEndpointGrabOffset = 0.5f;
 
         private ThirdPersonController characterController;
         private DetectionCharacterController characterDetection;
         private AnimationCharacterController characterAnimation;
         private GameObject curLedge;
+        private HandlePoints releasedRegrabHandle;
         private Point targetPoint = null;
         private Point currentPoint = null;
 
@@ -67,10 +76,28 @@ namespace Climbing
         private Vector3 curOriginGrabOffset = Vector3.zero;
         private Vector3 HandPosition = Vector3.zero;
         private Vector3 leftHandPosition, rightHandPosition, leftFootPosition, rightFootPosition = Vector3.zero;
+        private Vector3 smoothedLeftHandPosition = Vector3.zero;
+        private Vector3 smoothedRightHandPosition = Vector3.zero;
+        private Vector3 smoothedLeftFootPosition = Vector3.zero;
+        private Vector3 smoothedRightFootPosition = Vector3.zero;
 
         [Header("Offset Positions")]
         [SerializeField] private Vector3 FreeHangOffset;
         [SerializeField] private Vector3 BracedHangOffset;
+
+        [Header("Air Ledge Grab")]
+        [Tooltip("First normalized frame used to pull an airborne player to the ledge.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float airGrabMatchStart = 0.05f;
+        [Tooltip("Last normalized frame used to pull an airborne player to the ledge.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float airGrabMatchEnd = 0.72f;
+
+        [Header("Ledge Movement")]
+        [Tooltip("Keeps the centre of the hands away from the last Point so " +
+                 "the hands do not move past the end of a short ledge.")]
+        [Min(0f)]
+        [SerializeField] private float ledgeEndpointPadding = 0.18f;
 
         [Header("IK Settings")]
         [SerializeField] private Vector3 originHandIKBracedOffset;
@@ -78,6 +105,17 @@ namespace Climbing
         [SerializeField] private Vector3 originFootIKOffset;
         [SerializeField] private float IKHandRayLength = 0.5f;
         [SerializeField] private float IKFootRayLength = 0.5f;
+
+        [Header("IK Smoothing")]
+        [Tooltip("Smooths the single HandlePoints IK target without changing its weight or source.")]
+        [Min(0.01f)]
+        [SerializeField] private float ikPositionSmoothing = 18f;
+        [Tooltip("Smooths root alignment while moving along a ledge.")]
+        [Min(0.01f)]
+        [SerializeField] private float ledgeRootAlignmentSmoothing = 20f;
+        [Tooltip("Prevents one missed foot ray from switching hang type.")]
+        [Min(0f)]
+        [SerializeField] private float wallContactGraceTime = 0.10f;
 
         [Header("IK GameObjects")]
         [Tooltip("Auto Search the bones when not specified")]
@@ -152,6 +190,8 @@ namespace Climbing
             targetPoint = null;
             currentPoint = null;
             target = Vector3.zero;
+            releasedRegrabHandle = null;
+            ResetIKSmoothing();
 
             if (characterAnimation != null &&
                 characterAnimation.animator != null)
@@ -171,7 +211,8 @@ namespace Climbing
             if (animator == null)
                 return;
 
-            //Reset IK Weight Position to default if not on Ledge
+            // Animator IK is written only here. Hand contacts themselves are
+            // supplied by the single package HandlePoints/IK solver path.
             if (!onLedge)
             {
                 animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0);
@@ -181,32 +222,45 @@ namespace Climbing
                 return;
             }
 
-            //IK Position of Feet and Hands
-            animator.SetIKPositionWeight(
+            animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
+            ApplySmoothedIKPosition(
                 AvatarIKGoal.LeftHand,
-                leftHandIKFound ? 1f : 0f);
-            if (leftHandIKFound)
-                CalculateIKPositions(AvatarIKGoal.LeftHand, ref leftHandPosition);
-
-            animator.SetIKPositionWeight(
+                leftHandPosition,
+                ref smoothedLeftHandPosition,
+                ref leftHandIKInitialized);
+            animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1f);
+            ApplySmoothedIKPosition(
                 AvatarIKGoal.RightHand,
-                rightHandIKFound ? 1f : 0f);
-            if (rightHandIKFound)
-                CalculateIKPositions(AvatarIKGoal.RightHand, ref rightHandPosition);
+                rightHandPosition,
+                ref smoothedRightHandPosition,
+                ref rightHandIKInitialized);
 
             bool useFootIK =
                 wallFound && curClimbState == ClimbState.BHanging;
+            bool useLeftFootIK = useFootIK && leftFootIKFound;
+            bool useRightFootIK = useFootIK && rightFootIKFound;
             animator.SetIKPositionWeight(
                 AvatarIKGoal.LeftFoot,
-                useFootIK && leftFootIKFound ? 1f : 0f);
-            if (useFootIK && leftFootIKFound)
-                CalculateIKPositions(AvatarIKGoal.LeftFoot, ref leftFootPosition);
-
+                useLeftFootIK ? 1f : 0f);
+            if (useLeftFootIK)
+                ApplySmoothedIKPosition(
+                    AvatarIKGoal.LeftFoot,
+                    leftFootPosition,
+                    ref smoothedLeftFootPosition,
+                    ref leftFootIKInitialized);
+            else
+                leftFootIKInitialized = false;
             animator.SetIKPositionWeight(
                 AvatarIKGoal.RightFoot,
-                useFootIK && rightFootIKFound ? 1f : 0f);
-            if (useFootIK && rightFootIKFound)
-                CalculateIKPositions(AvatarIKGoal.RightFoot, ref rightFootPosition);
+                useRightFootIK ? 1f : 0f);
+            if (useRightFootIK)
+                ApplySmoothedIKPosition(
+                    AvatarIKGoal.RightFoot,
+                    rightFootPosition,
+                    ref smoothedRightFootPosition,
+                    ref rightFootIKInitialized);
+            else
+                rightFootIKInitialized = false;
         }
 
         /// <summary>
@@ -215,36 +269,16 @@ namespace Climbing
         public bool ClimbCheck()
         {
             active = false;
+            if (characterController.isGrounded)
+                releasedRegrabHandle = null;
+
             if (!characterController.dummy && characterController.isGrounded)
             {
                 onLedge = false;
                 RaycastHit hit;
                 if (characterController.characterInput.jump && !toLedge && !onLedge)
                 {
-                    //Throw Raycast to find Ledges
-                    ledgeFound = characterDetection.FindLedgeCollision(out hit);
-
-                    if (ledgeFound)
-                    {
-                        //Find Target Point
-                        target = ReachLedge(hit);
-                        targetRot = Quaternion.LookRotation(-hit.normal);
-
-                        //Check if Ledge is a Braced or FreeHand Point
-                        wallFound = characterDetection.FindFootCollision(target, targetRot, hit.normal);
-
-                        if (wallFound)
-                            curClimbState = ClimbState.BHanging;
-                        else
-                            curClimbState = ClimbState.FHanging;
-
-                        characterController.characterAnimation.HangLedge(curClimbState);
-                        startTime = 0.0f;
-                        endTime = 0.2f;
-                        active = true;
-                        characterController.ToggleWalk();
-                    }
-                    else
+                    if (!TryStartLedgeGrab(false, out hit))
                     {
                         target = Vector3.zero;
                         targetRot = Quaternion.identity;
@@ -256,15 +290,18 @@ namespace Climbing
                 {
                     //Throw Rays below Player
                     characterDetection.FindDropLedgeCollision(out hit);
-                    if (hit.collider)
+                    if (hit.collider && TryReachLedge(hit, out target))
                     {
-                        //Find Target Point
-                        target = ReachLedge(hit);
-                        targetRot = Quaternion.LookRotation(-hit.normal); 
-                        transform.rotation = Quaternion.FromToRotation(transform.forward, hit.normal) * transform.rotation;//rotates towards ledge direction
+                        targetRot = Quaternion.LookRotation(-hit.normal);
+                        transform.rotation = Quaternion.FromToRotation(
+                            transform.forward,
+                            hit.normal) * transform.rotation;
 
                         //Check if Ledge is a Braced or FreeHand Point
-                        wallFound = characterDetection.FindFootCollision(target, targetRot, hit.normal);
+                        wallFound = characterDetection.FindFootCollision(
+                            target,
+                            targetRot,
+                            hit.normal);
 
                         if (wallFound)
                         {
@@ -288,6 +325,83 @@ namespace Climbing
         }
 
         /// <summary>
+        /// Lets the active jump action hand control over to climbing when a
+        /// ledge is found in front of the player while airborne.
+        /// </summary>
+        public bool TryAirborneLedgeGrab()
+        {
+            if (characterController.isGrounded)
+            {
+                releasedRegrabHandle = null;
+                return false;
+            }
+
+            if (!characterController.isJumping ||
+                toLedge ||
+                onLedge)
+            {
+                return false;
+            }
+
+            return TryStartLedgeGrab(true, out _);
+        }
+
+        private bool TryStartLedgeGrab(bool fromAir, out RaycastHit hit)
+        {
+            ledgeFound = fromAir
+                ? characterDetection.FindAirborneLedgeCollision(out hit)
+                : characterDetection.FindLedgeCollision(out hit);
+            if (!ledgeFound)
+                return false;
+
+            HandlePoints candidateHandle =
+                FindHandlePoints(hit.collider);
+            if (ShouldBlockLedgeRegrab(
+                    releasedRegrabHandle,
+                    candidateHandle,
+                    characterController.isGrounded))
+            {
+                ledgeFound = false;
+                return false;
+            }
+
+            if (!TryReachLedge(hit, out target))
+            {
+                ledgeFound = false;
+                return false;
+            }
+
+            if (candidateHandle != releasedRegrabHandle)
+                releasedRegrabHandle = null;
+
+            targetRot = Quaternion.LookRotation(-hit.normal);
+            wallFound = characterDetection.FindFootCollision(
+                target,
+                targetRot,
+                hit.normal);
+            curClimbState = wallFound
+                ? ClimbState.BHanging
+                : ClimbState.FHanging;
+
+            if (fromAir)
+            {
+                characterAnimation.HangLedgeFromAir(curClimbState);
+                characterController.isJumping = false;
+                characterController.onAir = false;
+            }
+            else
+            {
+                characterAnimation.HangLedge(curClimbState);
+            }
+
+            startTime = 0f;
+            endTime = fromAir ? airGrabMatchEnd : 0.2f;
+            active = true;
+            characterController.ToggleWalk();
+            return true;
+        }
+
+        /// <summary>
         /// Main climbing update that checks climbing movement and inTransition animations
         /// </summary>
         public bool ClimbUpdate()
@@ -305,15 +419,7 @@ namespace Climbing
                 //Dismount from Ledge
                 if (characterController.characterInput.drop && characterController.characterInput.movement == Vector2.zero)
                 {
-                    wallFound = false;
-                    curLedge = null;
-                    onLedge = false;
-                    targetPoint = null;
-                    currentPoint = null;
-                    characterController.isJumping = true;
-                    curClimbState = ClimbState.None;
-                    characterAnimation.DropLedge((int)curClimbState);
-                    characterController.cameraController.newOffset(false);
+                    ReleaseCurrentLedge(true);
                 }
             }
 
@@ -334,6 +440,26 @@ namespace Climbing
                         characterAnimation.SetMatchTarget(AvatarTarget.LeftHand, target, targetRot, targetRot * BracedHangOffset, startTime, 0.56f);
                     else //Free
                         characterAnimation.SetMatchTarget(AvatarTarget.LeftHand, target, targetRot, targetRot * FreeHangOffset, startTime, 0.56f);
+                }
+
+                // Airborne jump to a braced ledge. The short Braced Hang clip
+                // aligns the hands before its Animator transition continues
+                // into Braced Hanging/Hanging Movement.
+                if (characterAnimation.animState.IsName("Braced Hang"))
+                {
+                    matchingTarget = true;
+                    rotTime = 0;
+
+                    if (!characterAnimation.animator.IsInTransition(0))
+                    {
+                        characterAnimation.SetMatchTarget(
+                            AvatarTarget.LeftHand,
+                            target,
+                            targetRot,
+                            targetRot * BracedHangOffset,
+                            airGrabMatchStart,
+                            airGrabMatchEnd);
+                    }
                 }
 
                 //Jump Ledge to Ledge 
@@ -463,12 +589,19 @@ namespace Climbing
                     climbing = ClimbFromLedge();
                 }
 
-                if (wallFound && !climbing)
+                if (!climbing)
                 {
-                    JumpToLedge(
+                    bool hasConnectedLedge = TryFindLedgeNeighbour(
                         characterController.characterInput.movement.x,
                         characterController.characterInput.movement.y,
-                        wantsToDescend);
+                        wantsToDescend,
+                        out Neighbour neighbour,
+                        out float xDistance);
+
+                    if (hasConnectedLedge && wallFound)
+                    {
+                        JumpToLedge(neighbour, xDistance);
+                    }
                 }
 
             }
@@ -484,14 +617,17 @@ namespace Climbing
         /// </summary>
         bool ClimbFromLedge()
         {
-            bool ret;
-
-            Vector3 origin = leftHandPosition + (rightHandPosition - leftHandPosition) / 2;
-            origin.y = leftHandPosition.y;
+            if (!TryGetStableGrabPosition(out Vector3 origin))
+                return false;
 
             //Checks if the player fits on the top surface to climb
             RaycastHit hit;
-            if (characterController.characterDetection.ThrowClimbRay(origin, transform.forward, IKHandRayLength, out hit))
+            if (characterController.characterDetection.ThrowClimbRay(
+                    origin,
+                    transform.forward,
+                    IKHandRayLength,
+                    out hit) &&
+                IsLocalClimbTarget(transform.position, hit.point))
             {
                 if (curClimbState == ClimbState.BHanging)
                 {
@@ -510,68 +646,114 @@ namespace Climbing
                 targetRot = transform.rotation;
                 toLedge = true;
                 onLedge = false;
-                ret = true;
                 characterController.cameraController.newOffset(false);
-            }
-            else
-            {
-                ret = false;
+                return true;
             }
 
-            return ret;
+            return false;
+        }
+
+        /// <summary>
+        /// A climb target must remain close to the player. This prevents a
+        /// failed hand ray from turning Vector3.zero into a valid world-space
+        /// MatchTarget destination.
+        /// </summary>
+        public static bool IsLocalClimbTarget(
+            Vector3 playerPosition,
+            Vector3 targetPosition)
+        {
+            return IsFinite(playerPosition) &&
+                   IsFinite(targetPosition) &&
+                   (targetPosition - playerPosition).sqrMagnitude <=
+                   MaxClimbTargetDistance * MaxClimbTargetDistance;
         }
 
         /// <summary>
         /// Checks available points to jump Ledge to Ledge dependng on the input direction
         /// </summary>
-        void JumpToLedge(float horizontal, float vertical, bool drop)
+        private bool TryFindLedgeNeighbour(
+            float horizontal,
+            float vertical,
+            bool drop,
+            out Neighbour neighbour,
+            out float xDistance)
         {
+            neighbour = null;
+            xDistance = 0f;
             if (vertical == 0 && horizontal == 0)
-                return;
+                return false;
 
-            Point point = null;
-            float xDistance = 0;
-            
+            HandlePoints handle = GetCurrentHandlePoints();
+            if (handle == null)
+                return false;
+
+            Point point;
             if (horizontalMovement > 0 && reachedEnd)
-                point = curLedge.GetComponentInChildren<HandlePoints>().GetClosestPoint(rightHandPosition);
+                point = handle.GetClosestPoint(rightHandPosition);
             else
-                point = curLedge.GetComponentInChildren<HandlePoints>().GetClosestPoint(leftHandPosition);
+                point = handle.GetClosestPoint(leftHandPosition);
 
             currentPoint = point;
+            if (point == null)
+                return false;
 
-            if (point)
+            Vector3 direction = new Vector3(horizontal, vertical, 0f);
+            neighbour = CandidatePointOnDirection(
+                direction,
+                point,
+                point.neighbours,
+                ref xDistance,
+                drop);
+            return neighbour != null;
+        }
+
+        private void JumpToLedge(Neighbour toPoint, float xDistance)
+        {
+            if (toPoint == null || toPoint.target == null)
+                return;
+
+            HandlePoints targetHandle =
+                toPoint.target.GetComponentInParent<HandlePoints>();
+            ParkourSurface targetSurface = targetHandle != null
+                ? targetHandle.GetComponentInParent<ParkourSurface>()
+                : null;
+            GameObject targetLedge = targetSurface != null
+                ? targetSurface.gameObject
+                : targetHandle != null && targetHandle.transform.parent != null
+                    ? targetHandle.transform.parent.gameObject
+                    : null;
+            Quaternion ledgeRotation = targetLedge != null
+                ? targetLedge.transform.rotation
+                : toPoint.target.transform.rotation;
+            if (!TrySetLedgeTarget(
+                    targetLedge,
+                    targetHandle,
+                    toPoint.target,
+                    ledgeRotation,
+                    out target))
             {
-                Vector3 direction = new Vector3(horizontal, vertical, 0f);
-
-                Neighbour toPoint = CandidatePointOnDirection(direction, point, point.neighbours, ref xDistance, drop);
-
-                if (toPoint != null)
-                {
-                    curLedge = toPoint.target.transform.parent.parent.gameObject;
-                    target = toPoint.target.transform.position;
-                    targetRot = curLedge.transform.rotation;
-                    targetPoint = toPoint.target;
-
-                    //Reposition Player if target is a Right Point
-                    if (toPoint.target == curLedge.GetComponentInChildren<HandlePoints>().furthestRight)
-                    {
-                        target -= toPoint.target.transform.rotation * new Vector3(0.5f, 0, 0);
-                    }
-
-                    onLedge = false;
-                    toLedge = true;
-                    jumping = true;
-
-                    direction = toPoint.direction;
-
-                    if ((xDistance < smallHopMaxDistance && xDistance > -smallHopMaxDistance) && direction.y != 0)
-                        direction.x = 0;
-
-                    wallFound = characterDetection.FindFootCollision(target, targetRot, -toPoint.target.transform.forward);
-
-                    characterController.characterAnimation.LedgeToLedge(curClimbState, direction, ref startTime, ref endTime);
-                }
+                return;
             }
+
+            onLedge = false;
+            toLedge = true;
+            jumping = true;
+
+            Vector3 direction = toPoint.direction;
+
+            if ((xDistance < smallHopMaxDistance && xDistance > -smallHopMaxDistance) && direction.y != 0)
+                direction.x = 0;
+
+            wallFound = characterDetection.FindFootCollision(
+                target,
+                targetRot,
+                -toPoint.target.transform.forward);
+
+            characterController.characterAnimation.LedgeToLedge(
+                curClimbState,
+                direction,
+                ref startTime,
+                ref endTime);
         }
 
         /// <summary>
@@ -672,13 +854,7 @@ namespace Climbing
                     IKHandRayLength,
                     out hit1);
             if (leftHandIKFound)
-            {
                 leftHandPosition = hit1.point;
-            }
-            else
-            {
-                leftHandPosition = Vector3.zero;
-            }
 
             rightHandIKFound = characterController.characterDetection
                 .ThrowHandRayToLedge(
@@ -687,13 +863,7 @@ namespace Climbing
                     IKHandRayLength,
                     out hit2);
             if (rightHandIKFound)
-            {
                 rightHandPosition = hit2.point;
-            }
-            else
-            {
-                rightHandPosition = Vector3.zero;
-            }
 
             leftFootIKFound = characterController.characterDetection
                 .ThrowFootRayToLedge(
@@ -702,13 +872,7 @@ namespace Climbing
                     IKFootRayLength,
                     out hit3);
             if (leftFootIKFound)
-            {
                 leftFootPosition = hit3.point + hit3.normal * 0.15f;
-            }
-            else
-            {
-                leftFootPosition = Vector3.zero;
-            }
 
             rightFootIKFound = characterController.characterDetection
                 .ThrowFootRayToLedge(
@@ -717,13 +881,7 @@ namespace Climbing
                     IKFootRayLength,
                     out hit4);
             if (rightFootIKFound)
-            {
                 rightFootPosition = hit4.point + hit4.normal * 0.15f;
-            }
-            else
-            {
-                rightFootPosition = Vector3.zero;
-            }
         }
 
         /// <summary>
@@ -731,7 +889,7 @@ namespace Climbing
         /// </summary>
         bool CheckValidMovement(float translation)
         {
-            bool ret = false;
+            bool ret = Mathf.Abs(translation) < 0.01f;
             RaycastHit hit1;
             RaycastHit hit2;
             RaycastHit hit3;
@@ -762,16 +920,29 @@ namespace Climbing
             {
                 if (translation < 0)
                 {
-                    curLedge = hit1.collider.transform.gameObject;
+                    SetCurrentLedgeFromCollider(hit1.collider);
                     ret = true;
                 }
             }
             if (characterController.characterDetection.ThrowHandRayToLedge(origin2, Vector3.forward, IKHandRayLength, out hit2)){
                 if (translation > 0)
                 {
-                    curLedge = hit2.collider.transform.gameObject;
+                    SetCurrentLedgeFromCollider(hit2.collider);
                     ret = true;
                 }
+            }
+
+            // A short or thin bar can fall between the two hand rays even
+            // though its configured Points still define a valid movement
+            // span. Use those Points as a deterministic fallback and as the
+            // endpoint limit for the root-motion animation.
+            if (!ret && TryGetStableGrabPosition(out Vector3 gripPosition))
+            {
+                ret = CanMoveWithinPointSpan(
+                    GetCurrentHandlePoints(),
+                    gripPosition,
+                    transform.right * translation,
+                    ledgeEndpointPadding);
             }
 
             //Checks if Foot detects a wall to place the feet
@@ -781,8 +952,13 @@ namespace Climbing
                 bool b2 = characterController.characterDetection.ThrowFootRayToLedge(origin4, Vector3.forward, IKFootRayLength + 0.1f, out hit4);
                 if (!b1 && !b2)
                 {
-                    wallFound = false;
+                    wallContactTime = 0f;
+                    wallMissTime += Time.deltaTime;
+                    if (wallMissTime >= wallContactGraceTime)
+                        wallFound = false;
                 }
+                else
+                    wallMissTime = 0f;
             }
             else if (curClimbState == ClimbState.FHanging)
             {
@@ -790,8 +966,13 @@ namespace Climbing
                 bool b2 = characterController.characterDetection.ThrowFootRayToLedge(origin4, Vector3.forward, IKFootRayLength + 0.1f, out hit4);
                 if (b1 && b2)
                 {
-                    wallFound = true;
+                    wallMissTime = 0f;
+                    wallContactTime += Time.deltaTime;
+                    if (wallContactTime >= wallContactGraceTime)
+                        wallFound = true;
                 }
+                else
+                    wallContactTime = 0f;
             }
 
             //If movement is valid adjust player with the motion
@@ -800,7 +981,13 @@ namespace Climbing
                 //Rotates the character towards the ledge while moving
                 Vector3 direction = hit2.point - hit1.point;
                 Vector3 tangent = Vector3.Cross(Vector3.up, direction).normalized;
-                transform.rotation = Quaternion.LookRotation(-tangent);
+                float alignment = ExponentialBlend(
+                    ledgeRootAlignmentSmoothing,
+                    Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    Quaternion.LookRotation(-tangent),
+                    alignment);
 
                 //Sets the model at a relative distance from the ledge without clipping into surface
                 Vector3 origin = transform.position - transform.forward * 0.25f;
@@ -816,11 +1003,77 @@ namespace Climbing
                 {
                     raylength = (curClimbState == ClimbState.BHanging) ? distanceToLedgeBraced : distanceToLedgeFree;
                     Vector3 newPos = (hit.point + hit.normal * raylength);
-                    transform.position = new Vector3(newPos.x, transform.position.y, newPos.z);
+                    Vector3 alignedPosition = new Vector3(
+                        newPos.x,
+                        transform.position.y,
+                        newPos.z);
+                    transform.position = Vector3.Lerp(
+                        transform.position,
+                        alignedPosition,
+                        alignment);
                 }
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Checks whether movement continues inside the world-space span of
+        /// the Points configured for a ledge. Point list order is irrelevant.
+        /// </summary>
+        public static bool CanMoveWithinPointSpan(
+            HandlePoints handle,
+            Vector3 gripPosition,
+            Vector3 worldMovementDirection,
+            float endpointPadding = 0.18f)
+        {
+            if (handle == null ||
+                handle.pointsInOrder == null ||
+                !IsFinite(gripPosition) ||
+                !IsFinite(worldMovementDirection))
+            {
+                return false;
+            }
+
+            if (worldMovementDirection.sqrMagnitude < 0.0001f)
+                return true;
+
+            Vector3 axis = handle.transform.right.normalized;
+            if (axis.sqrMagnitude < 0.5f)
+                return false;
+
+            float minimum = float.PositiveInfinity;
+            float maximum = float.NegativeInfinity;
+            int validPointCount = 0;
+            Vector3 reference = handle.transform.position;
+
+            for (int i = 0; i < handle.pointsInOrder.Count; i++)
+            {
+                Point point = handle.pointsInOrder[i];
+                if (point == null || !IsFinite(point.transform.position))
+                    continue;
+
+                float projection = Vector3.Dot(
+                    point.transform.position - reference,
+                    axis);
+                minimum = Mathf.Min(minimum, projection);
+                maximum = Mathf.Max(maximum, projection);
+                validPointCount++;
+            }
+
+            float span = maximum - minimum;
+            if (validPointCount < 2 || span < 0.01f)
+                return false;
+
+            float movement = Vector3.Dot(worldMovementDirection, axis);
+            if (Mathf.Abs(movement) < 0.001f)
+                return false;
+
+            float padding = Mathf.Clamp(endpointPadding, 0f, span * 0.45f);
+            float grip = Vector3.Dot(gripPosition - reference, axis);
+            return movement > 0f
+                ? grip < maximum - padding
+                : grip > minimum + padding;
         }
 
         /// <summary>
@@ -842,43 +1095,296 @@ namespace Climbing
         }
 
         /// <summary>
+        /// Smooths the position produced by the original HandlePoints/raycast
+        /// solver. It deliberately does not add another contact source and does
+        /// not change IK weight, so single ledges and connected ledges keep the
+        /// same grab behaviour.
+        /// </summary>
+        private void ApplySmoothedIKPosition(
+            AvatarIKGoal goal,
+            Vector3 rawPosition,
+            ref Vector3 smoothedPosition,
+            ref bool initialized)
+        {
+            if (!IsFinite(rawPosition))
+                return;
+
+            if (!initialized)
+            {
+                smoothedPosition = rawPosition;
+                initialized = true;
+            }
+            else
+            {
+                smoothedPosition = Vector3.Lerp(
+                    smoothedPosition,
+                    rawPosition,
+                    ExponentialBlend(ikPositionSmoothing, Time.deltaTime));
+            }
+
+            CalculateIKPositions(goal, ref smoothedPosition);
+        }
+
+        /// <summary>
+        /// Frame-rate independent interpolation factor in the [0, 1] range.
+        /// </summary>
+        public static float ExponentialBlend(float speed, float deltaTime)
+        {
+            if (!float.IsFinite(speed) || !float.IsFinite(deltaTime) ||
+                speed <= 0f || deltaTime <= 0f)
+            {
+                return 0f;
+            }
+
+            return 1f - Mathf.Exp(-speed * deltaTime);
+        }
+
+        /// <summary>
         /// Gets the closes Point to the player to climb on the Ledge from ground
         /// </summary>
-        Vector3 ReachLedge(RaycastHit hit)
+        bool TryReachLedge(RaycastHit hit, out Vector3 targetPos)
         {
-            Vector3 targetPos = Vector3.zero;
+            targetPos = Vector3.zero;
+            if (hit.collider == null)
+                return false;
 
-            curLedge = hit.transform.gameObject;
-            HandlePoints handle = curLedge.GetComponentInChildren<HandlePoints>();
-            List<Point> points = handle.pointsInOrder;
-
-            float dist = float.PositiveInfinity;
-            for (int i = 0; i < points.Count; i++)
+            GameObject ledge = hit.transform.gameObject;
+            HandlePoints handle = ledge.GetComponentInChildren<HandlePoints>();
+            if (handle == null)
             {
-                if (points[i] == null)
-                    continue;
-
-                float point2root = Vector3.Distance(points[i].transform.position, transform.position);
-
-                //Finds closes point on ledge relative to the player
-                if (point2root < dist)
+                ParkourSurface surface =
+                    hit.collider.GetComponentInParent<ParkourSurface>();
+                if (surface != null)
                 {
-                    dist = point2root;
-                    targetPos = points[i].transform.position;
-
-                    //Right Point Offset to place the player on Ledge
-                    if (handle.furthestRight == points[i])
-                    {
-                        targetPos -= hit.transform.right * 0.5f;
-                    }
+                    ledge = surface.gameObject;
+                    handle = ledge.GetComponentInChildren<HandlePoints>();
                 }
+            }
+
+            Point closestPoint = handle != null
+                ? handle.GetClosestPoint(transform.position)
+                : null;
+            if (closestPoint == null ||
+                !IsFinite(closestPoint.transform.position))
+            {
+                return false;
+            }
+
+            Quaternion ledgeRotation = hit.normal.sqrMagnitude > 0.5f
+                ? Quaternion.LookRotation(-hit.normal)
+                : ledge.transform.rotation;
+            if (!TrySetLedgeTarget(
+                    ledge,
+                    handle,
+                    closestPoint,
+                    ledgeRotation,
+                    out targetPos))
+            {
+                return false;
             }
 
             characterController.DisableController();
             toLedge = true;
             characterController.cameraController.newOffset(true);
 
-            return targetPos;
+            return true;
+        }
+
+        private bool TrySetLedgeTarget(
+            GameObject ledge,
+            HandlePoints handle,
+            Point point,
+            Quaternion rotation,
+            out Vector3 targetPosition)
+        {
+            targetPosition = Vector3.zero;
+            if (ledge == null ||
+                handle == null ||
+                point == null ||
+                !TryGetPointGrabTarget(handle, point, out targetPosition))
+            {
+                return false;
+            }
+
+            curLedge = ledge;
+            targetPoint = point;
+            currentPoint = point;
+            targetRot = rotation;
+            ResetIKSmoothing();
+            return true;
+        }
+
+        /// <summary>
+        /// Both an initial grab and a ledge-to-ledge jump use the same GPoint
+        /// anchor. This is the package's original alignment contract.
+        /// </summary>
+        public static bool TryGetPointGrabTarget(
+            HandlePoints handle,
+            Point point,
+            out Vector3 targetPosition)
+        {
+            targetPosition = Vector3.zero;
+            if (handle == null ||
+                point == null ||
+                !IsFinite(point.transform.position))
+            {
+                return false;
+            }
+
+            targetPosition = point.transform.position;
+            if (handle.furthestRight == point)
+            {
+                targetPosition -=
+                    handle.transform.right * RightEndpointGrabOffset;
+            }
+
+            return IsFinite(targetPosition);
+        }
+
+        /// <summary>
+        /// A manually released ledge stays blocked until the player lands.
+        /// Other HandlePoints remain available, so a fall can still transition
+        /// into a deliberately placed lower ledge.
+        /// </summary>
+        public static bool ShouldBlockLedgeRegrab(
+            HandlePoints releasedHandle,
+            HandlePoints candidateHandle,
+            bool isGrounded)
+        {
+            return !isGrounded &&
+                   releasedHandle != null &&
+                   candidateHandle == releasedHandle;
+        }
+
+        private static HandlePoints FindHandlePoints(Collider collider)
+        {
+            if (collider == null)
+                return null;
+
+            HandlePoints handle =
+                collider.GetComponentInChildren<HandlePoints>(true);
+            handle ??= collider.GetComponentInParent<HandlePoints>();
+
+            if (handle == null)
+            {
+                ParkourSurface surface =
+                    collider.GetComponentInParent<ParkourSurface>();
+                if (surface != null)
+                    handle = surface.GetComponentInChildren<HandlePoints>(true);
+            }
+
+            return handle;
+        }
+
+        private void ReleaseCurrentLedge(bool blockReleasedLedge)
+        {
+            if (blockReleasedLedge)
+                releasedRegrabHandle = GetCurrentHandlePoints();
+
+            active = false;
+            wallFound = false;
+            reachedEnd = false;
+            onLedge = false;
+            toLedge = false;
+            jumping = false;
+            curLedge = null;
+            targetPoint = null;
+            currentPoint = null;
+            target = Vector3.zero;
+            characterController.isJumping = true;
+            characterController.onAir = false;
+            curClimbState = ClimbState.None;
+            ResetIKSmoothing();
+            characterAnimation.DropLedge((int)curClimbState);
+            characterController.cameraController?.newOffset(false);
+        }
+
+        private void SetCurrentLedgeFromCollider(Collider collider)
+        {
+            if (collider == null)
+                return;
+
+            ParkourSurface surface =
+                collider.GetComponentInParent<ParkourSurface>();
+            GameObject ledge = surface != null
+                ? surface.gameObject
+                : collider.gameObject;
+
+            if (ledge.GetComponentInChildren<HandlePoints>() != null)
+                curLedge = ledge;
+        }
+
+        private HandlePoints GetCurrentHandlePoints()
+        {
+            return curLedge != null
+                ? curLedge.GetComponentInChildren<HandlePoints>()
+                : null;
+        }
+
+        private bool TryGetStableGrabPosition(out Vector3 position)
+        {
+            position = Vector3.zero;
+
+            if (LHand != null && RHand != null &&
+                IsFinite(LHand.transform.position) &&
+                IsFinite(RHand.transform.position))
+            {
+                position = (LHand.transform.position +
+                            RHand.transform.position) * 0.5f;
+            }
+            else if (leftHandIKFound && rightHandIKFound &&
+                     IsFinite(leftHandPosition) &&
+                     IsFinite(rightHandPosition))
+            {
+                position = (leftHandPosition + rightHandPosition) * 0.5f;
+            }
+            else
+            {
+                HandlePoints handle = GetCurrentHandlePoints();
+                Point closest = handle != null
+                    ? handle.GetClosestPoint(transform.position)
+                    : null;
+                if (closest == null)
+                    return false;
+
+                position = closest.transform.position;
+            }
+
+            // The Point is the authoritative height of a thin ledge; the
+            // animation bones can be a few centimetres above or below it.
+            HandlePoints currentHandle = GetCurrentHandlePoints();
+            Point nearestPoint = currentHandle != null
+                ? currentHandle.GetClosestPoint(position)
+                : null;
+            if (nearestPoint != null)
+                position.y = nearestPoint.transform.position.y;
+
+            return IsLocalClimbTarget(transform.position, position);
+        }
+
+        private static bool IsFinite(Vector3 value)
+        {
+            return float.IsFinite(value.x) &&
+                   float.IsFinite(value.y) &&
+                   float.IsFinite(value.z);
+        }
+
+        private void ResetIKSmoothing()
+        {
+            leftHandIKFound = false;
+            rightHandIKFound = false;
+            leftFootIKFound = false;
+            rightFootIKFound = false;
+            leftHandIKInitialized = false;
+            rightHandIKInitialized = false;
+            leftFootIKInitialized = false;
+            rightFootIKInitialized = false;
+            smoothedLeftHandPosition = Vector3.zero;
+            smoothedRightHandPosition = Vector3.zero;
+            smoothedLeftFootPosition = Vector3.zero;
+            smoothedRightFootPosition = Vector3.zero;
+            wallContactTime = 0f;
+            wallMissTime = 0f;
         }
     }
 }

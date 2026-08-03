@@ -47,6 +47,11 @@ namespace Climbing
             return climbController.ClimbCheck();
         }
 
+        public bool TryAirborneGrab()
+        {
+            return climbController.TryAirborneLedgeGrab();
+        }
+
         public override bool Update()
         {
             return climbController.ClimbUpdate();

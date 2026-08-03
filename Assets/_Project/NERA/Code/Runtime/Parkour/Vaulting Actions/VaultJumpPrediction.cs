@@ -76,5 +76,10 @@ namespace Climbing
 
             return ret;
         }
+
+        public void CancelForLedgeGrab()
+        {
+            jumpController.CancelForLedgeGrab();
+        }
     }
 }

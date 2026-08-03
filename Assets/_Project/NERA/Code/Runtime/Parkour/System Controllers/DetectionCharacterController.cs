@@ -55,15 +55,58 @@ namespace Climbing
         [SerializeField] private float FindLedgeNumRays = 7;
         [SerializeField] private float DropLedgeNumRays = 8;
 
+        [Header("Air Ledge Rays")]
+        [Tooltip("Vertical offset applied to the first ledge ray while airborne.")]
+        [SerializeField] private float airborneLedgeVerticalOffset = -1.8f;
+        [Tooltip("Number of upward-spaced rays used while airborne.")]
+        [SerializeField] private float airborneLedgeNumRays = 20f;
+
         public bool FindLedgeCollision(out RaycastHit hit)
         {
-            Vector3 rayOrigin = transform.TransformDirection(OriginLedgeRay) + transform.position;
+            return FindLedgeCollision(
+                ledgeLayer,
+                false,
+                0f,
+                FindLedgeNumRays,
+                out hit);
+        }
 
-            for(int i = 0; i < FindLedgeNumRays; i++)
+        /// <summary>
+        /// Uses a taller vertical sweep while airborne. The normal ground
+        /// sweep starts above the character's shoulders and can move above a
+        /// thin bar as the jump raises the character root.
+        /// </summary>
+        public bool FindAirborneLedgeCollision(out RaycastHit hit)
+        {
+            return FindLedgeCollision(
+                ledgeLayer,
+                true,
+                airborneLedgeVerticalOffset,
+                airborneLedgeNumRays,
+                out hit);
+        }
+
+        private bool FindLedgeCollision(
+            LayerMask layerMask,
+            bool requireAirGrabSurface,
+            float verticalOffset,
+            float rayCount,
+            out RaycastHit hit)
+        {
+            Vector3 rayOrigin =
+                transform.TransformDirection(OriginLedgeRay) +
+                transform.position +
+                Vector3.up * verticalOffset;
+
+            for(int i = 0; i < rayCount; i++)
             {
-                bool ret = ThrowRayToLedge(rayOrigin + new Vector3(0, 0.15f * i, 0), out hit);
+                bool ret = ThrowRayToLedge(
+                    rayOrigin + new Vector3(0, 0.15f * i, 0),
+                    layerMask,
+                    out hit);
 
-                if (ret)
+                if (ret &&
+                    (!requireAirGrabSurface || IsAirGrabSurface(hit.collider)))
                 {
                     return true;
                 }
@@ -143,6 +186,14 @@ namespace Climbing
 
         public bool ThrowRayToLedge(Vector3 origin, out RaycastHit hit)
         {
+            return ThrowRayToLedge(origin, ledgeLayer, out hit);
+        }
+
+        private bool ThrowRayToLedge(
+            Vector3 origin,
+            LayerMask layerMask,
+            out RaycastHit hit)
+        {
             if (showDebug)
             {
                 Debug.DrawLine(origin, origin + transform.forward * LedgeRayLength, Color.green);
@@ -153,7 +204,7 @@ namespace Climbing
                     transform.forward,
                     out hit,
                     LedgeRayLength,
-                    ledgeLayer,
+                    layerMask,
                     QueryTriggerInteraction.Ignore))
             {
                 if (showDebug) //Normal
@@ -169,6 +220,36 @@ namespace Climbing
             }
             return false;
 
+        }
+
+        private bool IsAirGrabSurface(Collider collider)
+        {
+            if (collider == null)
+                return false;
+
+            int colliderLayerMask = 1 << collider.gameObject.layer;
+            bool dedicatedLedge =
+                (ledgeLayer.value & colliderLayerMask) != 0;
+            return dedicatedLedge &&
+                   HasUsableHandlePoints(collider.transform);
+        }
+
+        private static bool HasUsableHandlePoints(Transform surfaceRoot)
+        {
+            HandlePoints handle =
+                surfaceRoot.GetComponentInChildren<HandlePoints>();
+            if (handle == null)
+                handle = surfaceRoot.GetComponentInParent<HandlePoints>();
+            if (handle == null || handle.pointsInOrder == null)
+                return false;
+
+            for (int i = 0; i < handle.pointsInOrder.Count; i++)
+            {
+                if (handle.pointsInOrder[i] != null)
+                    return true;
+            }
+
+            return false;
         }
         public bool ThrowClimbRay(Vector3 origin, Vector3 direction, float length, out RaycastHit hit)
         {
