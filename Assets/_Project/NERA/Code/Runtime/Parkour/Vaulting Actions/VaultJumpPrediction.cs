@@ -60,21 +60,16 @@ namespace Climbing
 
         public override bool FixedUpdate()
         {
-            bool ret = false;
-
             if (!jumpController.hasArrived())
             {
                 jumpController.hasEndedJump();
 
-                jumpController.FollowParabola(0.7f);
-                ret = true;
-            }
-            else
-            {
-                ret = jumpController.isMidPoint();
+                if (!jumpController.hasArrived())
+                    return jumpController.FollowParabola(0.7f);
             }
 
-            return ret;
+            return jumpController.curPoint != null &&
+                   jumpController.isMidPoint();
         }
 
         public void CancelForLedgeGrab()

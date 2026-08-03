@@ -50,6 +50,9 @@ namespace Climbing
         private float actualSpeed = 0;
         private int accuracy = 50;
 
+        private const float CollisionSkin = 0.02f;
+        private const float MinimumSweepDistance = 0.0001f;
+
         [HideInInspector] public Point curPoint = null;
 
         private void Start()
@@ -292,23 +295,134 @@ namespace Climbing
         /// <summary>
         /// Moves the player through the previously created curve
         /// </summary>
-        public void FollowParabola(float length)
+        public bool FollowParabola(float length)
         {
-            if (move == true)
-            {
-                actualSpeed += Time.fixedDeltaTime / length;
-                if (actualSpeed > 1)
-                {
-                    actualSpeed = 1;
-                }
-                controller.characterMovement.rb.position = SampleParabola(origin, target, maxHeight, actualSpeed);
+            if (!move)
+                return false;
 
-                //Rotate Mesh to Movement
-                Vector3 travelDirection = target - origin;
-                float targetAngle = Mathf.Atan2(travelDirection.x, travelDirection.z) * Mathf.Rad2Deg;
-                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, 0.1f);
-                controller.characterMovement.rb.rotation = Quaternion.Euler(0f, angle, 0f);
+            actualSpeed += Time.fixedDeltaTime / length;
+            if (actualSpeed > 1)
+                actualSpeed = 1;
+
+            Rigidbody rb = controller.characterMovement.rb;
+            Vector3 currentPosition = rb.position;
+            Vector3 desiredPosition = SampleParabola(
+                origin,
+                target,
+                maxHeight,
+                actualSpeed);
+            Vector3 displacement = desiredPosition - currentPosition;
+
+            if (TryGetBlockingHit(displacement, out RaycastHit hit))
+            {
+                Vector3 direction = displacement.normalized;
+                float safeDistance = Mathf.Max(
+                    0f,
+                    hit.distance - CollisionSkin);
+                rb.position = currentPosition + direction * safeDistance;
+
+                Vector3 plannedVelocity = displacement /
+                                          Mathf.Max(
+                                              Time.fixedDeltaTime,
+                                              MinimumSweepDistance);
+                AbortForCollision(plannedVelocity, hit.normal);
+                return false;
             }
+
+            rb.position = desiredPosition;
+
+            //Rotate Mesh to Movement
+            Vector3 travelDirection = target - origin;
+            float targetAngle = Mathf.Atan2(
+                travelDirection.x,
+                travelDirection.z) * Mathf.Rad2Deg;
+            float angle = Mathf.SmoothDampAngle(
+                transform.eulerAngles.y,
+                targetAngle,
+                ref turnSmoothVelocity,
+                0.1f);
+            rb.rotation = Quaternion.Euler(0f, angle, 0f);
+            return true;
+        }
+
+        private bool TryGetBlockingHit(
+            Vector3 displacement,
+            out RaycastHit blockingHit)
+        {
+            blockingHit = default;
+            float sweepDistance = displacement.magnitude;
+            if (sweepDistance <= MinimumSweepDistance)
+                return false;
+
+            Rigidbody rb = controller.characterMovement.rb;
+            RaycastHit[] hits = rb.SweepTestAll(
+                displacement / sweepDistance,
+                sweepDistance,
+                QueryTriggerInteraction.Ignore);
+            float closestDistance = float.PositiveInfinity;
+            bool found = false;
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider == null ||
+                    hit.collider.isTrigger ||
+                    hit.rigidbody == rb ||
+                    IsCurrentTargetCollider(hit.collider) ||
+                    hit.distance >= closestDistance)
+                {
+                    continue;
+                }
+
+                blockingHit = hit;
+                closestDistance = hit.distance;
+                found = true;
+            }
+
+            return found;
+        }
+
+        private bool IsCurrentTargetCollider(Collider collider)
+        {
+            if (curPoint == null || curPoint.type != PointType.Pole)
+                return false;
+
+            HandlePoints handle =
+                curPoint.GetComponentInParent<HandlePoints>();
+            if (handle == null)
+                return false;
+
+            Transform handleTransform = handle.transform;
+            Transform colliderTransform = collider.transform;
+            return colliderTransform == handleTransform ||
+                   colliderTransform.IsChildOf(handleTransform) ||
+                   handleTransform.IsChildOf(colliderTransform);
+        }
+
+        private void AbortForCollision(
+            Vector3 plannedVelocity,
+            Vector3 surfaceNormal)
+        {
+            move = false;
+            newPoint = false;
+            actualSpeed = 0f;
+            delay = 0f;
+            curPoint = null;
+
+            Animator animator = controller.characterAnimation.animator;
+            animator.SetBool("PredictedJump", false);
+            animator.SetBool("Crouch", false);
+
+            controller.EnableController();
+            controller.isJumping = true;
+            controller.onAir = true;
+
+            Rigidbody rb = controller.characterMovement.rb;
+            rb.linearVelocity =
+                MovementCharacterController.RemoveVelocityIntoSurface(
+                    plannedVelocity,
+                    surfaceNormal);
+            controller.characterMovement.ApplyGravity();
+            controller.characterAnimation.Fall();
         }
 
         /// <summary>

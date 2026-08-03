@@ -1633,7 +1633,7 @@ MonoBehaviour:
   FreeHangOffset: {x: 0, y: 0.02, z: -0.2}
   BracedHangOffset: {x: 0, y: 0.1, z: -0.2}
   airGrabMatchStart: 0.05
-  airGrabMatchEnd: 0.72
+  airGrabMatchEnd: 0.4
   ledgeEndpointPadding: 0.3
   originHandIKBracedOffset: {x: 0.08, y: 1.65, z: -0.25}
   originHandIKFreeOffset: {x: 0.04, y: 2.31, z: -0.25}

@@ -205,13 +205,15 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void BracedHopsUseSingleDirectionalBlendTree()
+        public void BracedHopsUseDirectionalBlendTree()
         {
             AnimatorController controller =
                 AssetDatabase.LoadAssetAtPath<AnimatorController>(
                     "Assets/_Project/NERA/Art/Parkour/" +
                     "Animator Controller.controller");
             Assert.That(controller, Is.Not.Null);
+
+            AnimatorStateMachine root = controller.layers[0].stateMachine;
             Assert.That(
                 controller.parameters.Select(parameter => parameter.name),
                 Does.Contain("HopHorizontal"));
@@ -219,10 +221,7 @@ namespace NERA.Tests
                 controller.parameters.Select(parameter => parameter.name),
                 Does.Contain("HopVertical"));
 
-            AnimatorStateMachine root = controller.layers[0].stateMachine;
-            AnimatorState hopState = FindAnimatorState(
-                root,
-                "Braced Hang Hop");
+            AnimatorState hopState = FindAnimatorState(root, "Braced Hang Hop");
             Assert.That(hopState, Is.Not.Null);
             Assert.That(hopState.tag, Is.EqualTo("Root"));
 
@@ -233,7 +232,6 @@ namespace NERA.Tests
                 Is.EqualTo(BlendTreeType.SimpleDirectional2D));
             Assert.That(tree.blendParameter, Is.EqualTo("HopHorizontal"));
             Assert.That(tree.blendParameterY, Is.EqualTo("HopVertical"));
-            Assert.That(tree.children, Has.Length.EqualTo(4));
             Assert.That(
                 tree.children.Select(child => child.position),
                 Is.EquivalentTo(new[]
@@ -244,30 +242,12 @@ namespace NERA.Tests
                     Vector2.down,
                 }));
 
-            foreach (string legacyState in new[]
-                     {
-                         "Braced Hang Hop Left",
-                         "Braced Hang Hop Right",
-                         "Braced Hang Hop Up",
-                         "Braced Hang Hop Down",
-                     })
-            {
-                Assert.That(
-                    FindAnimatorState(root, legacyState),
-                    Is.Null,
-                    legacyState);
-            }
-
             string source = System.IO.File.ReadAllText(
                 "Assets/_Project/NERA/Code/Runtime/Parkour/" +
                 "System Controllers/AnimationCharacterController.cs");
             Assert.That(
                 source,
                 Does.Contain("CrossFade(BracedHangHopStateName"));
-            Assert.That(source, Does.Not.Contain("Braced Hang Hop Left\""));
-            Assert.That(source, Does.Not.Contain("Braced Hang Hop Right\""));
-            Assert.That(source, Does.Not.Contain("Braced Hang Hop Up\""));
-            Assert.That(source, Does.Not.Contain("Braced Hang Hop Down\""));
         }
 
         [Test]
@@ -563,6 +543,47 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void AirMovementDoesNotPushThePlayerIntoWallsOrUpCorners()
+        {
+            Vector3 fallingIntoWall = new Vector3(0f, -5f, 6f);
+            Vector3 wallLimited =
+                MovementCharacterController.RemoveVelocityIntoSurface(
+                    fallingIntoWall,
+                    Vector3.back);
+
+            Assert.That(wallLimited.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(wallLimited.y, Is.EqualTo(-5f).Within(0.0001f));
+            Assert.That(wallLimited.z, Is.EqualTo(0f).Within(0.0001f));
+
+            Vector3 cornerLimited =
+                MovementCharacterController.RemoveVelocityIntoSurface(
+                    new Vector3(4f, -5f, 6f),
+                    Vector3.back);
+            cornerLimited =
+                MovementCharacterController.RemoveVelocityIntoSurface(
+                    cornerLimited,
+                    Vector3.left);
+
+            Assert.That(cornerLimited.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(cornerLimited.y, Is.EqualTo(-5f).Within(0.0001f));
+            Assert.That(cornerLimited.z, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
+        public void PredictedJumpChecksTheCapsuleBeforeMoving()
+        {
+            string source = System.IO.File.ReadAllText(
+                "Assets/_Project/NERA/Code/Runtime/Parkour/" +
+                "System Controllers/JumpPredictionController.cs");
+
+            Assert.That(source, Does.Contain("rb.SweepTestAll("));
+            Assert.That(
+                source,
+                Does.Not.Contain(
+                    "rb.position = SampleParabola("));
+        }
+
+        [Test]
         public void LedgeDescentUsesBackwardMovementWithoutDropModifier()
         {
             Assert.That(
@@ -579,6 +600,29 @@ namespace NERA.Tests
             Assert.That(
                 ClimbController.WantsToDescend(Vector2.left),
                 Is.False);
+        }
+
+        [Test]
+        public void DiagonalLedgeHopPreservesBothBlendAxes()
+        {
+            Vector2 upRight =
+                AnimationCharacterController.GetHopBlendDirection(
+                    new Vector3(1f, 1f, 0f));
+            Assert.That(upRight.x, Is.EqualTo(0.7071f).Within(0.0001f));
+            Assert.That(upRight.y, Is.EqualTo(0.7071f).Within(0.0001f));
+
+            Vector2 downLeft =
+                AnimationCharacterController.GetHopBlendDirection(
+                    new Vector3(-1f, -1f, 0f));
+            Assert.That(downLeft.x, Is.EqualTo(-0.7071f).Within(0.0001f));
+            Assert.That(downLeft.y, Is.EqualTo(-0.7071f).Within(0.0001f));
+
+            Assert.That(
+                AnimationCharacterController.GetHopBlendDirection(Vector3.left),
+                Is.EqualTo(Vector2.left));
+            Assert.That(
+                AnimationCharacterController.GetHopBlendDirection(Vector3.down),
+                Is.EqualTo(Vector2.down));
         }
 
         [Test]

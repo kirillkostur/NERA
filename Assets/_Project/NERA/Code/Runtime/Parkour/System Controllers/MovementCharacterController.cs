@@ -48,6 +48,8 @@ namespace Climbing
         private Vector3 velocity;
         private float smoothSpeed;
 
+        private const float AirMovementSweepPadding = 0.03f;
+
         public delegate void OnLandedDelegate();
         public delegate void OnFallDelegate();
         public event OnLandedDelegate OnLanded;
@@ -122,7 +124,7 @@ namespace Climbing
             //Grant movement while falling
             if (!controller.dummy && controller.isJumping && controller.characterInput.movement != Vector2.zero && !controller.isVaulting)
             {
-                rb.position += (transform.forward * walkSpeed) * Time.fixedDeltaTime;
+                ApplyAirMovement();
             }
 
             //IK Positioning
@@ -188,6 +190,57 @@ namespace Climbing
             {
                 rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallForce - 1) * Time.fixedDeltaTime;
             }
+        }
+
+        private void ApplyAirMovement()
+        {
+            Vector3 horizontalVelocity = transform.forward * walkSpeed;
+            float speed = horizontalVelocity.magnitude;
+
+            if (speed > Mathf.Epsilon)
+            {
+                float sweepDistance =
+                    speed * Time.fixedDeltaTime + AirMovementSweepPadding;
+                RaycastHit[] hits = rb.SweepTestAll(
+                    horizontalVelocity / speed,
+                    sweepDistance,
+                    QueryTriggerInteraction.Ignore);
+
+                foreach (RaycastHit hit in hits)
+                {
+                    if (hit.collider == null ||
+                        hit.collider.isTrigger ||
+                        hit.rigidbody == rb)
+                    {
+                        continue;
+                    }
+
+                    horizontalVelocity = RemoveVelocityIntoSurface(
+                        horizontalVelocity,
+                        hit.normal);
+                }
+            }
+
+            rb.linearVelocity = new Vector3(
+                horizontalVelocity.x,
+                rb.linearVelocity.y,
+                horizontalVelocity.z);
+        }
+
+        public static Vector3 RemoveVelocityIntoSurface(
+            Vector3 sourceVelocity,
+            Vector3 surfaceNormal)
+        {
+            if (surfaceNormal.sqrMagnitude <= Mathf.Epsilon)
+                return sourceVelocity;
+
+            surfaceNormal.Normalize();
+            float velocityIntoSurface =
+                Vector3.Dot(sourceVelocity, surfaceNormal);
+            if (velocityIntoSurface >= 0f)
+                return sourceVelocity;
+
+            return sourceVelocity - surfaceNormal * velocityIntoSurface;
         }
 
         /// <summary>

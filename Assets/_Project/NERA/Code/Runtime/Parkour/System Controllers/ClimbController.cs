@@ -569,8 +569,6 @@ namespace Climbing
             //Change from Braced Hang <-----> Free Hang
             ChangeBracedFreeHang();
 
-            characterAnimation.HangMovement(direction.x, (int)curClimbState); //Move on Ledge Animations
-
             bool wantsToDescend = WantsToDescend(direction);
 
             // Space moves up between ledges. Backward movement alone moves
@@ -589,22 +587,27 @@ namespace Climbing
                     climbing = ClimbFromLedge();
                 }
 
-                if (!climbing)
+                // Do not update the hanging movement blend tree in the same
+                // frame as another ledge action. Sampling its side pose before
+                // the hop/ledge-climb crossfade causes a one-frame double pose.
+                if (climbing)
+                    return;
+
+                bool hasConnectedLedge = TryFindLedgeNeighbour(
+                    characterController.characterInput.movement.x,
+                    characterController.characterInput.movement.y,
+                    wantsToDescend,
+                    out Neighbour neighbour,
+                    out float xDistance);
+
+                if (hasConnectedLedge && wallFound)
                 {
-                    bool hasConnectedLedge = TryFindLedgeNeighbour(
-                        characterController.characterInput.movement.x,
-                        characterController.characterInput.movement.y,
-                        wantsToDescend,
-                        out Neighbour neighbour,
-                        out float xDistance);
-
-                    if (hasConnectedLedge && wallFound)
-                    {
-                        JumpToLedge(neighbour, xDistance);
-                    }
+                    JumpToLedge(neighbour, xDistance);
+                    return;
                 }
-
             }
+
+            characterAnimation.HangMovement(direction.x, (int)curClimbState); //Move on Ledge Animations
         }
 
         public static bool WantsToDescend(Vector2 direction)

@@ -127,36 +127,32 @@ namespace Climbing
 
         public void LedgeToLedge(ClimbController.ClimbState state, Vector3 direction, ref float startTime, ref float endTime)
         {
+            // Keep the source pose neutral when the hop starts. ClimbMovement
+            // returns immediately after this call, so the shimmy blend tree
+            // cannot overwrite Horizontal again during the initiating frame.
+            animator.SetFloat("Horizontal", 0f);
+
             if (state == ClimbController.ClimbState.BHanging)
             {
-                Vector2 hopDirection = new Vector2(
-                    direction.x,
-                    direction.y);
-                if (hopDirection.sqrMagnitude > 1f)
-                    hopDirection.Normalize();
-
-                animator.SetFloat(
-                    HopHorizontalParameter,
-                    hopDirection.x);
-                animator.SetFloat(
-                    HopVerticalParameter,
-                    hopDirection.y);
+                Vector2 hopDirection = GetHopBlendDirection(direction);
+                animator.SetFloat(HopHorizontalParameter, hopDirection.x);
+                animator.SetFloat(HopVerticalParameter, hopDirection.y);
                 animator.CrossFade(BracedHangHopStateName, 0.2f);
 
-                // Preserve the original MatchTarget windows. Diagonal hops
-                // used the side clip before the Blend Tree, so they continue
-                // to use the side timing while the pose can now blend in Y.
-                if (Mathf.Abs(direction.x) > 0.01f)
+                // Preserve the MatchTarget windows used by the source clips.
+                // A true diagonal hop uses the side timing while its pose is
+                // blended with the vertical clip by the Animator.
+                if (Mathf.Abs(hopDirection.x) > 0.01f)
                 {
                     startTime = 0.2f;
                     endTime = 0.49f;
                 }
-                else if (direction.y > 0.01f)
+                else if (hopDirection.y > 0.01f)
                 {
                     startTime = 0.3f;
                     endTime = 0.48f;
                 }
-                else if (direction.y < -0.01f)
+                else if (hopDirection.y < -0.01f)
                 {
                     startTime = 0.3f;
                     endTime = 0.7f;
@@ -165,6 +161,15 @@ namespace Climbing
 
             animator.SetInteger("Climb State", (int)state);
             animator.SetBool("Hanging", true);
+        }
+
+        public static Vector2 GetHopBlendDirection(Vector3 direction)
+        {
+            Vector2 hopDirection = new Vector2(direction.x, direction.y);
+            if (hopDirection.sqrMagnitude > 1f)
+                hopDirection.Normalize();
+
+            return hopDirection;
         }
         public void BracedClimb()
         {
