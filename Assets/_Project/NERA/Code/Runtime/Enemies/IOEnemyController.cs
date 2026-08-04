@@ -1,5 +1,7 @@
 using NERA.Combat;
 using NERA.Quests;
+using NERA.Items;
+using NERA.Save;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,6 +19,8 @@ namespace NERA.Enemies
         }
 
         [SerializeField] private IOEnemyConfig config;
+        [Tooltip("Optional stable ID. If empty, scene hierarchy is used.")]
+        [SerializeField] private string persistentId;
 
         private static readonly HashSet<IOEnemyController> ActiveEnemySet =
             new HashSet<IOEnemyController>();
@@ -29,13 +33,18 @@ namespace NERA.Enemies
         private float baseY;
         private Material runtimeMaterial;
         private bool encounterReported;
+        private string persistentKey;
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
         public bool IsAlive => state != State.Dead;
+        public string PersistentKey => persistentKey;
 
         private void Awake()
         {
+            persistentKey = PersistentSceneIdentity.CreateKey(
+                transform,
+                persistentId);
             currentHealth = MaxHealth;
             baseY = transform.position.y;
 
@@ -50,6 +59,21 @@ namespace NERA.Enemies
                     EnergyColor * EmissionIntensity
                 );
             }
+        }
+
+        private void Start()
+        {
+            WorldStateController worldState = WorldStateController.Instance;
+            if (worldState == null ||
+                !worldState.IsEnemyDefeated(persistentKey))
+            {
+                return;
+            }
+
+            state = State.Dead;
+            ActiveEnemySet.Remove(this);
+            SpawnResearchDrop();
+            Destroy(gameObject);
         }
 
         private void OnEnable()
@@ -106,6 +130,7 @@ namespace NERA.Enemies
 
             state = State.Dead;
             ActiveEnemySet.Remove(this);
+            WorldStateController.Instance?.MarkEnemyDefeated(persistentKey);
             QuestController.Instance?.Report(
                 QuestSignalType.EnemyKilled,
                 config != null ? config.EnemyId : name,
@@ -238,11 +263,15 @@ namespace NERA.Enemies
             if (DeathDropPrefab == null)
                 return;
 
-            Instantiate(
+            GameObject drop = Instantiate(
                 DeathDropPrefab,
                 transform.position + DeathDropOffset,
                 Quaternion.identity
             );
+            WorldItem worldItem = drop != null
+                ? drop.GetComponentInChildren<WorldItem>(true)
+                : null;
+            worldItem?.SetPersistentWorldId(persistentKey + "/drop");
         }
 
         private void OnDisable()

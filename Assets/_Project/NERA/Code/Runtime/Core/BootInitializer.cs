@@ -91,17 +91,50 @@ namespace NERA.Core
         private IEnumerator BeginSession()
         {
             isLoading = true;
-            GetComponent<SaveGameController>()?.InitializeSession(
-                GameSessionLaunchState.ConsumeOrDefault());
+            GameSessionLaunchRequest launchRequest =
+                GameSessionLaunchState.ConsumeOrDefault();
+            SaveGameController saveController =
+                GetComponent<SaveGameController>();
+            AutoSaveService autoSave = GetComponent<AutoSaveService>();
+            CheckpointService checkpoints =
+                GetComponent<CheckpointService>();
+            saveController?.InitializeSession(launchRequest);
+            autoSave?.InitializeSession();
+            checkpoints?.InitializeSession();
+            autoSave?.SetSuspended(true);
 
-            if (string.IsNullOrWhiteSpace(initialSceneName) ||
-                !Application.CanStreamedLevelBeLoaded(initialSceneName))
+            string startSceneName = initialSceneName;
+            string startSpawnPointId = initialSpawnPointId;
+            bool resumeCheckpoint =
+                launchRequest.Mode == GameLaunchMode.Continue &&
+                saveController != null &&
+                saveController.HasCheckpoint &&
+                Application.CanStreamedLevelBeLoaded(
+                    saveController.CheckpointSceneName);
+            if (resumeCheckpoint)
+            {
+                startSceneName = saveController.CheckpointSceneName;
+                startSpawnPointId = saveController.CheckpointUsesWorldPose
+                    ? string.Empty
+                    : saveController.CheckpointSpawnPointId;
+                if (!saveController.CheckpointUsesWorldPose)
+                {
+                    checkpoints?.SuppressNextActivation(
+                        startSceneName,
+                        startSpawnPointId);
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(startSceneName) ||
+                !Application.CanStreamedLevelBeLoaded(startSceneName))
             {
                 Debug.LogError(
-                    $"BootInitializer: Scene '{initialSceneName}' is not available in Build Settings.",
+                    $"BootInitializer: Scene '{startSceneName}' is not " +
+                    "available in Build Settings.",
                     this
                 );
                 isLoading = false;
+                autoSave?.SetSuspended(false);
                 yield break;
             }
 
@@ -118,8 +151,20 @@ namespace NERA.Core
             }
 
             yield return SwitchGameplayScene(
-                initialSceneName,
-                initialSpawnPointId);
+                startSceneName,
+                startSpawnPointId);
+            if (resumeCheckpoint)
+                RestorePlayerCheckpointPose(saveController);
+            autoSave?.SetSuspended(false);
+            if (!resumeCheckpoint)
+            {
+                checkpoints?.ActivateCheckpoint(
+                    startSceneName,
+                    startSpawnPointId);
+                checkpoints?.SuppressNextActivation(
+                    startSceneName,
+                    startSpawnPointId);
+            }
             isLoading = false;
         }
 
@@ -143,26 +188,86 @@ namespace NERA.Core
             string sceneName,
             string spawnPointId)
         {
+            AutoSaveService autoSave = GetComponent<AutoSaveService>();
+            CheckpointService checkpoints =
+                GetComponent<CheckpointService>();
+            autoSave?.Flush();
+            autoSave?.SetSuspended(true);
             SetGameplayInputActive(false);
             yield return SwitchGameplayScene(sceneName, spawnPointId);
+            autoSave?.SetSuspended(false);
+            checkpoints?.ActivateCheckpoint(sceneName, spawnPointId);
+            checkpoints?.SuppressNextActivation(sceneName, spawnPointId);
             SetGameplayInputActive(true);
             isLoading = false;
         }
 
-        private IEnumerator SwitchGameplayScene(
+        public IEnumerator ReloadGameplayFromCheckpoint(
             string sceneName,
             string spawnPointId)
         {
-            if (string.Equals(
+            isLoading = true;
+            SetGameplayInputActive(false);
+            SaveGameController saveController =
+                GetComponent<SaveGameController>();
+            string transitionSpawnPointId =
+                saveController != null &&
+                saveController.CheckpointUsesWorldPose
+                    ? string.Empty
+                    : spawnPointId;
+            yield return SwitchGameplayScene(
+                sceneName,
+                transitionSpawnPointId,
+                forceReload: true,
+                reportSignals: false);
+            RestorePlayerCheckpointPose(saveController);
+            SetGameplayInputActive(true);
+            isLoading = false;
+        }
+
+        private void RestorePlayerCheckpointPose(
+            SaveGameController saveController)
+        {
+            if (saveController == null ||
+                !saveController.CheckpointUsesWorldPose)
+            {
+                return;
+            }
+
+            if (player == null)
+                player = FindFirstObjectByType<ParkourPlayerBridge>();
+            player?.Teleport(
+                saveController.CheckpointPosition,
+                saveController.CheckpointRotation);
+        }
+
+        private IEnumerator SwitchGameplayScene(
+            string sceneName,
+            string spawnPointId,
+            bool forceReload = false,
+            bool reportSignals = true)
+        {
+            bool sameScene = string.Equals(
                     currentGameplaySceneName,
                     sceneName,
-                    System.StringComparison.Ordinal))
+                    System.StringComparison.Ordinal);
+            if (sameScene && !forceReload)
             {
                 SetGameplayPresentationActive(true);
                 yield break;
             }
 
             string previousSceneName = currentGameplaySceneName;
+            if (sameScene && forceReload)
+            {
+                SetGameplayPresentationActive(false);
+                Scene currentScene =
+                    SceneManager.GetSceneByName(currentGameplaySceneName);
+                if (currentScene.IsValid() && currentScene.isLoaded)
+                    yield return SceneManager.UnloadSceneAsync(currentScene);
+                currentGameplaySceneName = null;
+            }
+
             SceneTransitionState.SetPendingSpawnPoint(spawnPointId);
 
             Scene targetScene = SceneManager.GetSceneByName(sceneName);
@@ -192,14 +297,16 @@ namespace NERA.Core
                 yield break;
             }
 
-            if (!string.IsNullOrWhiteSpace(previousSceneName))
+            if (reportSignals &&
+                !string.IsNullOrWhiteSpace(previousSceneName))
                 ReportSceneSignal(
                     QuestSignalType.LocationExited,
                     previousSceneName);
 
             SceneManager.SetActiveScene(targetScene);
             currentGameplaySceneName = sceneName;
-            ReportSceneEntered(sceneName);
+            if (reportSignals)
+                ReportSceneEntered(sceneName);
 
             if (!string.IsNullOrWhiteSpace(previousSceneName) &&
                 !string.Equals(
@@ -266,7 +373,12 @@ namespace NERA.Core
         private IEnumerator ReturnToMainMenuRoutine()
         {
             isLoading = true;
-            GetComponent<SaveGameController>()?.Save();
+            AutoSaveService autoSave = GetComponent<AutoSaveService>();
+            if (autoSave == null || !autoSave.Flush())
+            {
+                GetComponent<SaveGameController>()?.Save();
+            }
+            autoSave?.SetSuspended(true);
             GameSessionLaunchState.Clear();
             SetGameplayPresentationActive(false);
 

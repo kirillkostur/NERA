@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Climbing;
@@ -29,6 +30,37 @@ namespace NERA.Tests
 {
     public sealed class StationEnergySceneLifecycleTests
     {
+        private string previousSaveRoot;
+        private string isolatedSaveRoot;
+
+        [OneTimeSetUp]
+        public void RedirectSavesToTemporaryStorage()
+        {
+            previousSaveRoot = Environment.GetEnvironmentVariable(
+                SaveSlotStorage.SaveRootEnvironmentVariable);
+            isolatedSaveRoot = Path.Combine(
+                Path.GetTempPath(),
+                "NERA_PlayModeTests",
+                Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(isolatedSaveRoot);
+            Environment.SetEnvironmentVariable(
+                SaveSlotStorage.SaveRootEnvironmentVariable,
+                isolatedSaveRoot);
+        }
+
+        [OneTimeTearDown]
+        public void RestoreSaveStorage()
+        {
+            Environment.SetEnvironmentVariable(
+                SaveSlotStorage.SaveRootEnvironmentVariable,
+                previousSaveRoot);
+            if (!string.IsNullOrWhiteSpace(isolatedSaveRoot) &&
+                Directory.Exists(isolatedSaveRoot))
+            {
+                Directory.Delete(isolatedSaveRoot, true);
+            }
+        }
+
         [UnityTearDown]
         public IEnumerator TearDownPersistentBootRoot()
         {
@@ -53,6 +85,68 @@ namespace NERA.Tests
             Assert.That(
                 Object.FindFirstObjectByType<BootInitializer>(),
                 Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator BootMenuWindowsFollowAuthoredFlow()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return null;
+
+            Transform canvas = GameObject.Find("Canvas").transform;
+            Transform panel = canvas.Find("Panel");
+            Transform root = panel.Find("RootButton");
+            Transform continueScreen = panel.Find("ContinueScreen");
+            Transform optionsScreen = panel.Find("OptionsScreen");
+            Transform exitScreen = panel.Find("ExitScreen");
+            Transform slotBackground = continueScreen.Find(
+                "background_Screen_station");
+
+            Assert.That(root.gameObject.activeSelf, Is.True);
+            Assert.That(continueScreen.gameObject.activeSelf, Is.False);
+            Assert.That(optionsScreen.gameObject.activeSelf, Is.False);
+            Assert.That(exitScreen.gameObject.activeSelf, Is.False);
+
+            for (int slot = 1; slot <= SaveSlotStorage.SlotCount; slot++)
+            {
+                Assert.That(
+                    slotBackground.Find($"Panel_Save_{slot}")
+                        .GetComponent<Button>(),
+                    Is.Not.Null);
+            }
+
+            root.Find("ContinueButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.False);
+            Assert.That(continueScreen.gameObject.activeSelf, Is.True);
+
+            slotBackground.Find("CloseButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.True);
+            Assert.That(continueScreen.gameObject.activeSelf, Is.False);
+
+            root.Find("NewGameButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.False);
+            Assert.That(continueScreen.gameObject.activeSelf, Is.True);
+            slotBackground.Find("CloseButton").GetComponent<Button>()
+                .onClick.Invoke();
+
+            root.Find("OptionsButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.False);
+            Assert.That(optionsScreen.gameObject.activeSelf, Is.True);
+            optionsScreen.Find("background_Screen_station/CloseButton")
+                .GetComponent<Button>().onClick.Invoke();
+
+            root.Find("ExitButton").GetComponent<Button>()
+                .onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.True);
+            Assert.That(exitScreen.gameObject.activeSelf, Is.True);
+            exitScreen.Find("background_exit/NOButton")
+                .GetComponent<Button>().onClick.Invoke();
+            Assert.That(root.gameObject.activeSelf, Is.True);
+            Assert.That(exitScreen.gameObject.activeSelf, Is.False);
         }
 
         [UnityTest]

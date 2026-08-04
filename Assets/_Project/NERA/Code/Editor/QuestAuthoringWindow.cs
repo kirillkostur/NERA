@@ -181,6 +181,8 @@ namespace NERA.Editor
                 "Опишите, что нужно сделать.";
             stage.FindPropertyRelative("completionLogic").enumValueIndex =
                 (int)QuestConditionLogic.All;
+            stage.FindPropertyRelative("createCheckpointOnCompletion")
+                .boolValue = false;
             SerializedProperty completion =
                 stage.FindPropertyRelative("completionConditions");
             completion.arraySize = 1;

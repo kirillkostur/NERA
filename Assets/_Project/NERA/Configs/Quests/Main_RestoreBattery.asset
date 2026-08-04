@@ -47,3 +47,4 @@ MonoBehaviour:
       requiredCount: 1
       comparison: 3
       threshold: 0.5
+  createCheckpointOnCompletion: 1

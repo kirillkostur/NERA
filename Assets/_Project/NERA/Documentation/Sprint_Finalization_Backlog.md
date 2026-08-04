@@ -1,9 +1,12 @@
 # NERA Sprint Finalization Backlog
 
-Updated: 2026-07-30
+Updated: 2026-08-04
 
 This file is the working source of truth for closing Sprint 01-10 in order.
 Status values: `DONE`, `PARTIAL`, `TODO`, `BLOCKED`.
+
+Definition of Done and the milestone order are documented in
+`First_Playable_Status_and_Roadmap_2026-08-04.md`.
 
 ## Sprint 01 - Project Foundation
 
@@ -60,11 +63,17 @@ Status: `PARTIAL`
 - DONE: research-capable Ancient Record and NERA Memory Core interaction
   prototypes.
 - DONE: weak Blue IO enemy prototype with detection, pursuit and energy attack.
-- DONE: Expedition objective progression controller.
-- PARTIAL: visited, IO encounter, research sample and returned flags exist, but
-  are Expedition 01-only and session-only.
-- TODO: persist objective flags and hide consumed one-time content after scene
-  reload/save load.
+- DONE: data-driven Expedition 01 quest stages are persisted in save version 16.
+- DONE: Dynamic Parkour Player and parkour surfaces are integrated into the
+  production Player prefab and Expedition 01.
+- PARTIAL: Expedition 01 currently contains a package-style parkour playground
+  and `Map/TestRoom`, not a focused production route.
+- DONE: persist consumed `WorldItem`, defeated `IOEnemyController` and enemy
+  drops across Continue; full checkpoint snapshot restores them after death.
+- PARTIAL: technical respawn/checkpoint flow and HUD message are implemented;
+  health HUD, damage feedback and authored death screen remain.
+- TODO: assign authored `Persistent Id` values to every production item and
+  enemy on the final Expedition 01 route.
 - TODO: replace the Blue IO placeholder mesh with the authored mesh + VFX prefab.
 - TODO: final combat feedback, audio, balancing and player-facing health/objective HUD.
 
@@ -87,14 +96,34 @@ Status: `PARTIAL`
   without `DontDestroyOnLoad`.
 - DONE: basic JSON save/load/reset.
 - DONE: editor Save/Clear/Load menu.
+- DONE: production identity — Company Name `Measured Field`, Product Name `Nera`.
+- DONE: standard `Application.persistentDataPath` policy and safe migration
+  chain from the previous Company/Product path into the production identity.
+- DONE: Boot menu three-slot selection, slot dates/completion placeholders,
+  overwrite confirmation, Options placeholder and Exit confirmation.
+- DONE: pre-slot `nera_save.json` migration into `nera_save_1.json`; the selected
+  slot is carried through Boot -> MainScene and owns all later autosaves.
 - DONE: config-driven static/dynamic QuestController and Expedition 01 quest.
-- DONE: save version 14 for quest progress/history and maintainable objects.
+- DONE: save version 16 for quest progress/history, maintainable objects,
+  checkpoint scene/authored spawn or player pose, and supported world-object
+  state.
 - DONE: compact HUD with highest-priority main and side quest objectives.
-- TODO: unified GameSessionState.
-- PARTIAL: SaveData mapping; one-time scene-object consumption remains.
+- DONE: simple event-driven background writer with 2-second debounce,
+  10-second dirty cap, transition/lifecycle flushes and rolling per-slot
+  backups.
+- DONE: separate full checkpoint snapshot per slot, checkpoint scene with an
+  authored spawn or dynamic player pose, Continue resume and death rollback.
+- DONE: Expedition 01 and Expedition 02 start-spawn checkpoint triggers and
+  brief authored checkpoint HUD indicator.
+- DONE: individual quest stages can opt into a full checkpoint after completion;
+  `PlayerCheckpointTrigger` exposes the same operation to authored UnityEvents.
+- PARTIAL: supported world state covers scene `WorldItem`, Blue IO enemies,
+  their drops and boolean `PersistentWorldFlag` objects; multi-state objects
+  still require explicit integration.
 - TODO: full terminal quest journal and objective notifications.
-- TODO: scene bootstrap state application.
-- TODO: full First Playable save/load verification.
+- DONE: scene bootstrap applies persisted item/enemy state.
+- TODO: full First Playable Continue/death rollback verification in a Windows
+  build.
 
 ## Sprint 07 - UX, Audio and VFX Polish
 
@@ -102,26 +131,36 @@ Status: `PARTIAL`
 
 - DONE: standardized Press/Hold prompt.
 - DONE: station power lighting feedback.
+- DONE: Player death ragdoll foundation and automatic checkpoint restore/revive.
+- PARTIAL: parkour integration has automated coverage but still needs a manual
+  production-route regression pass.
+- PARTIAL: checkpoint save/restore message is present; player health, damage
+  feedback and authored death screen remain.
 - TODO: objective and interaction result feedback pass.
 - TODO: terminal NEW markers and state messages.
 - TODO: Expedition route readability pass.
 - TODO: planned VFX placeholders.
-- TODO: planned SFX and ambience placeholders.
+- TODO: planned SFX and ambience placeholders; no authored project audio assets
+  were found during the 2026-08-04 audit.
 - TODO: internal playtest checklist.
 
 ## Sprint 08 - QA and Performance Baseline
 
 Status: `PARTIAL`
 
-- DONE: automated baseline — 72 EditMode and 17 PlayMode tests pass on
-  Unity 6000.0.71f1 (2026-08-01).
+- PARTIAL: save/checkpoint rewrite baseline — 119/119 EditMode and 19/20
+  graphical batch PlayMode pass on Unity 6000.0.71f1. The remaining existing
+  UI drag-test needs a normal Game View because batch uses 640x480; repeat the
+  full 20-test run in the connected Editor.
 - DONE: permanent editor validation command for required scenes and station
-  upgrade prefabs.
+  upgrade prefabs, including production Company/Product identity.
 - DONE: Standalone Low, Medium and High URP quality preset baseline.
 - DONE: IO target registry, projectile pooling and event-driven refresh for the
   main terminal/laboratory screens.
-- DONE: current Windows Development Build — 164.56 MB, 0 errors and
+- DONE: last known Windows Development Build — 164.56 MB, 0 errors and
   0 warnings (2026-07-30).
+- TODO: new Windows Development Build after the 2026-08-01 — 2026-08-04
+  parkour and Player changes.
 - TODO: standalone full-flow QA.
 - TODO: bug list and priorities.
 - TODO: FPS, frame-time, RAM, loading and build-size baseline.
@@ -145,7 +184,8 @@ Status: `PARTIAL`
   LocationState and DiscoverySource.
 - DONE: Expedition 02-08 and Unknown Signal placeholder configs/scenes.
 - PARTIAL: Expeditions 02-08 are template duplicates and are not production
-  content.
+  content. Expedition 03-08 currently differ from Expedition 02 only by spawn
+  name and ID.
 - DONE: Map/Locations presentation foundation.
 - DONE: Research and Library collection foundations.
 - DONE: AntennaState, calibration and maintenance flow.
@@ -159,12 +199,17 @@ Status: `PARTIAL`
 
 ## Current Order
 
-1. Finalize Company/Product Name and choose a save-path migration/reset policy.
-2. Add the terminal quest journal, objective notifications and authored
-   Expedition 01 exploration points.
-3. Persist one-time scene-object completion.
-4. Quarantine or replace duplicated Expedition 02-08 template content.
-5. Complete Expedition 01 presentation and combat feedback from Sprint 04.
-6. Record a current standalone full-flow and performance baseline.
-7. Complete polish, QA and First Playable Lock.
-8. Split the largest UI/save controllers behind focused regression tests.
+1. Freeze First Playable scope to Boot, MainScene, Player Station and
+   Expedition 01. Production identity and save-path migration were finalized
+   on 2026-08-04.
+2. Persist one-time scene-object completion and define checkpoint/resume rules.
+3. Add health HUD, damage/death feedback and respawn/reload flow.
+4. Remove test content from Player Station and turn Expedition 01 from a
+   parkour playground into a focused production blockout.
+5. Add the post-research coda, objective notifications and minimum quest
+   history/journal presentation.
+6. Complete combat, audio, VFX and route-readability feedback.
+7. Build and pass the current standalone full-flow and performance baseline.
+8. Close blocker/critical issues and create the First Playable lock.
+9. Only then author Expedition 02-08 or split large controllers behind focused
+   regression tests.

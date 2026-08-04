@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
-using System.IO;
+using System.Globalization;
 using NERA.Core;
 using NERA.Graphics;
 using NERA.Save;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,29 +12,54 @@ using UnityEngine.UI;
 namespace NERA.UI
 {
     /// <summary>
-    /// Controller for the authored Boot scene menu. Assign buttons in the
-    /// Inspector; visual hierarchy and animation remain fully authored.
+    /// Controls the authored Boot menu without owning its presentation. The
+    /// UI is resolved from the stable Canvas/Panel hierarchy at runtime.
     /// </summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         [Header("Scene Flow")]
         [SerializeField] private string runtimeSceneName = "MainScene";
 
-        [Header("Optional Authored Buttons")]
+        [Header("Optional Authored Root Buttons")]
         [SerializeField] private Button newGameButton;
         [SerializeField] private Button continueButton;
+        [SerializeField] private Button optionsButton;
         [SerializeField] private Button exitButton;
 
+        private readonly SaveSlotView[] saveSlots =
+            new SaveSlotView[SaveSlotStorage.SlotCount];
+
+        private GameObject rootButtons;
+        private GameObject continueScreen;
+        private GameObject optionsScreen;
+        private GameObject exitScreen;
+        private GameObject overwriteDialog;
+        private Button slotContinueButton;
+        private Button slotCloseButton;
+        private Button overwriteYesButton;
+        private Button overwriteNoButton;
+        private Button optionsConfirmButton;
+        private Button optionsCloseButton;
+        private Button exitYesButton;
+        private Button exitNoButton;
+        private TMP_Text slotScreenDescription;
+        private GameLaunchMode slotScreenMode;
+        private int selectedSlot;
         private bool isLoading;
 
-        public bool HasSave => File.Exists(SaveGameController.DefaultSavePath);
+        public bool HasSave => SaveSlotStorage.HasAnySave();
 
         private void Awake()
         {
-            newGameButton?.onClick.AddListener(StartNewGame);
-            continueButton?.onClick.AddListener(ContinueGame);
-            exitButton?.onClick.AddListener(ExitGame);
-            Refresh();
+            SaveSlotStorage.TryMigrateLegacySingleSaveToSlotOne();
+            if (!TryResolveAuthoredUi())
+            {
+                enabled = false;
+                return;
+            }
+
+            BindButtons();
+            ShowRootMenu();
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -43,28 +70,58 @@ namespace NERA.UI
             if (newGameButton != null)
                 newGameButton.interactable = !isLoading;
             if (continueButton != null)
-                continueButton.interactable = !isLoading && HasSave;
+                continueButton.interactable = !isLoading;
+            if (optionsButton != null)
+                optionsButton.interactable = !isLoading;
             if (exitButton != null)
                 exitButton.interactable = !isLoading;
+
+            RefreshSaveSlots();
         }
 
         public void StartNewGame()
         {
-            StartRuntime(GameLaunchMode.NewGame);
+            OpenSaveSlotScreen(GameLaunchMode.NewGame);
         }
 
         public void ContinueGame()
         {
-            if (!HasSave)
-            {
-                Debug.LogWarning(
-                    "Main menu: Continue requested, but no save file exists.",
-                    this);
-                Refresh();
-                return;
-            }
+            OpenSaveSlotScreen(GameLaunchMode.Continue);
+        }
 
-            StartRuntime(GameLaunchMode.Continue);
+        public void ShowOptions()
+        {
+            if (isLoading)
+                return;
+
+            rootButtons.SetActive(false);
+            continueScreen.SetActive(false);
+            exitScreen.SetActive(false);
+            optionsScreen.SetActive(true);
+            overwriteDialog.SetActive(false);
+        }
+
+        public void ShowExitConfirmation()
+        {
+            if (isLoading)
+                return;
+
+            continueScreen.SetActive(false);
+            optionsScreen.SetActive(false);
+            overwriteDialog.SetActive(false);
+            rootButtons.SetActive(true);
+            exitScreen.SetActive(true);
+        }
+
+        public void ShowRootMenu()
+        {
+            selectedSlot = 0;
+            rootButtons.SetActive(true);
+            continueScreen.SetActive(false);
+            optionsScreen.SetActive(false);
+            exitScreen.SetActive(false);
+            overwriteDialog.SetActive(false);
+            Refresh();
         }
 
         public void SetLowQuality()
@@ -86,11 +143,112 @@ namespace NERA.UI
         {
             Application.Quit();
 #if UNITY_EDITOR
-            Debug.Log("Main menu: Exit requested. Application.Quit is ignored in the Editor.");
+            Debug.Log(
+                "Main menu: Exit requested. Application.Quit is ignored " +
+                "in the Editor.");
 #endif
         }
 
-        private void StartRuntime(GameLaunchMode mode)
+        private void OpenSaveSlotScreen(GameLaunchMode mode)
+        {
+            if (isLoading)
+                return;
+
+            slotScreenMode = mode;
+            selectedSlot = 0;
+            rootButtons.SetActive(false);
+            continueScreen.SetActive(true);
+            optionsScreen.SetActive(false);
+            exitScreen.SetActive(false);
+            overwriteDialog.SetActive(false);
+
+            if (slotScreenDescription != null)
+            {
+                slotScreenDescription.text = mode == GameLaunchMode.NewGame
+                    ? "SELECT A SAVE SLOT"
+                    : "SELECT A GAME SAVE";
+            }
+
+            RefreshSaveSlots();
+        }
+
+        private void SelectSlot1()
+        {
+            SelectSlot(1);
+        }
+
+        private void SelectSlot2()
+        {
+            SelectSlot(2);
+        }
+
+        private void SelectSlot3()
+        {
+            SelectSlot(3);
+        }
+
+        private void SelectSlot(int slot)
+        {
+            if (isLoading || overwriteDialog.activeSelf)
+                return;
+
+            if (slotScreenMode == GameLaunchMode.Continue &&
+                !SaveSlotStorage.HasSave(slot))
+            {
+                return;
+            }
+
+            selectedSlot = SaveSlotStorage.NormalizeSlot(slot);
+            RefreshSaveSlots();
+        }
+
+        private void ConfirmSlotSelection()
+        {
+            if (selectedSlot < 1 || selectedSlot > SaveSlotStorage.SlotCount)
+                return;
+
+            bool occupied = SaveSlotStorage.HasSave(selectedSlot);
+            if (slotScreenMode == GameLaunchMode.Continue)
+            {
+                if (occupied)
+                    StartRuntime(GameLaunchMode.Continue, selectedSlot);
+                return;
+            }
+
+            if (occupied)
+            {
+                overwriteDialog.SetActive(true);
+                return;
+            }
+
+            StartRuntime(GameLaunchMode.NewGame, selectedSlot);
+        }
+
+        private void ConfirmOverwrite()
+        {
+            if (selectedSlot < 1 || selectedSlot > SaveSlotStorage.SlotCount)
+                return;
+
+            overwriteDialog.SetActive(false);
+            StartRuntime(GameLaunchMode.NewGame, selectedSlot);
+        }
+
+        private void CancelOverwrite()
+        {
+            overwriteDialog.SetActive(false);
+            selectedSlot = 0;
+            RefreshSaveSlots();
+        }
+
+        private void ConfirmOptions()
+        {
+            Debug.Log(
+                "Main menu: Options confirmation is reserved for the " +
+                "future settings implementation.",
+                this);
+        }
+
+        private void StartRuntime(GameLaunchMode mode, int saveSlot)
         {
             if (isLoading)
                 return;
@@ -107,7 +265,7 @@ namespace NERA.UI
 
             isLoading = true;
             Refresh();
-            GameSessionLaunchState.Request(mode);
+            GameSessionLaunchState.Request(mode, saveSlot);
             StartCoroutine(LoadRuntimeScene());
         }
 
@@ -126,11 +284,273 @@ namespace NERA.UI
             yield return operation;
         }
 
+        private bool TryResolveAuthoredUi()
+        {
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            Transform panel = canvas != null
+                ? canvas.transform.Find("Panel")
+                : null;
+            Transform root = panel != null
+                ? panel.Find("RootButton")
+                : null;
+            Transform slotScreen = panel != null
+                ? panel.Find("ContinueScreen")
+                : null;
+            Transform options = panel != null
+                ? panel.Find("OptionsScreen")
+                : null;
+            Transform exit = panel != null
+                ? panel.Find("ExitScreen")
+                : null;
+
+            if (root == null || slotScreen == null || options == null ||
+                exit == null)
+            {
+                Debug.LogError(
+                    "Main menu: Expected Canvas/Panel menu hierarchy was " +
+                    "not found.",
+                    this);
+                return false;
+            }
+
+            rootButtons = root.gameObject;
+            continueScreen = slotScreen.gameObject;
+            optionsScreen = options.gameObject;
+            exitScreen = exit.gameObject;
+
+            newGameButton ??= FindButton(root, "NewGameButton");
+            continueButton ??= FindButton(root, "ContinueButton");
+            optionsButton ??= FindButton(root, "OptionsButton");
+            exitButton ??= FindButton(root, "ExitButton");
+
+            Transform slotBackground =
+                slotScreen.Find("background_Screen_station");
+            Transform optionsBackground =
+                options.Find("background_Screen_station");
+            Transform exitBackground = exit.Find("background_exit");
+            if (slotBackground == null || optionsBackground == null ||
+                exitBackground == null)
+            {
+                Debug.LogError(
+                    "Main menu: One or more authored menu backgrounds are " +
+                    "missing.",
+                    this);
+                return false;
+            }
+
+            slotScreenDescription = FindText(
+                slotBackground,
+                "Description_Text");
+            slotContinueButton = FindButton(
+                slotBackground,
+                "ContinueButton");
+            slotCloseButton = FindButton(slotBackground, "CloseButton");
+
+            Transform overwrite =
+                slotBackground.Find("background_overwrite_slot");
+            overwriteDialog = overwrite != null ? overwrite.gameObject : null;
+            overwriteYesButton = FindButton(overwrite, "YESButton");
+            overwriteNoButton = FindButton(overwrite, "NOButton");
+
+            optionsConfirmButton = FindButton(
+                optionsBackground,
+                "ContinueButton");
+            optionsCloseButton = FindButton(optionsBackground, "CloseButton");
+            exitYesButton = FindButton(exitBackground, "YESButton");
+            exitNoButton = FindButton(exitBackground, "NOButton");
+
+            for (int index = 0; index < saveSlots.Length; index++)
+            {
+                int slot = index + 1;
+                Transform slotRoot =
+                    slotBackground.Find($"Panel_Save_{slot}");
+                saveSlots[index] = SaveSlotView.Create(slot, slotRoot);
+            }
+
+            bool resolved = newGameButton != null &&
+                            continueButton != null &&
+                            optionsButton != null &&
+                            exitButton != null &&
+                            slotContinueButton != null &&
+                            slotCloseButton != null &&
+                            overwriteDialog != null &&
+                            overwriteYesButton != null &&
+                            overwriteNoButton != null &&
+                            optionsConfirmButton != null &&
+                            optionsCloseButton != null &&
+                            exitYesButton != null &&
+                            exitNoButton != null;
+
+            for (int index = 0; index < saveSlots.Length; index++)
+                resolved &= saveSlots[index] != null;
+
+            if (!resolved)
+            {
+                Debug.LogError(
+                    "Main menu: One or more authored controls could not be " +
+                    "resolved. Check the Boot hierarchy and slot Buttons.",
+                    this);
+            }
+
+            return resolved;
+        }
+
+        private void BindButtons()
+        {
+            newGameButton.onClick.AddListener(StartNewGame);
+            continueButton.onClick.AddListener(ContinueGame);
+            optionsButton.onClick.AddListener(ShowOptions);
+            exitButton.onClick.AddListener(ShowExitConfirmation);
+            slotContinueButton.onClick.AddListener(ConfirmSlotSelection);
+            slotCloseButton.onClick.AddListener(ShowRootMenu);
+            overwriteYesButton.onClick.AddListener(ConfirmOverwrite);
+            overwriteNoButton.onClick.AddListener(CancelOverwrite);
+            optionsConfirmButton.onClick.AddListener(ConfirmOptions);
+            optionsCloseButton.onClick.AddListener(ShowRootMenu);
+            exitYesButton.onClick.AddListener(ExitGame);
+            exitNoButton.onClick.AddListener(ShowRootMenu);
+            saveSlots[0].Button.onClick.AddListener(SelectSlot1);
+            saveSlots[1].Button.onClick.AddListener(SelectSlot2);
+            saveSlots[2].Button.onClick.AddListener(SelectSlot3);
+        }
+
+        private void RefreshSaveSlots()
+        {
+            if (saveSlots[0] == null)
+                return;
+
+            bool isNewGame = slotScreenMode == GameLaunchMode.NewGame;
+            for (int index = 0; index < saveSlots.Length; index++)
+            {
+                SaveSlotView slot = saveSlots[index];
+                bool occupied = SaveSlotStorage.HasSave(slot.Slot);
+                bool canSelect = !isLoading && (isNewGame || occupied);
+                slot.Refresh(
+                    occupied,
+                    canSelect,
+                    selectedSlot == slot.Slot);
+            }
+
+            if (slotContinueButton != null)
+            {
+                bool selectedSaveExists = selectedSlot > 0 &&
+                    SaveSlotStorage.HasSave(selectedSlot);
+                slotContinueButton.interactable = !isLoading &&
+                    selectedSlot > 0 &&
+                    (isNewGame || selectedSaveExists);
+            }
+        }
+
+        private static Button FindButton(Transform parent, string childName)
+        {
+            Transform child = parent != null ? parent.Find(childName) : null;
+            return child != null ? child.GetComponent<Button>() : null;
+        }
+
+        private static TMP_Text FindText(Transform parent, string childName)
+        {
+            Transform child = parent != null ? parent.Find(childName) : null;
+            return child != null ? child.GetComponent<TMP_Text>() : null;
+        }
+
         private void OnDestroy()
         {
             newGameButton?.onClick.RemoveListener(StartNewGame);
             continueButton?.onClick.RemoveListener(ContinueGame);
-            exitButton?.onClick.RemoveListener(ExitGame);
+            optionsButton?.onClick.RemoveListener(ShowOptions);
+            exitButton?.onClick.RemoveListener(ShowExitConfirmation);
+            slotContinueButton?.onClick.RemoveListener(ConfirmSlotSelection);
+            slotCloseButton?.onClick.RemoveListener(ShowRootMenu);
+            overwriteYesButton?.onClick.RemoveListener(ConfirmOverwrite);
+            overwriteNoButton?.onClick.RemoveListener(CancelOverwrite);
+            optionsConfirmButton?.onClick.RemoveListener(ConfirmOptions);
+            optionsCloseButton?.onClick.RemoveListener(ShowRootMenu);
+            exitYesButton?.onClick.RemoveListener(ExitGame);
+            exitNoButton?.onClick.RemoveListener(ShowRootMenu);
+
+            if (saveSlots[0] != null)
+                saveSlots[0].Button.onClick.RemoveListener(SelectSlot1);
+            if (saveSlots[1] != null)
+                saveSlots[1].Button.onClick.RemoveListener(SelectSlot2);
+            if (saveSlots[2] != null)
+                saveSlots[2].Button.onClick.RemoveListener(SelectSlot3);
+        }
+
+        private sealed class SaveSlotView
+        {
+            private readonly Image background;
+            private readonly TMP_Text dateText;
+            private readonly TMP_Text completionText;
+            private readonly Color baseColor;
+
+            private SaveSlotView(
+                int slot,
+                Button button,
+                Image background,
+                TMP_Text dateText,
+                TMP_Text completionText)
+            {
+                Slot = slot;
+                Button = button;
+                this.background = background;
+                this.dateText = dateText;
+                this.completionText = completionText;
+                baseColor = background.color;
+                Button.transition = Selectable.Transition.None;
+            }
+
+            public int Slot { get; }
+            public Button Button { get; }
+
+            public static SaveSlotView Create(int slot, Transform root)
+            {
+                if (root == null)
+                    return null;
+
+                Button button = root.GetComponent<Button>();
+                Image image = root.GetComponent<Image>();
+                TMP_Text date = FindText(root, "Data_Text");
+                TMP_Text completion = FindText(root, "Complete_Text");
+                return button != null && image != null && date != null &&
+                       completion != null
+                    ? new SaveSlotView(
+                        slot,
+                        button,
+                        image,
+                        date,
+                        completion)
+                    : null;
+            }
+
+            public void Refresh(
+                bool occupied,
+                bool canSelect,
+                bool selected)
+            {
+                Button.interactable = canSelect;
+
+                Color color = baseColor;
+                if (selected)
+                    color.a = Mathf.Max(baseColor.a, 0.75f);
+                else if (!canSelect)
+                    color.a = Mathf.Min(baseColor.a, 0.18f);
+                background.color = color;
+
+                if (!occupied)
+                {
+                    dateText.text = "--.--.---- - --:--";
+                    completionText.text = "0% COMPLETE";
+                    return;
+                }
+
+                DateTime writeTime = SaveSlotStorage.GetLastWriteTime(Slot);
+                dateText.text = writeTime.ToString(
+                    "dd.MM.yyyy - H:mm",
+                    CultureInfo.InvariantCulture);
+                int completion = Mathf.RoundToInt(
+                    SaveSlotStorage.GetCompletionPercent(Slot));
+                completionText.text = $"{completion}% COMPLETE";
+            }
         }
     }
 }

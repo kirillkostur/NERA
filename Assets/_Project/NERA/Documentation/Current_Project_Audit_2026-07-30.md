@@ -1,5 +1,8 @@
 # NERA Current Project Audit
 
+> Historical snapshot. Актуальный статус, Definition of Done и порядок работ
+> находятся в `First_Playable_Status_and_Roadmap_2026-08-04.md`.
+
 Date: 2026-07-30  
 Unity: 6000.0.71f1  
 Target: StandaloneWindows64

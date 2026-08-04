@@ -2,6 +2,7 @@ using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Library;
 using NERA.Quests;
+using NERA.Save;
 using UnityEngine;
 
 namespace NERA.Items
@@ -11,11 +12,24 @@ namespace NERA.Items
         [Header("Item")]
         [SerializeField] private ItemData itemData;
         [SerializeField] private bool destroyAfterPickup = true;
+        [Tooltip("Optional stable ID. If empty, scene hierarchy is used.")]
+        [SerializeField] private string persistentId;
+        [SerializeField] private bool trackWorldState = true;
 
         private ItemInstance itemInstance;
+        private string runtimePersistentKey;
+        private string scenePersistentKey;
 
         public ItemData ItemData => itemData;
         public ItemInstance ItemInstance => itemInstance;
+        public string PersistentKey => GetPersistentKey();
+
+        private void Awake()
+        {
+            scenePersistentKey = PersistentSceneIdentity.CreateKey(
+                transform,
+                persistentId);
+        }
 
         public void Initialize(ItemData item)
         {
@@ -27,8 +41,27 @@ namespace NERA.Items
             itemInstance = instance;
             itemData = instance?.ItemData;
             destroyAfterPickup = true;
+            trackWorldState = false;
+            runtimePersistentKey = string.Empty;
             SetActionText("Pick Up");
             SetAvailable(itemData != null, itemData == null ? "Item data missing" : string.Empty);
+        }
+
+        public void SetPersistentWorldId(string persistentKey)
+        {
+            runtimePersistentKey =
+                PersistentSceneIdentity.Normalize(persistentKey);
+            trackWorldState = !string.IsNullOrEmpty(runtimePersistentKey);
+        }
+
+        private void Start()
+        {
+            if (!trackWorldState)
+                return;
+
+            WorldStateController state = WorldStateController.Instance;
+            if (state != null && state.IsConsumed(GetPersistentKey()))
+                Destroy(gameObject);
         }
 
         private void Reset()
@@ -78,6 +111,12 @@ namespace NERA.Items
                 itemData.ItemId,
                 itemData.DisplayName);
 
+            if (trackWorldState)
+            {
+                WorldStateController.Instance?.MarkConsumed(
+                    GetPersistentKey());
+            }
+
             base.CompleteInteraction(interactor);
             SetAvailable(false, "Picked Up");
 
@@ -85,6 +124,21 @@ namespace NERA.Items
                 Destroy(gameObject);
             else
                 gameObject.SetActive(false);
+        }
+
+        private string GetPersistentKey()
+        {
+            if (!string.IsNullOrEmpty(runtimePersistentKey))
+                return runtimePersistentKey;
+
+            if (string.IsNullOrEmpty(scenePersistentKey))
+            {
+                scenePersistentKey = PersistentSceneIdentity.CreateKey(
+                    transform,
+                    persistentId);
+            }
+
+            return scenePersistentKey;
         }
     }
 }

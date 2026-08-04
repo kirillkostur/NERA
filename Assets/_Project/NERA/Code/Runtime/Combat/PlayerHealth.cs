@@ -95,6 +95,27 @@ namespace NERA.Combat
             HealthChanged?.Invoke(CurrentHealth, maxHealth);
         }
 
+        public void Revive()
+        {
+            if (!deathProcessed)
+            {
+                RestoreFullHealth();
+                return;
+            }
+
+            SetRagdollActive(false);
+            deathProcessed = false;
+            playerBridge?.Revive();
+            if (animator != null)
+            {
+                animator.Rebind();
+                animator.Update(0f);
+            }
+
+            CurrentHealth = maxHealth;
+            HealthChanged?.Invoke(CurrentHealth, maxHealth);
+        }
+
         private void Die(GameObject source)
         {
             if (deathProcessed)

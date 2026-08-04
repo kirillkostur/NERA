@@ -18,15 +18,32 @@ namespace NERA.Save
 {
     public sealed class SaveGameController : MonoBehaviour
     {
-        [SerializeField] private string fileName = "nera_save.json";
         [SerializeField] private ItemCatalogData itemDatabase;
         [SerializeField] private List<ItemData> itemCatalog = new List<ItemData>();
-        [SerializeField, Min(0.05f)] private float autoSaveDelay = 0.25f;
+        [SerializeField, Range(0, SaveSlotStorage.MaxBackupGenerations)]
+        private int backupGenerations = 3;
 
         public static SaveGameController Instance { get; private set; }
         public static string DefaultSavePath =>
-            Path.Combine(Application.persistentDataPath, "nera_save.json");
-        public string SavePath => Path.Combine(Application.persistentDataPath, fileName);
+            SaveSlotStorage.GetSlotPath(SaveSlotStorage.DefaultSlot);
+        public int ActiveSaveSlot { get; private set; } =
+            SaveSlotStorage.DefaultSlot;
+        public string SavePath => SaveSlotStorage.GetSlotPath(ActiveSaveSlot);
+        public string CheckpointPath =>
+            SaveSlotStorage.GetCheckpointPath(ActiveSaveSlot);
+        public string CheckpointSceneName => checkpointSceneName;
+        public string CheckpointSpawnPointId => checkpointSpawnPointId;
+        public bool CheckpointUsesWorldPose => checkpointUsesWorldPose;
+        public Vector3 CheckpointPosition => checkpointPosition;
+        public Quaternion CheckpointRotation => checkpointRotation;
+        public bool HasCheckpoint =>
+            !string.IsNullOrWhiteSpace(checkpointSceneName) &&
+            (checkpointUsesWorldPose ||
+             !string.IsNullOrWhiteSpace(checkpointSpawnPointId));
+        public bool IsBusy => isLoading || isSaving;
+
+        public event Action SaveStarted;
+        public event Action<bool> SaveCompleted;
 
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
@@ -39,13 +56,18 @@ namespace NERA.Save
         private StationStorageController stationStorage;
         private StationSystemsController stationSystems;
         private QuestController quests;
+        private WorldStateController worldState;
         private readonly Dictionary<string, float> maintenanceConditions =
             new Dictionary<string, float>(StringComparer.Ordinal);
         private bool isApplyingMaintenanceState;
         private bool isLoading;
-        private bool autoSavePending;
-        private float autoSaveAt;
+        private bool isSaving;
         private bool sessionInitialized;
+        private string checkpointSceneName = string.Empty;
+        private string checkpointSpawnPointId = string.Empty;
+        private bool checkpointUsesWorldPose;
+        private Vector3 checkpointPosition;
+        private Quaternion checkpointRotation = Quaternion.identity;
 
         private void Awake()
         {
@@ -58,101 +80,277 @@ namespace NERA.Save
             Instance = this;
         }
 
-        private void Start()
-        {
-            InitializeSession(GameSessionLaunchState.ConsumeOrDefault());
-        }
-
-        public void InitializeSession(GameLaunchMode launchMode)
+        public void InitializeSession(GameSessionLaunchRequest request)
         {
             if (sessionInitialized)
                 return;
 
             sessionInitialized = true;
+            ActiveSaveSlot = request.SaveSlot;
             CacheSystems();
-            if (launchMode == GameLaunchMode.NewGame)
+            if (request.Mode == GameLaunchMode.NewGame)
                 ClearSave(true);
             else
                 Load();
             Subscribe();
         }
 
-        private void Update()
+        public void SetBackupGenerations(int generations)
         {
-            if (!autoSavePending || Time.unscaledTime < autoSaveAt)
-                return;
-
-            Save();
+            backupGenerations = Mathf.Clamp(
+                generations,
+                0,
+                SaveSlotStorage.MaxBackupGenerations);
         }
 
-        public void Save()
+        public bool Save()
         {
-            if (isLoading)
-                return;
+            if (IsBusy)
+                return false;
 
-            autoSavePending = false;
-            CacheSystems();
-            SaveGameData data = Capture();
-            string json = JsonUtility.ToJson(data, true);
-            string temporaryPath = SavePath + ".tmp";
+            bool saved = false;
+            isSaving = true;
+            SaveStarted?.Invoke();
 
             try
             {
-                Directory.CreateDirectory(Application.persistentDataPath);
-                File.WriteAllText(temporaryPath, json);
-                File.Copy(temporaryPath, SavePath, true);
-                File.Delete(temporaryPath);
+                CacheSystems();
+                SaveGameData data = Capture();
+                saved = WriteSaveData(
+                    data,
+                    SavePath,
+                    rotatePrimaryBackups: true,
+                    backupCheckpoint: false);
                 Debug.Log($"SaveGame: Progress saved to '{SavePath}'.", this);
             }
             catch (Exception exception)
             {
                 Debug.LogError($"SaveGame: Could not save progress.\n{exception}", this);
             }
+
+            finally
+            {
+                isSaving = false;
+                SaveCompleted?.Invoke(saved);
+            }
+
+            return saved;
         }
 
-        public void Load()
+        public bool SaveCheckpoint(
+            string sceneName,
+            string spawnPointId)
         {
-            CacheSystems();
+            return SaveCheckpointInternal(
+                sceneName,
+                spawnPointId,
+                false,
+                Vector3.zero,
+                Quaternion.identity);
+        }
 
-            if (!File.Exists(SavePath))
+        public bool SaveCheckpointAtPosition(
+            string sceneName,
+            string checkpointId,
+            Vector3 position,
+            Quaternion rotation)
+        {
+            return SaveCheckpointInternal(
+                sceneName,
+                checkpointId,
+                true,
+                position,
+                rotation);
+        }
+
+        private bool SaveCheckpointInternal(
+            string sceneName,
+            string checkpointId,
+            bool usesWorldPose,
+            Vector3 position,
+            Quaternion rotation)
+        {
+            if (IsBusy ||
+                string.IsNullOrWhiteSpace(sceneName) ||
+                string.IsNullOrWhiteSpace(checkpointId))
             {
-                Debug.Log("SaveGame: No save file found. Starting a new game.", this);
-                return;
+                return false;
             }
+
+            checkpointSceneName = sceneName.Trim();
+            checkpointSpawnPointId = checkpointId.Trim();
+            checkpointUsesWorldPose = usesWorldPose;
+            checkpointPosition = position;
+            checkpointRotation = NormalizeRotation(rotation);
+            bool saved = false;
+            isSaving = true;
+            SaveStarted?.Invoke();
 
             try
             {
-                string json = File.ReadAllText(SavePath);
-                SaveGameData data = JsonUtility.FromJson<SaveGameData>(json);
-
-                if (data == null)
-                    throw new InvalidDataException("Save data is empty.");
-
-                isLoading = true;
-                Apply(data);
-                Debug.Log($"SaveGame: Progress loaded from '{SavePath}'.", this);
+                CacheSystems();
+                SaveGameData data = Capture();
+                bool checkpointSaved = WriteSaveData(
+                    data,
+                    CheckpointPath,
+                    rotatePrimaryBackups: false,
+                    backupCheckpoint: true);
+                bool primarySaved = checkpointSaved && WriteSaveData(
+                    data,
+                    SavePath,
+                    rotatePrimaryBackups: true,
+                    backupCheckpoint: false);
+                saved = checkpointSaved && primarySaved;
+                if (saved)
+                {
+                    Debug.Log(
+                        $"SaveGame: Checkpoint '{checkpointSpawnPointId}' " +
+                        $"saved in scene '{checkpointSceneName}'.",
+                        this);
+                }
             }
             catch (Exception exception)
             {
-                Debug.LogError($"SaveGame: Could not load progress.\n{exception}", this);
+                Debug.LogError(
+                    $"SaveGame: Could not save checkpoint.\n{exception}",
+                    this);
             }
             finally
             {
-                isLoading = false;
+                isSaving = false;
+                SaveCompleted?.Invoke(saved);
             }
+
+            return saved;
+        }
+
+        public bool Load()
+        {
+            CacheSystems();
+            if (ActiveSaveSlot == SaveSlotStorage.DefaultSlot)
+                SaveSlotStorage.TryMigrateLegacySingleSaveToSlotOne();
+
+            Exception lastException = null;
+            var candidates = new List<string>(
+                SaveSlotStorage.GetLoadCandidates(
+                    ActiveSaveSlot,
+                    backupGenerations))
+            {
+                CheckpointPath,
+                SaveSlotStorage.GetCheckpointBackupPath(ActiveSaveSlot)
+            };
+            foreach (string candidatePath in candidates)
+            {
+                if (!File.Exists(candidatePath))
+                    continue;
+
+                try
+                {
+                    string json = File.ReadAllText(candidatePath);
+                    SaveGameData data = JsonUtility.FromJson<SaveGameData>(json);
+                    if (data == null)
+                        throw new InvalidDataException("Save data is empty.");
+
+                    ApplyLoadedData(data);
+                    if (!string.Equals(
+                            candidatePath,
+                            SavePath,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        Debug.LogWarning(
+                            $"SaveGame: Primary save was unavailable or invalid. " +
+                            $"Loaded backup '{candidatePath}'.",
+                            this);
+                    }
+                    else
+                    {
+                        Debug.Log(
+                            $"SaveGame: Progress loaded from '{SavePath}'.",
+                            this);
+                    }
+
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    lastException = exception;
+                }
+            }
+
+            if (lastException == null)
+                Debug.Log("SaveGame: No save file found. Starting a new game.", this);
+            else
+                Debug.LogError(
+                    $"SaveGame: Could not load the primary save or any " +
+                    $"backup.\n{lastException}",
+                    this);
+            return false;
+        }
+
+        public bool LoadCheckpoint()
+        {
+            if (IsBusy)
+                return false;
+
+            CacheSystems();
+            string[] candidates =
+            {
+                CheckpointPath,
+                SaveSlotStorage.GetCheckpointBackupPath(ActiveSaveSlot)
+            };
+            Exception lastException = null;
+            foreach (string candidatePath in candidates)
+            {
+                if (!File.Exists(candidatePath))
+                    continue;
+
+                try
+                {
+                    SaveGameData data = JsonUtility.FromJson<SaveGameData>(
+                        File.ReadAllText(candidatePath));
+                    if (data == null)
+                        throw new InvalidDataException(
+                            "Checkpoint data is empty.");
+
+                    ApplyLoadedData(data);
+                    bool persistedRollback = WriteSaveData(
+                        data,
+                        SavePath,
+                        rotatePrimaryBackups: true,
+                        backupCheckpoint: false);
+                    if (!persistedRollback)
+                        throw new IOException(
+                            "Checkpoint loaded but rollback could not be " +
+                            "written to the current save.");
+
+                    Debug.Log(
+                        $"SaveGame: Restored checkpoint from " +
+                        $"'{candidatePath}'.",
+                        this);
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    lastException = exception;
+                }
+            }
+
+            Debug.LogError(
+                "SaveGame: Could not restore a checkpoint." +
+                (lastException != null ? $"\n{lastException}" : string.Empty),
+                this);
+            return false;
         }
 
         public void ClearSave(bool resetProgress)
         {
+            AutoSaveService autoSave = AutoSaveService.Instance;
+            bool wasSuspended = autoSave != null && autoSave.IsSuspended;
+            autoSave?.CancelPending();
+            autoSave?.SetSuspended(true);
             try
             {
-                if (File.Exists(SavePath))
-                    File.Delete(SavePath);
-
-                string temporaryPath = SavePath + ".tmp";
-
-                if (File.Exists(temporaryPath))
-                    File.Delete(temporaryPath);
+                SaveSlotStorage.DeleteSlot(ActiveSaveSlot);
 
                 if (resetProgress)
                     ResetProgress();
@@ -163,11 +361,140 @@ namespace NERA.Save
             {
                 Debug.LogError($"SaveGame: Could not clear save.\n{exception}", this);
             }
+            finally
+            {
+                if (!wasSuspended)
+                    autoSave?.SetSuspended(false);
+            }
+        }
+
+        private void ApplyLoadedData(SaveGameData data)
+        {
+            AutoSaveService autoSave = AutoSaveService.Instance;
+            bool wasSuspended = autoSave != null && autoSave.IsSuspended;
+            isLoading = true;
+            autoSave?.SetSuspended(true);
+            try
+            {
+                Apply(data);
+            }
+            finally
+            {
+                isLoading = false;
+                if (!wasSuspended)
+                    autoSave?.SetSuspended(false);
+            }
+        }
+
+        private bool WriteSaveData(
+            SaveGameData data,
+            string destinationPath,
+            bool rotatePrimaryBackups,
+            bool backupCheckpoint)
+        {
+            string temporaryPath = destinationPath + ".tmp";
+            try
+            {
+                string json = JsonUtility.ToJson(data, true);
+                Directory.CreateDirectory(
+                    Path.GetDirectoryName(destinationPath));
+                File.WriteAllText(temporaryPath, json);
+
+                if (rotatePrimaryBackups)
+                {
+                    SaveSlotStorage.RotateBackups(
+                        ActiveSaveSlot,
+                        backupGenerations);
+                }
+                else if (backupCheckpoint && File.Exists(destinationPath))
+                {
+                    File.Copy(
+                        destinationPath,
+                        SaveSlotStorage.GetCheckpointBackupPath(
+                            ActiveSaveSlot),
+                        true);
+                }
+
+                CommitTemporarySave(temporaryPath, destinationPath);
+                return true;
+            }
+            finally
+            {
+                DeleteTemporaryFile(temporaryPath);
+            }
+        }
+
+        private static void CommitTemporarySave(
+            string temporaryPath,
+            string destinationPath)
+        {
+            if (File.Exists(destinationPath))
+            {
+                try
+                {
+                    File.Replace(temporaryPath, destinationPath, null);
+                    return;
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    // File.Copy below is the portable fallback.
+                }
+                catch (IOException)
+                {
+                    // File.Copy below handles filesystems without Replace.
+                }
+            }
+
+            File.Copy(temporaryPath, destinationPath, true);
+        }
+
+        private static void DeleteTemporaryFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch (Exception)
+            {
+                // A stale .tmp is harmless and will be replaced next save.
+            }
+        }
+
+        private static Quaternion NormalizeRotation(Quaternion rotation)
+        {
+            float squareMagnitude =
+                rotation.x * rotation.x +
+                rotation.y * rotation.y +
+                rotation.z * rotation.z +
+                rotation.w * rotation.w;
+            if (squareMagnitude < 0.000001f)
+                return Quaternion.identity;
+
+            float inverseMagnitude = 1f / Mathf.Sqrt(squareMagnitude);
+            return new Quaternion(
+                rotation.x * inverseMagnitude,
+                rotation.y * inverseMagnitude,
+                rotation.z * inverseMagnitude,
+                rotation.w * inverseMagnitude);
         }
 
         private SaveGameData Capture()
         {
-            SaveGameData data = new SaveGameData();
+            SaveGameData data = new SaveGameData
+            {
+                checkpointSceneName = checkpointSceneName,
+                checkpointSpawnPointId = checkpointSpawnPointId,
+                checkpointUsesWorldPose = checkpointUsesWorldPose,
+                checkpointPositionX = checkpointPosition.x,
+                checkpointPositionY = checkpointPosition.y,
+                checkpointPositionZ = checkpointPosition.z,
+                checkpointRotationX = checkpointRotation.x,
+                checkpointRotationY = checkpointRotation.y,
+                checkpointRotationZ = checkpointRotation.z,
+                checkpointRotationW = checkpointRotation.w
+            };
+            worldState?.Capture(data);
 
             if (stationPower != null)
                 data.stationPowerState = (int)stationPower.State;
@@ -329,6 +656,22 @@ namespace NERA.Save
 
         private void Apply(SaveGameData data)
         {
+            checkpointSceneName = data.checkpointSceneName?.Trim() ??
+                string.Empty;
+            checkpointSpawnPointId =
+                data.checkpointSpawnPointId?.Trim() ?? string.Empty;
+            checkpointUsesWorldPose = data.checkpointUsesWorldPose;
+            checkpointPosition = new Vector3(
+                data.checkpointPositionX,
+                data.checkpointPositionY,
+                data.checkpointPositionZ);
+            checkpointRotation = NormalizeRotation(new Quaternion(
+                data.checkpointRotationX,
+                data.checkpointRotationY,
+                data.checkpointRotationZ,
+                data.checkpointRotationW));
+            worldState?.Restore(data);
+
             if (energySystem != null && data.energyStateInitialized)
             {
                 energySystem.RestoreState(
@@ -631,6 +974,12 @@ namespace NERA.Save
         private void ResetProgress()
         {
             isLoading = true;
+            checkpointSceneName = string.Empty;
+            checkpointSpawnPointId = string.Empty;
+            checkpointUsesWorldPose = false;
+            checkpointPosition = Vector3.zero;
+            checkpointRotation = Quaternion.identity;
+            worldState?.ResetState();
 
             if (stationPower != null)
                 stationPower.SetState(StationPowerState.Offline);
@@ -729,6 +1078,9 @@ namespace NERA.Save
             if (quests == null)
                 quests = GetComponent<QuestController>();
 
+            if (worldState == null)
+                worldState = GetComponent<WorldStateController>();
+
             RegisterResearchLibraryEntries();
         }
 
@@ -758,46 +1110,6 @@ namespace NERA.Save
 
         private void Subscribe()
         {
-            if (discovery != null)
-                discovery.LocationDiscovered += HandleProgressChanged;
-
-            if (stationPower != null)
-                stationPower.StateChanged += HandleStationPowerChanged;
-
-            if (energySystem != null)
-                energySystem.StateChanged += HandleEnergyStateChanged;
-
-            if (antenna != null)
-                antenna.ConditionChanged += HandleAntennaConditionChanged;
-
-            if (antenna != null)
-                antenna.ActiveSignalChanged += HandleAntennaSignalChanged;
-
-            if (inventory != null)
-                inventory.InventoryChanged += HandleInventoryChanged;
-
-            if (research != null)
-                research.ResearchAnalyzed += HandleResearchAnalyzed;
-
-            if (research != null)
-                research.StateChanged += HandleResearchStateChanged;
-
-            if (laboratoryWorkstation != null)
-                laboratoryWorkstation.ItemsChanged +=
-                    HandleLaboratoryWorkstationChanged;
-
-            if (library != null)
-                library.EntryUnlocked += HandleLibraryEntryUnlocked;
-
-            if (stationStorage != null)
-                stationStorage.StorageChanged += HandleStationStorageChanged;
-
-            if (stationSystems != null)
-                stationSystems.SystemsChanged += HandleStationSystemsChanged;
-
-            if (quests != null)
-                quests.QuestsChanged += HandleQuestsChanged;
-
             MaintainableObject.Registered += HandleMaintainableRegistered;
             MaintainableObject.AnyConditionChanged +=
                 HandleMaintainableConditionChanged;
@@ -805,114 +1117,9 @@ namespace NERA.Save
 
         private void Unsubscribe()
         {
-            if (discovery != null)
-                discovery.LocationDiscovered -= HandleProgressChanged;
-
-            if (stationPower != null)
-                stationPower.StateChanged -= HandleStationPowerChanged;
-
-            if (energySystem != null)
-                energySystem.StateChanged -= HandleEnergyStateChanged;
-
-            if (antenna != null)
-                antenna.ConditionChanged -= HandleAntennaConditionChanged;
-
-            if (antenna != null)
-                antenna.ActiveSignalChanged -= HandleAntennaSignalChanged;
-
-            if (inventory != null)
-                inventory.InventoryChanged -= HandleInventoryChanged;
-
-            if (research != null)
-                research.ResearchAnalyzed -= HandleResearchAnalyzed;
-
-            if (research != null)
-                research.StateChanged -= HandleResearchStateChanged;
-
-            if (laboratoryWorkstation != null)
-                laboratoryWorkstation.ItemsChanged -=
-                    HandleLaboratoryWorkstationChanged;
-
-            if (library != null)
-                library.EntryUnlocked -= HandleLibraryEntryUnlocked;
-
-            if (stationStorage != null)
-                stationStorage.StorageChanged -= HandleStationStorageChanged;
-
-            if (stationSystems != null)
-                stationSystems.SystemsChanged -= HandleStationSystemsChanged;
-
-            if (quests != null)
-                quests.QuestsChanged -= HandleQuestsChanged;
-
             MaintainableObject.Registered -= HandleMaintainableRegistered;
             MaintainableObject.AnyConditionChanged -=
                 HandleMaintainableConditionChanged;
-        }
-
-        private void HandleProgressChanged(string _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleStationPowerChanged(StationPowerState _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleEnergyStateChanged(EnergyState _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleAntennaConditionChanged(float _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleAntennaSignalChanged(ExpeditionLocationData _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleInventoryChanged()
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleResearchAnalyzed(string _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleResearchStateChanged(ResearchController.ResearchState _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleLaboratoryWorkstationChanged()
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleLibraryEntryUnlocked(string _)
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleStationStorageChanged()
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleStationSystemsChanged()
-        {
-            RequestAutoSave();
-        }
-
-        private void HandleQuestsChanged()
-        {
-            RequestAutoSave();
         }
 
         private void HandleMaintainableRegistered(
@@ -947,8 +1154,6 @@ namespace NERA.Save
 
             maintenanceConditions[objectId.Trim().ToLowerInvariant()] =
                 Mathf.Clamp01(condition);
-            if (!isApplyingMaintenanceState)
-                RequestAutoSave();
         }
 
         private void RestoreMaintenanceState(
@@ -1163,20 +1368,6 @@ namespace NERA.Save
                         value: maintainable.Condition);
                 }
             }
-        }
-
-        private void RequestAutoSave()
-        {
-            if (isLoading)
-                return;
-
-            autoSavePending = true;
-            autoSaveAt = Time.unscaledTime + autoSaveDelay;
-        }
-
-        private void OnApplicationQuit()
-        {
-            Save();
         }
 
         private void OnDestroy()

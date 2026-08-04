@@ -39,6 +39,12 @@ namespace NERA.Player
         private Behaviour[] parkourBehaviours = System.Array.Empty<Behaviour>();
         private CinemachineVirtualCameraBase[] virtualCameras =
             System.Array.Empty<CinemachineVirtualCameraBase>();
+        private readonly Dictionary<CinemachineVirtualCameraBase, Transform>
+            originalFollowTargets =
+                new Dictionary<CinemachineVirtualCameraBase, Transform>();
+        private readonly Dictionary<CinemachineVirtualCameraBase, Transform>
+            originalLookAtTargets =
+                new Dictionary<CinemachineVirtualCameraBase, Transform>();
         private bool isDead;
 
         public bool IsInputEnabled => !isDead && inputLocks.Count == 0;
@@ -129,7 +135,10 @@ namespace NERA.Player
             ResetExternalParkourState();
 
             if (ragdollCameraTarget != null)
+            {
+                CaptureGameplayCameraTargets();
                 RetargetGameplayCameras(ragdollCameraTarget);
+            }
 
             foreach (Behaviour behaviour in parkourBehaviours)
             {
@@ -154,6 +163,43 @@ namespace NERA.Player
                 if (collider != null)
                     collider.enabled = false;
             }
+        }
+
+        public void Revive()
+        {
+            if (!isDead)
+                return;
+
+            ResolveReferences();
+            isDead = false;
+            inputLocks.Remove(this);
+            ResetExternalParkourState();
+            RestoreGameplayCameraTargets();
+
+            foreach (Behaviour behaviour in parkourBehaviours)
+            {
+                if (behaviour != null)
+                    behaviour.enabled = true;
+            }
+
+            foreach (Collider collider in locomotionColliders)
+            {
+                if (collider != null)
+                    collider.enabled = true;
+            }
+
+            if (locomotionBody != null)
+            {
+                locomotionBody.isKinematic = false;
+                locomotionBody.useGravity = true;
+                locomotionBody.detectCollisions = true;
+                locomotionBody.linearVelocity = Vector3.zero;
+                locomotionBody.angularVelocity = Vector3.zero;
+                locomotionBody.WakeUp();
+            }
+
+            parkourController?.EnableController();
+            ApplyInputState();
         }
 
         private void ResolveReferences()
@@ -241,6 +287,42 @@ namespace NERA.Player
                 {
                     virtualCamera.LookAt = target;
                 }
+            }
+        }
+
+        private void CaptureGameplayCameraTargets()
+        {
+            if (originalFollowTargets.Count > 0 ||
+                originalLookAtTargets.Count > 0)
+            {
+                return;
+            }
+
+            foreach (CinemachineVirtualCameraBase virtualCamera in
+                     virtualCameras)
+            {
+                if (virtualCamera == null)
+                    continue;
+
+                originalFollowTargets[virtualCamera] = virtualCamera.Follow;
+                originalLookAtTargets[virtualCamera] = virtualCamera.LookAt;
+            }
+        }
+
+        private void RestoreGameplayCameraTargets()
+        {
+            foreach (KeyValuePair<CinemachineVirtualCameraBase, Transform>
+                     pair in originalFollowTargets)
+            {
+                if (pair.Key != null)
+                    pair.Key.Follow = pair.Value;
+            }
+
+            foreach (KeyValuePair<CinemachineVirtualCameraBase, Transform>
+                     pair in originalLookAtTargets)
+            {
+                if (pair.Key != null)
+                    pair.Key.LookAt = pair.Value;
             }
         }
 

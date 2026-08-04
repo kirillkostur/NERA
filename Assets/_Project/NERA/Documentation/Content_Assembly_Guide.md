@@ -159,6 +159,8 @@ P_WorldItem_<Name>
 
 - `Item Data` — будущий `ItemData` этого предмета;
 - `Destroy After Pickup` — обычно включён;
+- `Persistent Id` — стабильный уникальный ID production-экземпляра в сцене;
+- `Track World State` — включён для одноразового сценового предмета;
 - действие — `Pick Up`;
 - режим — `Press` для обычного предмета или `Hold` для важной находки.
 
@@ -345,6 +347,7 @@ Config хранит здоровье, обнаружение, дистанцию
 
 - `IOEnemyController`;
 - назначенный `IOEnemyConfig`;
+- стабильный `Persistent Id` на каждом production-экземпляре сцены;
 - Collider;
 - NavMeshAgent, если вариант использует навигацию;
 - визуальный child;
@@ -550,12 +553,27 @@ Map Symbol: Unknown
 компактного HUD, валидации и сохранения находится в
 `Quest_System_Guide.md`.
 
-`SaveGameData` версии 14 хранит квестовый прогресс и состояние обслуживаемых
-объектов. Обычный `WorldItem` всё ещё уничтожает или отключает только текущий
-scene instance: для одноразового контента нужен отдельный стабильный object ID
-и восстановление consumed/completed state при загрузке сцены.
+`SaveGameData` версии 16 хранит квестовый прогресс, состояние обслуживаемых
+объектов, consumed `WorldItem`, defeated `IOEnemyController`, завершённые
+`PersistentWorldFlag` и динамическую позицию чекпоинта. Пустой
+`Persistent Id` временно заменяется ключом из scene hierarchy, но production-
+объекту нужен authored ID: переименование или перенос hierarchy не должны
+создать новый save key.
 
-## 11. Рекомендуемый порядок сборки Expedition 02
+Для важного этапа квеста чекпоинт включается прямо в его карточке Inspector
+флагом `Чекпоинт после завершения`. Для двери или головоломки добавить
+`PersistentWorldFlag`, связать событие решения с `Complete()`, а
+`On Completed`/`On Incomplete` — с применением открытого и исходного состояния.
+
+## 11. Expedition 02 — только после First Playable lock
+
+Expedition 02-08 сейчас являются template scenes и не входят в первый
+полноценный срез. До закрытия Station + Expedition 01 не следует добавлять в
+них production-контент или расширять через них прогрессию. Актуальные границы
+среза и порядок работ находятся в
+`First_Playable_Status_and_Roadmap_2026-08-04.md`.
+
+После First Playable lock рекомендуемый порядок сборки Expedition 02:
 
 1. Создать папку локального контента Expedition 02.
 2. Импортировать и настроить модели, материалы, текстуры, VFX и audio.
@@ -581,6 +599,7 @@ scene instance: для одноразового контента нужен от
 
 - [ ] Модель и материалы лежат в правильной content-папке.
 - [ ] World prefab имеет `WorldItem` и collider.
+- [ ] Production-экземпляр имеет стабильный `Persistent Id`.
 - [ ] Equipped prefab не содержит world/gameplay компонентов.
 - [ ] Создан уникальный `ItemData.itemId`.
 - [ ] В `ItemData` назначены icon и world prefab.

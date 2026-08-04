@@ -34,7 +34,21 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 14;
+        public int version = 16;
+        public string checkpointSceneName;
+        public string checkpointSpawnPointId;
+        public bool checkpointUsesWorldPose;
+        public float checkpointPositionX;
+        public float checkpointPositionY;
+        public float checkpointPositionZ;
+        public float checkpointRotationX;
+        public float checkpointRotationY;
+        public float checkpointRotationZ;
+        public float checkpointRotationW = 1f;
+        public List<string> consumedWorldObjectIds = new List<string>();
+        public List<string> defeatedEnemyObjectIds = new List<string>();
+        public List<string> completedWorldFlagIds = new List<string>();
+        public float completionPercent;
         public int stationPowerState;
         public bool energyStateInitialized;
         public float stationEnergy;

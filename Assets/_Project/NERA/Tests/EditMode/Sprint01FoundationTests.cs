@@ -503,6 +503,71 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void CompletedStageKeepsItsCheckpointFlagAfterAdvancing()
+        {
+            QuestDefinition definition = CreateQuestDefinition(
+                "main.stage_checkpoint_test",
+                activationConditionCount: 0,
+                completionConditionCount: 1);
+            QuestCatalog catalog = null;
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                SerializedProperty stages =
+                    serialized.FindProperty("stages");
+                stages.arraySize = 2;
+
+                SerializedProperty first = stages.GetArrayElementAtIndex(0);
+                first.FindPropertyRelative("createCheckpointOnCompletion")
+                    .boolValue = true;
+                ConfigureQuestCondition(
+                    first.FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.LocationEntered,
+                    "stage_checkpoint_a");
+
+                SerializedProperty second = stages.GetArrayElementAtIndex(1);
+                second.FindPropertyRelative("title").stringValue =
+                    "Second stage";
+                second.FindPropertyRelative("createCheckpointOnCompletion")
+                    .boolValue = false;
+                ConfigureQuestCondition(
+                    second.FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.LocationEntered,
+                    "stage_checkpoint_b");
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                bool completedStageCreatesCheckpoint = false;
+                quests.QuestStageChanged += state =>
+                {
+                    int completedIndex = state.CurrentStageIndex - 1;
+                    completedStageCreatesCheckpoint =
+                        state.Definition.Stages[completedIndex]
+                            .CreateCheckpointOnCompletion;
+                };
+                catalog = CreateQuestCatalog(definition);
+                quests.Configure(catalog);
+
+                quests.Report(
+                    QuestSignalType.LocationEntered,
+                    "stage_checkpoint_a");
+
+                QuestRuntimeState active = quests.FindActive(
+                    "main.stage_checkpoint_test");
+                Assert.That(active, Is.Not.Null);
+                Assert.That(active.CurrentStageIndex, Is.EqualTo(1));
+                Assert.That(completedStageCreatesCheckpoint, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
         public void CurrentStateConditionUsesFactReportedBeforeQuestActivation()
         {
             QuestDefinition definition = CreateQuestDefinition(
@@ -779,7 +844,7 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(data));
 
-            Assert.That(restored.version, Is.EqualTo(14));
+            Assert.That(restored.version, Is.EqualTo(16));
             Assert.That(restored.activeQuests[0].currentStageIndex,
                 Is.EqualTo(2));
             Assert.That(restored.maintenanceObjects[0].objectId,
@@ -884,12 +949,31 @@ namespace NERA.Tests
         {
             GameSessionLaunchState.Request(GameLaunchMode.NewGame);
 
+            GameSessionLaunchRequest request =
+                GameSessionLaunchState.ConsumeOrDefault();
+            Assert.That(request.Mode, Is.EqualTo(GameLaunchMode.NewGame));
             Assert.That(
-                GameSessionLaunchState.ConsumeOrDefault(),
-                Is.EqualTo(GameLaunchMode.NewGame));
+                request.SaveSlot,
+                Is.EqualTo(SaveSlotStorage.DefaultSlot));
+
+            GameSessionLaunchRequest fallback =
+                GameSessionLaunchState.ConsumeOrDefault();
+            Assert.That(fallback.Mode, Is.EqualTo(GameLaunchMode.Continue));
             Assert.That(
-                GameSessionLaunchState.ConsumeOrDefault(),
-                Is.EqualTo(GameLaunchMode.Continue));
+                fallback.SaveSlot,
+                Is.EqualTo(SaveSlotStorage.DefaultSlot));
+        }
+
+        [Test]
+        public void RequestedSaveSlotIsConsumedWithLaunchMode()
+        {
+            GameSessionLaunchState.Request(GameLaunchMode.NewGame, 2);
+
+            GameSessionLaunchRequest request =
+                GameSessionLaunchState.ConsumeOrDefault();
+
+            Assert.That(request.Mode, Is.EqualTo(GameLaunchMode.NewGame));
+            Assert.That(request.SaveSlot, Is.EqualTo(2));
         }
     }
 

@@ -32,6 +32,8 @@ namespace NERA.Editor
             "Assets/_Project/NERA/Prefabs/Player/Player.prefab";
         private const string LocationConfigRoot =
             "Assets/_Project/NERA/Configs";
+        private const string ExpectedCompanyName = "Measured Field";
+        private const string ExpectedProductName = "Nera";
 
         private static readonly string[] RequiredBuildScenePrefix =
         {
@@ -99,6 +101,7 @@ namespace NERA.Editor
         public static void ValidateOrThrow()
         {
             List<string> errors = new List<string>();
+            ValidatePlayerSettings(errors);
             ValidateBuildScenes(errors);
             ValidatePlayerPrefab(errors);
             ValidateExpeditionLocations(errors);
@@ -111,6 +114,29 @@ namespace NERA.Editor
                 throw new InvalidOperationException(
                     "NERA project validation failed:\n- " +
                     string.Join("\n- ", errors));
+            }
+        }
+
+        private static void ValidatePlayerSettings(List<string> errors)
+        {
+            if (!string.Equals(
+                    PlayerSettings.companyName,
+                    ExpectedCompanyName,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(
+                    $"Company Name must be '{ExpectedCompanyName}', but is " +
+                    $"'{PlayerSettings.companyName}'.");
+            }
+
+            if (!string.Equals(
+                    PlayerSettings.productName,
+                    ExpectedProductName,
+                    StringComparison.Ordinal))
+            {
+                errors.Add(
+                    $"Product Name must be '{ExpectedProductName}', but is " +
+                    $"'{PlayerSettings.productName}'.");
             }
         }
 

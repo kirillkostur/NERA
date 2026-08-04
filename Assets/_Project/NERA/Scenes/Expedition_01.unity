@@ -6274,6 +6274,7 @@ GameObject:
   m_Component:
   - component: {fileID: 710879830}
   - component: {fileID: 710879829}
+  - component: {fileID: 710879832}
   m_Layer: 0
   m_Name: Spawn_Expedition01_Start
   m_TagString: Untagged
@@ -6309,6 +6310,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &710879832
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710879828}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4, y: 3, z: 4}
+  m_Center: {x: 0, y: 1.5, z: 0}
 --- !u!1 &717123971
 GameObject:
   m_ObjectHideFlags: 0
@@ -13019,6 +13041,8 @@ MonoBehaviour:
   questInteractionName: 
   itemData: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
   destroyAfterPickup: 1
+  persistentId: 
+  trackWorldState: 1
 --- !u!23 &1295145794
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -21141,6 +21165,74 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   neighbours: []
   type: 2
+--- !u!1 &1988261194
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1988261197}
+  - component: {fileID: 1988261196}
+  - component: {fileID: 1988261195}
+  m_Layer: 0
+  m_Name: Auto_Save_Checkpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1988261195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988261194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d90dd14121b950e468894e70d11c75f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  checkpointId: checkpoint
+  onlyOnce: 1
+--- !u!65 &1988261196
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988261194}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 7.32, y: 2.65, z: 2.54}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &1988261197
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988261194}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.33, y: 4.54, z: 71.96}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2033211467
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21863,3 +21955,4 @@ SceneRoots:
   - {fileID: 1076173761}
   - {fileID: 1295145797}
   - {fileID: 1870789655}
+  - {fileID: 1988261197}

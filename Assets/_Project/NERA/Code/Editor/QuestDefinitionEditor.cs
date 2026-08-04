@@ -266,6 +266,9 @@ namespace NERA.Editor
                     stage.FindPropertyRelative("description");
                 SerializedProperty completionLogic =
                     stage.FindPropertyRelative("completionLogic");
+                SerializedProperty createCheckpointOnCompletion =
+                    stage.FindPropertyRelative(
+                        "createCheckpointOnCompletion");
                 SerializedProperty completionConditions =
                     stage.FindPropertyRelative("completionConditions");
 
@@ -290,6 +293,12 @@ namespace NERA.Editor
                     EditorGUILayout.PropertyField(
                         stageDescription,
                         new GUIContent("Подробности"));
+                    EditorGUILayout.PropertyField(
+                        createCheckpointOnCompletion,
+                        new GUIContent(
+                            "Чекпоинт после завершения",
+                            "После завершения этого этапа сохраняет весь " +
+                            "прогресс и текущую позицию игрока."));
                     EditorGUILayout.LabelField(
                         "Условия завершения этапа",
                         EditorStyles.boldLabel);
@@ -722,6 +731,8 @@ namespace NERA.Editor
                 string.Empty;
             stage.FindPropertyRelative("completionLogic").enumValueIndex =
                 (int)QuestConditionLogic.All;
+            stage.FindPropertyRelative("createCheckpointOnCompletion")
+                .boolValue = false;
             SerializedProperty conditions =
                 stage.FindPropertyRelative("completionConditions");
             conditions.arraySize = 0;

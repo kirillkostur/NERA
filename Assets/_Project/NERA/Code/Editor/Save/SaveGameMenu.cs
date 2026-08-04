@@ -24,6 +24,7 @@ namespace NERA.EditorTools
                 return;
             }
 
+            SaveSlotStorage.TryMigrateLegacySingleSaveToSlotOne();
             if (!File.Exists(GetSavePath()))
             {
                 EditorUtility.DisplayDialog(
@@ -65,36 +66,63 @@ namespace NERA.EditorTools
             return EditorApplication.isPlaying;
         }
 
-        [MenuItem("Project/Save/Clear", priority = 102)]
-        private static void Clear()
+        [MenuItem("Project/Save/Clear/Slot 1", priority = 102)]
+        private static void ClearSlot1()
         {
+            ClearSlot(1);
+        }
+
+        [MenuItem("Project/Save/Clear/Slot 2", priority = 103)]
+        private static void ClearSlot2()
+        {
+            ClearSlot(2);
+        }
+
+        [MenuItem("Project/Save/Clear/Slot 3", priority = 104)]
+        private static void ClearSlot3()
+        {
+            ClearSlot(3);
+        }
+
+        [MenuItem("Project/Save/Clear/All Slots", priority = 120)]
+        private static void ClearAllSlots()
+        {
+            SaveGameController controller = SaveGameController.Instance;
+            bool hasActiveRuntime =
+                EditorApplication.isPlaying && controller != null;
+            if (!SaveSlotStorage.HasAnySave() && !hasActiveRuntime)
+            {
+                EditorUtility.DisplayDialog(
+                    "Clear NERA Saves",
+                    "All save slots are already empty.",
+                    "OK");
+                return;
+            }
+
             bool confirmed = EditorUtility.DisplayDialog(
-                "Clear NERA Save",
-                "Delete the current save and reset runtime progress?",
-                "Clear",
-                "Cancel"
-            );
+                "Clear All NERA Saves",
+                "Delete save slots 1, 2 and 3? This cannot be undone." +
+                (hasActiveRuntime
+                    ? " The current runtime progress will also be reset."
+                    : string.Empty),
+                "Clear All",
+                "Cancel");
 
             if (!confirmed)
                 return;
 
-            if (EditorApplication.isPlaying && SaveGameController.Instance != null)
-            {
-                SaveGameController.Instance.ClearSave(true);
-            }
-            else
-            {
-                DeleteIfExists(GetSavePath());
-                DeleteIfExists(GetSavePath() + ".tmp");
-                Debug.Log($"Save menu: Save file cleared at '{GetSavePath()}'.");
-            }
+            SaveSlotStorage.DeleteAllSlots();
+            if (hasActiveRuntime)
+                controller.ClearSave(true);
+
+            Debug.Log("Save menu: All three save slots were cleared.");
         }
 
         [MenuItem("Project/Save/Open Save Folder", priority = 120)]
         private static void OpenSaveFolder()
         {
-            Directory.CreateDirectory(Application.persistentDataPath);
-            EditorUtility.RevealInFinder(Application.persistentDataPath);
+            Directory.CreateDirectory(SaveSlotStorage.StorageRoot);
+            EditorUtility.RevealInFinder(SaveSlotStorage.StorageRoot);
         }
 
         private static string GetSavePath()
@@ -107,10 +135,43 @@ namespace NERA.EditorTools
                 : SaveGameController.DefaultSavePath;
         }
 
-        private static void DeleteIfExists(string path)
+        private static void ClearSlot(int slot)
         {
-            if (File.Exists(path))
-                File.Delete(path);
+            int normalizedSlot = SaveSlotStorage.NormalizeSlot(slot);
+            SaveGameController controller = SaveGameController.Instance;
+            bool isActiveRuntimeSlot =
+                EditorApplication.isPlaying &&
+                controller != null &&
+                controller.ActiveSaveSlot == normalizedSlot;
+            if (!SaveSlotStorage.HasSave(normalizedSlot) &&
+                !isActiveRuntimeSlot)
+            {
+                EditorUtility.DisplayDialog(
+                    $"Clear NERA Save Slot {normalizedSlot}",
+                    $"Save slot {normalizedSlot} is already empty.",
+                    "OK");
+                return;
+            }
+
+            bool confirmed = EditorUtility.DisplayDialog(
+                $"Clear NERA Save Slot {normalizedSlot}",
+                $"Delete save slot {normalizedSlot}? This cannot be undone." +
+                (isActiveRuntimeSlot
+                    ? " The current runtime progress will also be reset."
+                    : string.Empty),
+                "Clear",
+                "Cancel");
+            if (!confirmed)
+                return;
+
+            if (isActiveRuntimeSlot)
+                controller.ClearSave(true);
+            else
+                SaveSlotStorage.DeleteSlot(normalizedSlot);
+
+            Debug.Log(
+                $"Save menu: Save slot {normalizedSlot} was cleared at " +
+                $"'{SaveSlotStorage.GetSlotPath(normalizedSlot)}'.");
         }
     }
 }

@@ -177,12 +177,18 @@ namespace NERA.Quests
         [SerializeField, TextArea] private string description;
         [SerializeField] private QuestConditionLogic completionLogic =
             QuestConditionLogic.All;
+        [Tooltip(
+            "Creates a full checkpoint at the player's current position " +
+            "after this stage is completed.")]
+        [SerializeField] private bool createCheckpointOnCompletion;
         [SerializeField] private List<QuestConditionDefinition>
             completionConditions = new List<QuestConditionDefinition>();
 
         public string Title => title?.Trim() ?? string.Empty;
         public string Description => description?.Trim() ?? string.Empty;
         public QuestConditionLogic CompletionLogic => completionLogic;
+        public bool CreateCheckpointOnCompletion =>
+            createCheckpointOnCompletion;
         public IReadOnlyList<QuestConditionDefinition> CompletionConditions =>
             completionConditions ??
             (IReadOnlyList<QuestConditionDefinition>)
