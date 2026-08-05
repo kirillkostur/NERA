@@ -33,6 +33,8 @@ Status: `DONE`
 - DONE: terminal access rules and terminal input mode.
 - DONE: Status, Drone, Map and Library terminal panels.
 - DONE: config-driven per-object battery cutoffs and terminal low-power lockout.
+- DONE: physical device service/manual restart shares requested state with the
+  terminal and resolves maintainable objects by stable ObjectId.
 - DONE: Station power EditMode regression tests.
 - DONE: standalone build verification as part of the Sprint 01-02 baseline build.
 - DONE: Sprint 02 result notes recorded in this backlog.

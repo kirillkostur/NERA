@@ -7,13 +7,15 @@ namespace NERA.Interaction
             InteractionMode mode,
             float holdDuration,
             bool isAvailable,
-            string unavailableReason)
+            string unavailableReason,
+            bool isVisible = true)
         {
             ActionText = actionText;
             Mode = mode;
             HoldDuration = holdDuration;
             IsAvailable = isAvailable;
             UnavailableReason = unavailableReason;
+            IsVisible = isVisible;
         }
 
         public string ActionText { get; }
@@ -21,5 +23,6 @@ namespace NERA.Interaction
         public float HoldDuration { get; }
         public bool IsAvailable { get; }
         public string UnavailableReason { get; }
+        public bool IsVisible { get; }
     }
 }

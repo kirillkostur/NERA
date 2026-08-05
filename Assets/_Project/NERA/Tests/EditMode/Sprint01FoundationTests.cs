@@ -1519,6 +1519,11 @@ namespace NERA.Tests
             energy = root.AddComponent<EnergySystemController>();
             power = root.AddComponent<StationPowerController>();
             discovery = root.AddComponent<ExpeditionDiscoveryController>();
+            StationObjectIdentity identity =
+                root.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Antenna,
+                "station_antenna");
             maintenance = root.AddComponent<MaintainableObject>();
             SerializedObject serializedMaintenance = new SerializedObject(maintenance);
             serializedMaintenance.FindProperty("role").enumValueIndex =
@@ -1619,7 +1624,12 @@ namespace NERA.Tests
         [Test]
         public void MaintenanceConditionCanFaultAntennaAndRepairRestoresIt()
         {
+            Assert.That(
+                maintenance.ObjectId,
+                Is.EqualTo("station_antenna"));
             maintenance.SetCondition(0f);
+            Assert.That(maintenance.Condition, Is.Zero);
+            Assert.That(antenna.Condition, Is.Zero);
             antenna.RefreshAvailability();
 
             Assert.That(antenna.State, Is.EqualTo(AntennaState.Faulted));

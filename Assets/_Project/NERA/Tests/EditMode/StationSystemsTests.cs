@@ -1,7 +1,9 @@
 using NERA.Expeditions;
 using NERA.Energy;
 using NERA.Inventory;
+using NERA.Interaction;
 using NERA.Items;
+using NERA.Maintenance;
 using NERA.Station;
 using NUnit.Framework;
 using System.Reflection;
@@ -367,7 +369,7 @@ namespace NERA.Tests
                     thirdTurret);
             Assert.That(configuredTurret, Is.Not.Null);
             Assert.That(
-                systems.Config.FindByPreviewName("SM_Turret_3"),
+                systems.Config.FindByObjectId(thirdTurret),
                 Is.SameAs(configuredTurret));
 
             inventory.AddItem(servoDrive);
@@ -524,8 +526,13 @@ namespace NERA.Tests
 
             StationUpgradeStageController stageController =
                 prefab.GetComponent<StationUpgradeStageController>();
+            StationObjectIdentity identity =
+                prefab.GetComponent<StationObjectIdentity>();
             Assert.That(stageController, Is.Not.Null);
+            Assert.That(identity, Is.Not.Null);
+            Assert.That(identity.SystemType, Is.EqualTo(expectedType));
             Assert.That(stageController.SystemType, Is.EqualTo(expectedType));
+            Assert.That(stageController.ObjectId, Is.EqualTo(identity.ObjectId));
             Assert.That(stageController.MaxStage, Is.EqualTo(maximumStage));
 
             for (int stage = 0; stage <= maximumStage; stage++)
@@ -636,6 +643,195 @@ namespace NERA.Tests
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Battery, false),
                 Is.False);
+        }
+
+        [Test]
+        public void PhysicalInteractionStartsTheSameRequestedStateAsTerminal()
+        {
+            StationDeviceInteractable device = CreateStationDevice(
+                StationSystemType.Laboratory,
+                out MaintainableObject maintenance);
+            Assert.That(
+                typeof(IInteractable).IsAssignableFrom(
+                    typeof(MaintainableObject)),
+                Is.False);
+
+            Assert.That(
+                systems.SetRequestedActive(
+                    StationSystemType.Laboratory,
+                    false),
+                Is.True);
+            Assert.That(device.GetPrompt().IsVisible, Is.True);
+
+            device.CompleteInteraction(playerRoot);
+
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.True);
+            Assert.That(
+                device.GetPrompt().IsVisible,
+                Is.False,
+                "A healthy running device must not display Operational.");
+        }
+
+        [Test]
+        public void PhysicalStartDoesNotChangeToggleWithoutPower()
+        {
+            StationDeviceInteractable device = CreateStationDevice(
+                StationSystemType.Laboratory,
+                out _);
+            systems.SetRequestedActive(
+                StationSystemType.Laboratory,
+                false);
+            energy.SetGridEnabled(false);
+
+            InteractionPrompt prompt = device.GetPrompt();
+            Assert.That(prompt.IsVisible, Is.True);
+            Assert.That(prompt.IsAvailable, Is.True);
+
+            device.CompleteInteraction(playerRoot);
+
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.False,
+                "A failed physical start must not move the terminal toggle.");
+        }
+
+        [Test]
+        public void MaintenanceActionRepairsBeforeManualStart()
+        {
+            StationDeviceInteractable device = CreateStationDevice(
+                StationSystemType.Laboratory,
+                out MaintainableObject maintenance);
+            systems.SetRequestedActive(
+                StationSystemType.Laboratory,
+                false);
+            maintenance.SetCondition(0.5f);
+
+            Assert.That(
+                device.GetPrompt().ActionText,
+                Is.EqualTo("Service Device"));
+
+            device.CompleteInteraction(playerRoot);
+
+            Assert.That(maintenance.Condition, Is.EqualTo(1f));
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.False,
+                "Repair and start are two separate physical actions.");
+            Assert.That(device.GetPrompt().IsVisible, Is.True);
+        }
+
+        [Test]
+        public void MaintenanceLookupUsesStableObjectIdBeforeRole()
+        {
+            MaintainableObject wrong = CreateMaintainable(
+                "wrong_antenna",
+                MaintenanceRole.Antenna,
+                0f);
+            MaintainableObject antenna = CreateMaintainable(
+                "station_antenna",
+                MaintenanceRole.Antenna,
+                1f);
+
+            Assert.That(wrong.IsOperational, Is.False);
+            Assert.That(
+                systems.IsMaintenanceReady(
+                    StationSystemType.Antenna,
+                    "station_antenna"),
+                Is.True,
+                "A different object with the same role must be ignored.");
+
+            antenna.SetCondition(0f);
+            Assert.That(
+                systems.IsMaintenanceReady(
+                    StationSystemType.Antenna,
+                    "station_antenna"),
+                Is.False);
+
+            antenna.gameObject.SetActive(false);
+            Assert.That(
+                systems.IsMaintenanceReady(
+                    StationSystemType.Antenna,
+                    "station_antenna"),
+                Is.True,
+                "A missing exact ID must not fall back to another device role.");
+        }
+
+        [Test]
+        public void MaintenancePrefabsExposeStableIdsThroughDeviceInteraction()
+        {
+            StationSystemsConfig config = StationSystemsConfig.LoadDefault();
+            Assert.That(
+                config.Find(
+                    StationSystemType.SolarPanel,
+                    "station_solar_01"),
+                Is.Not.Null);
+
+            GameObject antennaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
+                "P_StationAntenna_Stages.prefab");
+            MaintainableObject[] antennaMaintenance =
+                antennaPrefab.GetComponentsInChildren<MaintainableObject>(true);
+            StationDeviceInteractable[] antennaInteractions =
+                antennaPrefab.GetComponentsInChildren<StationDeviceInteractable>(true);
+            Assert.That(antennaMaintenance, Has.Length.EqualTo(1));
+            Assert.That(antennaInteractions, Has.Length.EqualTo(1));
+            foreach (MaintainableObject maintainable in antennaMaintenance)
+                Assert.That(maintainable.ObjectId, Is.EqualTo("station_antenna"));
+            foreach (StationDeviceInteractable interaction in antennaInteractions)
+                Assert.That(interaction.ObjectId, Is.EqualTo("station_antenna"));
+
+            GameObject turretPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Station/P_StationTurret.prefab");
+            Assert.That(
+                turretPrefab.GetComponent<StationDeviceInteractable>(),
+                Is.Not.Null);
+            Assert.That(
+                turretPrefab.GetComponent<StationTurretController>().TurretId,
+                Is.Empty,
+                "A staged turret receives its ID from the stage root instance.");
+        }
+
+        private StationDeviceInteractable CreateStationDevice(
+            StationSystemType type,
+            out MaintainableObject maintenance)
+        {
+            GameObject deviceRoot = new GameObject($"Test_{type}_Device");
+            deviceRoot.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                deviceRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(type, string.Empty);
+            maintenance = deviceRoot.AddComponent<MaintainableObject>();
+            StationDeviceInteractable device =
+                deviceRoot.AddComponent<StationDeviceInteractable>();
+            return device;
+        }
+
+        private MaintainableObject CreateMaintainable(
+            string objectId,
+            MaintenanceRole role,
+            float condition)
+        {
+            GameObject deviceRoot = new GameObject($"Test_{objectId}");
+            deviceRoot.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                deviceRoot.AddComponent<StationObjectIdentity>();
+            StationSystemType type = role switch
+            {
+                MaintenanceRole.SolarPanel => StationSystemType.SolarPanel,
+                MaintenanceRole.Antenna => StationSystemType.Antenna,
+                MaintenanceRole.Turret => StationSystemType.Turret,
+                _ => default
+            };
+            identity.Configure(type, objectId);
+            MaintainableObject maintainable =
+                deviceRoot.AddComponent<MaintainableObject>();
+            SerializedObject serialized = new SerializedObject(maintainable);
+            serialized.FindProperty("role").enumValueIndex = (int)role;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            maintainable.SetCondition(condition);
+            return maintainable;
         }
 
         private static ItemData CreateItem(string id, ItemType type)

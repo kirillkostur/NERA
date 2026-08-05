@@ -188,8 +188,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_StationTurret_Stages_04
       objectReference: {fileID: 0}
-    - target: {fileID: 4660163651798804139, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
+    - target: {fileID: 1944048897529250152, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
+      propertyPath: objectId
       value: station_turret_04
       objectReference: {fileID: 0}
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
@@ -231,18 +231,6 @@ PrefabInstance:
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6903757456902814300, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: objectId
-      value: station_turret_04
-      objectReference: {fileID: 0}
-    - target: {fileID: 7649498224019411924, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_04
-      objectReference: {fileID: 0}
-    - target: {fileID: 7944509812169728299, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_04
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -383,6 +371,7 @@ GameObject:
   - component: {fileID: 84075194}
   - component: {fileID: 84075193}
   - component: {fileID: 84075192}
+  - component: {fileID: 84075197}
   m_Layer: 6
   m_Name: Station_Terminal
   m_TagString: Untagged
@@ -508,6 +497,20 @@ Transform:
   - {fileID: 192147486}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &84075197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84075191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 2
+  objectId:
 --- !u!1001 &101458258
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -519,6 +522,10 @@ PrefabInstance:
     - target: {fileID: 472533362972568821, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_Name
       value: P_StationTurret_Stages_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 1944048897529250152, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
+      propertyPath: objectId
+      value: station_turret_01
       objectReference: {fileID: 0}
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -559,14 +566,6 @@ PrefabInstance:
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6903757456902814300, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: objectId
-      value: station_turret_01
-      objectReference: {fileID: 0}
-    - target: {fileID: 7501967234013005690, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: questInteractionId
-      value: station_turret_01
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1470,6 +1469,7 @@ GameObject:
   - component: {fileID: 482209752}
   - component: {fileID: 482209751}
   - component: {fileID: 482209750}
+  - component: {fileID: 482209755}
   m_Layer: 6
   m_Name: Station_LaboratoryTable
   m_TagString: Untagged
@@ -1594,6 +1594,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &482209755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482209749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 4
+  objectId:
 --- !u!1 &486137662
 GameObject:
   m_ObjectHideFlags: 0
@@ -2515,6 +2529,75 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 316ee28a63d0923488f0d4cb8edd0b47, type: 3}
+--- !u!1 &1268130902
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1268130905}
+  - component: {fileID: 1268130904}
+  - component: {fileID: 1268130903}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1268130903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268130902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33af0f17519b4dfca114cdfc40240a11, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  profile: {fileID: 11400000, guid: 527a6697d97aded4a9905e5f387b0848, type: 2}
+  priority: 0
+  playerTag: Player
+--- !u!65 &1268130904
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268130902}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9, y: 3, z: 9}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &1268130905
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268130902}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.05, y: 1.92, z: 23.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1441563790
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2639,6 +2722,8 @@ GameObject:
   - component: {fileID: 1505363865}
   - component: {fileID: 1505363864}
   - component: {fileID: 1505363869}
+  - component: {fileID: 1505363870}
+  - component: {fileID: 1505363871}
   m_Layer: 6
   m_Name: Station_SolarPanel_01
   m_TagString: Untagged
@@ -2658,7 +2743,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2368e86dd85a4a543b7c4d27a4a025b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panelId: station_solar_01
   outputMultiplier: 1
   maintenance: {fileID: 1505363869}
 --- !u!23 &1505363865
@@ -2762,6 +2846,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  role: 1
+  exposedToWeather: 1
+  initialCondition: 1
+  cleaningVfx: {fileID: 0}
+  targetRenderer: {fileID: 1505363865}
+  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
+  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
+--- !u!114 &1505363870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505363863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7af2bec867a5473ea90edc4ea3b15a00, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
   actionText: Interact
   mode: 1
   holdDuration: 2
@@ -2778,16 +2881,21 @@ MonoBehaviour:
       m_Calls: []
   questInteractionId: 
   questInteractionName: 
-  objectId: 
-  displayName: 
-  role: 1
-  exposedToWeather: 1
-  initialCondition: 1
-  serviceDuration: 2
-  cleaningVfx: {fileID: 0}
-  targetRenderer: {fileID: 1505363865}
-  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
-  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
+  maintenance: {fileID: 1505363869}
+--- !u!114 &1505363871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505363863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 0
+  objectId: station_solar_01
 --- !u!1 &1542857272
 GameObject:
   m_ObjectHideFlags: 0
@@ -3008,8 +3116,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_StationTurret_Stages_02
       objectReference: {fileID: 0}
-    - target: {fileID: 4660163651798804139, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
+    - target: {fileID: 1944048897529250152, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
+      propertyPath: objectId
       value: station_turret_02
       objectReference: {fileID: 0}
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
@@ -3051,18 +3159,6 @@ PrefabInstance:
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6903757456902814300, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: objectId
-      value: station_turret_02
-      objectReference: {fileID: 0}
-    - target: {fileID: 7649498224019411924, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_02
-      objectReference: {fileID: 0}
-    - target: {fileID: 7944509812169728299, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_02
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3368,8 +3464,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_StationTurret_Stages_03
       objectReference: {fileID: 0}
-    - target: {fileID: 4660163651798804139, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
+    - target: {fileID: 1944048897529250152, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
+      propertyPath: objectId
       value: station_turret_03
       objectReference: {fileID: 0}
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
@@ -3411,18 +3507,6 @@ PrefabInstance:
     - target: {fileID: 6800869463899358157, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6903757456902814300, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: objectId
-      value: station_turret_03
-      objectReference: {fileID: 0}
-    - target: {fileID: 7649498224019411924, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_03
-      objectReference: {fileID: 0}
-    - target: {fileID: 7944509812169728299, guid: 6862dd1b7bd03a04d9e168e44317d9f8, type: 3}
-      propertyPath: turretId
-      value: station_turret_03
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3579,11 +3663,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3280139439017994701, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 3280139439017994702, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: mode
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3280139439017994701, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 3280139439017994702, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: holdDuration
       value: 1.5
       objectReference: {fileID: 0}
@@ -3595,19 +3679,19 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_StationAntenna_Stages
       objectReference: {fileID: 0}
-    - target: {fileID: 8233761523038168216, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 8233761523038168217, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: mode
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8233761523038168216, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 8233761523038168217, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: holdDuration
       value: 1.5
       objectReference: {fileID: 0}
-    - target: {fileID: 8779248034097435336, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 8779248034097435337, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: mode
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8779248034097435336, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
+    - target: {fileID: 8779248034097435337, guid: e14e11a29f73e4a4a8efc8581495bc4d, type: 3}
       propertyPath: holdDuration
       value: 1.5
       objectReference: {fileID: 0}
@@ -3649,3 +3733,4 @@ SceneRoots:
   - {fileID: 544134404}
   - {fileID: 2097897266}
   - {fileID: 328062987}
+  - {fileID: 1268130905}

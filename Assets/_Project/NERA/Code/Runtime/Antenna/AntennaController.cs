@@ -13,6 +13,7 @@ namespace NERA.Antenna
     public sealed class AntennaController : MonoBehaviour
     {
         private const string AntennaConsumerId = "antenna_calibration";
+        private const string AntennaObjectId = "station_antenna";
 
         [SerializeField] private MaintainableObject maintenance;
         [SerializeField, Range(0f, 1f)] private float signalDiscoveryChance = 0.5f;
@@ -67,6 +68,17 @@ namespace NERA.Antenna
 
             Instance = this;
             EnsureEnergyRegistration();
+        }
+
+        private void OnEnable()
+        {
+            MaintainableObject.Registered += HandleMaintenanceRegistered;
+            CacheMaintenanceSource();
+        }
+
+        private void OnDisable()
+        {
+            MaintainableObject.Registered -= HandleMaintenanceRegistered;
         }
 
         private void Start()
@@ -468,22 +480,30 @@ namespace NERA.Antenna
 
         private void CacheMaintenanceSource()
         {
-            if (maintenance == null)
+            if (maintenance == null ||
+                !maintenance.isActiveAndEnabled ||
+                !string.Equals(
+                    maintenance.ObjectId,
+                    AntennaObjectId,
+                    StringComparison.OrdinalIgnoreCase))
             {
-                MaintainableObject[] candidates =
-                    FindObjectsByType<MaintainableObject>(
-                        FindObjectsInactive.Include,
-                        FindObjectsSortMode.None
-                    );
-
-                foreach (MaintainableObject candidate in candidates)
+                MaintainableObject local =
+                    GetComponentInChildren<MaintainableObject>(true);
+                if (local != null &&
+                    string.Equals(
+                        local.ObjectId,
+                        AntennaObjectId,
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    if (candidate != null &&
-                        candidate.Role == MaintenanceRole.Antenna)
-                    {
-                        maintenance = candidate;
-                        break;
-                    }
+                    maintenance = local;
+                }
+                else
+                {
+                    maintenance = MaintainableObject.TryFind(
+                        AntennaObjectId,
+                        out MaintainableObject identified)
+                        ? identified
+                        : null;
                 }
             }
 
@@ -500,6 +520,22 @@ namespace NERA.Antenna
                 subscribedMaintenance.ConditionChanged += HandleConditionChanged;
                 subscribedMaintenance.SetCondition(fallbackCondition);
             }
+        }
+
+        private void HandleMaintenanceRegistered(
+            MaintainableObject registered)
+        {
+            if (registered == null ||
+                !string.Equals(
+                    registered.ObjectId,
+                    AntennaObjectId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            maintenance = registered;
+            CacheMaintenanceSource();
         }
 
         private MaintainableObject MaintenanceSource => maintenance;
@@ -551,6 +587,7 @@ namespace NERA.Antenna
 
         private void OnDestroy()
         {
+            MaintainableObject.Registered -= HandleMaintenanceRegistered;
             EnergySystemController.Instance?.SetConsumerActive(
                 AntennaConsumerId,
                 false

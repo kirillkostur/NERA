@@ -1,23 +1,18 @@
 using System;
 using System.Collections.Generic;
 using NERA.Energy;
-using NERA.Interaction;
 using NERA.Quests;
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Maintenance
 {
-    public sealed class MaintainableObject : BaseInteractable
+    [DisallowMultipleComponent]
+    public sealed class MaintainableObject : MonoBehaviour
     {
-        [Header("Identity")]
-        [Tooltip("Stable save/quest ID. Device components may assign it at runtime.")]
-        [SerializeField] private string objectId;
-        [SerializeField] private string displayName;
-
         [SerializeField] private MaintenanceRole role = MaintenanceRole.Generic;
         [SerializeField] private bool exposedToWeather;
         [SerializeField, Range(0f, 1f)] private float initialCondition = 1f;
-        [SerializeField, Min(0.1f)] private float serviceDuration = 2f;
         [SerializeField] private ParticleSystem cleaningVfx;
         [SerializeField] private Renderer targetRenderer;
         [SerializeField] private Color cleanColor = new Color(0.12f, 0.45f, 0.55f);
@@ -25,6 +20,7 @@ namespace NERA.Maintenance
 
         private Material runtimeMaterial;
         private float condition = 1f;
+        private StationObjectIdentity identity;
 
         private static readonly Dictionary<string, MaintainableObject>
             ObjectsById = new Dictionary<string, MaintainableObject>(
@@ -34,17 +30,34 @@ namespace NERA.Maintenance
         public static event Action<MaintainableObject> Registered;
         public static event Action<string, float> AnyConditionChanged;
 
-        public string ObjectId => NormalizeId(objectId);
-        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
-            ? gameObject.name
-            : displayName.Trim();
+        public string ObjectId
+        {
+            get
+            {
+                CacheIdentity();
+                return NormalizeId(identity?.ObjectId);
+            }
+        }
+        public string DisplayName
+        {
+            get
+            {
+                CacheIdentity();
+                return identity != null
+                    ? identity.DisplayName
+                    : gameObject.name;
+            }
+        }
         public MaintenanceRole Role => role;
         public bool ExposedToWeather => exposedToWeather;
         public float Condition => condition;
         public bool IsOperational => condition > 0.01f;
+        public bool NeedsService => condition < 0.999f;
+        public string ServiceActionText => GetServiceActionText();
 
         private void Awake()
         {
+            CacheIdentity();
             condition = Mathf.Clamp01(initialCondition);
 
             if (targetRenderer == null)
@@ -59,6 +72,7 @@ namespace NERA.Maintenance
 
         private void OnEnable()
         {
+            CacheIdentity();
             Register();
         }
 
@@ -67,33 +81,22 @@ namespace NERA.Maintenance
             ApplyWeatherWear(Time.deltaTime);
         }
 
-        public override InteractionPrompt GetPrompt()
-        {
-            bool needsService = condition < 0.999f;
-            return new InteractionPrompt(
-                GetActionText(),
-                InteractionMode.Hold,
-                serviceDuration,
-                needsService,
-                needsService
-                    ? $"Condition {Mathf.RoundToInt(condition * 100f)}%"
-                    : "Operational"
-            );
-        }
-
-        public override void CompleteInteraction(GameObject interactor)
+        public bool Service()
         {
             if (!RestoreCondition())
-                return;
+                return false;
 
             if (cleaningVfx != null)
                 cleaningVfx.Play();
-
-            base.CompleteInteraction(interactor);
+            return true;
         }
 
         public void SetCondition(float value)
         {
+            // Identity can be configured immediately before this component
+            // becomes active (including in EditMode tests and prefab tools).
+            // Re-register before evaluating an unchanged value.
+            Register();
             float newCondition = Mathf.Clamp01(value);
             if (Mathf.Approximately(condition, newCondition))
                 return;
@@ -111,26 +114,22 @@ namespace NERA.Maintenance
             }
         }
 
-        public void SetObjectIdentity(string stableId, string name = null)
-        {
-            string normalized = NormalizeId(stableId);
-            if (string.IsNullOrEmpty(normalized))
-                return;
-
-            Unregister();
-            objectId = normalized;
-            if (!string.IsNullOrWhiteSpace(name))
-                displayName = name.Trim();
-            Register();
-        }
-
         public static bool TryFind(
             string stableId,
             out MaintainableObject maintainable)
         {
-            return ObjectsById.TryGetValue(
-                NormalizeId(stableId),
-                out maintainable);
+            string normalized = NormalizeId(stableId);
+            if (ObjectsById.TryGetValue(normalized, out maintainable) &&
+                maintainable != null &&
+                maintainable.isActiveAndEnabled)
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrEmpty(normalized))
+                ObjectsById.Remove(normalized);
+            maintainable = null;
+            return false;
         }
 
         public static IEnumerable<MaintainableObject> ActiveObjects =>
@@ -171,7 +170,7 @@ namespace NERA.Maintenance
             runtimeMaterial.color = Color.Lerp(dirtyColor, cleanColor, condition);
         }
 
-        private string GetActionText()
+        private string GetServiceActionText()
         {
             switch (role)
             {
@@ -224,6 +223,19 @@ namespace NERA.Maintenance
         private static string NormalizeId(string value)
         {
             return value?.Trim().ToLowerInvariant() ?? string.Empty;
+        }
+
+        private void CacheIdentity()
+        {
+            if (identity == null)
+            {
+                identity = GetComponentInParent<StationObjectIdentity>(true);
+            }
+        }
+
+        private void OnValidate()
+        {
+            CacheIdentity();
         }
 
         private void OnDisable()

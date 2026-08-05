@@ -268,7 +268,10 @@ namespace NERA.Station
             if (role == MaintenanceRole.Generic)
                 return true;
 
-            MaintainableObject maintenance = FindMaintenance(role);
+            MaintainableObject maintenance = FindMaintenance(
+                type,
+                objectId,
+                role);
             return maintenance == null || maintenance.IsOperational;
         }
 
@@ -298,7 +301,7 @@ namespace NERA.Station
             };
 
             MaintainableObject maintenance = role != MaintenanceRole.Generic
-                ? FindMaintenance(role)
+                ? FindMaintenance(type, objectId, role)
                 : null;
             return maintenance != null ? maintenance.Condition : 1f;
         }
@@ -961,15 +964,37 @@ namespace NERA.Station
                 : objectId;
         }
 
-        private static MaintainableObject FindMaintenance(MaintenanceRole role)
+        private MaintainableObject FindMaintenance(
+            StationSystemType type,
+            string objectId,
+            MaintenanceRole fallbackRole)
         {
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            string stableId = string.IsNullOrWhiteSpace(objectId)
+                ? definition?.ObjectId
+                : objectId;
+            if (!string.IsNullOrWhiteSpace(stableId))
+            {
+                return MaintainableObject.TryFind(
+                    stableId,
+                    out MaintainableObject identified)
+                    ? identified
+                    : null;
+            }
+
+            // Compatibility path for old configs without an ObjectId. New
+            // station devices must resolve through their stable ID above.
             MaintainableObject[] candidates = FindObjectsByType<MaintainableObject>(
-                FindObjectsInactive.Include,
+                FindObjectsInactive.Exclude,
                 FindObjectsSortMode.None);
             foreach (MaintainableObject candidate in candidates)
             {
-                if (candidate != null && candidate.Role == role)
+                if (candidate != null &&
+                    candidate.isActiveAndEnabled &&
+                    candidate.Role == fallbackRole)
+                {
                     return candidate;
+                }
             }
             return null;
         }

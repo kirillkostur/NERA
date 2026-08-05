@@ -91,6 +91,9 @@ namespace NERA.Interaction
                     continue;
 
                 InteractionPrompt prompt = interactable.GetPrompt();
+                if (!prompt.IsVisible)
+                    continue;
+
                 if (!HasClearPath(
                         origin,
                         candidateCollider,
@@ -198,7 +201,7 @@ namespace NERA.Interaction
                 return;
 
             InteractionPrompt prompt = currentInteractable.GetPrompt();
-            if (!prompt.IsAvailable)
+            if (!prompt.IsVisible || !prompt.IsAvailable)
             {
                 if (activeInteractable != null)
                     CancelActiveInteraction();

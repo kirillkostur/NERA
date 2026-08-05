@@ -75,7 +75,6 @@ namespace NERA.Station
     {
         [SerializeField] private StationSystemType systemType;
         [SerializeField] private string objectId;
-        [SerializeField] private string previewObjectName;
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
         [SerializeField] private bool controllable;
@@ -86,7 +85,6 @@ namespace NERA.Station
 
         public StationSystemType SystemType => systemType;
         public string ObjectId => objectId?.Trim() ?? string.Empty;
-        public string PreviewObjectName => previewObjectName?.Trim() ?? string.Empty;
         public string DisplayName => string.IsNullOrWhiteSpace(displayName)
             ? systemType.ToString()
             : displayName;
@@ -138,29 +136,6 @@ namespace NERA.Station
             return null;
         }
 
-        public StationSystemDefinition(
-            StationSystemType type,
-            string id,
-            string previewName,
-            string name,
-            string details,
-            bool canControl,
-            bool activeAtStart,
-            int startingLevel,
-            params StationUpgradeLevelDefinition[] levels)
-        {
-            systemType = type;
-            objectId = id;
-            previewObjectName = previewName;
-            displayName = name;
-            description = details;
-            controllable = canControl;
-            initiallyActive = activeAtStart;
-            initialLevel = Mathf.Max(0, startingLevel);
-            upgradeLevels = levels != null
-                ? new List<StationUpgradeLevelDefinition>(levels)
-                : new List<StationUpgradeLevelDefinition>();
-        }
     }
 
     [CreateAssetMenu(
@@ -213,27 +188,6 @@ namespace NERA.Station
                     string.Equals(
                         definition.ObjectId,
                         requestedId,
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return definition;
-                }
-            }
-
-            return null;
-        }
-
-        public StationSystemDefinition FindByPreviewName(string previewObjectName)
-        {
-            string requestedName = Normalize(previewObjectName);
-            if (string.IsNullOrEmpty(requestedName))
-                return null;
-
-            foreach (StationSystemDefinition definition in StationObjects)
-            {
-                if (definition != null &&
-                    string.Equals(
-                        definition.PreviewObjectName,
-                        requestedName,
                         StringComparison.OrdinalIgnoreCase))
                 {
                     return definition;

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2729537747104802363}
   - component: {fileID: 7972592355869084430}
+  - component: {fileID: 6722805703735871358}
   m_Layer: 0
   m_Name: P_StationBattery_Stages
   m_TagString: Untagged
@@ -47,11 +48,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 1
   maxStage: 2
-  objectId: station_battery
-  initialStage: 1
   stageContainer: {fileID: 0}
+--- !u!114 &6722805703735871358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305252521317006925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 1
+  objectId: station_battery
 --- !u!1 &3090590471525448943
 GameObject:
   m_ObjectHideFlags: 0
@@ -188,6 +200,8 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
+  questInteractionId:
+  questInteractionName:
   targetRenderer: {fileID: 0}
   onlineColor: {r: 0.1, g: 0.8, b: 0.45, a: 1}
 --- !u!114 &7276761248019659951
@@ -341,6 +355,8 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
+  questInteractionId:
+  questInteractionName:
   targetRenderer: {fileID: 0}
   onlineColor: {r: 0.1, g: 0.8, b: 0.45, a: 1}
 --- !u!114 &6692046034172057707

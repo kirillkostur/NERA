@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stationObjects:
   - systemType: 0
-    objectId: 
-    previewObjectName: SM_Solar_Panel
+    objectId: station_solar_01
     displayName: SOLAR PANEL
     description: Generates station power. Clean it outside to restore efficiency.
     controllable: 0
@@ -24,7 +23,6 @@ MonoBehaviour:
     upgradeLevels: []
   - systemType: 1
     objectId: station_battery
-    previewObjectName: SM_Battery
     displayName: BATTERY
     description: Stores generated energy and supplies all active consumers.
     controllable: 0
@@ -49,7 +47,6 @@ MonoBehaviour:
       energyCost: 100
   - systemType: 2
     objectId: 
-    previewObjectName: SM_Central_Room
     displayName: COMPUTER
     description: Central terminal. It cannot be stopped or upgraded from itself.
     controllable: 0
@@ -58,7 +55,6 @@ MonoBehaviour:
     upgradeLevels: []
   - systemType: 3
     objectId: station_drone
-    previewObjectName: SM_Drone
     displayName: DRONE
     description: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
     controllable: 1
@@ -91,7 +87,6 @@ MonoBehaviour:
       energyCost: 200
   - systemType: 4
     objectId: 
-    previewObjectName: 
     displayName: LABORATORY
     description: Analyzes recovered objects and unlocks Library records.
     controllable: 1
@@ -100,7 +95,6 @@ MonoBehaviour:
     upgradeLevels: []
   - systemType: 5
     objectId: 
-    previewObjectName: SM_Upgrade_Room
     displayName: CHARGER
     description: Restores charge to energy-powered equipment.
     controllable: 1
@@ -109,7 +103,6 @@ MonoBehaviour:
     upgradeLevels: []
   - systemType: 6
     objectId: station_antenna
-    previewObjectName: SM_Antenna
     displayName: ANTENNA
     description: Finds unknown signals. Install a replacement drive before first
       use.
@@ -147,7 +140,6 @@ MonoBehaviour:
       energyCost: 200
   - systemType: 7
     objectId: station_turret_01
-    previewObjectName: SM_Turret_1
     displayName: TURRET 1
     description: Automatic defense platform for the first station sector.
     controllable: 1
@@ -184,7 +176,6 @@ MonoBehaviour:
       energyCost: 200
   - systemType: 7
     objectId: station_turret_02
-    previewObjectName: SM_Turret_2
     displayName: TURRET 2
     description: Automatic defense platform for the second station sector.
     controllable: 1
@@ -221,7 +212,6 @@ MonoBehaviour:
       energyCost: 180
   - systemType: 7
     objectId: station_turret_03
-    previewObjectName: SM_Turret_3
     displayName: TURRET 3
     description: Automatic defense platform for the third station sector.
     controllable: 1
@@ -258,7 +248,6 @@ MonoBehaviour:
       energyCost: 220
   - systemType: 7
     objectId: station_turret_04
-    previewObjectName: SM_Turret_4
     displayName: TURRET 4
     description: Automatic defense platform for the fourth station sector.
     controllable: 1

@@ -1464,6 +1464,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3512702866090533762}
   - component: {fileID: 1394181758150214340}
+  - component: {fileID: 7953481541191845622}
   m_Layer: 0
   m_Name: P_StationDrone_Stages
   m_TagString: Untagged
@@ -1502,11 +1503,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 3
   maxStage: 3
-  objectId: station_drone
-  initialStage: 1
   stageContainer: {fileID: 0}
+--- !u!114 &7953481541191845622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6859366930807024488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 3
+  objectId: station_drone
 --- !u!1 &8394887786865340492
 GameObject:
   m_ObjectHideFlags: 0

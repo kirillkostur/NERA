@@ -292,7 +292,6 @@ GameObject:
   - component: {fileID: 2102994369370977691}
   - component: {fileID: 4266969821749243748}
   - component: {fileID: 7770334965625084599}
-  - component: {fileID: 8233761523038168216}
   m_Layer: 6
   m_Name: Station_Antenna
   m_TagString: Untagged
@@ -390,40 +389,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8233761523038168216
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5104463159935198623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  actionText: Interact
-  mode: 0
-  holdDuration: 1
-  isAvailable: 1
-  unavailableReason: Unavailable
-  onInteractionStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  role: 2
-  exposedToWeather: 1
-  initialCondition: 1
-  serviceDuration: 2
-  cleaningVfx: {fileID: 0}
-  targetRenderer: {fileID: 0}
-  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
-  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
 --- !u!1 &5951742289283698248
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,7 +401,6 @@ GameObject:
   - component: {fileID: 7306867774638041581}
   - component: {fileID: 5034834143989508634}
   - component: {fileID: 3681518286520050990}
-  - component: {fileID: 8779248034097435336}
   m_Layer: 6
   m_Name: Station_Antenna
   m_TagString: Untagged
@@ -534,40 +498,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8779248034097435336
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5951742289283698248}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  actionText: Interact
-  mode: 0
-  holdDuration: 1
-  isAvailable: 1
-  unavailableReason: Unavailable
-  onInteractionStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  role: 2
-  exposedToWeather: 1
-  initialCondition: 1
-  serviceDuration: 2
-  cleaningVfx: {fileID: 0}
-  targetRenderer: {fileID: 0}
-  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
-  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
 --- !u!1 &6134809492693202114
 GameObject:
   m_ObjectHideFlags: 0
@@ -686,6 +616,9 @@ GameObject:
   m_Component:
   - component: {fileID: 937678590582667029}
   - component: {fileID: 9191571850730253892}
+  - component: {fileID: 3575800988001106343}
+  - component: {fileID: 2653414883297044131}
+  - component: {fileID: 904309830376316659}
   m_Layer: 0
   m_Name: P_StationAntenna_Stages
   m_TagString: Untagged
@@ -724,11 +657,70 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 6
   maxStage: 3
-  objectId: station_antenna
-  initialStage: 0
   stageContainer: {fileID: 0}
+--- !u!114 &3575800988001106343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6637533922877540212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 6
+  objectId: station_antenna
+--- !u!114 &2653414883297044131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6637533922877540212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  role: 2
+  exposedToWeather: 1
+  initialCondition: 1
+  cleaningVfx: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
+  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
+--- !u!114 &904309830376316659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6637533922877540212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7af2bec867a5473ea90edc4ea3b15a00, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  actionText: Interact
+  mode: 0
+  holdDuration: 1.5
+  isAvailable: 1
+  unavailableReason: Unavailable
+  onInteractionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteractionCancelled:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteractionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  questInteractionId:
+  questInteractionName:
+  maintenance: {fileID: 2653414883297044131}
 --- !u!1 &6655158899308888604
 GameObject:
   m_ObjectHideFlags: 0
@@ -849,7 +841,6 @@ GameObject:
   - component: {fileID: 8386899868923779427}
   - component: {fileID: 7418267998732945370}
   - component: {fileID: 2852408797830135008}
-  - component: {fileID: 3280139439017994701}
   m_Layer: 6
   m_Name: Station_Antenna
   m_TagString: Untagged
@@ -947,40 +938,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3280139439017994701
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6935487692298209859}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  actionText: Interact
-  mode: 0
-  holdDuration: 1
-  isAvailable: 1
-  unavailableReason: Unavailable
-  onInteractionStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-  onInteractionCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  role: 2
-  exposedToWeather: 1
-  initialCondition: 1
-  serviceDuration: 2
-  cleaningVfx: {fileID: 0}
-  targetRenderer: {fileID: 0}
-  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
-  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
 --- !u!1 &7590522163604110665
 GameObject:
   m_ObjectHideFlags: 0

@@ -203,8 +203,8 @@ namespace NERA.Tests
             StationBattery[] batteries = Object.FindObjectsByType<StationBattery>(
                 FindObjectsInactive.Exclude,
                 FindObjectsSortMode.None);
-            SolarPanelInteractable[] solarPanels =
-                Object.FindObjectsByType<SolarPanelInteractable>(
+            SolarPowerSource[] solarPanels =
+                Object.FindObjectsByType<SolarPowerSource>(
                     FindObjectsInactive.Exclude,
                     FindObjectsSortMode.None);
             int initialBatteryCount = batteries.Length;
@@ -239,7 +239,7 @@ namespace NERA.Tests
             environment.SetWeather(StationWeather.Clear);
             energy.AdvanceSimulation(0.1f);
 
-            solarPanels = Object.FindObjectsByType<SolarPanelInteractable>(
+            solarPanels = Object.FindObjectsByType<SolarPowerSource>(
                 FindObjectsInactive.Exclude,
                 FindObjectsSortMode.None);
             batteries = Object.FindObjectsByType<StationBattery>(

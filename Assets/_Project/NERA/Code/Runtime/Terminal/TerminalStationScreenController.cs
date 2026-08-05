@@ -302,24 +302,22 @@ namespace NERA.Terminal
             initiallyActive = false;
             Transform fallback = null;
             Transform current = hit;
+            StationSystemsConfig config =
+                StationSystemsController.Instance?.Config ??
+                StationSystemsConfig.LoadDefault();
             while (current != null && current != transform)
             {
-                StationSystemsConfig config =
-                    StationSystemsController.Instance?.Config ??
-                    StationSystemsConfig.LoadDefault();
-                StationSystemDefinition configuredObject =
-                    config.FindByPreviewName(current.name);
-                if (configuredObject != null)
+                StationObjectIdentity identity =
+                    current.GetComponent<StationObjectIdentity>();
+                StationSystemDefinition identifiedObject =
+                    identity?.ResolveDefinition(config);
+                if (identifiedObject != null)
                 {
-                    system = configuredObject.SystemType;
-                    objectName =
-                        !string.IsNullOrWhiteSpace(
-                            configuredObject.DisplayName)
-                            ? configuredObject.DisplayName
-                            : current.name;
-                    objectId = configuredObject.ObjectId;
-                    initialLevel = configuredObject.InitialLevel;
-                    initiallyActive = configuredObject.InitiallyActive;
+                    system = identifiedObject.SystemType;
+                    objectName = identifiedObject.DisplayName;
+                    objectId = identifiedObject.ObjectId;
+                    initialLevel = identifiedObject.InitialLevel;
+                    initiallyActive = identifiedObject.InitiallyActive;
                     return;
                 }
 

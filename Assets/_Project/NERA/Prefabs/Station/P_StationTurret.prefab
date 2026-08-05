@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: 1656287413203410099}
   - component: {fileID: 6716097858862269822}
   - component: {fileID: 2752375339507151800}
+  - component: {fileID: 2752375339507151801}
   - component: {fileID: 2336981380523759081}
   m_Layer: 6
   m_Name: P_StationTurret
@@ -159,9 +160,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  role: 3
+  exposedToWeather: 1
+  initialCondition: 1
+  cleaningVfx: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
+  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
+--- !u!114 &2752375339507151801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6046442425184904200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7af2bec867a5473ea90edc4ea3b15a00, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
   actionText: Interact
-  mode: 0
-  holdDuration: 1
+  mode: 1
+  holdDuration: 1.3
   isAvailable: 1
   unavailableReason: Unavailable
   onInteractionStarted:
@@ -173,14 +193,9 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
-  role: 3
-  exposedToWeather: 1
-  initialCondition: 1
-  serviceDuration: 2
-  cleaningVfx: {fileID: 0}
-  targetRenderer: {fileID: 0}
-  cleanColor: {r: 0.12, g: 0.45, b: 0.55, a: 1}
-  dirtyColor: {r: 0.55, g: 0.25, b: 0.12, a: 1}
+  questInteractionId:
+  questInteractionName:
+  maintenance: {fileID: 2752375339507151800}
 --- !u!114 &2336981380523759081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -193,7 +208,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f4c5f9921695944fb15e6d6bf34cd55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turretId: station_turret_01
   yawPivot: {fileID: 4951281617270428743}
   muzzle: {fileID: 5583470981681337853}
   detectionRange: 18

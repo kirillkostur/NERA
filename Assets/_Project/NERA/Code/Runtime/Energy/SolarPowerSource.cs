@@ -1,20 +1,22 @@
 using NERA.Maintenance;
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Energy
 {
-    public sealed class SolarPanelInteractable : MonoBehaviour
+    [RequireComponent(typeof(StationObjectIdentity))]
+    public sealed class SolarPowerSource : MonoBehaviour
     {
-        [Tooltip("Leave empty to generate a stable unique ID from the scene hierarchy.")]
-        [SerializeField] private string panelId;
         [SerializeField, Min(0f)] private float outputMultiplier = 1f;
         [SerializeField] private MaintainableObject maintenance;
 
+        private StationObjectIdentity identity;
         private bool registered;
         private string registeredPanelId;
 
         private void Awake()
         {
+            CacheIdentity();
             if (maintenance == null)
                 maintenance = GetComponent<MaintainableObject>();
 
@@ -39,32 +41,23 @@ namespace NERA.Energy
             if (energy == null)
                 return;
 
-            string hierarchyId = string.IsNullOrWhiteSpace(panelId)
-                ? StationEnergyDeviceId.Build(this, "solar")
-                : panelId;
-            maintenance?.SetObjectIdentity(hierarchyId, gameObject.name);
-            if (energy.RegisterSolarPanel(
-                    hierarchyId,
+            string stableId = ResolvePanelId();
+            if (!energy.RegisterSolarPanel(
+                    stableId,
                     EffectiveOutputMultiplier))
             {
-                registeredPanelId = hierarchyId;
-            }
-            else
                 return;
+            }
 
+            registeredPanelId = stableId;
             registered = true;
         }
 
         private void UpdateRegisteredOutput()
         {
-            EnergySystemController energy = EnergySystemController.Instance;
-            if (energy == null)
-                return;
-
-            energy.RegisterSolarPanel(
+            EnergySystemController.Instance?.RegisterSolarPanel(
                 ActivePanelId,
-                EffectiveOutputMultiplier
-            );
+                EffectiveOutputMultiplier);
         }
 
         private float EffectiveOutputMultiplier =>
@@ -72,10 +65,25 @@ namespace NERA.Energy
 
         private string ActivePanelId =>
             string.IsNullOrWhiteSpace(registeredPanelId)
-                ? (string.IsNullOrWhiteSpace(panelId)
-                    ? StationEnergyDeviceId.Build(this, "solar")
-                    : panelId)
+                ? ResolvePanelId()
                 : registeredPanelId;
+
+        private string ResolvePanelId()
+        {
+            CacheIdentity();
+            return identity != null ? identity.ObjectId : string.Empty;
+        }
+
+        private void CacheIdentity()
+        {
+            if (identity == null)
+                identity = GetComponent<StationObjectIdentity>();
+        }
+
+        private void OnValidate()
+        {
+            CacheIdentity();
+        }
 
         private void HandleConditionChanged(float _)
         {

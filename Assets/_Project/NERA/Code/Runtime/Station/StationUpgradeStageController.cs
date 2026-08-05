@@ -6,17 +6,16 @@ namespace NERA.Station
     /// Shows one authored Stage_N child according to the installed station
     /// upgrade level. Stage contents remain fully editable in the prefab.
     /// </summary>
+    [RequireComponent(typeof(StationObjectIdentity))]
     public sealed class StationUpgradeStageController : MonoBehaviour
     {
-        [SerializeField] private StationSystemType systemType;
         [SerializeField, Min(0)] private int maxStage = 3;
-        [SerializeField] private string objectId;
-        [SerializeField, Min(0)] private int initialStage;
         [SerializeField] private Transform stageContainer;
 
+        private StationObjectIdentity identity;
         private StationSystemsController subscribedSystems;
 
-        public StationSystemType SystemType => systemType;
+        public StationSystemType SystemType => ResolveSystemType();
         public int MaxStage => Mathf.Max(0, maxStage);
         public string ObjectId => ResolveObjectId();
         public int InitialStage => ResolveInitialStage();
@@ -24,6 +23,7 @@ namespace NERA.Station
 
         private void OnEnable()
         {
+            CacheIdentity();
             StationSystemsController.InstanceChanged += HandleInstanceChanged;
             BindSystems(StationSystemsController.Instance);
         }
@@ -34,12 +34,12 @@ namespace NERA.Station
                 StationSystemsController.Instance;
             int level = systems != null
                 ? systems.GetUpgradeLevel(
-                    systemType,
+                    ResolveSystemType(),
                     ResolveObjectId(),
                     ResolveInitialStage())
                 : StationSystemsConfig.LoadDefault()
                     .Find(
-                        systemType,
+                        ResolveSystemType(),
                         ResolveObjectId())?.InitialLevel ??
                     ResolveInitialStage();
             CurrentStage = Mathf.Clamp(level, 0, Mathf.Max(0, maxStage));
@@ -73,21 +73,26 @@ namespace NERA.Station
 
         private string ResolveObjectId()
         {
-            if (!string.IsNullOrWhiteSpace(objectId))
-                return objectId.Trim();
-
-            StationTurretController turret =
-                GetComponentInParent<StationTurretController>();
-            return turret != null ? turret.TurretId : string.Empty;
+            CacheIdentity();
+            return identity != null ? identity.ObjectId : string.Empty;
         }
 
         private int ResolveInitialStage()
         {
-            StationTurretController turret =
-                GetComponentInParent<StationTurretController>();
-            return turret != null
-                ? turret.InitialUpgradeLevel
-                : Mathf.Max(0, initialStage);
+            CacheIdentity();
+            return identity?.ResolveDefinition()?.InitialLevel ?? 0;
+        }
+
+        private StationSystemType ResolveSystemType()
+        {
+            CacheIdentity();
+            return identity != null ? identity.SystemType : default;
+        }
+
+        private void CacheIdentity()
+        {
+            if (identity == null)
+                identity = GetComponent<StationObjectIdentity>();
         }
 
         private void OnDisable()

@@ -462,8 +462,18 @@ ID должен совпадать с ID, который отправляет и
 - `ItemData.ItemId`;
 - ID `ResearchDefinition`;
 - `IOEnemyConfig.EnemyId`;
-- `MaintainableObject.ObjectId`;
+- `StationObjectIdentity.ObjectId`;
+- производные `MaintainableObject.ObjectId` и
+  `StationDeviceInteractable.ObjectId`;
 - station object ID из `StationSystems_Default`.
+
+Для физического устройства ID задаётся один раз в `StationObjectIdentity` и
+должен совпадать с `StationSystems_Default`. Компоненты обслуживания и
+взаимодействия получают его с корня автоматически.
+События включения/выключения системы отправляет `StationSystemsController` с
+этим ID независимо от того, использовал игрок терминал или подошёл к устройству.
+Для квеста на включение системы следует выбирать `Система станции включена`, а
+не заполнять `Quest Interaction Id` у физической точки запуска.
 
 Для двух глобальных источников ID подставляется автоматически и не требует
 ручного ввода:
@@ -731,6 +741,7 @@ runtime-события повторного лабораторного анал�
 | Первое завершение исследования | `ResearchController` |
 | Обнаружение и уничтожение IO | `IOEnemyController` |
 | Изменение condition устройства | `MaintainableObject` |
+| Физическое обслуживание и ручной запуск устройства | `StationDeviceInteractable`; результат запуска подтверждает `StationSystemsController` |
 | Неисправность, включение, выключение и улучшение системы | `StationSystemsController` |
 | Появление и потеря питания всей станции | `StationPowerController` |
 | Текущий уровень общего заряда | `EnergySystemController` |

@@ -2391,6 +2391,7 @@ GameObject:
   - component: {fileID: 114055855}
   - component: {fileID: 114055854}
   - component: {fileID: 114055853}
+  - component: {fileID: 114055856}
   m_Layer: 13
   m_Name: SM_Solar_Panel
   m_TagString: Untagged
@@ -2487,6 +2488,20 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 114055851}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &114055856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 114055851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 0
+  objectId: station_solar_01
 --- !u!1 &115565420
 GameObject:
   m_ObjectHideFlags: 0
@@ -10339,6 +10354,7 @@ GameObject:
   m_Component:
   - component: {fileID: 517341421}
   - component: {fileID: 517341422}
+  - component: {fileID: 517341423}
   m_Layer: 13
   m_Name: SM_Antenna
   m_TagString: Untagged
@@ -10377,11 +10393,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 6
   maxStage: 3
-  objectId: station_antenna
-  initialStage: 0
   stageContainer: {fileID: 0}
+--- !u!114 &517341423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517341420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 6
+  objectId: station_antenna
 --- !u!1 &519915168
 GameObject:
   m_ObjectHideFlags: 0
@@ -13245,6 +13272,7 @@ GameObject:
   m_Component:
   - component: {fileID: 621616019}
   - component: {fileID: 621616020}
+  - component: {fileID: 621616021}
   m_Layer: 13
   m_Name: SM_Turret_2
   m_TagString: Untagged
@@ -13283,11 +13311,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 7
   maxStage: 3
-  objectId: station_turret_02
-  initialStage: 0
   stageContainer: {fileID: 0}
+--- !u!114 &621616021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 621616018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 7
+  objectId: station_turret_02
 --- !u!1 &622264947
 GameObject:
   m_ObjectHideFlags: 0
@@ -13943,7 +13982,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 645028743}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -17562,6 +17601,7 @@ GameObject:
   - component: {fileID: 772480197}
   - component: {fileID: 772480196}
   - component: {fileID: 772480195}
+  - component: {fileID: 772480198}
   m_Layer: 13
   m_Name: SM_Central_Room
   m_TagString: Untagged
@@ -17658,6 +17698,20 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 772480193}
   m_Mesh: {fileID: -5256847496780781771, guid: 7a15fb3ad65f218469227108363ea6b9, type: 3}
+--- !u!114 &772480198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772480193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 2
+  objectId:
 --- !u!1 &773294891
 GameObject:
   m_ObjectHideFlags: 0
@@ -18958,6 +19012,7 @@ GameObject:
   m_Component:
   - component: {fileID: 818554829}
   - component: {fileID: 818554830}
+  - component: {fileID: 818554831}
   m_Layer: 13
   m_Name: SM_Turret_4
   m_TagString: Untagged
@@ -18996,11 +19051,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 7
   maxStage: 3
-  objectId: station_turret_04
-  initialStage: 0
   stageContainer: {fileID: 0}
+--- !u!114 &818554831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 818554828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 7
+  objectId: station_turret_04
 --- !u!1 &818763644
 GameObject:
   m_ObjectHideFlags: 0
@@ -20784,6 +20850,7 @@ GameObject:
   - component: {fileID: 879022371}
   - component: {fileID: 879022370}
   - component: {fileID: 879022369}
+  - component: {fileID: 879022372}
   m_Layer: 13
   m_Name: SM_Upgrade_Room
   m_TagString: Untagged
@@ -20880,6 +20947,20 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 879022367}
   m_Mesh: {fileID: 884330377489191511, guid: 7a15fb3ad65f218469227108363ea6b9, type: 3}
+--- !u!114 &879022372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 879022367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 5
+  objectId:
 --- !u!1 &884130485
 GameObject:
   m_ObjectHideFlags: 0
@@ -39236,6 +39317,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1577738072}
   - component: {fileID: 1577738073}
+  - component: {fileID: 1577738074}
   m_Layer: 13
   m_Name: SM_Turret_3
   m_TagString: Untagged
@@ -39274,11 +39356,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 7
   maxStage: 3
-  objectId: station_turret_03
-  initialStage: 0
   stageContainer: {fileID: 0}
+--- !u!114 &1577738074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577738071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 7
+  objectId: station_turret_03
 --- !u!1 &1582831885
 GameObject:
   m_ObjectHideFlags: 0
@@ -42920,6 +43013,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1782500270}
   - component: {fileID: 1782500271}
+  - component: {fileID: 1782500272}
   m_Layer: 13
   m_Name: SM_Drone
   m_TagString: Untagged
@@ -42958,11 +43052,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 3
   maxStage: 3
-  objectId: station_drone
-  initialStage: 1
   stageContainer: {fileID: 0}
+--- !u!114 &1782500272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782500269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 3
+  objectId: station_drone
 --- !u!1 &1790687445
 GameObject:
   m_ObjectHideFlags: 0
@@ -44502,6 +44607,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1848838901}
   - component: {fileID: 1848838902}
+  - component: {fileID: 1848838903}
   m_Layer: 13
   m_Name: SM_Battery
   m_TagString: Untagged
@@ -44539,11 +44645,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 1
   maxStage: 2
-  objectId: station_battery
-  initialStage: 1
   stageContainer: {fileID: 0}
+--- !u!114 &1848838903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1848838900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 1
+  objectId: station_battery
 --- !u!1 &1851674662
 GameObject:
   m_ObjectHideFlags: 0
@@ -45027,6 +45144,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1865335026}
   - component: {fileID: 1865335027}
+  - component: {fileID: 1865335028}
   m_Layer: 13
   m_Name: SM_Turret_1
   m_TagString: Untagged
@@ -45065,11 +45183,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11489586bc39504479db7772f9c9d0e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  systemType: 7
   maxStage: 3
-  objectId: station_turret_01
-  initialStage: 1
   stageContainer: {fileID: 0}
+--- !u!114 &1865335028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865335025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a7c5fb87d5422d94f88083c70ed15b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  systemType: 7
+  objectId: station_turret_01
 --- !u!1 &1869496886
 GameObject:
   m_ObjectHideFlags: 0

@@ -74,6 +74,9 @@ namespace NERA.UI
                 return;
 
             InteractionPrompt prompt = interactable.GetPrompt();
+            SetVisible(prompt.IsVisible);
+            if (!prompt.IsVisible)
+                return;
 
             if (promptText != null)
                 promptText.text = BuildPromptText(prompt);

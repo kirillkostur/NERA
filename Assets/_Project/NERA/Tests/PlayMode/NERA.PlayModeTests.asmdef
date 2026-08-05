@@ -3,6 +3,7 @@
   "rootNamespace": "NERA.Tests",
   "references": [
     "NERA.Runtime",
+    "Unity.Cinemachine",
     "UnityEngine.TestRunner"
   ],
   "includePlatforms": [],

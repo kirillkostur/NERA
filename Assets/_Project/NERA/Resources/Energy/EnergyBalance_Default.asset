@@ -31,7 +31,7 @@ MonoBehaviour:
   lightingMinimumChargePercent: 25
   stationObjectCutoffs:
   - systemType: 0
-    objectId:
+    objectId: station_solar_01
     minimumChargePercent: 0
   - systemType: 1
     objectId:
