@@ -549,24 +549,8 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void SlideRequiresForwardMomentumAndRejectsAscendingTravel()
+        public void SlideSupportsStandingStartsAndDetectsDownhillSlopes()
         {
-            Assert.That(
-                VaultSlide.HasForwardMomentum(
-                    Vector3.zero,
-                    Vector3.forward),
-                Is.False);
-            Assert.That(
-                VaultSlide.HasForwardMomentum(
-                    Vector3.back * 4f,
-                    Vector3.forward),
-                Is.False);
-            Assert.That(
-                VaultSlide.HasForwardMomentum(
-                    Vector3.forward * VaultSlide.MinimumForwardSpeed,
-                    Vector3.forward),
-                Is.True);
-
             Assert.That(
                 VaultSlide.IsNonAscendingDestination(
                     Vector3.zero,
@@ -578,6 +562,17 @@ namespace NERA.Tests
                     Vector3.forward * 3f +
                     Vector3.up * (VaultSlide.MaximumUpwardHeight + 0.01f)),
                 Is.False);
+
+            Assert.That(VaultSlide.IsSlideSlope(Vector3.up), Is.False);
+            Vector3 steepSlopeNormal =
+                Quaternion.AngleAxis(45f, Vector3.right) * Vector3.up;
+            Assert.That(VaultSlide.IsSlideSlope(steepSlopeNormal), Is.True);
+            Assert.That(
+                VaultSlide.TryGetDownhillDirection(
+                    steepSlopeNormal,
+                    out Vector3 downhill),
+                Is.True);
+            Assert.That(downhill.y, Is.LessThan(0f));
         }
 
         [Test]

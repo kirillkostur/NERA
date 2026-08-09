@@ -466,6 +466,15 @@ namespace NERA.Tests
                     label.GetType().GetProperty("text")?.GetValue(label),
                     Is.EqualTo($"TURRET {level}"));
             }
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_1").GetComponent<Button>()
+                    .interactable,
+                Is.False,
+                "An already installed object upgrade must not be clickable.");
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_2").GetComponent<Button>()
+                    .interactable,
+                Is.True);
 
             Assert.That(stationScreen.SelectPreviewObject(secondTurret), Is.True);
             Assert.That(
@@ -507,6 +516,49 @@ namespace NERA.Tests
                 Is.True,
                 "The station preview must switch immediately when the " +
                 "selected turret upgrade level changes.");
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_1").GetComponent<Button>()
+                    .interactable,
+                Is.False);
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_2").GetComponent<Button>()
+                    .interactable,
+                Is.False);
+            Assert.That(
+                upgradePanel.Find("Slot_LVL_3").GetComponent<Button>()
+                    .interactable,
+                Is.True);
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Turret,
+                        "station_turret_02",
+                        3,
+                        true)
+                });
+            yield return null;
+            for (int level = 1; level <= 3; level++)
+            {
+                Assert.That(
+                    upgradePanel.Find($"Slot_LVL_{level}")
+                        .gameObject.activeSelf,
+                    Is.False,
+                    "Upgrade slots must be hidden at maximum level.");
+            }
+            Component maximumLevelText =
+                upgradePanel.Find("description_update")
+                    .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                maximumLevelText.GetType().GetProperty("text")
+                    ?.GetValue(maximumLevelText),
+                Is.EqualTo("MAXIMUM LEVEL"));
+            Assert.That(
+                upgradePanel.Find("UpgradeButton").gameObject.activeSelf,
+                Is.False);
 
             terminal.ShowNextScreen();
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));

@@ -14,6 +14,8 @@ namespace NERA.Terminal
 {
     public sealed class TerminalStationScreenController : MonoBehaviour
     {
+        private const string MaximumLevelMessage = "MAXIMUM LEVEL";
+
         private TerminalUIScreen terminal;
         [SerializeField] private RawImage stationImage;
         [SerializeField] private Camera stationCamera;
@@ -834,8 +836,17 @@ namespace NERA.Terminal
 
         private void SelectUpgradeLevel(int targetLevel)
         {
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            if (selectedSystem.HasValue &&
+                systems != null &&
+                targetLevel <= GetSelectedUpgradeLevel(systems))
+            {
+                return;
+            }
+
             int maxLevel = selectedSystem.HasValue
-                ? StationSystemsController.Instance?.Config.GetMaxLevel(
+                ? systems?.Config.GetMaxLevel(
                     selectedSystem.Value,
                     selectedObjectId) ?? 1
                 : 1;
@@ -878,6 +889,30 @@ namespace NERA.Terminal
                 1,
                 Mathf.Max(1, maxLevel));
 
+            bool maximumLevelReached =
+                definition?.Upgradeable == true &&
+                maxLevel > 0 &&
+                currentLevel >= maxLevel;
+            if (maximumLevelReached)
+            {
+                SetUpgradeSlotsVisible(false);
+                TerminalUIUtility.SetText(
+                    upgradeTitle,
+                    MaximumLevelMessage);
+                TerminalUIUtility.SetText(upgradeInfo, string.Empty);
+                TerminalUIUtility.SetText(upgradeRequired, string.Empty);
+                if (upgradeButton != null)
+                {
+                    upgradeButton.interactable = false;
+                    upgradeButton.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            if (upgradeButton != null)
+                upgradeButton.gameObject.SetActive(true);
+
             for (int i = 0; i < levelButtons.Length; i++)
             {
                 int level = i + 1;
@@ -901,7 +936,7 @@ namespace NERA.Terminal
                 if (button == null || !configured)
                     continue;
 
-                button.interactable = true;
+                button.interactable = level > currentLevel;
                 Image image = button.targetGraphic as Image;
                 if (image != null)
                 {
