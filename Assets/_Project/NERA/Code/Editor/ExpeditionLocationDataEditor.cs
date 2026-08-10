@@ -50,10 +50,9 @@ namespace NERA.Editor
             switch (propertyPath)
             {
                 case "droneScanDuration":
-                case "requiredDroneUpgradeLevel":
+                case "requiredDroneTravelRange":
                     return source != DiscoverySource.Drone;
-                case "antennaScanDuration":
-                case "requiredAntennaUpgradeLevel":
+                case "requiredAntennaScanRange":
                     return source != DiscoverySource.Antenna;
                 default:
                     return false;

@@ -366,20 +366,20 @@ HUD содержит два слота:
 | `Враг уничтожен` | `EnemyKilled` | Уничтожен враг. | `io_blue_weak` |
 | `Состояние объекта упало ниже значения` | `DeviceConditionBelow` | Condition объекта меньше или равен порогу. | `station_solar_01` |
 | `Состояние объекта восстановлено` | `DeviceConditionRestored` | Condition объекта больше или равен порогу. | `station_solar_01` |
-| `На станции возникла неисправность` | `StationFaultStarted` | Система отключена через fault API. | `station_turret_03` |
-| `Система станции включена` | `StationSystemActivated` | Игрок или система снова включили объект. | `station_turret_03` |
+| `На станции возникла неисправность` | `StationFaultStarted` | Система отключена через fault API. | `station_turret_02` |
+| `Система станции включена` | `StationSystemActivated` | Игрок или система снова включили объект. | `station_turret_02` |
 | `После завершения квеста` | `QuestCompleted` | Полностью завершён квест с указанным `Quest ID`. | `main.restore_battery` |
 | `Игрок покинул локацию` | `LocationExited` | Начался переход из загруженной игровой локации. | `Expedition_01` |
 | `Взаимодействие с объектом завершено` | `ObjectInteractionCompleted` | Игрок успешно завершил interaction конкретного объекта. | `ancient_console_01` |
 | `Предмет покинул инвентарь` | `ItemRemoved` | Предмет удалён, израсходован или выброшен. | `engineering_part_01` |
 | `Предмет передан в цель` | `ItemDelivered` | Принимающая система подтвердила передачу предмета. | `engineering_part_01` |
 | `Количество предмета в инвентаре` | `InventoryItemCountChanged` | Проверяется фактическое текущее количество Item ID. | `engineering_part_01` |
-| `Система станции выключена` | `StationSystemDeactivated` | Конкретная система перешла в выключенное состояние. | `station_turret_03` |
-| `Система станции улучшена` | `StationSystemUpgraded` | Проверяется текущий уровень улучшения объекта. | `station_battery` |
+| `Система станции выключена` | `StationSystemDeactivated` | Конкретная система перешла в выключенное состояние. | `station_turret_02` |
+| `Система станции улучшена` | `StationSystemUpgraded` | Проверяется текущее количество установленных физических деталей. | `station_battery` |
 | `Питание станции восстановлено` | `StationPowerOnline` | Вся энергосеть станции перешла в Online. | `station_power` |
 | `Питание станции потеряно` | `StationPowerOffline` | Вся энергосеть станции перешла в Offline. | `station_power` |
 | `Уровень заряда станции` | `EnergyChargeChanged` | Проверяется фактический процент общего заряда. | `station_energy` |
-| `Неисправность станции устранена` | `StationFaultResolved` | Gameplay-система явно подтвердила устранение fault. | `station_turret_03` |
+| `Неисправность станции устранена` | `StationFaultResolved` | Gameplay-система явно подтвердила устранение fault. | `station_turret_02` |
 | `Нападение на станцию началось` | `StationAttackStarted` | Контроллер волны объявил начало нападения. | `io_raid_01` |
 | `Нападение на станцию отражено` | `StationAttackRepelled` | Контроллер волны подтвердил результат всей атаки. | `io_raid_01` |
 | `Сканирование дроном завершено` | `DroneScanCompleted` | Дрон закончил цикл сканирования, независимо от новизны локации. | `Expedition_01` |
@@ -560,8 +560,9 @@ Runtime хранит состояние в диапазоне `0..1`, а Inspect
 
 Новая игра начинает работу с выключенной батареей и обесточенной сетью.
 Первое успешное взаимодействие с физической батареей через
-`PowerRestoreInteractable` восстанавливает сеть и отправляет событие
-`StationSystemActivated` с ID `station_battery`.
+`StationUpgradeableObject` восстанавливает сеть удерживанием `E` и отправляет
+событие `StationSystemActivated` с ID `station_battery`. После восстановления
+следующее короткое нажатие `E` открывает апгрейд батареи.
 
 Не следует использовать ID `station_battery_01`: такого ID нет в
 `StationSystems_Default`. Фактический ID батареи — `station_battery`.
@@ -665,7 +666,7 @@ Runtime хранит состояние в диапазоне `0..1`, а Inspect
 ```csharp
 StationSystemsController.Instance.DisableFromFault(
     StationSystemType.Turret,
-    "station_turret_03",
+    "station_turret_02",
     "EnemySabotage");
 ```
 

@@ -54,14 +54,11 @@ namespace NERA.Station
             bool requestedActive = systems != null
                 ? systems.IsRequestedActive(
                     ResolveSystemType(),
-                    resolvedObjectId,
-                    definition.InitialLevel,
-                    definition.InitiallyActive)
+                    resolvedObjectId)
                 : definition.InitiallyActive;
             bool canRun = systems != null && systems.CanStart(
                 ResolveSystemType(),
                 resolvedObjectId,
-                definition.InitialLevel,
                 out _);
 
             // Requested devices resume automatically after power returns.
@@ -98,9 +95,7 @@ namespace NERA.Station
             if (!systems.SetRequestedActive(
                     ResolveSystemType(),
                     true,
-                    resolvedObjectId,
-                    definition.InitialLevel,
-                    definition.InitiallyActive))
+                    resolvedObjectId))
             {
                 return;
             }

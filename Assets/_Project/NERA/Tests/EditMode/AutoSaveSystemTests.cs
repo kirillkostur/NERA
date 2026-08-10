@@ -230,7 +230,7 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(source));
 
-            Assert.That(restored.version, Is.EqualTo(16));
+            Assert.That(restored.version, Is.EqualTo(18));
             Assert.That(
                 restored.checkpointSceneName,
                 Is.EqualTo("Expedition_02"));

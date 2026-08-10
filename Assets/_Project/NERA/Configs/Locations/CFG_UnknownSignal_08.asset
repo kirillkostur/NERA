@@ -22,9 +22,8 @@ MonoBehaviour:
   spawnPointId: UnknownSignal08_Start
   discoverySource: 1
   droneScanDuration: 5
-  requiredDroneUpgradeLevel: 0
-  antennaScanDuration: 8
-  requiredAntennaUpgradeLevel: 2
+  requiredDroneTravelRange: 0
+  requiredAntennaScanRange: 2
   initialState: 0
   mapSymbol: 1
   mapSlot: {fileID: 0}

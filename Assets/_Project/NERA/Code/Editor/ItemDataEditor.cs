@@ -40,6 +40,15 @@ namespace NERA.Editor
                     continue;
                 }
 
+                bool showEngineeringOptions =
+                    itemType.hasMultipleDifferentValues ||
+                    itemType.enumValueIndex == (int)ItemType.EngineeringPart;
+                if (!showEngineeringOptions &&
+                    property.propertyPath == "engineeringPartDefinition")
+                {
+                    continue;
+                }
+
                 using (new EditorGUI.DisabledScope(
                            property.propertyPath == "m_Script"))
                 {

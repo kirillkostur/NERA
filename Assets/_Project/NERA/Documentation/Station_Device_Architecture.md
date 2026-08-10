@@ -1,118 +1,406 @@
-# Архитектура устройств станции
+# Физические апгрейды объектов станции
 
-Документ описывает единую настройку физических устройств в `Player_Station`
-и их 3D-превью на экране улучшений в `MainScene`.
+Этот документ описывает актуальную систему апгрейдов без уровней и стадий.
+Апгрейд — это реальная `Engineering Part`, установленная в физический слот
+объекта. Деталь динамически появляется на объекте, изменяет его характеристики,
+сохраняется и отображается в `StationUIPreview` терминала.
 
-## Основное правило
+## Что и где настраивается
 
-У логического объекта станции есть один `StationObjectIdentity`. Компонент
-хранит:
+| Что | Где |
+|---|---|
+| Объекты станции, их ID, базовые характеристики и список слотов | `Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset` |
+| Предметы-детали, совместимость со слотами и бонусы | `Assets/_Project/NERA/Configs/Items/Item_EngineeringPart/` |
+| Каталог всех предметов, необходимый для загрузки детали по `Item Id` | `Assets/_Project/NERA/Resources/ItemCatalog_Default.asset` |
+| Базовый прототип объекта со слотами и камерой | `Assets/_Project/NERA/Prefabs/Station/P_StationUpgradeableCube.prefab` |
+| Физические объекты | `Assets/_Project/NERA/Scenes/Player_Station.unity` |
+| 3D-превью объектов в терминале | `Assets/_Project/NERA/Scenes/MainScene.unity`, объект `StationUIPreview` |
 
-- `System Type`;
-- стабильный `Object Id` из `StationSystems_Default`.
-
-Остальные компоненты получают тип и ID через ближайший родительский
-`StationObjectIdentity`. Копировать ID в `MaintainableObject`,
-`StationDeviceInteractable`, `StationTurretController` или
-`StationUpgradeStageController` не нужно.
-
-## Физический объект в `Player_Station`
-
-Рекомендуемая структура:
+Связь всей системы строится на трёх значениях:
 
 ```text
-StationObjectRoot
-├── StationObjectIdentity
-├── StationUpgradeStageController    // если есть уровни
-├── MaintainableObject               // если есть износ/поломка
-├── StationDeviceInteractable        // если возможен ручной запуск
-├── профильный функциональный компонент
-└── Stage_N                          // модели, коллайдеры, VFX, pivots
+System Type + Object Id + Slot Id
 ```
 
-`StationObjectIdentity` и общее поведение находятся выше `Stage_N`. Визуальная
-стадия может меняться, не меняя ID, condition и запрошенное состояние системы.
+Одинаковые значения должны использоваться в конфиге объекта, компонентах
+сцены, конфиге детали и превью терминала.
 
-`StationDeviceInteractable` выполняет две последовательные функции:
+## 1. Настройка объекта в StationSystems_Default
 
-1. Если condition ниже максимального — обслуживает устройство.
-2. Если устройство исправно, доступно и выключено — запрашивает ручной запуск
-   через `StationSystemsController`.
-
-Параметры `Press`/`Hold`, текст и длительность задаются только в
-`StationDeviceInteractable`.
-
-## Превью в `MainScene`
-
-Корень кликабельной 3D-модели должен содержать только:
+Откройте:
 
 ```text
-PreviewRoot
-├── StationObjectIdentity
-└── StationUpgradeStageController    // если модель имеет стадии
+Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset
 ```
 
-HUD поднимается от коллайдера к `StationObjectIdentity` и получает определение
-из `StationSystems_Default`. Имя GameObject больше не участвует в привязке и
-может меняться без поломки выбора.
+В списке `Station Objects` создайте или отредактируйте элемент объекта.
 
-На превью нельзя добавлять `MaintainableObject`, `StationBattery`,
-`SolarPowerSource`, `StationTurretController` или другие runtime-
-компоненты. Иначе UI-модель зарегистрируется как настоящее устройство.
+Основные поля:
 
-## Стадии улучшений
+- `System Type` — тип системы: `Turret`, `Antenna`, `Drone`, `Battery` и т. д.;
+- `Object Id` — уникальный стабильный ID конкретного объекта;
+- `Display Name` и `Description` — имя и описание в терминале;
+- `Controllable` — можно ли запускать объект вручную;
+- `Initially Active` — должен ли объект быть запрошен активным при новой игре;
+- `Base Object Stats` — базовые характеристики без установленных деталей;
+- `Physical Upgrade Slots` — доступные физические слоты.
 
-`StationUpgradeStageController` читает тип и ID только из
-`StationObjectIdentity`, слушает `StationSystemsController.SystemsChanged` и
-включает один дочерний объект `Stage_N`.
+`Object Id` нельзя менять после выпуска сохранений без миграции. Для двух
+турелей используются отдельные ID `station_turret_01` и `station_turret_02`, даже
+если их слоты и базовые характеристики одинаковые.
 
-В `Stage_N` следует хранить:
+### Базовые характеристики
 
-- модель и материалы;
-- коллайдеры;
-- VFX и точки визуальных эффектов;
-- stage-specific pivots и параметры, если они действительно отличаются.
+Каждый элемент `Base Object Stats` содержит:
 
-Не следует дублировать в стадиях одинаковые компоненты обслуживания,
-взаимодействия и идентичности. Антенна уже собрана по этой схеме: один
-`MaintainableObject` и один `StationDeviceInteractable` находятся на корне.
+- `Stat` — программный тип характеристики;
+- `Display Name` — понятное имя для терминала;
+- `Base Value` — значение объекта без деталей;
+- `Unit` — единица измерения, например ` m`, ` kW`, ` s`;
+- `Decimals` — количество знаков после запятой.
 
-Батарея пока сохраняет stage-specific `StationBattery`, потому что стадии
-регистрируют разную ёмкость. Турели сохраняют stage-specific боевой rig,
-поскольку уровни отличаются дальностью, уроном, скорострельностью, материалами,
-yaw pivot и muzzle. Их ID при этом всё равно приходит только с корня.
+Итоговое значение рассчитывается так:
 
-## Правила ID
+```text
+(Base Value + сумма всех Add) × произведение всех Multiply
+```
 
-- ID должен быть уникальным и стабильным после выхода сохранений.
-- Один ID используется в `StationSystems_Default`, `StationObjectIdentity` и
-  соответствующем cutoff в `EnergyBalance_Default`.
-- Роль обслуживания не заменяет ID.
-- Для четырёх турелей используются `station_turret_01`–
-  `station_turret_04`.
-- Логический ID батареи `station_battery` не равен физическому ID источника
-  энергии `station_battery_01`. Это разные ключи разных подсистем.
+Примеры:
 
-Изменение существующего ID требует миграции сохранений.
+- базовый урон `12`, деталь `Add 8` → итоговый урон `20`;
+- скорость вращения `180`, деталь `Multiply 1.35` → `243`;
+- интервал стрельбы `0.45`, деталь `Multiply 0.75` → `0.3375` секунды.
 
-## Добавление нового объекта
+Для характеристик, где меньше означает лучше, используйте множитель меньше
+единицы. Это относится, например, к `Fire Interval`, `Damage Taken`, расходу
+энергии и длительности калибровки.
 
-1. Добавить определение в `StationSystems_Default`.
-2. Назначить уникальный `Object Id`.
-3. Добавить `StationObjectIdentity` на физический корень.
-4. При необходимости добавить `StationUpgradeStageController`,
-   `MaintainableObject`, `StationDeviceInteractable` и профильный компонент.
-5. Добавить отдельный `StationObjectIdentity` с тем же ID на корень превью в
-   `MainScene`.
-6. Добавить энергетический cutoff с тем же ID, если объект потребляет энергию.
-7. Проверить выбор в терминале, независимость уровня, переключение `Stage_N`,
-   ручной запуск, обслуживание и восстановление сохранения.
+### Слоты объекта
 
-## Проверка перед сохранением prefab
+Каждый элемент `Physical Upgrade Slots` содержит:
 
-- На логическом корне ровно один `StationObjectIdentity`.
-- В `StationUpgradeStageController` нет отдельного поля ID.
-- В `MaintainableObject` и `StationDeviceInteractable` нет копий ID.
-- Превью не содержит runtime-функциональности.
-- Все коллайдеры физического объекта находятся под его interaction root.
-- У турелей четыре разных ID, даже если они используют один prefab стадий.
+- `Slot Id` — технический ID, например `Slot_1`;
+- `Display Name` — понятное назначение слота.
+
+Слоты не захардкожены в runtime-коде. Можно создать любое количество слотов,
+но каждый объявленный слот должен иметь соответствующий `StationUpgradeSlot`
+на физическом объекте и на его терминальном превью.
+
+Текущая раскладка:
+
+| Объект | Слоты |
+|---|---|
+| Турель | `Slot_1` Weapon emitter, `Slot_2` Target sensor, `Slot_3` Cooling unit, `Slot_4` Rotation drive, `Slot_5` Armor chassis |
+| Антенна | `Slot_1` Scanner, `Slot_2` Sensor array, `Slot_3` Calibration sensor |
+| Дрон | `Slot_1` Stabilizer, `Slot_2` Propulsion, `Slot_3` Charging servo |
+| Батарея | `Slot_1` Capacitor bank, `Slot_2` Reinforced housing, `Slot_3` Thermal pack |
+
+## 2. Подготовка физического объекта
+
+Рекомендуемая структура объекта в `Player_Station`:
+
+```text
+Station_Object
+├── Base
+│   ├── Slot_1                    [StationUpgradeSlot]
+│   │   └── Fake                  [Mesh + Collider, inactive]
+│   ├── Slot_2                    [StationUpgradeSlot]
+│   │   └── Fake                  [Mesh + Collider, inactive]
+│   └── ...
+├── CameraTarget
+└── VirtualCamOrbit
+```
+
+На корне нужны компоненты:
+
+- `StationObjectIdentity`;
+- `StationObjectVisual`;
+- `StationUpgradeableObject`;
+- профильный компонент объекта, например `StationTurretController`;
+- `MaintainableObject`, если объект может ломаться;
+- коллайдер для обычного взаимодействия игрока.
+
+### StationObjectIdentity
+
+Укажите:
+
+- `System Type`, совпадающий с `StationSystems_Default`;
+- `Object Id`, точно соответствующий нужному объекту в конфиге.
+
+Именно эта пара связывает физический объект, состояние, характеристики,
+сохранение и терминальное превью.
+
+### StationUpgradeSlot
+
+Создайте дочерний объект для каждого слота и добавьте
+`StationUpgradeSlot`.
+
+Поля компонента:
+
+- `Slot Id` — должен совпадать с `Physical Upgrade Slots / Slot Id`;
+- `Fake Visual` — дочерний объект-силуэт;
+- `Installed Local Position` — позиция установленной детали внутри слота;
+- `Installed Local Euler Angles` — её локальный поворот;
+- `Installed Local Scale` — её локальный масштаб.
+
+Реальную деталь заранее помещать в слот нельзя. В сцене должен находиться
+только `Fake`. После установки система сама создаёт `Installed_<itemId>` из
+префаба, указанного в конфиге предмета.
+
+Для `Fake`:
+
+- добавьте Mesh, показывающий форму или место детали;
+- добавьте Collider, чтобы слот можно было выбрать мышкой;
+- назначьте слой `Interactable`;
+- сохраните GameObject неактивным.
+
+`Fake` автоматически включается только во время апгрейда выбранного объекта и
+снова отключается после выхода.
+
+### StationObjectVisual
+
+На физическом объекте включите `Show Fake Slots When Empty`. Это разрешает
+показывать силуэты во время апгрейда. Компонент сам собирает дочерние
+`StationUpgradeSlot`, если массив `Slots` не заполнен вручную.
+
+### StationUpgradeableObject
+
+Свяжите:
+
+- `Identity` — `StationObjectIdentity` этого объекта;
+- `Visual` — его `StationObjectVisual`;
+- `Upgrade Camera` — дочернюю `VirtualCamOrbit`;
+- `Maintenance` — `MaintainableObject`, если он есть;
+- `Required Action Hold Duration` — время удерживания `E` для ремонта,
+  восстановления питания или запуска.
+
+Сам апгрейд всегда открывается коротким нажатием `E`. Если объект сломан или
+ещё не запущен, сначала выполняется обязательное действие удерживанием `E`.
+
+### VirtualCamOrbit
+
+У объекта должна быть своя Cinemachine-камера с орбитальным поведением и
+правильно заданной целью. Проще всего копировать и настраивать готовую
+`VirtualCamOrbit` из `P_StationUpgradeableCube`.
+
+Во время апгрейда:
+
+- `A` вращает камеру влево;
+- `D` вращает камеру вправо;
+- после отпускания камера остаётся в текущем положении;
+- `ESC` закрывает режим апгрейда.
+
+## 3. Подготовка визуального префаба детали
+
+Создайте отдельный prefab визуала детали. Рекомендуется оставлять в нём только:
+
+- Mesh Renderer / Skinned Mesh Renderer;
+- Mesh Filter;
+- материалы;
+- необходимые дочерние визуальные объекты.
+
+Не добавляйте в установленный визуал игровую логику. После создания система
+отключает все `MonoBehaviour` и физику `Rigidbody`, но лишние коллайдеры всё
+равно могут мешать кликам по другим слотам. Для обычной детали коллайдеры в
+визуальном prefab не нужны.
+
+Ориентация prefab не обязана идеально совпадать со всеми объектами: финальная
+позиция, поворот и масштаб задаются отдельно на каждом `StationUpgradeSlot`.
+
+## 4. Создание и настройка Engineering Part
+
+Создайте новый `Item Data` через меню:
+
+```text
+Create > NERA > Items > Item Data
+```
+
+Рекомендуемое место:
+
+```text
+Assets/_Project/NERA/Configs/Items/Item_EngineeringPart/
+```
+
+Можно также дублировать ближайший существующий пример.
+
+Заполните общие поля:
+
+- `Item Id` — уникальный стабильный ID предмета;
+- `Display Name` и `Description`;
+- `Item Type` — обязательно `Engineering Part`;
+- `Icon`;
+- `World Prefab` — представление предмета в мире и fallback-визуал;
+- `Engineering Part / Installed Visual Prefab` — prefab, который появится в
+  физическом слоте и в `StationUIPreview`.
+
+Если `Installed Visual Prefab` пуст, система использует GameObject из
+`World Prefab`, но отдельный визуальный prefab предпочтительнее.
+
+### Compatible Installations
+
+Добавьте элемент в `Engineering Part / Compatible Installations` для каждой
+поддерживаемой комбинации объекта и слота.
+
+Поля одного элемента:
+
+- `System Type` — тип подходящего объекта;
+- `Object Id` — конкретный объект или пустое значение;
+- `Slot Id` — точный ID слота;
+- `Modifiers` — изменения характеристик для этой комбинации.
+
+Пустой `Object Id` означает «подходит для всех объектов выбранного типа».
+Например, деталь с `System Type = Turret`, пустым `Object Id` и
+`Slot Id = Slot_1` подходит обеим турелям. Если указать
+`station_turret_02`, она подойдёт только второй турели.
+
+Один предмет может быть универсальным. Для этого добавьте несколько элементов
+`Compatible Installations`. У каждого элемента могут быть собственные бонусы.
+Например, один `Chassis` сейчас подходит к `Turret / Slot_5` и
+`Battery / Slot_2`, но меняет для них разные характеристики.
+
+Не создавайте две пересекающиеся записи для одной комбинации. При совпадении
+нескольких записей используется первая найденная запись и только её
+`Modifiers`.
+
+### Modifiers
+
+Каждый модификатор содержит:
+
+- `Stat` — изменяемая характеристика;
+- `Mode = Add` — прибавить значение;
+- `Mode = Multiply` — умножить итог на значение;
+- `Value` — число прибавки или множителя.
+
+Пример детали усиления орудия:
+
+```text
+Item Type: Engineering Part
+Installed Visual Prefab: P_TurretEmitterUpgrade
+
+Compatible Installations [0]
+  System Type: Turret
+  Object Id: <empty>
+  Slot Id: Slot_1
+  Modifiers [0]
+    Stat: Damage
+    Mode: Add
+    Value: 8
+```
+
+Такая деталь подходит в первый слот любой турели и увеличивает урон с `12` до
+`20`.
+
+## 5. Обязательная регистрация в ItemCatalog_Default
+
+После создания предмета добавьте его в список `Items` здесь:
+
+```text
+Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
+```
+
+Это обязательный шаг. Система сохраняет установленную деталь по `Item Id`, а
+затем ищет её конфиг через каталог. Если предмет не добавлен в каталог:
+
+- визуал может исчезнуть после применения или загрузки;
+- модификаторы характеристик не будут найдены;
+- превью терминала не сможет восстановить установленную модель.
+
+## 6. Какие характеристики уже подключены к gameplay
+
+Добавить `Stat` в конфиг недостаточно: профильный runtime-компонент объекта
+должен получать значение через `StationSystemsController.GetStat`.
+
+Сейчас реально используются:
+
+| Объект | Характеристики |
+|---|---|
+| Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Consumption`, `Damage Taken` |
+| Батарея | `Capacity`, `Initial Charge` |
+| Дрон | `Travel Range`, `Charging Energy Consumption` |
+| Антенна | `Scan Range`, `Calibration Energy Consumption`, `Calibration Duration` |
+
+Чтобы добавить новую характеристику:
+
+1. Добавьте значение в `StationObjectStat` в
+   `StationSystemsConfig.cs`, если такого типа ещё нет.
+2. Добавьте базовое значение в `StationSystems_Default`.
+3. Добавьте модификатор в нужные `Engineering Part`.
+4. В функциональном компоненте объекта получайте итог через
+   `StationSystemsController.GetStat`.
+5. Проверьте базовое и улучшенное значение в терминале и в gameplay.
+
+Терминал автоматически отображает эффективные значения всех характеристик,
+которые перечислены в `Base Object Stats`.
+
+## 7. Привязка StationUIPreview
+
+Чтобы терминал показывал установленную деталь, корень превью должен иметь:
+
+- `StationObjectIdentity` с теми же `System Type` и `Object Id`;
+- `StationObjectVisual`;
+- дочерние `StationUpgradeSlot` с теми же `Slot Id`;
+- подходящие точки установки для превью.
+
+На превью выключите `Show Fake Slots When Empty`: терминал должен показывать
+только реально установленные детали, без силуэтов пустых слотов.
+
+Не добавляйте на превью `StationUpgradeableObject`, `MaintainableObject`,
+энергетические или боевые компоненты. Превью является только визуальным
+представлением общего состояния.
+
+## 8. Как апгрейд работает в игре
+
+1. Игрок подходит к исправному и запущенному объекту.
+2. Короткое нажатие `E` открывает режим апгрейда.
+3. Пустые `Fake` выбранного объекта становятся видимыми.
+4. Игрок нажимает на силуэт слота.
+5. Система ищет первую совместимую деталь в рюкзаке, quick access, anomaly
+   inventory, затем в тех же группах склада.
+6. Деталь временно удаляется из источника и появляется в слоте.
+7. Появляется кнопка `UpgradesButton`.
+8. Нажатие кнопки применяет установку, модификаторы и сохранённое состояние.
+
+Если до применения нажать `ESC`, все временно поставленные детали возвращаются
+туда, откуда были взяты. Повторный клик по временно поставленной детали также
+отменяет её установку.
+
+Уже применённый слот сейчас нельзя освободить или заменить через интерфейс.
+Это отдельная будущая функция демонтажа.
+
+## 9. Проверочный список
+
+Если деталь не устанавливается, проверьте по порядку:
+
+- предмет имеет `Item Type = Engineering Part`;
+- предмет есть в `ItemCatalog_Default`;
+- `System Type` совпадает у объекта и детали;
+- `Object Id` совпадает либо оставлен пустым в совместимости;
+- `Slot Id` одинаков в `StationSystems_Default`, `StationUpgradeSlot` и детали;
+- слот объявлен в `Physical Upgrade Slots`;
+- `Fake Visual` назначен и имеет Collider;
+- `Installed Visual Prefab` назначен;
+- в инвентаре или на складе действительно есть экземпляр детали;
+- слот ещё не занят применённой деталью;
+- `StationObjectVisual` видит все дочерние слоты;
+- в Unity Console нет сообщения `No compatible engineering part`.
+
+После успешной установки проверьте:
+
+- модель появилась в физическом слоте;
+- `Fake` исчез;
+- значение характеристики изменилось в терминале;
+- та же модель появилась на `StationUIPreview`;
+- после сохранения и загрузки деталь и бонус сохранились.
+
+## Прототипный rebuild
+
+Меню:
+
+```text
+NERA > Station > Rebuild Physical Upgrade Prototypes
+```
+
+пересобирает текущие две турели, антенну, дрон, батарею и их терминальные
+превью из центрального конфига. Это инструмент для кубических прототипов. Он
+может заменить вручную настроенные объекты и поэтому не должен запускаться для
+финальных художественных prefab без предварительной проверки изменений.

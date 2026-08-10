@@ -229,7 +229,11 @@ namespace NERA.Drone
 
             energy.RegisterConsumer(
                 DroneChargerConsumerId,
-                energy.Config.DroneChargingConsumption,
+                StationSystemsConfig.GetEffectiveStat(
+                    StationSystemType.Drone,
+                    "station_drone",
+                    StationObjectStat.ChargingEnergyConsumption,
+                    4f),
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Drone),
                 StationSystemType.Drone,

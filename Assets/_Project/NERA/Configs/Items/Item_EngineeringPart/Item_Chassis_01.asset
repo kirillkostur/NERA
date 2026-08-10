@@ -29,3 +29,20 @@ MonoBehaviour:
   anomalyIntegrationDefinition: {fileID: 0}
   weaponDefinition: {fileID: 0}
   energyDefinition: {fileID: 0}
+  engineeringPartDefinition:
+    installedVisualPrefab: {fileID: 2278190858216321600, guid: 8d21ee9db41793b4abc4372fa83dcb8d, type: 3}
+    compatibleInstallations:
+    - systemType: 7
+      objectId: 
+      slotId: Slot_5
+      modifiers:
+      - stat: 5
+        mode: 1
+        value: 0.7
+    - systemType: 1
+      objectId:
+      slotId: Slot_2
+      modifiers:
+      - stat: 6
+        mode: 1
+        value: 1.25

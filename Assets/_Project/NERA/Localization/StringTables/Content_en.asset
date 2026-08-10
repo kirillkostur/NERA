@@ -337,27 +337,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319876
-    m_Localized: Stores generated energy and supplies all active consumers.
+    m_Localized: Stores generated energy. Physical parts expand its capacity.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319877
     m_Localized: BATTERY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319878
-    m_Localized: BATTERY I
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319879
-    m_Localized: Standard station cell bank.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319880
-    m_Localized: BATTERY II
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319881
-    m_Localized: Expanded high-capacity cell bank.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319882
@@ -365,7 +349,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319883
-    m_Localized: Central terminal. It cannot be stopped or upgraded from itself.
+    m_Localized: Central terminal. It cannot be stopped or physically upgraded.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319884
@@ -373,35 +357,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319885
-    m_Localized: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
+    m_Localized: Surveys expedition sectors. Installed parts improve travel range and charging.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319886
     m_Localized: DRONE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319887
-    m_Localized: DRONE I
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319888
-    m_Localized: Short-range expedition drive.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319889
-    m_Localized: DRONE II
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319890
-    m_Localized: Medium-range expedition drive.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319891
-    m_Localized: DRONE III
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319892
-    m_Localized: Long-range expedition drive.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319893
@@ -409,7 +369,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198514176
-    m_Localized: Analyzes recovered objects, charges equipment, and integrates anomalies.
+    m_Localized: Analyzes objects, charges equipment, and integrates anomalies.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514179
@@ -417,36 +377,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198514180
-    m_Localized: Finds unknown signals. Install a replacement drive before first
-      use.
+    m_Localized: Finds unknown signals. Installed parts improve scan range and calibration.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514181
     m_Localized: ANTENNA
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514182
-    m_Localized: ANTENNA I
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514183
-    m_Localized: Restores short-range signal reception.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514184
-    m_Localized: ANTENNA II
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514185
-    m_Localized: Improves signal resolution and range.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514186
-    m_Localized: ANTENNA III
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514187
-    m_Localized: Enables deep-range signal acquisition.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514188
@@ -454,35 +389,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198514189
-    m_Localized: Automatic defense platform for the first station sector.
+    m_Localized: Automatic defense platform. Uses the shared turret part layout.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514190
     m_Localized: TURRET 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514191
-    m_Localized: TURRET 1 / LEVEL 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514192
-    m_Localized: Factory-installed defensive platform.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514193
-    m_Localized: TURRET 1 / LEVEL 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514194
-    m_Localized: Improves tracking and sustained fire.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514195
-    m_Localized: TURRET 1 / LEVEL 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514196
-    m_Localized: Maximum performance for the first defense sector.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514197
@@ -490,107 +401,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198514198
-    m_Localized: Automatic defense platform for the second station sector.
+    m_Localized: Automatic defense platform. Uses the shared turret part layout.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514199
     m_Localized: TURRET 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514200
-    m_Localized: TURRET 2 / LEVEL 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514201
-    m_Localized: Installs the second defensive platform.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514202
-    m_Localized: TURRET 2 / LEVEL 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514203
-    m_Localized: Reinforces its tracking assembly.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514204
-    m_Localized: TURRET 2 / LEVEL 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514205
-    m_Localized: Adds an autonomous long-range control core.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514206
-    m_Localized: TURRET 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514207
-    m_Localized: Automatic defense platform for the third station sector.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514208
-    m_Localized: TURRET 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514209
-    m_Localized: TURRET 3 / LEVEL 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514210
-    m_Localized: Builds the third defensive platform.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514211
-    m_Localized: TURRET 3 / LEVEL 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514212
-    m_Localized: Adds a stabilized drive and processing core.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514213
-    m_Localized: TURRET 3 / LEVEL 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514214
-    m_Localized: Installs redundant signal and targeting channels.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514215
-    m_Localized: TURRET 4
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514216
-    m_Localized: Automatic defense platform for the fourth station sector.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514217
-    m_Localized: TURRET 4
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514218
-    m_Localized: TURRET 4 / LEVEL 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514219
-    m_Localized: Restores the fourth defense sector.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514220
-    m_Localized: TURRET 4 / LEVEL 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708480
-    m_Localized: Upgrades its signal and rotation systems.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708481
-    m_Localized: TURRET 4 / LEVEL 3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708482
-    m_Localized: Installs a high-load command assembly.
     m_Metadata:
       m_Items: []
   - m_Id: 128425879658496

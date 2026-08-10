@@ -29,15 +29,12 @@ namespace NERA.Expeditions
         [SerializeField, Min(0.1f)]
         [Tooltip("Time in seconds required for the drone to discover this location.")]
         private float droneScanDuration = 3f;
-        [SerializeField, Min(0)]
-        [Tooltip("Drone system upgrade level required to survey this location.")]
-        private int requiredDroneUpgradeLevel;
-        [SerializeField, Min(0.1f)]
-        [Tooltip("Time in seconds required for the antenna to detect this location.")]
-        private float antennaScanDuration = 3f;
-        [SerializeField, Min(0)]
-        [Tooltip("Antenna system upgrade level required to detect this location.")]
-        private int requiredAntennaUpgradeLevel;
+        [SerializeField, Min(0f)]
+        [Tooltip("Required configured Travel Range of the station drone.")]
+        private float requiredDroneTravelRange;
+        [SerializeField, Min(0f)]
+        [Tooltip("Required configured Scan Range of the station antenna.")]
+        private float requiredAntennaScanRange;
         [SerializeField] private LocationState initialState;
 
         [Header("Map")]
@@ -68,10 +65,10 @@ namespace NERA.Expeditions
         public string SpawnPointId => spawnPointId?.Trim() ?? string.Empty;
         public DiscoverySource DiscoverySource => discoverySource;
         public float DroneScanDuration => Mathf.Max(0.1f, droneScanDuration);
-        public int RequiredDroneUpgradeLevel => Mathf.Max(0, requiredDroneUpgradeLevel);
-        public float AntennaScanDuration => Mathf.Max(0.1f, antennaScanDuration);
-        public int RequiredAntennaUpgradeLevel =>
-            Mathf.Max(0, requiredAntennaUpgradeLevel);
+        public float RequiredDroneTravelRange =>
+            Mathf.Max(0f, requiredDroneTravelRange);
+        public float RequiredAntennaScanRange =>
+            Mathf.Max(0f, requiredAntennaScanRange);
         public LocationState InitialState => initialState;
         public MapSymbol MapSymbol => mapSymbol;
         public MapSlotData MapSlot => mapSlot;

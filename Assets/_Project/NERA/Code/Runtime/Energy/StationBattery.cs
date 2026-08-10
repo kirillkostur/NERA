@@ -1,19 +1,20 @@
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Energy
 {
+    [RequireComponent(typeof(StationObjectIdentity))]
     public sealed class StationBattery : MonoBehaviour
     {
-        [Tooltip("Leave empty to generate a stable unique ID from the scene hierarchy.")]
-        [SerializeField] private string batteryId;
-        [SerializeField, Min(1f)] private float capacity = 1000f;
-        [SerializeField, Min(0f)] private float initialCharge = 1000f;
-
+        private StationObjectIdentity identity;
         private EnergySystemController registeredEnergy;
+        private StationSystemsController subscribedSystems;
 
         private void OnEnable()
         {
-            registeredEnergy = null;
+            identity = GetComponent<StationObjectIdentity>();
+            StationSystemsController.InstanceChanged += HandleSystemsChanged;
+            BindSystems(StationSystemsController.Instance);
             Register();
         }
 
@@ -28,25 +29,53 @@ namespace NERA.Energy
                 Register();
         }
 
+        private void HandleSystemsChanged(StationSystemsController systems)
+        {
+            BindSystems(systems);
+            Register();
+        }
+
+        private void BindSystems(StationSystemsController systems)
+        {
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged -= Register;
+            subscribedSystems = systems;
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged += Register;
+        }
+
         private void Register()
         {
             EnergySystemController energy = EnergySystemController.Instance;
-            if (energy == null)
+            if (energy == null || identity == null)
                 return;
 
-            if (!energy.RegisterBattery(
-                    string.IsNullOrWhiteSpace(batteryId)
-                        ? StationEnergyDeviceId.Build(this, "battery")
-                        : batteryId,
-                    capacity,
-                    initialCharge))
-                return;
+            float capacity = StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Battery,
+                identity.ObjectId,
+                StationObjectStat.Capacity,
+                1000f);
+            float initialCharge = StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Battery,
+                identity.ObjectId,
+                StationObjectStat.InitialCharge,
+                capacity);
 
-            registeredEnergy = energy;
+            if (energy.RegisterBattery(
+                    identity.ObjectId,
+                    Mathf.Max(1f, capacity),
+                    Mathf.Clamp(initialCharge, 0f, capacity)))
+            {
+                registeredEnergy = energy;
+            }
         }
 
         private void OnDisable()
         {
+            StationSystemsController.InstanceChanged -= HandleSystemsChanged;
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged -= Register;
+            subscribedSystems = null;
             registeredEnergy = null;
         }
     }

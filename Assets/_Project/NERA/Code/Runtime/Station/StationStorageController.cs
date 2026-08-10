@@ -253,6 +253,25 @@ namespace NERA.Station
                 TryRemoveOne(anomalySlots, itemId, out removed);
         }
 
+        public bool RemoveInstanceAt(
+            InventorySlotGroup group,
+            int index,
+            out ItemInstance removed)
+        {
+            removed = null;
+            List<ItemInstance> slots = GetMutableSlots(group);
+            if (index < 0 || index >= slots.Count ||
+                slots[index]?.ItemData == null)
+            {
+                return false;
+            }
+
+            removed = slots[index];
+            slots[index] = null;
+            StorageChanged?.Invoke();
+            return true;
+        }
+
         public void RestoreGroups(
             IReadOnlyList<ItemInstance> backpack,
             IReadOnlyList<ItemInstance> quickAccess,

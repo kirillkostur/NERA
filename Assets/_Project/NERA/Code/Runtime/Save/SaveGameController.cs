@@ -59,7 +59,6 @@ namespace NERA.Save
         private WorldStateController worldState;
         private readonly Dictionary<string, float> maintenanceConditions =
             new Dictionary<string, float>(StringComparer.Ordinal);
-        private bool isApplyingMaintenanceState;
         private bool isLoading;
         private bool isSaving;
         private bool sessionInitialized;
@@ -587,27 +586,33 @@ namespace NERA.Save
                     states[pair.Key] = pair.Value;
                 }
 
-                foreach (KeyValuePair<StationSystemType, int> pair in
-                    stationSystems.UpgradeLevels)
+                foreach (KeyValuePair<StationSystemType, bool> pair in
+                    stationSystems.RequestedStates)
                 {
-                    data.stationSystems.Add(new StationSystemSaveData
+                    StationSystemSaveData savedSystem = new StationSystemSaveData
                     {
                         systemType = (int)pair.Key,
-                        upgradeLevel = pair.Value,
-                        requestedActive = states.TryGetValue(pair.Key, out bool active) && active
-                    });
+                        requestedActive = pair.Value
+                    };
+                    CaptureInstalledParts(
+                        stationSystems.GetInstalledParts(pair.Key, string.Empty),
+                        savedSystem.installedParts);
+                    data.stationSystems.Add(savedSystem);
                 }
 
                 foreach (StationObjectSystemState objectState in
                          stationSystems.ObjectStates)
                 {
-                    data.stationSystems.Add(new StationSystemSaveData
+                    StationSystemSaveData savedObject = new StationSystemSaveData
                     {
                         systemType = (int)objectState.SystemType,
                         objectId = objectState.ObjectId,
-                        upgradeLevel = objectState.UpgradeLevel,
                         requestedActive = objectState.RequestedActive
-                    });
+                    };
+                    CaptureInstalledParts(
+                        objectState.InstalledParts,
+                        savedObject.installedParts);
+                    data.stationSystems.Add(savedObject);
                 }
             }
 
@@ -780,8 +785,6 @@ namespace NERA.Save
 
             if (stationSystems != null)
             {
-                Dictionary<StationSystemType, int> levels =
-                    new Dictionary<StationSystemType, int>();
                 Dictionary<StationSystemType, bool> states =
                     new Dictionary<StationSystemType, bool>();
                 List<StationObjectSystemState> objectStates =
@@ -794,23 +797,33 @@ namespace NERA.Save
                                 typeof(StationSystemType), saved.systemType))
                         {
                             StationSystemType type = (StationSystemType)saved.systemType;
-                            if (string.IsNullOrWhiteSpace(saved.objectId))
+                            StationSystemDefinition definition =
+                                stationSystems.GetDefinition(type, saved.objectId);
+                            string restoredObjectId =
+                                string.IsNullOrWhiteSpace(saved.objectId)
+                                    ? definition?.ObjectId ?? string.Empty
+                                    : saved.objectId;
+                            if (string.IsNullOrWhiteSpace(restoredObjectId))
                             {
-                                levels[type] = saved.upgradeLevel;
                                 states[type] = saved.requestedActive;
+                                objectStates.Add(new StationObjectSystemState(
+                                    type,
+                                    string.Empty,
+                                    saved.requestedActive,
+                                    ResolveInstalledParts(saved.installedParts)));
                             }
                             else
                             {
                                 objectStates.Add(new StationObjectSystemState(
                                     type,
-                                    saved.objectId,
-                                    saved.upgradeLevel,
-                                    saved.requestedActive));
+                                    restoredObjectId,
+                                    saved.requestedActive,
+                                    ResolveInstalledParts(saved.installedParts)));
                             }
                         }
                     }
                 }
-                stationSystems.Restore(levels, states, objectStates);
+                stationSystems.Restore(states, objectStates);
             }
 
             RestoreMaintenanceState(data.maintenanceObjects);
@@ -821,6 +834,45 @@ namespace NERA.Save
             SynchronizeQuestStates();
             if (data.version < 14)
                 SynchronizeQuestFacts();
+        }
+
+        private static void CaptureInstalledParts(
+            IReadOnlyList<StationInstalledPartState> source,
+            List<StationInstalledPartSaveData> destination)
+        {
+            if (source == null || destination == null)
+                return;
+
+            foreach (StationInstalledPartState part in source)
+            {
+                destination.Add(new StationInstalledPartSaveData
+                {
+                    slotId = part.SlotId,
+                    itemId = part.ItemId
+                });
+            }
+        }
+
+        private static IReadOnlyList<StationInstalledPartState>
+            ResolveInstalledParts(
+                IReadOnlyList<StationInstalledPartSaveData> source)
+        {
+            if (source == null || source.Count == 0)
+                return Array.Empty<StationInstalledPartState>();
+
+            var result = new List<StationInstalledPartState>(source.Count);
+            foreach (StationInstalledPartSaveData saved in source)
+            {
+                if (saved != null &&
+                    !string.IsNullOrWhiteSpace(saved.slotId) &&
+                    !string.IsNullOrWhiteSpace(saved.itemId))
+                {
+                    result.Add(new StationInstalledPartState(
+                        saved.slotId,
+                        saved.itemId));
+                }
+            }
+            return result;
         }
 
         private static bool HasStructuredInventory(SaveGameData data)
@@ -1140,9 +1192,7 @@ namespace NERA.Save
                 return;
             }
 
-            isApplyingMaintenanceState = true;
             maintainable.SetCondition(savedCondition);
-            isApplyingMaintenanceState = false;
         }
 
         private void HandleMaintainableConditionChanged(
@@ -1178,9 +1228,7 @@ namespace NERA.Save
                         objectId,
                         out MaintainableObject maintainable))
                 {
-                    isApplyingMaintenanceState = true;
                     maintainable.SetCondition(condition);
-                    isApplyingMaintenanceState = false;
                 }
             }
         }
@@ -1301,9 +1349,7 @@ namespace NERA.Save
                         : objectId;
                     bool active = stationSystems.IsRequestedActive(
                         definition.SystemType,
-                        objectId,
-                        definition.InitialLevel,
-                        definition.InitiallyActive);
+                        objectId);
                     quests.SynchronizeState(
                         active
                             ? QuestSignalType.StationSystemActivated
@@ -1314,10 +1360,9 @@ namespace NERA.Save
                         QuestSignalType.StationSystemUpgraded,
                         targetId,
                         definition.DisplayName,
-                        value: stationSystems.GetUpgradeLevel(
+                        value: stationSystems.GetInstalledPartCount(
                             definition.SystemType,
-                            objectId,
-                            definition.InitialLevel));
+                            objectId));
                 }
             }
 

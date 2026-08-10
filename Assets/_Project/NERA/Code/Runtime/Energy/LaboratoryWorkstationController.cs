@@ -528,6 +528,12 @@ namespace NERA.Energy
             if (energy == null)
                 return;
 
+            float synthesisConsumption =
+                StationSystemsConfig.GetEffectiveStat(
+                    StationSystemType.Laboratory,
+                    string.Empty,
+                    StationObjectStat.IdleEnergyConsumption,
+                    4f);
             energy.RegisterConsumer(
                 ChargingConsumerId,
                 energy.Config.ItemChargingConsumption,
@@ -536,7 +542,7 @@ namespace NERA.Energy
                 StationSystemType.Laboratory);
             energy.RegisterConsumer(
                 SynthesisConsumerId,
-                energy.Config.LaboratoryConsumption,
+                synthesisConsumption,
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Laboratory),
                 StationSystemType.Laboratory);

@@ -12,7 +12,7 @@
 - [`Parkour_Player_Integration.md`](Parkour_Player_Integration.md) — текущий Player prefab, parkour, камера, оружие и ragdoll.
 - [`Main_Menu_Assembly_Guide.md`](Main_Menu_Assembly_Guide.md) — Boot/MainScene и переходы.
 - [`Autosave_System_Guide.md`](Autosave_System_Guide.md) — фоновое состояние слота, полный checkpoint rollback, authored-точки и резервные файлы.
-- [`Station_Device_Architecture.md`](Station_Device_Architecture.md) — единая идентичность, физическое взаимодействие, стадии улучшений и HUD-превью станции.
+- [`Station_Device_Architecture.md`](Station_Device_Architecture.md) — пошаговая настройка физических слотов, Engineering Part, бонусов характеристик и StationUIPreview.
 - [`Camera_Orbit_Zones.md`](Camera_Orbit_Zones.md) — профили орбит `FreeLookCam` и триггеры комнат, коридоров и узких мест.
 - [`PC_Quality_Presets.md`](PC_Quality_Presets.md) — PC quality baseline и profiling gate.
 

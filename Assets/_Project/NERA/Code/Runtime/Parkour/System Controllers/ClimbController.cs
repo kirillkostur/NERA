@@ -161,7 +161,7 @@ namespace Climbing
             }
         }
 
-        public void onDrawGizmos()
+        public void OnDrawGizmos()
         {
             if (targetPoint != null && currentPoint != null)
             {
@@ -205,7 +205,7 @@ namespace Climbing
             characterController ??= GetComponent<ThirdPersonController>();
             characterController?.cameraController?.ResetOffsetImmediate();
         }
-        public void onAnimatorIK(int layerIndex)
+        public void OnAnimatorIK(int layerIndex)
         {
             Animator animator = characterAnimation?.animator;
             if (animator == null)

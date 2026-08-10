@@ -12,23 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fc4fe962efc0f2478ad33727848b58b, type: 3}
   m_Name: EnergyBalance_Default
   m_EditorClassIdentifier: 
-  batteryCapacity: 1000
-  batteryInitialCharge: 1000
   clearDayGeneration: 40
   cloudyDayGeneration: 18
   sandstormGeneration: 5
-  sandstormContaminationPerSecond: 0.01
   outdoorDeviceConditionLossPerSecond: 0.005
-  terminalConsumption: 2
-  laboratoryConsumption: 4
-  droneChargingConsumption: 4
   itemChargingConsumption: 4
-  antennaCalibrationConsumption: 3
-  lightingConsumption: 3
-  turretIdleConsumption: 2
-  turretFiringConsumption: 5
   defaultConsumerMinimumChargePercent: 25
-  lightingMinimumChargePercent: 25
   stationObjectCutoffs:
   - systemType: 0
     objectId: station_solar_01
@@ -54,14 +43,7 @@ MonoBehaviour:
   - systemType: 7
     objectId: station_turret_02
     minimumChargePercent: 25
-  - systemType: 7
-    objectId: station_turret_03
-    minimumChargePercent: 25
-  - systemType: 7
-    objectId: station_turret_04
-    minimumChargePercent: 25
   droneRechargeDuration: 20
-  antennaCalibrationDuration: 8
   fullDayDurationSeconds: 600
   sunriseHour: 6
   sunsetHour: 18

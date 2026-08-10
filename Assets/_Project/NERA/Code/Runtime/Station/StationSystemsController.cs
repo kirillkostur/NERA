@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NERA.Drone;
-using NERA.Inventory;
 using NERA.Items;
 using NERA.Maintenance;
 using NERA.Quests;
@@ -14,39 +13,48 @@ namespace NERA.Station
         public StationObjectSystemState(
             StationSystemType systemType,
             string objectId,
-            int upgradeLevel,
-            bool requestedActive)
+            bool requestedActive,
+            IEnumerable<StationInstalledPartState> installedParts = null)
         {
             SystemType = systemType;
-            ObjectId = objectId;
-            UpgradeLevel = upgradeLevel;
+            ObjectId = objectId?.Trim() ?? string.Empty;
             RequestedActive = requestedActive;
+            InstalledParts = installedParts != null
+                ? new List<StationInstalledPartState>(installedParts)
+                : (IReadOnlyList<StationInstalledPartState>)
+                    Array.Empty<StationInstalledPartState>();
         }
 
         public StationSystemType SystemType { get; }
         public string ObjectId { get; }
-        public int UpgradeLevel { get; }
         public bool RequestedActive { get; }
+        public IReadOnlyList<StationInstalledPartState> InstalledParts { get; }
     }
 
+    /// <summary>
+    /// Runtime state for station objects. Physical parts are the only upgrade
+    /// progression: there are no abstract levels or sequential upgrade costs.
+    /// </summary>
     public sealed class StationSystemsController : MonoBehaviour
     {
         private sealed class ObjectRuntimeState
         {
             public StationSystemType SystemType;
-            public int UpgradeLevel;
             public bool RequestedActive;
         }
 
         [SerializeField] private StationSystemsConfig config;
 
-        private readonly Dictionary<StationSystemType, int> upgradeLevels =
-            new Dictionary<StationSystemType, int>();
         private readonly Dictionary<StationSystemType, bool> requestedStates =
             new Dictionary<StationSystemType, bool>();
         private readonly Dictionary<string, ObjectRuntimeState> objectStates =
             new Dictionary<string, ObjectRuntimeState>(
                 StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, string>>
+            installedParts =
+                new Dictionary<string, Dictionary<string, string>>(
+                    StringComparer.OrdinalIgnoreCase);
+        private ItemCatalogData itemCatalog;
 
         public static StationSystemsController Instance { get; private set; }
         public static event Action<StationSystemsController> InstanceChanged;
@@ -88,112 +96,214 @@ namespace NERA.Station
             Energy.EnergySystemController energy =
                 Energy.EnergySystemController.Instance;
             return definition != null &&
-                   energy != null &&
-                   energy.HasSufficientCharge(
-                       energy.Config.GetMinimumCharge01(type, objectId));
+                energy != null &&
+                energy.HasSufficientCharge(
+                    energy.Config.GetMinimumCharge01(type, objectId));
         }
 
-        public int GetUpgradeLevel(StationSystemType type)
-        {
-            StationSystemDefinition definition = GetDefinition(type);
-            if (definition != null &&
-                !string.IsNullOrWhiteSpace(definition.ObjectId))
-            {
-                return GetUpgradeLevel(
-                    type,
-                    definition.ObjectId,
-                    definition.InitialLevel);
-            }
-
-            return upgradeLevels.TryGetValue(type, out int level)
-                ? level
-                : definition?.InitialLevel ?? 0;
-        }
-
-        public int GetUpgradeLevel(
+        public string GetInstalledPartItemId(
             StationSystemType type,
             string objectId,
-            int initialLevel)
+            string slotId)
         {
-            if (string.IsNullOrWhiteSpace(objectId))
+            string normalizedSlot = NormalizeSlotId(slotId);
+            if (string.IsNullOrEmpty(normalizedSlot) ||
+                !installedParts.TryGetValue(
+                    GetPartStateKey(type, objectId),
+                    out Dictionary<string, string> parts))
             {
-                return upgradeLevels.TryGetValue(type, out int sharedLevel)
-                    ? sharedLevel
-                    : initialLevel;
+                return string.Empty;
             }
 
-            return EnsureObjectState(
-                type,
-                objectId,
-                initialLevel,
-                initialLevel > 0).UpgradeLevel;
+            return parts.TryGetValue(normalizedSlot, out string itemId)
+                ? itemId
+                : string.Empty;
         }
 
-        public bool IsUnlocked(StationSystemType type)
+        public IReadOnlyList<StationInstalledPartState> GetInstalledParts(
+            StationSystemType type,
+            string objectId)
         {
-            StationSystemDefinition definition = GetDefinition(type);
-            return IsUnlocked(
-                type,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0);
+            if (!installedParts.TryGetValue(
+                    GetPartStateKey(type, objectId),
+                    out Dictionary<string, string> parts))
+            {
+                return Array.Empty<StationInstalledPartState>();
+            }
+
+            var result = new List<StationInstalledPartState>(parts.Count);
+            foreach (KeyValuePair<string, string> pair in parts)
+                result.Add(new StationInstalledPartState(pair.Key, pair.Value));
+            result.Sort((left, right) => string.Compare(
+                left.SlotId,
+                right.SlotId,
+                StringComparison.OrdinalIgnoreCase));
+            return result;
         }
 
-        public bool IsUnlocked(
+        public int GetInstalledPartCount(
+            StationSystemType type,
+            string objectId)
+        {
+            return installedParts.TryGetValue(
+                GetPartStateKey(type, objectId),
+                out Dictionary<string, string> parts)
+                ? parts.Count
+                : 0;
+        }
+
+        public bool TryInstallParts(
             StationSystemType type,
             string objectId,
-            int initialLevel)
+            IReadOnlyList<StationPartInstallRequest> requests,
+            out string reason)
+        {
+            if (requests == null || requests.Count == 0)
+            {
+                reason = "No parts selected.";
+                return false;
+            }
+
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            if (definition == null)
+            {
+                reason = "Station object is not configured.";
+                return false;
+            }
+
+            string stateKey = GetPartStateKey(type, objectId);
+            installedParts.TryGetValue(
+                stateKey,
+                out Dictionary<string, string> currentParts);
+            var requestedSlots = new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (StationPartInstallRequest request in requests)
+            {
+                string slotId = NormalizeSlotId(request.SlotId);
+                if (string.IsNullOrEmpty(slotId) || request.Item == null ||
+                    request.Item.ItemType != ItemType.EngineeringPart)
+                {
+                    reason = "Engineering part or slot is not configured.";
+                    return false;
+                }
+
+                if (definition.FindSlot(slotId) == null)
+                {
+                    reason = $"Slot '{request.SlotId}' is not declared in " +
+                        $"{definition.DisplayName}.";
+                    return false;
+                }
+
+                if (!requestedSlots.Add(slotId) ||
+                    currentParts != null && currentParts.ContainsKey(slotId))
+                {
+                    reason = $"Slot '{request.SlotId}' is already occupied.";
+                    return false;
+                }
+
+                if (request.Item.FindEngineeringCompatibility(
+                        type,
+                        objectId,
+                        slotId) == null)
+                {
+                    reason = $"{request.Item.DisplayName} does not fit " +
+                        $"slot '{request.SlotId}'.";
+                    return false;
+                }
+            }
+
+            if (currentParts == null)
+            {
+                currentParts = new Dictionary<string, string>(
+                    StringComparer.OrdinalIgnoreCase);
+                installedParts[stateKey] = currentParts;
+            }
+
+            foreach (StationPartInstallRequest request in requests)
+            {
+                currentParts[NormalizeSlotId(request.SlotId)] =
+                    request.Item.ItemId;
+            }
+
+            int installedCount = currentParts.Count;
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemUpgraded,
+                ResolveQuestTargetId(type, objectId),
+                definition.DisplayName,
+                value: installedCount);
+            SystemsChanged?.Invoke();
+            return Succeed(out reason);
+        }
+
+        public float GetStat(
+            StationSystemType type,
+            string objectId,
+            StationObjectStat stat,
+            float fallback = 0f)
         {
             StationSystemDefinition definition = GetDefinition(type, objectId);
-            return definition == null ||
-                !definition.RequiresUpgradeToOperate ||
-                GetUpgradeLevel(type, objectId, initialLevel) > 0;
-        }
+            float baseValue = definition?.GetBaseStat(stat, fallback) ?? fallback;
+            if (!installedParts.TryGetValue(
+                    GetPartStateKey(type, objectId),
+                    out Dictionary<string, string> parts) ||
+                parts.Count == 0)
+            {
+                return baseValue;
+            }
 
-        public bool IsRequestedActive(StationSystemType type)
-        {
-            StationSystemDefinition definition = GetDefinition(type);
-            return IsRequestedActive(
-                type,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0,
-                definition?.InitiallyActive ?? false);
+            itemCatalog ??= Resources.Load<ItemCatalogData>(
+                "ItemCatalog_Default");
+            float additive = 0f;
+            float multiplier = 1f;
+            foreach (KeyValuePair<string, string> part in parts)
+            {
+                ItemData item = itemCatalog?.Find(part.Value);
+                EngineeringPartCompatibility compatibility =
+                    item?.FindEngineeringCompatibility(
+                        type,
+                        objectId,
+                        part.Key);
+                if (compatibility == null)
+                    continue;
+
+                foreach (StationObjectStatModifierDefinition modifier in
+                         compatibility.Modifiers)
+                {
+                    if (modifier == null || modifier.Stat != stat)
+                        continue;
+                    if (modifier.Mode == StationStatModifierMode.Add)
+                        additive += modifier.Value;
+                    else
+                        multiplier *= modifier.Value;
+                }
+            }
+            return (baseValue + additive) * multiplier;
         }
 
         public bool IsRequestedActive(
             StationSystemType type,
-            string objectId,
-            int initialLevel,
-            bool initiallyActive)
+            string objectId = null)
         {
-            if (!string.IsNullOrWhiteSpace(objectId))
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            string resolvedId = ResolveObjectId(definition, objectId);
+            if (!string.IsNullOrEmpty(resolvedId))
             {
                 return EnsureObjectState(
                     type,
-                    objectId,
-                    initialLevel,
-                    initiallyActive).RequestedActive;
+                    resolvedId,
+                    definition?.InitiallyActive ?? true).RequestedActive;
             }
 
-            StationSystemDefinition definition = GetDefinition(type, objectId);
-            if (requestedStates.TryGetValue(type, out bool active))
-                return active;
-            return definition == null || definition.InitiallyActive;
-        }
-
-        public bool SetCriticalSystemActive(
-            StationSystemType type,
-            bool active)
-        {
-            return SetCriticalSystemActive(
-                type,
-                active,
-                false);
+            return requestedStates.TryGetValue(type, out bool active)
+                ? active
+                : definition?.InitiallyActive ?? true;
         }
 
         public bool SetCriticalSystemActive(
             StationSystemType type,
             bool active,
-            bool reportActivationWhenAlreadyActive)
+            bool reportActivationWhenAlreadyActive = false)
         {
             if (type != StationSystemType.Battery &&
                 type != StationSystemType.Computer)
@@ -202,52 +312,29 @@ namespace NERA.Station
             }
 
             StationSystemDefinition definition = GetDefinition(type);
-            string objectId = definition?.ObjectId;
-            if (!string.IsNullOrWhiteSpace(objectId))
+            if (definition == null)
+                return false;
+            string objectId = definition.ObjectId;
+            bool current = IsRequestedActive(type, objectId);
+            if (current == active)
             {
-                ObjectRuntimeState objectState = EnsureObjectState(
-                    type,
-                    objectId,
-                    definition.InitialLevel,
-                    definition.InitiallyActive);
-                if (objectState.RequestedActive == active)
-                {
-                    if (active && reportActivationWhenAlreadyActive)
-                        ReportSystemActivated(definition, objectId);
-                    return true;
-                }
-
-                objectState.RequestedActive = active;
-            }
-            else
-            {
-                if (requestedStates.TryGetValue(
-                        type,
-                        out bool current) &&
-                    current == active)
-                {
-                    if (active && reportActivationWhenAlreadyActive)
-                        ReportSystemActivated(definition, objectId);
-                    return true;
-                }
-
-                requestedStates[type] = active;
+                if (active && reportActivationWhenAlreadyActive)
+                    ReportSystemActivated(definition, objectId);
+                return true;
             }
 
+            SetRuntimeActive(type, objectId, active, definition.InitiallyActive);
             if (active)
                 ReportSystemActivated(definition, objectId);
+            else
+                ReportSystemDeactivated(definition, objectId);
             SystemsChanged?.Invoke();
             return true;
         }
 
-        public bool IsMaintenanceReady(StationSystemType type)
-        {
-            return IsMaintenanceReady(type, null);
-        }
-
         public bool IsMaintenanceReady(
             StationSystemType type,
-            string objectId)
+            string objectId = null)
         {
             if (type == StationSystemType.Turret &&
                 !string.IsNullOrWhiteSpace(objectId))
@@ -264,10 +351,8 @@ namespace NERA.Station
                 StationSystemType.Turret => MaintenanceRole.Turret,
                 _ => MaintenanceRole.Generic
             };
-
             if (role == MaintenanceRole.Generic)
                 return true;
-
             MaintainableObject maintenance = FindMaintenance(
                 type,
                 objectId,
@@ -275,14 +360,9 @@ namespace NERA.Station
             return maintenance == null || maintenance.IsOperational;
         }
 
-        public float GetCondition(StationSystemType type)
-        {
-            return GetCondition(type, null);
-        }
-
         public float GetCondition(
             StationSystemType type,
-            string objectId)
+            string objectId = null)
         {
             if (type == StationSystemType.Turret &&
                 !string.IsNullOrWhiteSpace(objectId))
@@ -299,7 +379,6 @@ namespace NERA.Station
                 StationSystemType.Turret => MaintenanceRole.Turret,
                 _ => MaintenanceRole.Generic
             };
-
             MaintainableObject maintenance = role != MaintenanceRole.Generic
                 ? FindMaintenance(type, objectId, role)
                 : null;
@@ -309,17 +388,12 @@ namespace NERA.Station
         public bool CanStart(StationSystemType type, out string reason)
         {
             StationSystemDefinition definition = GetDefinition(type);
-            return CanStart(
-                type,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0,
-                out reason);
+            return CanStart(type, definition?.ObjectId, out reason);
         }
 
         public bool CanStart(
             StationSystemType type,
             string objectId,
-            int initialLevel,
             out string reason)
         {
             StationSystemDefinition definition = GetDefinition(type, objectId);
@@ -328,20 +402,14 @@ namespace NERA.Station
                 reason = "This system cannot be controlled from the computer.";
                 return false;
             }
-
-            if (!IsUnlocked(type, objectId, initialLevel))
-            {
-                reason = "Upgrade required.";
-                return false;
-            }
-
             if (!IsMaintenanceReady(type, objectId))
             {
                 reason = "Cleaning or repair required.";
                 return false;
             }
 
-            Energy.EnergySystemController energy = Energy.EnergySystemController.Instance;
+            Energy.EnergySystemController energy =
+                Energy.EnergySystemController.Instance;
             if (energy == null || !energy.HasUsablePower)
             {
                 reason = "Station power is unavailable.";
@@ -352,37 +420,20 @@ namespace NERA.Station
                 energy.Config.GetMinimumChargePercent(type, objectId);
             if (!energy.HasSufficientCharge(minimumChargePercent / 100f))
             {
-                reason =
-                    $"Battery charge below {minimumChargePercent:0}%.";
+                reason = $"Battery charge below {minimumChargePercent:0}%.";
                 return false;
             }
-
-            reason = string.Empty;
-            return true;
-        }
-
-        public bool SetRequestedActive(StationSystemType type, bool active)
-        {
-            StationSystemDefinition definition = GetDefinition(type);
-            return SetRequestedActive(
-                type,
-                active,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0,
-                definition?.InitiallyActive ?? false);
+            return Succeed(out reason);
         }
 
         public bool SetRequestedActive(
             StationSystemType type,
             bool active,
-            string objectId,
-            int initialLevel,
-            bool initiallyActive)
+            string objectId = null)
         {
             StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null || !definition.Controllable)
                 return false;
-
             if (type == StationSystemType.Drone &&
                 !active &&
                 DroneScanController.Instance != null &&
@@ -390,38 +441,17 @@ namespace NERA.Station
             {
                 return false;
             }
-
-            if (active &&
-                !CanStart(type, objectId, initialLevel, out _))
+            if (active && !CanStart(type, objectId, out _))
                 return false;
 
-            if (!string.IsNullOrWhiteSpace(objectId))
-            {
-                ObjectRuntimeState objectState = EnsureObjectState(
-                    type,
-                    objectId,
-                    initialLevel,
-                    initiallyActive);
-                if (objectState.RequestedActive == active)
-                    return true;
-
-                objectState.RequestedActive = active;
-                if (active)
-                    ReportSystemActivated(definition, objectId);
-                else
-                    ReportSystemDeactivated(definition, objectId);
-                SystemsChanged?.Invoke();
+            string resolvedId = ResolveObjectId(definition, objectId);
+            if (IsRequestedActive(type, resolvedId) == active)
                 return true;
-            }
-
-            if (requestedStates.TryGetValue(type, out bool current) && current == active)
-                return true;
-
-            requestedStates[type] = active;
+            SetRuntimeActive(type, resolvedId, active, definition.InitiallyActive);
             if (active)
-                ReportSystemActivated(definition, objectId);
+                ReportSystemActivated(definition, resolvedId);
             else
-                ReportSystemDeactivated(definition, objectId);
+                ReportSystemDeactivated(definition, resolvedId);
             SystemsChanged?.Invoke();
             return true;
         }
@@ -434,277 +464,47 @@ namespace NERA.Station
             StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null)
                 return false;
-
-            bool changed;
-            if (!string.IsNullOrWhiteSpace(objectId))
-            {
-                ObjectRuntimeState objectState = EnsureObjectState(
-                    type,
-                    objectId,
-                    definition.InitialLevel,
-                    definition.InitiallyActive);
-                changed = objectState.RequestedActive;
-                objectState.RequestedActive = false;
-            }
-            else
-            {
-                changed = !requestedStates.TryGetValue(type, out bool current) ||
-                    current;
-                requestedStates[type] = false;
-            }
-
+            string resolvedId = ResolveObjectId(definition, objectId);
+            bool changed = IsRequestedActive(type, resolvedId);
+            SetRuntimeActive(type, resolvedId, false, definition.InitiallyActive);
             QuestController.Instance?.ReportStationFault(
-                ResolveQuestTargetId(type, objectId),
+                ResolveQuestTargetId(type, resolvedId),
                 definition.DisplayName,
                 cause);
-            ReportSystemDeactivated(definition, objectId, cause);
+            ReportSystemDeactivated(definition, resolvedId, cause);
             if (changed)
                 SystemsChanged?.Invoke();
             return true;
         }
 
-        public bool CanUpgrade(
-            StationSystemType type,
-            PlayerInventory inventory,
-            StationStorageController storage)
-        {
-            return CanUpgradeTo(
-                type,
-                GetUpgradeLevel(type) + 1,
-                inventory,
-                storage,
-                out _);
-        }
-
-        public bool CanUpgradeTo(
-            StationSystemType type,
-            int targetLevel,
-            PlayerInventory inventory,
-            StationStorageController storage,
-            out string reason)
-        {
-            StationSystemDefinition definition = GetDefinition(type);
-            return CanUpgradeTo(
-                type,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0,
-                targetLevel,
-                inventory,
-                storage,
-                out reason);
-        }
-
-        public bool CanUpgradeTo(
-            StationSystemType type,
-            string objectId,
-            int initialLevel,
-            int targetLevel,
-            PlayerInventory inventory,
-            StationStorageController storage,
-            out string reason)
-        {
-            StationSystemDefinition definition = GetDefinition(type, objectId);
-            StationUpgradeLevelDefinition upgrade =
-                Config.GetUpgradeDefinition(
-                    type,
-                    objectId,
-                    targetLevel);
-            int currentLevel = GetUpgradeLevel(
-                type,
-                objectId,
-                initialLevel);
-            int maxLevel = Config.GetMaxLevel(type, objectId);
-            if (definition == null || !definition.Upgradeable ||
-                targetLevel != currentLevel + 1 ||
-                targetLevel > maxLevel ||
-                upgrade == null)
-            {
-                reason = targetLevel <= currentLevel
-                    ? "Upgrade already installed."
-                    : "Previous upgrade level is required.";
-                return false;
-            }
-
-            Dictionary<string, int> requiredTotals =
-                new Dictionary<string, int>(StringComparer.Ordinal);
-            foreach (StationUpgradeItemRequirement requirement in
-                     upgrade.RequiredItems)
-            {
-                if (requirement == null ||
-                    string.IsNullOrWhiteSpace(requirement.ItemId))
-                {
-                    reason = "Upgrade item is not configured.";
-                    return false;
-                }
-
-                requiredTotals.TryGetValue(
-                    requirement.ItemId,
-                    out int alreadyRequired);
-                int totalRequired = alreadyRequired + requirement.Count;
-                requiredTotals[requirement.ItemId] = totalRequired;
-                int available = (inventory != null
-                        ? inventory.CountItem(requirement.ItemId)
-                        : 0) +
-                    (storage != null
-                        ? storage.CountItem(requirement.ItemId)
-                        : 0);
-                if (available < totalRequired)
-                {
-                    reason =
-                        $"{requirement.DisplayName}: " +
-                        $"{available}/{totalRequired}.";
-                    return false;
-                }
-            }
-
-            float energyCost = upgrade.EnergyCost;
-            Energy.EnergySystemController energy =
-                Energy.EnergySystemController.Instance;
-            if (energyCost > 0f &&
-                (energy == null || !energy.CanSpendEnergy(energyCost)))
-            {
-                reason = $"Required energy: {energyCost:0}.";
-                return false;
-            }
-
-            reason = string.Empty;
-            return true;
-        }
-
-        public bool TryUpgrade(
-            StationSystemType type,
-            PlayerInventory inventory,
-            StationStorageController storage)
-        {
-            return TryUpgradeTo(
-                type,
-                GetUpgradeLevel(type) + 1,
-                inventory,
-                storage);
-        }
-
-        public bool TryUpgradeTo(
-            StationSystemType type,
-            int targetLevel,
-            PlayerInventory inventory,
-            StationStorageController storage)
-        {
-            StationSystemDefinition definition = GetDefinition(type);
-            return TryUpgradeTo(
-                type,
-                definition?.ObjectId,
-                definition?.InitialLevel ?? 0,
-                targetLevel,
-                inventory,
-                storage);
-        }
-
-        public bool TryUpgradeTo(
-            StationSystemType type,
-            string objectId,
-            int initialLevel,
-            int targetLevel,
-            PlayerInventory inventory,
-            StationStorageController storage)
-        {
-            if (!CanUpgradeTo(
-                    type,
-                    objectId,
-                    initialLevel,
-                    targetLevel,
-                    inventory,
-                    storage,
-                    out _))
-                return false;
-
-            StationSystemDefinition definition = GetDefinition(type, objectId);
-            StationUpgradeLevelDefinition upgrade =
-                Config.GetUpgradeDefinition(
-                    type,
-                    objectId,
-                    targetLevel);
-            foreach (StationUpgradeItemRequirement requirement in
-                     upgrade.RequiredItems)
-            {
-                int remaining = requirement.Count;
-                while (remaining > 0 && storage != null &&
-                    storage.TryRemoveOne(requirement.ItemId, out _))
-                {
-                    remaining--;
-                }
-
-                while (remaining > 0 && inventory != null &&
-                    inventory.TryRemoveOne(requirement.ItemId, out _))
-                {
-                    remaining--;
-                }
-
-                if (remaining > 0)
-                {
-                    Debug.LogError(
-                        $"Station upgrade '{type}' lost its validated " +
-                        $"item source for '{requirement.ItemId}'.",
-                        this);
-                    return false;
-                }
-            }
-
-            float energyCost = upgrade.EnergyCost;
-            if (energyCost > 0f &&
-                Energy.EnergySystemController.Instance?.TrySpendEnergy(
-                    energyCost) != true)
-            {
-                Debug.LogError(
-                    $"Station upgrade '{type}' lost its validated energy source.",
-                    this);
-                return false;
-            }
-
-            if (!string.IsNullOrWhiteSpace(objectId))
-            {
-                ObjectRuntimeState objectState = EnsureObjectState(
-                    type,
-                    objectId,
-                    initialLevel,
-                    initialLevel > 0);
-                objectState.UpgradeLevel = targetLevel;
-                if (definition.RequiresUpgradeToOperate)
-                    objectState.RequestedActive = true;
-            }
-            else
-            {
-                upgradeLevels[type] = targetLevel;
-                if (definition.RequiresUpgradeToOperate)
-                    requestedStates[type] = true;
-            }
-
-            QuestController.Instance?.Report(
-                QuestSignalType.StationSystemUpgraded,
-                ResolveQuestTargetId(type, objectId),
-                definition.DisplayName,
-                value: targetLevel);
-            SystemsChanged?.Invoke();
-            return true;
-        }
-
         public bool CanDroneReach(Expeditions.ExpeditionLocationData location)
         {
-            return location != null &&
-                GetUpgradeLevel(StationSystemType.Drone) >=
-                location.RequiredDroneUpgradeLevel;
+            if (location == null)
+                return false;
+            StationSystemDefinition drone = GetDefinition(StationSystemType.Drone);
+            return GetStat(
+                    StationSystemType.Drone,
+                    drone?.ObjectId,
+                    StationObjectStat.TravelRange) >=
+                location.RequiredDroneTravelRange;
         }
 
         public bool CanAntennaReach(Expeditions.ExpeditionLocationData location)
         {
-            return location != null &&
-                GetUpgradeLevel(StationSystemType.Antenna) >=
-                location.RequiredAntennaUpgradeLevel;
+            if (location == null)
+                return false;
+            StationSystemDefinition antenna =
+                GetDefinition(StationSystemType.Antenna);
+            return GetStat(
+                    StationSystemType.Antenna,
+                    antenna?.ObjectId,
+                    StationObjectStat.ScanRange) >=
+                location.RequiredAntennaScanRange;
         }
 
-        public IEnumerable<KeyValuePair<StationSystemType, int>> UpgradeLevels =>
-            upgradeLevels;
-        public IEnumerable<KeyValuePair<StationSystemType, bool>> RequestedStates =>
-            requestedStates;
+        public IEnumerable<KeyValuePair<StationSystemType, bool>>
+            RequestedStates => requestedStates;
+
         public IEnumerable<StationObjectSystemState> ObjectStates
         {
             get
@@ -715,58 +515,40 @@ namespace NERA.Station
                     yield return new StationObjectSystemState(
                         pair.Value.SystemType,
                         pair.Key,
-                        pair.Value.UpgradeLevel,
-                        pair.Value.RequestedActive);
+                        pair.Value.RequestedActive,
+                        GetInstalledParts(pair.Value.SystemType, pair.Key));
                 }
             }
         }
 
         public void RegisterObject(
             StationSystemType type,
-            string objectId,
-            int initialLevel,
-            bool initiallyActive)
+            string objectId)
         {
             if (string.IsNullOrWhiteSpace(objectId))
                 return;
-
+            StationSystemDefinition definition = GetDefinition(type, objectId);
             EnsureObjectState(
                 type,
                 objectId,
-                initialLevel,
-                initiallyActive);
+                definition?.InitiallyActive ?? true);
         }
 
         public void Restore(
-            IEnumerable<KeyValuePair<StationSystemType, int>> levels,
             IEnumerable<KeyValuePair<StationSystemType, bool>> states,
             IEnumerable<StationObjectSystemState> restoredObjects = null)
         {
             InitializeDefaults();
-
-            if (levels != null)
-            {
-                foreach (KeyValuePair<StationSystemType, int> pair in levels)
-                {
-                    StationSystemDefinition definition = GetDefinition(pair.Key);
-                    if (definition != null)
-                    {
-                        int minimumLevel = definition.RequiresUpgradeToOperate
-                            ? 0
-                            : definition.InitialLevel;
-                        upgradeLevels[pair.Key] = Mathf.Clamp(
-                            pair.Value, minimumLevel, definition.MaxLevel);
-                    }
-                }
-            }
-
             if (states != null)
             {
                 foreach (KeyValuePair<StationSystemType, bool> pair in states)
                 {
                     StationSystemDefinition definition = GetDefinition(pair.Key);
-                    if (definition != null && definition.Controllable)
+                    if (definition != null &&
+                        string.IsNullOrWhiteSpace(definition.ObjectId))
+                    {
                         requestedStates[pair.Key] = pair.Value;
+                    }
                 }
             }
 
@@ -774,33 +556,31 @@ namespace NERA.Station
             {
                 foreach (StationObjectSystemState restored in restoredObjects)
                 {
-                    if (string.IsNullOrWhiteSpace(restored.ObjectId))
-                        continue;
-
-                    StationSystemDefinition definition =
-                        GetDefinition(
-                            restored.SystemType,
-                            restored.ObjectId);
+                    StationSystemDefinition definition = GetDefinition(
+                        restored.SystemType,
+                        restored.ObjectId);
                     if (definition == null)
                         continue;
 
-                    string id = NormalizeObjectId(restored.ObjectId);
-                    int restoredLevel = Mathf.Clamp(
-                        restored.UpgradeLevel,
-                        0,
-                        Config.GetMaxLevel(
-                            restored.SystemType,
-                            restored.ObjectId));
-                    objectStates[id] = new ObjectRuntimeState
+                    if (string.IsNullOrWhiteSpace(restored.ObjectId))
                     {
-                        SystemType = restored.SystemType,
-                        UpgradeLevel = restoredLevel,
-                        RequestedActive =
-                            definition.Controllable &&
-                            restored.RequestedActive &&
-                            (!definition.RequiresUpgradeToOperate ||
-                             restoredLevel > 0)
-                    };
+                        RestoreInstalledParts(
+                            restored.SystemType,
+                            string.Empty,
+                            restored.InstalledParts);
+                        continue;
+                    }
+
+                    objectStates[NormalizeObjectId(restored.ObjectId)] =
+                        new ObjectRuntimeState
+                        {
+                            SystemType = restored.SystemType,
+                            RequestedActive = restored.RequestedActive
+                        };
+                    RestoreInstalledParts(
+                        restored.SystemType,
+                        restored.ObjectId,
+                        restored.InstalledParts);
                 }
             }
 
@@ -817,23 +597,17 @@ namespace NERA.Station
 
         private void InitializeDefaults()
         {
-            upgradeLevels.Clear();
             requestedStates.Clear();
             objectStates.Clear();
+            installedParts.Clear();
             foreach (StationSystemDefinition definition in Config.StationObjects)
             {
                 if (definition == null)
                     continue;
-
-                bool requestedActive =
-                    definition.InitiallyActive &&
-                    (!definition.RequiresUpgradeToOperate ||
-                     definition.InitialLevel > 0);
                 if (string.IsNullOrWhiteSpace(definition.ObjectId))
                 {
-                    upgradeLevels[definition.SystemType] =
-                        definition.InitialLevel;
-                    requestedStates[definition.SystemType] = requestedActive;
+                    requestedStates[definition.SystemType] =
+                        definition.InitiallyActive;
                 }
                 else
                 {
@@ -841,8 +615,7 @@ namespace NERA.Station
                         new ObjectRuntimeState
                         {
                             SystemType = definition.SystemType,
-                            UpgradeLevel = definition.InitialLevel,
-                            RequestedActive = requestedActive
+                            RequestedActive = definition.InitiallyActive
                         };
                 }
             }
@@ -851,77 +624,60 @@ namespace NERA.Station
         private ObjectRuntimeState EnsureObjectState(
             StationSystemType type,
             string objectId,
-            int initialLevel,
             bool initiallyActive)
         {
             string id = NormalizeObjectId(objectId);
-            if (objectStates.TryGetValue(
-                    id,
-                    out ObjectRuntimeState existing))
-            {
+            if (objectStates.TryGetValue(id, out ObjectRuntimeState existing))
                 return existing;
-            }
-
             StationSystemDefinition definition = GetDefinition(type, id);
-            if (definition != null &&
-                string.Equals(
-                    definition.ObjectId,
-                    id,
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                initialLevel = definition.InitialLevel;
-                initiallyActive = definition.InitiallyActive;
-            }
-
-            int maxLevel = Config.GetMaxLevel(type, id);
-            if (maxLevel <= 0)
-                maxLevel = definition?.MaxLevel ?? Mathf.Max(1, initialLevel);
-            int level = Mathf.Clamp(initialLevel, 0, maxLevel);
             ObjectRuntimeState created = new ObjectRuntimeState
             {
                 SystemType = type,
-                UpgradeLevel = level,
-                RequestedActive =
-                    initiallyActive &&
-                    (definition == null ||
-                     !definition.RequiresUpgradeToOperate ||
-                     level > 0)
+                RequestedActive = definition?.InitiallyActive ?? initiallyActive
             };
             objectStates[id] = created;
             return created;
         }
 
-        private static string NormalizeObjectId(string objectId)
-        {
-            return objectId?.Trim().ToLowerInvariant() ?? string.Empty;
-        }
-
-        private static void ReportSystemActivated(
-            StationSystemDefinition definition,
-            string objectId)
-        {
-            if (definition == null)
-                return;
-
-            QuestController.Instance?.Report(
-                QuestSignalType.StationSystemActivated,
-                ResolveQuestTargetId(definition.SystemType, objectId),
-                definition.DisplayName);
-        }
-
-        private static void ReportSystemDeactivated(
-            StationSystemDefinition definition,
+        private void SetRuntimeActive(
+            StationSystemType type,
             string objectId,
-            string cause = null)
+            bool active,
+            bool initiallyActive)
         {
+            if (string.IsNullOrWhiteSpace(objectId))
+                requestedStates[type] = active;
+            else
+                EnsureObjectState(type, objectId, initiallyActive)
+                    .RequestedActive = active;
+        }
+
+        private void RestoreInstalledParts(
+            StationSystemType type,
+            string objectId,
+            IEnumerable<StationInstalledPartState> restored)
+        {
+            if (restored == null)
+                return;
+            StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null)
                 return;
 
-            QuestController.Instance?.Report(
-                QuestSignalType.StationSystemDeactivated,
-                ResolveQuestTargetId(definition.SystemType, objectId),
-                definition.DisplayName,
-                cause: cause);
+            var parts = new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase);
+            foreach (StationInstalledPartState part in restored)
+            {
+                string slotId = NormalizeSlotId(part.SlotId);
+                string itemId = part.ItemId?.Trim() ?? string.Empty;
+                if (!string.IsNullOrEmpty(slotId) &&
+                    !string.IsNullOrEmpty(itemId) &&
+                    definition.FindSlot(slotId) != null)
+                {
+                    parts[slotId] = itemId;
+                }
+            }
+            if (parts.Count > 0)
+                installedParts[GetPartStateKey(type, objectId)] = parts;
         }
 
         private void SynchronizeQuestStates()
@@ -930,21 +686,17 @@ namespace NERA.Station
             if (quests == null)
                 return;
 
-            foreach (StationSystemDefinition definition in
-                     Config.StationObjects)
+            foreach (StationSystemDefinition definition in Config.StationObjects)
             {
                 if (definition == null)
                     continue;
-
                 string objectId = definition.ObjectId;
                 string targetId = ResolveQuestTargetId(
                     definition.SystemType,
                     objectId);
                 bool active = IsRequestedActive(
                     definition.SystemType,
-                    objectId,
-                    definition.InitialLevel,
-                    definition.InitiallyActive);
+                    objectId);
                 quests.SynchronizeState(
                     active
                         ? QuestSignalType.StationSystemActivated
@@ -955,20 +707,10 @@ namespace NERA.Station
                     QuestSignalType.StationSystemUpgraded,
                     targetId,
                     definition.DisplayName,
-                    value: GetUpgradeLevel(
+                    value: GetInstalledPartCount(
                         definition.SystemType,
-                        objectId,
-                        definition.InitialLevel));
+                        objectId));
             }
-        }
-
-        private static string ResolveQuestTargetId(
-            StationSystemType type,
-            string objectId)
-        {
-            return string.IsNullOrWhiteSpace(objectId)
-                ? type.ToString()
-                : objectId;
         }
 
         private MaintainableObject FindMaintenance(
@@ -989,15 +731,13 @@ namespace NERA.Station
                     : null;
             }
 
-            // Compatibility path for old configs without an ObjectId. New
-            // station devices must resolve through their stable ID above.
-            MaintainableObject[] candidates = FindObjectsByType<MaintainableObject>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
+            MaintainableObject[] candidates =
+                FindObjectsByType<MaintainableObject>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None);
             foreach (MaintainableObject candidate in candidates)
             {
-                if (candidate != null &&
-                    candidate.isActiveAndEnabled &&
+                if (candidate != null && candidate.isActiveAndEnabled &&
                     candidate.Role == fallbackRole)
                 {
                     return candidate;
@@ -1006,11 +746,77 @@ namespace NERA.Station
             return null;
         }
 
+        private static void ReportSystemActivated(
+            StationSystemDefinition definition,
+            string objectId)
+        {
+            if (definition == null)
+                return;
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemActivated,
+                ResolveQuestTargetId(definition.SystemType, objectId),
+                definition.DisplayName);
+        }
+
+        private static void ReportSystemDeactivated(
+            StationSystemDefinition definition,
+            string objectId,
+            string cause = null)
+        {
+            if (definition == null)
+                return;
+            QuestController.Instance?.Report(
+                QuestSignalType.StationSystemDeactivated,
+                ResolveQuestTargetId(definition.SystemType, objectId),
+                definition.DisplayName,
+                cause: cause);
+        }
+
+        private static string ResolveQuestTargetId(
+            StationSystemType type,
+            string objectId)
+        {
+            return string.IsNullOrWhiteSpace(objectId)
+                ? type.ToString()
+                : objectId;
+        }
+
+        private static string ResolveObjectId(
+            StationSystemDefinition definition,
+            string objectId)
+        {
+            return string.IsNullOrWhiteSpace(objectId)
+                ? definition?.ObjectId ?? string.Empty
+                : objectId.Trim();
+        }
+
+        private static string GetPartStateKey(
+            StationSystemType type,
+            string objectId)
+        {
+            return $"{(int)type}:{NormalizeObjectId(objectId)}";
+        }
+
+        private static string NormalizeObjectId(string objectId)
+        {
+            return objectId?.Trim().ToLowerInvariant() ?? string.Empty;
+        }
+
+        private static string NormalizeSlotId(string slotId)
+        {
+            return slotId?.Trim().ToLowerInvariant() ?? string.Empty;
+        }
+
+        private static bool Succeed(out string reason)
+        {
+            reason = string.Empty;
+            return true;
+        }
+
         private void OnDestroy()
         {
             if (Instance != this)
                 return;
-
             Instance = null;
             InstanceChanged?.Invoke(null);
         }

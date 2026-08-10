@@ -19,268 +19,220 @@ MonoBehaviour:
     description: Generates station power. Clean it outside to restore efficiency.
     controllable: 1
     initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels: []
+    baseStats:
+    - stat: 7
+      displayName: Generation
+      baseValue: 40
+      unit: ' kW'
+      decimals: 0
+    slots: []
   - systemType: 1
     objectId: station_battery
     displayName: BATTERY
-    description: Stores generated energy and supplies all active consumers.
+    description: Stores generated energy. Physical parts expand its capacity.
     controllable: 0
     initiallyActive: 0
-    initialLevel: 1
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: BATTERY I
-      upgradeIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
-      description: Standard station cell bank.
-      requiredItems: []
-      energyCost: 0
-    - targetLevel: 2
-      displayName: BATTERY II
-      upgradeIcon: {fileID: 21300000, guid: 8ed47365a84603c47b5d47760763d67e, type: 3}
-      description: Expanded high-capacity cell bank.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
-        count: 1
-      energyCost: 100
+    baseStats:
+    - stat: 6
+      displayName: Capacity
+      baseValue: 1000
+      unit: ' kWh'
+      decimals: 0
+    - stat: 11
+      displayName: Initial charge
+      baseValue: 1000
+      unit: ' kWh'
+      decimals: 0
+    slots:
+    - slotId: Slot_1
+      displayName: Capacitor bank
+    - slotId: Slot_2
+      displayName: Reinforced housing
+    - slotId: Slot_3
+      displayName: Thermal pack
   - systemType: 2
     objectId: 
     displayName: TERMINAL
-    description: Central terminal. It cannot be stopped or upgraded from itself.
+    description: Central terminal. It cannot be stopped or physically upgraded.
     controllable: 0
     initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels: []
+    baseStats:
+    - stat: 4
+      displayName: Idle consumption
+      baseValue: 2
+      unit: ' kW'
+      decimals: 1
+    slots: []
   - systemType: 3
     objectId: station_drone
     displayName: DRONE
-    description: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
+    description: Surveys expedition sectors. Installed parts improve travel range
+      and charging.
     controllable: 1
     initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: DRONE I
-      upgradeIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-      description: Short-range expedition drive.
-      requiredItems: []
-      energyCost: 0
-    - targetLevel: 2
-      displayName: DRONE II
-      upgradeIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
-      description: Medium-range expedition drive.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 0b790ed76c3ac4a47926a7c546bbb17a, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: ace56722ab72c954bb904c020e503fbe, type: 2}
-        count: 1
-      energyCost: 100
-    - targetLevel: 3
-      displayName: DRONE III
-      upgradeIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
-      description: Long-range expedition drive.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 72d15de3259a3934cb80de739cc12eed, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: bbca9899c8eeaa04c9dc7f075b2dd11b, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 4e8c05f23a34d2246b4a6c0be44d5a48, type: 2}
-        count: 1
-      energyCost: 200
+    baseStats:
+    - stat: 9
+      displayName: Travel range
+      baseValue: 1
+      unit: ' sectors'
+      decimals: 0
+    - stat: 12
+      displayName: Charging consumption
+      baseValue: 4
+      unit: ' kW'
+      decimals: 1
+    slots:
+    - slotId: Slot_1
+      displayName: Stabilizer
+    - slotId: Slot_2
+      displayName: Propulsion
+    - slotId: Slot_3
+      displayName: Charging servo
   - systemType: 4
     objectId: 
     displayName: LABORATORY
-    description: Analyzes recovered objects, charges equipment, and integrates anomalies.
+    description: Analyzes objects, charges equipment, and integrates anomalies.
     controllable: 1
     initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels: []
+    baseStats:
+    - stat: 4
+      displayName: Idle consumption
+      baseValue: 4
+      unit: ' kW'
+      decimals: 1
+    slots: []
   - systemType: 6
     objectId: station_antenna
     displayName: ANTENNA
-    description: Finds unknown signals. Install a replacement drive before first
-      use.
+    description: Finds unknown signals. Installed parts improve scan range and calibration.
     controllable: 1
     initiallyActive: 0
-    initialLevel: 0
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: ANTENNA I
-      upgradeIcon: {fileID: 0}
-      description: Restores short-range signal reception.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      energyCost: 0
-    - targetLevel: 2
-      displayName: ANTENNA II
-      upgradeIcon: {fileID: 0}
-      description: Improves signal resolution and range.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
-        count: 1
-      energyCost: 100
-    - targetLevel: 3
-      displayName: ANTENNA III
-      upgradeIcon: {fileID: 0}
-      description: Enables deep-range signal acquisition.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
-        count: 1
-      energyCost: 200
+    baseStats:
+    - stat: 8
+      displayName: Scan range
+      baseValue: 1
+      unit: ' sectors'
+      decimals: 0
+    - stat: 13
+      displayName: Calibration consumption
+      baseValue: 3
+      unit: ' kW'
+      decimals: 1
+    - stat: 14
+      displayName: Calibration duration
+      baseValue: 8
+      unit: ' s'
+      decimals: 1
+    slots:
+    - slotId: Slot_1
+      displayName: Scanner
+    - slotId: Slot_2
+      displayName: Sensor array
+    - slotId: Slot_3
+      displayName: Calibration sensor
   - systemType: 7
     objectId: station_turret_01
     displayName: TURRET 1
-    description: Automatic defense platform for the first station sector.
+    description: Automatic defense platform. Uses the shared turret part layout.
     controllable: 1
     initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: TURRET 1 / LEVEL 1
-      upgradeIcon: {fileID: 0}
-      description: Factory-installed defensive platform.
-      requiredItems: []
-      energyCost: 0
-    - targetLevel: 2
-      displayName: TURRET 1 / LEVEL 2
-      upgradeIcon: {fileID: 0}
-      description: Improves tracking and sustained fire.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
-        count: 1
-      energyCost: 200
-    - targetLevel: 3
-      displayName: TURRET 1 / LEVEL 3
-      upgradeIcon: {fileID: 0}
-      description: Maximum performance for the first defense sector.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
-        count: 1
-      energyCost: 300
+    baseStats:
+    - stat: 0
+      displayName: Damage
+      baseValue: 12
+      unit: 
+      decimals: 0
+    - stat: 1
+      displayName: Detection range
+      baseValue: 18
+      unit: ' m'
+      decimals: 0
+    - stat: 2
+      displayName: Rotation speed
+      baseValue: 180
+      unit: ' deg/s'
+      decimals: 0
+    - stat: 3
+      displayName: Fire interval
+      baseValue: 0.45
+      unit: ' s'
+      decimals: 2
+    - stat: 4
+      displayName: Idle consumption
+      baseValue: 2
+      unit: ' kW'
+      decimals: 1
+    - stat: 10
+      displayName: Firing consumption
+      baseValue: 5
+      unit: ' kW'
+      decimals: 1
+    - stat: 5
+      displayName: Damage taken
+      baseValue: 1
+      unit: ' x'
+      decimals: 2
+    slots:
+    - slotId: Slot_1
+      displayName: Weapon emitter
+    - slotId: Slot_2
+      displayName: Target sensor
+    - slotId: Slot_3
+      displayName: Cooling unit
+    - slotId: Slot_4
+      displayName: Rotation drive
+    - slotId: Slot_5
+      displayName: Armor chassis
   - systemType: 7
     objectId: station_turret_02
     displayName: TURRET 2
-    description: Automatic defense platform for the second station sector.
+    description: Automatic defense platform. Uses the shared turret part layout.
     controllable: 1
-    initiallyActive: 0
-    initialLevel: 0
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: TURRET 2 / LEVEL 1
-      upgradeIcon: {fileID: 0}
-      description: Installs the second defensive platform.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
-        count: 1
-      energyCost: 100
-    - targetLevel: 2
-      displayName: TURRET 2 / LEVEL 2
-      upgradeIcon: {fileID: 0}
-      description: Reinforces its tracking assembly.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
-        count: 1
-      energyCost: 200
-    - targetLevel: 3
-      displayName: TURRET 2 / LEVEL 3
-      upgradeIcon: {fileID: 0}
-      description: Adds an autonomous long-range control core.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
-        count: 1
-      energyCost: 300
-  - systemType: 7
-    objectId: station_turret_03
-    displayName: TURRET 3
-    description: Automatic defense platform for the third station sector.
-    controllable: 1
-    initiallyActive: 0
-    initialLevel: 0
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: TURRET 3 / LEVEL 1
-      upgradeIcon: {fileID: 0}
-      description: Builds the third defensive platform.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
-        count: 1
-      energyCost: 100
-    - targetLevel: 2
-      displayName: TURRET 3 / LEVEL 2
-      upgradeIcon: {fileID: 0}
-      description: Adds a stabilized drive and processing core.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
-        count: 1
-      energyCost: 200
-    - targetLevel: 3
-      displayName: TURRET 3 / LEVEL 3
-      upgradeIcon: {fileID: 0}
-      description: Installs redundant signal and targeting channels.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
-        count: 1
-      energyCost: 300
-  - systemType: 7
-    objectId: station_turret_04
-    displayName: TURRET 4
-    description: Automatic defense platform for the fourth station sector.
-    controllable: 1
-    initiallyActive: 0
-    initialLevel: 0
-    upgradeLevels:
-    - targetLevel: 1
-      displayName: TURRET 4 / LEVEL 1
-      upgradeIcon: {fileID: 0}
-      description: Restores the fourth defense sector.
-      requiredItems:
-      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
-        count: 1
-      energyCost: 100
-    - targetLevel: 2
-      displayName: TURRET 4 / LEVEL 2
-      upgradeIcon: {fileID: 0}
-      description: Upgrades its signal and rotation systems.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 1
-      energyCost: 200
-    - targetLevel: 3
-      displayName: TURRET 4 / LEVEL 3
-      upgradeIcon: {fileID: 0}
-      description: Installs a high-load command assembly.
-      requiredItems:
-      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
-        count: 1
-      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
-        count: 1
-      energyCost: 300
+    initiallyActive: 1
+    baseStats:
+    - stat: 0
+      displayName: Damage
+      baseValue: 12
+      unit: 
+      decimals: 0
+    - stat: 1
+      displayName: Detection range
+      baseValue: 18
+      unit: ' m'
+      decimals: 0
+    - stat: 2
+      displayName: Rotation speed
+      baseValue: 180
+      unit: ' deg/s'
+      decimals: 0
+    - stat: 3
+      displayName: Fire interval
+      baseValue: 0.45
+      unit: ' s'
+      decimals: 2
+    - stat: 4
+      displayName: Idle consumption
+      baseValue: 2
+      unit: ' kW'
+      decimals: 1
+    - stat: 10
+      displayName: Firing consumption
+      baseValue: 5
+      unit: ' kW'
+      decimals: 1
+    - stat: 5
+      displayName: Damage taken
+      baseValue: 1
+      unit: ' x'
+      decimals: 2
+    slots:
+    - slotId: Slot_1
+      displayName: Weapon emitter
+    - slotId: Slot_2
+      displayName: Target sensor
+    - slotId: Slot_3
+      displayName: Cooling unit
+    - slotId: Slot_4
+      displayName: Rotation drive
+    - slotId: Slot_5
+      displayName: Armor chassis

@@ -23,7 +23,7 @@ MonoBehaviour:
   spawnPointId: Expedition07_Start
   discoverySource: 0
   droneScanDuration: 5
-  requiredDroneUpgradeLevel: 2
+  requiredDroneTravelRange: 2
   initialState: 0
   mapSymbol: 0
   mapSlot: {fileID: 11400000, guid: b6773b5c1e7b4428bbcb0c1385a8c156, type: 2}

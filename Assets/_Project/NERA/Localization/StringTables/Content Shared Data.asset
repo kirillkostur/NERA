@@ -307,22 +307,6 @@ MonoBehaviour:
     m_Key: target.station_battery.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1194319878
-    m_Key: station.battery.station_battery.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319879
-    m_Key: station.battery.station_battery.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319880
-    m_Key: station.battery.station_battery.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319881
-    m_Key: station.battery.station_battery.upgrade.2.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1194319882
     m_Key: station.computer.shared.name
     m_Metadata:
@@ -341,30 +325,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1194319886
     m_Key: target.station_drone.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319887
-    m_Key: station.drone.station_drone.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319888
-    m_Key: station.drone.station_drone.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319889
-    m_Key: station.drone.station_drone.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319890
-    m_Key: station.drone.station_drone.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319891
-    m_Key: station.drone.station_drone.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319892
-    m_Key: station.drone.station_drone.upgrade.3.description
     m_Metadata:
       m_Items: []
   - m_Id: 1194319893
@@ -387,30 +347,6 @@ MonoBehaviour:
     m_Key: target.station_antenna.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514182
-    m_Key: station.antenna.station_antenna.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514183
-    m_Key: station.antenna.station_antenna.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514184
-    m_Key: station.antenna.station_antenna.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514185
-    m_Key: station.antenna.station_antenna.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514186
-    m_Key: station.antenna.station_antenna.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514187
-    m_Key: station.antenna.station_antenna.upgrade.3.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514188
     m_Key: station.turret.station_turret_01.name
     m_Metadata:
@@ -423,30 +359,6 @@ MonoBehaviour:
     m_Key: target.station_turret_01.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514191
-    m_Key: station.turret.station_turret_01.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514192
-    m_Key: station.turret.station_turret_01.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514193
-    m_Key: station.turret.station_turret_01.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514194
-    m_Key: station.turret.station_turret_01.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514195
-    m_Key: station.turret.station_turret_01.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514196
-    m_Key: station.turret.station_turret_01.upgrade.3.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514197
     m_Key: station.turret.station_turret_02.name
     m_Metadata:
@@ -457,102 +369,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1198514199
     m_Key: target.station_turret_02.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514200
-    m_Key: station.turret.station_turret_02.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514201
-    m_Key: station.turret.station_turret_02.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514202
-    m_Key: station.turret.station_turret_02.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514203
-    m_Key: station.turret.station_turret_02.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514204
-    m_Key: station.turret.station_turret_02.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514205
-    m_Key: station.turret.station_turret_02.upgrade.3.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514206
-    m_Key: station.turret.station_turret_03.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514207
-    m_Key: station.turret.station_turret_03.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514208
-    m_Key: target.station_turret_03.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514209
-    m_Key: station.turret.station_turret_03.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514210
-    m_Key: station.turret.station_turret_03.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514211
-    m_Key: station.turret.station_turret_03.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514212
-    m_Key: station.turret.station_turret_03.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514213
-    m_Key: station.turret.station_turret_03.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514214
-    m_Key: station.turret.station_turret_03.upgrade.3.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514215
-    m_Key: station.turret.station_turret_04.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514216
-    m_Key: station.turret.station_turret_04.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514217
-    m_Key: target.station_turret_04.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514218
-    m_Key: station.turret.station_turret_04.upgrade.1.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514219
-    m_Key: station.turret.station_turret_04.upgrade.1.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514220
-    m_Key: station.turret.station_turret_04.upgrade.2.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708480
-    m_Key: station.turret.station_turret_04.upgrade.2.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708481
-    m_Key: station.turret.station_turret_04.upgrade.3.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1202708482
-    m_Key: station.turret.station_turret_04.upgrade.3.description
     m_Metadata:
       m_Items: []
   - m_Id: 128425879658496

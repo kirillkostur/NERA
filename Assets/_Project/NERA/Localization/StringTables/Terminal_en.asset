@@ -27,10 +27,6 @@ MonoBehaviour:
     m_Localized: Select an object in the 3D station preview.
     m_Metadata:
       m_Items: []
-  - m_Id: 1886380033
-    m_Localized: Station module. No remote power controls are available.
-    m_Metadata:
-      m_Items: []
   - m_Id: 1886380034
     m_Localized: Low Power
     m_Metadata:
@@ -45,85 +41,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1886380037
     m_Localized: NO OBJECT SELECTED
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380038
-    m_Localized: ACTIVE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380039
-    m_Localized: OFFLINE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380040
-    m_Localized: LOW POWER
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380041
-    m_Localized: STOPPED
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380042
-    m_Localized: 'Charge - {0}/{1}
-
-      Consumption - {2}
-
-      Connected objects
-      - {3}'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380043
-    m_Localized: 'Status - {0}
-
-      Generation - {1}
-
-      Efficiency - {2}%'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380044
-    m_Localized: 'Status - {0}
-
-      Consumption - {1}
-
-      Condition - {2}%
-
-      Upgrade
-      level - {3}'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380045
-    m_Localized: 'Status - {0}
-
-      Condition - {1}%
-
-      Upgrade level - {2}'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380046
-    m_Localized: MAXIMUM LEVEL
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380047
-    m_Localized: '{0} {1}'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380048
-    m_Localized: '{0} - {1}/{2}'
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380049
-    m_Localized: Energy - {0}
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
-  - m_Id: 1886380050
-    m_Localized: Upgrade level is not configured.
     m_Metadata:
       m_Items: []
   - m_Id: 1886380051
@@ -215,10 +132,6 @@ MonoBehaviour:
     m_Localized: YES
     m_Metadata:
       m_Items: []
-  - m_Id: 8458854401
-    m_Localized: UPGRADE
-    m_Metadata:
-      m_Items: []
   - m_Id: 8463048704
     m_Localized: ESC
     m_Metadata:
@@ -252,7 +165,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 8509186049
-    m_Localized: UPGRADES
+    m_Localized: UPGRADE
     m_Metadata:
       m_Items: []
   - m_Id: 8509186050
@@ -315,38 +228,6 @@ MonoBehaviour:
     m_Localized: STATUS
     m_Metadata:
       m_Items: []
-  - m_Id: 60594622291968
-    m_Localized: UPGRADES
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291969
-    m_Localized: SOLAR PANEL
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291970
-    m_Localized: BATTERY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291971
-    m_Localized: TERMINAL
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291972
-    m_Localized: DRONE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291973
-    m_Localized: LABORATORY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291975
-    m_Localized: ANTENNA
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594626486272
-    m_Localized: TURRET
-    m_Metadata:
-      m_Items: []
   references:
     version: 2
     RefIds:
@@ -355,13 +236,6 @@ MonoBehaviour:
       data:
         m_Entries: 
         m_SharedEntries:
-        - id: 1886380042
-        - id: 1886380043
-        - id: 1886380044
-        - id: 1886380045
-        - id: 1886380047
-        - id: 1886380048
-        - id: 1886380049
         - id: 1886380051
         - id: 1886380053
         - id: 1886380055

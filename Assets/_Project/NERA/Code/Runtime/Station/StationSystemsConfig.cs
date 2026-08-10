@@ -1,92 +1,67 @@
 using System;
 using System.Collections.Generic;
-using NERA.Items;
 using NERA.Localization;
 using UnityEngine;
 
 namespace NERA.Station
 {
-    [Serializable]
-    public sealed class StationUpgradeItemRequirement
+    public enum StationObjectStat
     {
-        [SerializeField] private ItemData item;
-        [SerializeField, Min(1)] private int count = 1;
+        Damage,
+        DetectionRange,
+        RotationSpeed,
+        FireInterval,
+        IdleEnergyConsumption,
+        DamageTaken,
+        Capacity,
+        Generation,
+        ScanRange,
+        TravelRange,
+        FiringEnergyConsumption,
+        InitialCharge,
+        ChargingEnergyConsumption,
+        CalibrationEnergyConsumption,
+        CalibrationDuration
+    }
 
-        public ItemData Item => item;
-        public string ItemId => item != null ? item.ItemId : string.Empty;
-        public string DisplayName => item != null &&
-            !string.IsNullOrWhiteSpace(item.DisplayName)
-                ? item.DisplayName
-                : ItemId;
-        public int Count => Mathf.Max(1, count);
+    [Serializable]
+    public sealed class StationObjectStatDefinition
+    {
+        [SerializeField] private StationObjectStat stat;
+        [SerializeField] private string displayName;
+        [SerializeField] private float baseValue;
+        [SerializeField] private string unit;
+        [SerializeField, Range(0, 3)] private int decimals = 1;
 
-        public StationUpgradeItemRequirement(ItemData requiredItem, int requiredCount)
+        public StationObjectStat Stat => stat;
+        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
+            ? stat.ToString()
+            : displayName.Trim();
+        public float BaseValue => baseValue;
+        public string Unit => unit?.Trim() ?? string.Empty;
+        public int Decimals => Mathf.Clamp(decimals, 0, 3);
+
+        public string Format(float value)
         {
-            item = requiredItem;
-            count = Mathf.Max(1, requiredCount);
+            return $"{value.ToString($"F{Decimals}")}{Unit}";
         }
     }
 
     [Serializable]
-    public sealed class StationUpgradeLevelDefinition
+    public sealed class StationObjectSlotDefinition
     {
-        [SerializeField, Min(1)] private int targetLevel = 1;
+        [SerializeField] private string slotId;
         [SerializeField] private string displayName;
-        [Tooltip("Icon shown in this upgrade level slot in the station terminal.")]
-        [SerializeField] private Sprite upgradeIcon;
-        [SerializeField, TextArea(2, 4)] private string description;
-        [SerializeField] private List<StationUpgradeItemRequirement> requiredItems =
-            new List<StationUpgradeItemRequirement>();
-        [SerializeField, Min(0f)] private float energyCost;
 
-        [NonSerialized] private string localizationKey;
-
-        public int TargetLevel => Mathf.Max(1, targetLevel);
-        public string DisplayName => string.IsNullOrEmpty(localizationKey)
-            ? displayName ?? string.Empty
-            : NERALocalization.Get(
-                NERALocalization.ContentTable,
-                $"{localizationKey}.name",
-                displayName ?? string.Empty);
-        public Sprite UpgradeIcon => upgradeIcon;
-        public string Description => string.IsNullOrEmpty(localizationKey)
-            ? description ?? string.Empty
-            : NERALocalization.Get(
-                NERALocalization.ContentTable,
-                $"{localizationKey}.description",
-                description ?? string.Empty);
-        public IReadOnlyList<StationUpgradeItemRequirement> RequiredItems =>
-            requiredItems != null
-                ? requiredItems
-                : Array.Empty<StationUpgradeItemRequirement>();
-        public float EnergyCost => Mathf.Max(0f, energyCost);
-
-        public StationUpgradeLevelDefinition(
-            int level,
-            string name,
-            string details,
-            float requiredEnergy,
-            params StationUpgradeItemRequirement[] items)
-        {
-            targetLevel = Mathf.Max(1, level);
-            displayName = name;
-            description = details;
-            energyCost = Mathf.Max(0f, requiredEnergy);
-            requiredItems = items != null
-                ? new List<StationUpgradeItemRequirement>(items)
-                : new List<StationUpgradeItemRequirement>();
-        }
-
-        internal void SetLocalizationKey(string parentKey)
-        {
-            localizationKey = $"{parentKey}.upgrade.{TargetLevel}";
-        }
+        public string SlotId => slotId?.Trim() ?? string.Empty;
+        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
+            ? SlotId
+            : displayName.Trim();
     }
 
     /// <summary>
-    /// Complete configuration of one selectable station object.
-    /// An empty object id marks the single shared object of its system type.
-    /// Repeated systems, such as turrets, use a unique object id per instance.
+    /// Central configuration for one concrete station object. Base values and
+    /// physical slots live here; installed engineering parts only modify them.
     /// </summary>
     [Serializable]
     public sealed class StationSystemDefinition
@@ -97,9 +72,12 @@ namespace NERA.Station
         [SerializeField, TextArea] private string description;
         [SerializeField] private bool controllable;
         [SerializeField] private bool initiallyActive = true;
-        [SerializeField, Min(0)] private int initialLevel = 1;
-        [SerializeField] private List<StationUpgradeLevelDefinition> upgradeLevels =
-            new List<StationUpgradeLevelDefinition>();
+        [Header("Base Object Stats")]
+        [SerializeField] private List<StationObjectStatDefinition> baseStats =
+            new List<StationObjectStatDefinition>();
+        [Header("Physical Upgrade Slots")]
+        [SerializeField] private List<StationObjectSlotDefinition> slots =
+            new List<StationObjectSlotDefinition>();
 
         [NonSerialized] private string localizationKey;
 
@@ -119,67 +97,58 @@ namespace NERA.Station
                 description ?? string.Empty);
         public bool Controllable => controllable;
         public bool InitiallyActive => initiallyActive;
-        public int InitialLevel => Mathf.Clamp(initialLevel, 0, MaxLevel);
-        public bool RequiresUpgradeToOperate => InitialLevel == 0 && MaxLevel > 0;
-        public bool Upgradeable
-        {
-            get
-            {
-                foreach (StationUpgradeLevelDefinition level in UpgradeLevels)
-                {
-                    if (level != null && level.TargetLevel > InitialLevel)
-                        return true;
-                }
-
-                return false;
-            }
-        }
-        public int MaxLevel
-        {
-            get
-            {
-                int maximum = Mathf.Max(0, initialLevel);
-                foreach (StationUpgradeLevelDefinition level in UpgradeLevels)
-                {
-                    if (level != null)
-                        maximum = Mathf.Max(maximum, level.TargetLevel);
-                }
-
-                return maximum;
-            }
-        }
-        public IReadOnlyList<StationUpgradeLevelDefinition> UpgradeLevels =>
-            upgradeLevels != null
-                ? upgradeLevels
-                : Array.Empty<StationUpgradeLevelDefinition>();
+        public IReadOnlyList<StationObjectStatDefinition> BaseStats =>
+            baseStats ?? (IReadOnlyList<StationObjectStatDefinition>)
+                Array.Empty<StationObjectStatDefinition>();
+        public IReadOnlyList<StationObjectSlotDefinition> Slots =>
+            slots ?? (IReadOnlyList<StationObjectSlotDefinition>)
+                Array.Empty<StationObjectSlotDefinition>();
+        public bool SupportsPhysicalUpgrades => Slots.Count > 0;
 
         private string RawDisplayName => string.IsNullOrWhiteSpace(displayName)
             ? systemType.ToString()
-            : displayName;
+            : displayName.Trim();
 
-        public StationUpgradeLevelDefinition GetUpgradeDefinition(int targetLevel)
+        public StationObjectStatDefinition FindStat(StationObjectStat stat)
         {
-            foreach (StationUpgradeLevelDefinition level in UpgradeLevels)
+            foreach (StationObjectStatDefinition definition in BaseStats)
             {
-                if (level != null && level.TargetLevel == targetLevel)
-                    return level;
+                if (definition != null && definition.Stat == stat)
+                    return definition;
             }
+            return null;
+        }
 
+        public float GetBaseStat(StationObjectStat stat, float fallback = 0f)
+        {
+            return FindStat(stat)?.BaseValue ?? fallback;
+        }
+
+        public StationObjectSlotDefinition FindSlot(string slotId)
+        {
+            string requested = slotId?.Trim() ?? string.Empty;
+            foreach (StationObjectSlotDefinition slot in Slots)
+            {
+                if (slot != null && string.Equals(
+                        slot.SlotId,
+                        requested,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return slot;
+                }
+            }
             return null;
         }
 
         internal void SetLocalizationKey(string key)
         {
             localizationKey = key;
-            foreach (StationUpgradeLevelDefinition level in UpgradeLevels)
-                level?.SetLocalizationKey(localizationKey);
         }
-
     }
 
     [CreateAssetMenu(
         fileName = "StationSystems_Default",
-        menuName = "NERA/Station/Systems Config")]
+        menuName = "NERA/Station/Object Configuration")]
     public sealed class StationSystemsConfig : ScriptableObject
     {
         [SerializeField] private List<StationSystemDefinition> stationObjects =
@@ -190,9 +159,9 @@ namespace NERA.Station
             get
             {
                 EnsureLocalizationKeys();
-                return stationObjects != null
-                    ? stationObjects
-                    : Array.Empty<StationSystemDefinition>();
+                return stationObjects ??
+                    (IReadOnlyList<StationSystemDefinition>)
+                        Array.Empty<StationSystemDefinition>();
             }
         }
 
@@ -202,7 +171,6 @@ namespace NERA.Station
         {
             string requestedId = Normalize(objectId);
             StationSystemDefinition firstOfType = null;
-
             foreach (StationSystemDefinition definition in StationObjects)
             {
                 if (definition == null || definition.SystemType != type)
@@ -217,7 +185,6 @@ namespace NERA.Station
                     return definition;
                 }
             }
-
             return string.IsNullOrEmpty(requestedId) ? firstOfType : null;
         }
 
@@ -229,8 +196,7 @@ namespace NERA.Station
 
             foreach (StationSystemDefinition definition in StationObjects)
             {
-                if (definition != null &&
-                    string.Equals(
+                if (definition != null && string.Equals(
                         definition.ObjectId,
                         requestedId,
                         StringComparison.OrdinalIgnoreCase))
@@ -238,58 +204,50 @@ namespace NERA.Station
                     return definition;
                 }
             }
-
             return null;
-        }
-
-        public StationUpgradeLevelDefinition GetUpgradeDefinition(
-            StationSystemType type,
-            string objectId,
-            int targetLevel)
-        {
-            return Find(type, objectId)?.GetUpgradeDefinition(targetLevel);
-        }
-
-        public int GetMaxLevel(StationSystemType type, string objectId)
-        {
-            return Find(type, objectId)?.MaxLevel ?? 0;
         }
 
         public static StationSystemsConfig LoadDefault()
         {
-            StationSystemsConfig loaded =
-                Resources.Load<StationSystemsConfig>(
-                    "Station/StationSystems_Default");
-            if (loaded != null)
-                return loaded;
+            return Resources.Load<StationSystemsConfig>(
+                "Station/StationSystems_Default");
+        }
 
-            Debug.LogError(
-                "StationSystems_Default is missing from Resources/Station. " +
-                "Station data must be configured in that single asset.");
-            return CreateInstance<StationSystemsConfig>();
+        public static float GetEffectiveStat(
+            StationSystemType type,
+            string objectId,
+            StationObjectStat stat,
+            float fallback = 0f)
+        {
+            StationSystemsController runtime =
+                StationSystemsController.Instance;
+            if (runtime != null)
+                return runtime.GetStat(type, objectId, stat, fallback);
+
+            StationSystemDefinition definition =
+                LoadDefault()?.Find(type, objectId);
+            return definition?.GetBaseStat(stat, fallback) ?? fallback;
+        }
+
+        private void EnsureLocalizationKeys()
+        {
+            for (int index = 0; index < stationObjects.Count; index++)
+            {
+                StationSystemDefinition definition = stationObjects[index];
+                if (definition == null)
+                    continue;
+                string type =
+                    definition.SystemType.ToString().ToLowerInvariant();
+                string id = string.IsNullOrWhiteSpace(definition.ObjectId)
+                    ? "shared"
+                    : definition.ObjectId.ToLowerInvariant();
+                definition.SetLocalizationKey($"station.{type}.{id}");
+            }
         }
 
         private static string Normalize(string value)
         {
             return value?.Trim() ?? string.Empty;
-        }
-
-        private void EnsureLocalizationKeys()
-        {
-            if (stationObjects == null)
-                return;
-
-            foreach (StationSystemDefinition definition in stationObjects)
-            {
-                if (definition == null)
-                    continue;
-
-                string objectId = string.IsNullOrWhiteSpace(definition.ObjectId)
-                    ? "shared"
-                    : NERALocalization.NormalizeKeyPart(definition.ObjectId);
-                definition.SetLocalizationKey(
-                    $"station.{NERALocalization.NormalizeKeyPart(definition.SystemType.ToString())}.{objectId}");
-            }
         }
     }
 }

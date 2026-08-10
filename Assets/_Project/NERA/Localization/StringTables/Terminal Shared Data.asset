@@ -23,10 +23,6 @@ MonoBehaviour:
     m_Key: station.select_object_hint
     m_Metadata:
       m_Items: []
-  - m_Id: 1886380033
-    m_Key: station.no_remote_controls
-    m_Metadata:
-      m_Items: []
   - m_Id: 1886380034
     m_Key: station.power.low
     m_Metadata:
@@ -41,58 +37,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1886380037
     m_Key: station.no_object_selected
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380038
-    m_Key: station.state.active
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380039
-    m_Key: station.state.offline
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380040
-    m_Key: station.state.low_power
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380041
-    m_Key: station.state.stopped
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380042
-    m_Key: station.status.battery
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380043
-    m_Key: station.status.solar
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380044
-    m_Key: station.status.system_with_consumption
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380045
-    m_Key: station.status.system
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380046
-    m_Key: station.maximum_level
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380047
-    m_Key: station.upgrade.level_label
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380048
-    m_Key: station.upgrade.item_requirement
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380049
-    m_Key: station.upgrade.energy_requirement
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1886380050
-    m_Key: station.upgrade.not_configured
     m_Metadata:
       m_Items: []
   - m_Id: 1886380051
@@ -171,10 +115,6 @@ MonoBehaviour:
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
     m_Metadata:
       m_Items: []
-  - m_Id: 8458854401
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_upgrade_upgradebutton_text_upgrade
-    m_Metadata:
-      m_Items: []
   - m_Id: 8463048704
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_label
     m_Metadata:
@@ -208,7 +148,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 8509186049
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_upgradesmapbutton_text_upgrade
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
     m_Metadata:
       m_Items: []
   - m_Id: 8509186050
@@ -271,42 +211,6 @@ MonoBehaviour:
     m_Key: station.tab.status
     m_Metadata:
       m_Items: []
-  - m_Id: 60594622291968
-    m_Key: station.tab.upgrades
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291969
-    m_Key: station.system_name.solarpanel
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291970
-    m_Key: station.system_name.battery
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291971
-    m_Key: station.system_name.computer
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291972
-    m_Key: station.system_name.drone
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291973
-    m_Key: station.system_name.laboratory
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594622291975
-    m_Key: station.system_name.antenna
-    m_Metadata:
-      m_Items: []
-  - m_Id: 60594626486272
-    m_Key: station.system_name.turret
-    m_Metadata:
-      m_Items: []
-  m_Metadata:
-    m_Items: []
-  m_KeyGenerator:
-    rid: 1138171735028269368
   references:
     version: 2
     RefIds:

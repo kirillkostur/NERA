@@ -377,33 +377,11 @@ namespace NERA.Editor.Localization
         {
             AddT("station.select_object", "SELECT STATION OBJECT", "ВЫБЕРИТЕ ОБЪЕКТ СТАНЦИИ");
             AddT("station.tab.status", "STATUS", "СОСТОЯНИЕ");
-            AddT("station.tab.upgrades", "UPGRADES", "УЛУЧШЕНИЯ");
-            AddT("station.system_name.solarpanel", "SOLAR PANEL", "СОЛНЕЧНАЯ ПАНЕЛЬ");
-            AddT("station.system_name.battery", "BATTERY", "БАТАРЕЯ");
-            AddT("station.system_name.computer", "TERMINAL", "ТЕРМИНАЛ");
-            AddT("station.system_name.drone", "DRONE", "ДРОН");
-            AddT("station.system_name.laboratory", "LABORATORY", "ЛАБОРАТОРИЯ");
-            AddT("station.system_name.antenna", "ANTENNA", "АНТЕННА");
-            AddT("station.system_name.turret", "TURRET", "ТУРЕЛЬ");
             AddT("station.select_object_hint", "Select an object in the 3D station preview.", "Выберите объект на трёхмерной модели станции.");
-            AddT("station.no_remote_controls", "Station module. No remote power controls are available.", "Модуль станции. Удалённое управление питанием недоступно.");
             AddT("station.power.low", "Low Power", "Мало энергии");
             AddT("station.power.active", "Active", "Активно");
             AddT("station.power.inactive", "Inactive", "Неактивно");
             AddT("station.no_object_selected", "NO OBJECT SELECTED", "ОБЪЕКТ НЕ ВЫБРАН");
-            AddT("station.state.active", "ACTIVE", "АКТИВНО");
-            AddT("station.state.offline", "OFFLINE", "ОТКЛЮЧЕНО");
-            AddT("station.state.low_power", "LOW POWER", "МАЛО ЭНЕРГИИ");
-            AddT("station.state.stopped", "STOPPED", "ОСТАНОВЛЕНО");
-            AddT("station.status.battery", "Charge - {0}/{1}\nConsumption - {2}\nConnected objects - {3}", "Заряд — {0}/{1}\nПотребление — {2}\nПодключено объектов — {3}", true);
-            AddT("station.status.solar", "Status - {0}\nGeneration - {1}\nEfficiency - {2}%", "Состояние — {0}\nГенерация — {1}\nЭффективность — {2}%", true);
-            AddT("station.status.system_with_consumption", "Status - {0}\nConsumption - {1}\nCondition - {2}%\nUpgrade level - {3}", "Состояние — {0}\nПотребление — {1}\nИсправность — {2}%\nУровень улучшения — {3}", true);
-            AddT("station.status.system", "Status - {0}\nCondition - {1}%\nUpgrade level - {2}", "Состояние — {0}\nИсправность — {1}%\nУровень улучшения — {2}", true);
-            AddT("station.maximum_level", "MAXIMUM LEVEL", "МАКСИМАЛЬНЫЙ УРОВЕНЬ");
-            AddT("station.upgrade.level_label", "{0} {1}", "{0} {1}", true);
-            AddT("station.upgrade.item_requirement", "{0} - {1}/{2}", "{0} — {1}/{2}", true);
-            AddT("station.upgrade.energy_requirement", "Energy - {0}", "Энергия — {0}", true);
-            AddT("station.upgrade.not_configured", "Upgrade level is not configured.", "Уровень улучшения не настроен.");
             AddT("map.travel_confirmation", "Travel to {0}?", "Переместиться в локацию «{0}»?", true);
             AddT("map.select_sector", "Select a sector on the 3D map.", "Выберите сектор на трёхмерной карте.");
             AddT("map.drone_target", "DRONE TARGET\n{0}", "ЦЕЛЬ ДРОНА\n{0}", true);
@@ -510,14 +488,18 @@ namespace NERA.Editor.Localization
                     if (!string.IsNullOrWhiteSpace(objectId))
                         AddTarget(objectId, name, TranslateContent(baseKey + ".name", name));
 
-                    SerializedProperty upgrades = system.FindPropertyRelative("upgradeLevels");
-                    for (int levelIndex = 0; levelIndex < upgrades.arraySize; levelIndex++)
+                    SerializedProperty stats =
+                        system.FindPropertyRelative("baseStats");
+                    for (int statIndex = 0;
+                         stats != null && statIndex < stats.arraySize;
+                         statIndex++)
                     {
-                        SerializedProperty upgrade = upgrades.GetArrayElementAtIndex(levelIndex);
-                        int level = upgrade.FindPropertyRelative("targetLevel").intValue;
-                        string upgradeKey = $"{baseKey}.upgrade.{level}";
-                        AddContent(upgradeKey + ".name", ReadString(upgrade.FindPropertyRelative("displayName")));
-                        AddContent(upgradeKey + ".description", ReadString(upgrade.FindPropertyRelative("description")));
+                        SerializedProperty stat =
+                            stats.GetArrayElementAtIndex(statIndex);
+                        string statName = ReadString(
+                            stat.FindPropertyRelative("displayName"));
+                        if (!string.IsNullOrWhiteSpace(statName))
+                            AddContent($"{baseKey}.stat.{statIndex}", statName);
                     }
                 }
             }

@@ -398,9 +398,14 @@ namespace NERA.Research
             if (energy == null)
                 return;
 
+            float consumption = StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Laboratory,
+                string.Empty,
+                StationObjectStat.IdleEnergyConsumption,
+                4f);
             energy.RegisterConsumer(
                 LaboratoryConsumerId,
-                energy.Config.LaboratoryConsumption,
+                consumption,
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Laboratory),
                 StationSystemType.Laboratory

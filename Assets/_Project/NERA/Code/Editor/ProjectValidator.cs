@@ -42,35 +42,6 @@ namespace NERA.Editor
             "Assets/_Project/NERA/Scenes/Player_Station.unity"
         };
 
-        private static readonly UpgradePrefabExpectation[]
-            UpgradePrefabExpectations =
-            {
-                new UpgradePrefabExpectation(
-                    "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
-                    "P_StationTurret_Stages.prefab",
-                    StationSystemType.Turret,
-                    0,
-                    3),
-                new UpgradePrefabExpectation(
-                    "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
-                    "P_StationBattery_Stages.prefab",
-                    StationSystemType.Battery,
-                    1,
-                    2),
-                new UpgradePrefabExpectation(
-                    "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
-                    "P_StationDrone_Stages.prefab",
-                    StationSystemType.Drone,
-                    1,
-                    3),
-                new UpgradePrefabExpectation(
-                    "Assets/_Project/NERA/Prefabs/StationUpgrade/" +
-                    "P_StationAntenna_Stages.prefab",
-                    StationSystemType.Antenna,
-                    0,
-                    3)
-            };
-
         private static readonly QualityPresetExpectation[]
             PCQualityPresetExpectations =
             {
@@ -94,7 +65,6 @@ namespace NERA.Editor
                 $"{EditorBuildSettings.scenes.Count(scene => scene.enabled)} " +
                 $"enabled build scenes, " +
                 $"{FindLocationAssets().Length} location configs and " +
-                $"{UpgradePrefabExpectations.Length} upgrade prefabs, " +
                 $"{PCQualityPresetExpectations.Length} PC quality presets.");
         }
 
@@ -106,7 +76,6 @@ namespace NERA.Editor
             ValidatePlayerPrefab(errors);
             ValidateExpeditionLocations(errors);
             ValidateQuestCatalog(errors);
-            ValidateUpgradePrefabs(errors);
             ValidatePCQualityPresets(errors);
 
             if (errors.Count > 0)
@@ -656,74 +625,6 @@ namespace NERA.Editor
                 errors.Add($"Quest catalog: {error}");
         }
 
-        private static void ValidateUpgradePrefabs(List<string> errors)
-        {
-            foreach (UpgradePrefabExpectation expectation in
-                     UpgradePrefabExpectations)
-            {
-                GameObject prefab =
-                    AssetDatabase.LoadAssetAtPath<GameObject>(
-                        expectation.Path);
-                if (prefab == null)
-                {
-                    errors.Add(
-                        $"Station upgrade prefab is missing: " +
-                        expectation.Path);
-                    continue;
-                }
-
-                StationUpgradeStageController controller =
-                    prefab.GetComponent<StationUpgradeStageController>();
-                if (controller == null)
-                {
-                    errors.Add(
-                        $"{expectation.Path} has no " +
-                        nameof(StationUpgradeStageController));
-                    continue;
-                }
-
-                if (controller.SystemType != expectation.SystemType)
-                {
-                    errors.Add(
-                        $"{expectation.Path} targets " +
-                        $"{controller.SystemType}, expected " +
-                        expectation.SystemType);
-                }
-
-                if (controller.MaxStage != expectation.MaximumStage)
-                {
-                    errors.Add(
-                        $"{expectation.Path} has max stage " +
-                        $"{controller.MaxStage}, expected " +
-                        expectation.MaximumStage);
-                }
-
-                for (int stage = 0;
-                     stage <= expectation.MaximumStage;
-                     stage++)
-                {
-                    Transform stageRoot =
-                        prefab.transform.Find($"Stage_{stage}");
-                    if (stageRoot == null)
-                    {
-                        errors.Add(
-                            $"{expectation.Path} is missing Stage_{stage}");
-                        continue;
-                    }
-
-                    bool shouldBeActive =
-                        stage == expectation.InitialStage;
-                    if (stageRoot.gameObject.activeSelf != shouldBeActive)
-                    {
-                        errors.Add(
-                            $"{expectation.Path}/Stage_{stage} active state " +
-                            $"is {stageRoot.gameObject.activeSelf}, expected " +
-                            shouldBeActive);
-                    }
-                }
-            }
-        }
-
         private static void ValidatePCQualityPresets(List<string> errors)
         {
             HashSet<string> qualityNames = new HashSet<string>(
@@ -747,26 +648,6 @@ namespace NERA.Editor
                         expectation.PipelineAssetPath);
                 }
             }
-        }
-
-        private readonly struct UpgradePrefabExpectation
-        {
-            public UpgradePrefabExpectation(
-                string path,
-                StationSystemType systemType,
-                int initialStage,
-                int maximumStage)
-            {
-                Path = path;
-                SystemType = systemType;
-                InitialStage = initialStage;
-                MaximumStage = maximumStage;
-            }
-
-            public string Path { get; }
-            public StationSystemType SystemType { get; }
-            public int InitialStage { get; }
-            public int MaximumStage { get; }
         }
 
         private readonly struct QualityPresetExpectation

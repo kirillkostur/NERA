@@ -870,7 +870,7 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(data));
 
-            Assert.That(restored.version, Is.EqualTo(16));
+            Assert.That(restored.version, Is.EqualTo(18));
             Assert.That(restored.activeQuests[0].currentStageIndex,
                 Is.EqualTo(2));
             Assert.That(restored.maintenanceObjects[0].objectId,
@@ -1680,16 +1680,12 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void AntennaUsesLocationScanDuration()
+        public void AntennaUsesCentralObjectCalibrationDuration()
         {
-            SerializedObject serializedSignal = new SerializedObject(signal);
-            serializedSignal.FindProperty("antennaScanDuration").floatValue = 0.5f;
-            serializedSignal.ApplyModifiedPropertiesWithoutUndo();
-
             Assert.That(antenna.StartCalibration(signal), Is.True);
-            Assert.That(antenna.CalibrationDuration, Is.EqualTo(0.5f));
+            Assert.That(antenna.CalibrationDuration, Is.EqualTo(8f));
 
-            antenna.AdvanceCalibration(0.4f);
+            antenna.AdvanceCalibration(7.9f);
             Assert.That(antenna.State, Is.EqualTo(AntennaState.Calibrating));
 
             antenna.AdvanceCalibration(0.1f);
@@ -1697,25 +1693,23 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void AntennaCannotCalibrateSignalAboveItsUpgradeLevel()
+        public void AntennaCannotCalibrateSignalBeyondConfiguredScanRange()
         {
             StationSystemsController systems =
                 root.AddComponent<StationSystemsController>();
             SetSingleton(typeof(StationSystemsController), systems);
 
             SerializedObject serializedSignal = new SerializedObject(signal);
-            serializedSignal.FindProperty("requiredAntennaUpgradeLevel").intValue = 2;
+            serializedSignal.FindProperty("requiredAntennaScanRange").floatValue = 2f;
             serializedSignal.ApplyModifiedPropertiesWithoutUndo();
 
             systems.Restore(
-                null,
                 null,
                 new[]
                 {
                     new StationObjectSystemState(
                         StationSystemType.Antenna,
                         "station_antenna",
-                        1,
                         true)
                 });
             antenna.RefreshAvailability();
@@ -1723,14 +1717,18 @@ namespace NERA.Tests
 
             systems.Restore(
                 null,
-                null,
                 new[]
                 {
                     new StationObjectSystemState(
                         StationSystemType.Antenna,
                         "station_antenna",
-                        2,
-                        true)
+                        true,
+                        new[]
+                        {
+                            new StationInstalledPartState(
+                                "Slot_1",
+                                "research_scanner_01")
+                        })
                 });
             antenna.RefreshAvailability();
             Assert.That(antenna.CanCalibrate(signal), Is.True);

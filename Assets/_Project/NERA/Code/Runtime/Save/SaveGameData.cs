@@ -20,8 +20,16 @@ namespace NERA.Save
     {
         public int systemType;
         public string objectId;
-        public int upgradeLevel;
         public bool requestedActive;
+        public List<StationInstalledPartSaveData> installedParts =
+            new List<StationInstalledPartSaveData>();
+    }
+
+    [Serializable]
+    public sealed class StationInstalledPartSaveData
+    {
+        public string slotId;
+        public string itemId;
     }
 
     [Serializable]
@@ -34,7 +42,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 16;
+        public int version = 18;
         public string checkpointSceneName;
         public string checkpointSpawnPointId;
         public bool checkpointUsesWorldPose;

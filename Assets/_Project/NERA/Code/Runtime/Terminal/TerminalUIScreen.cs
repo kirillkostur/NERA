@@ -292,9 +292,14 @@ namespace NERA.Terminal
             if (energy == null)
                 return;
 
+            float consumption = StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Computer,
+                string.Empty,
+                StationObjectStat.IdleEnergyConsumption,
+                2f);
             energy.RegisterConsumer(
                 TerminalConsumerId,
-                energy.Config.TerminalConsumption,
+                consumption,
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Computer),
                 StationSystemType.Computer);

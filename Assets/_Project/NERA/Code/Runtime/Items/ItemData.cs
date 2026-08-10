@@ -54,6 +54,10 @@ namespace NERA.Items
         [Header("Energy")]
         [SerializeField] private ItemEnergyDefinition energyDefinition;
 
+        [Header("Engineering Part")]
+        [SerializeField] private EngineeringPartDefinition
+            engineeringPartDefinition;
+
         public string ItemId => itemId;
         public string DisplayName => NERALocalization.Content(
             "item", ItemId, "name", displayName);
@@ -75,6 +79,21 @@ namespace NERA.Items
             anomalyIntegrationDefinition;
         public WeaponDefinition WeaponDefinition => weaponDefinition;
         public ItemEnergyDefinition EnergyDefinition => energyDefinition;
+        public EngineeringPartDefinition EngineeringPartDefinition =>
+            engineeringPartDefinition;
+
+        public EngineeringPartCompatibility FindEngineeringCompatibility(
+            Station.StationSystemType systemType,
+            string objectId,
+            string slotId)
+        {
+            return itemType == ItemType.EngineeringPart
+                ? engineeringPartDefinition?.Find(
+                    systemType,
+                    objectId,
+                    slotId)
+                : null;
+        }
 
         private void OnValidate()
         {

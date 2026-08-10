@@ -45,12 +45,17 @@ namespace NERA.Antenna
             : fallbackCondition;
         public bool IsOperational => Condition > 0.01f;
         public bool CanStartCalibration => CanCalibrate(FindNextSignalCandidate());
-        public float CalibrationDuration =>
-            CalibrationTarget != null
-                ? CalibrationTarget.AntennaScanDuration
-                : EnergySystemController.Instance != null
-                ? EnergySystemController.Instance.Config.AntennaCalibrationDuration
-                : EnergyBalanceConfig.LoadDefault().AntennaCalibrationDuration;
+        public float CalibrationDuration
+        {
+            get
+            {
+                return StationSystemsConfig.GetEffectiveStat(
+                    StationSystemType.Antenna,
+                    "station_antenna",
+                    StationObjectStat.CalibrationDuration,
+                    8f);
+            }
+        }
 
         private float elapsedCalibrationTime;
         private float fallbackCondition = 1f;
@@ -138,7 +143,7 @@ namespace NERA.Antenna
                    discovery != null &&
                    target != null &&
                    target.DiscoverySource == DiscoverySource.Antenna &&
-                   HasRequiredAntennaUpgrade(target) &&
+                   HasRequiredAntennaRange(target) &&
                    ActiveSignal == null &&
                    !IsConsumed(target) &&
                    HasAnyDiscoveredExpeditionSector() &&
@@ -247,8 +252,7 @@ namespace NERA.Antenna
             {
                 StationSystemsController systems = StationSystemsController.Instance;
                 return systems == null ||
-                    (systems.IsUnlocked(StationSystemType.Antenna) &&
-                     systems.IsRequestedActive(StationSystemType.Antenna));
+                    systems.IsRequestedActive(StationSystemType.Antenna);
             }
         }
 
@@ -359,7 +363,7 @@ namespace NERA.Antenna
             {
                 if (location == null ||
                     location.DiscoverySource != DiscoverySource.Antenna ||
-                    !HasRequiredAntennaUpgrade(location) ||
+                    !HasRequiredAntennaRange(location) ||
                     IsConsumed(location) ||
                     !HasAnyDiscoveredExpeditionSector())
                 {
@@ -372,7 +376,7 @@ namespace NERA.Antenna
             return null;
         }
 
-        private static bool HasRequiredAntennaUpgrade(
+        private static bool HasRequiredAntennaRange(
             ExpeditionLocationData location)
         {
             StationSystemsController systems = StationSystemsController.Instance;
@@ -577,7 +581,11 @@ namespace NERA.Antenna
 
             energy.RegisterConsumer(
                 AntennaConsumerId,
-                energy.Config.AntennaCalibrationConsumption,
+                StationSystemsConfig.GetEffectiveStat(
+                    StationSystemType.Antenna,
+                    "station_antenna",
+                    StationObjectStat.CalibrationEnergyConsumption,
+                    3f),
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Antenna),
                 StationSystemType.Antenna,

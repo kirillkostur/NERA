@@ -20,3 +20,13 @@ MonoBehaviour:
   worldPrefab: {fileID: 7962635430784054245, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
   equippedVisualPrefab: {fileID: 0}
   researchDefinition: {fileID: 0}
+  engineeringPartDefinition:
+    installedVisualPrefab: {fileID: 2278190858216321600, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
+    compatibleInstallations:
+    - systemType: 7
+      objectId: 
+      slotId: Slot_4
+      modifiers:
+      - stat: 2
+        mode: 1
+        value: 1.35

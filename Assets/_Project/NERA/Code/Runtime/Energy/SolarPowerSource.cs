@@ -69,9 +69,29 @@ namespace NERA.Energy
 
         private float EffectiveOutputMultiplier =>
             IsRequestedActive()
-                ? outputMultiplier *
+                ? outputMultiplier * ConfiguredGenerationMultiplier *
                   (maintenance != null ? maintenance.Condition : 1f)
                 : 0f;
+
+        private float ConfiguredGenerationMultiplier
+        {
+            get
+            {
+                EnergySystemController energy = EnergySystemController.Instance;
+                float clearDayGeneration =
+                    energy != null ? energy.Config.ClearDayGeneration : 0f;
+                if (clearDayGeneration <= 0.001f)
+                    return 1f;
+
+                float configuredGeneration =
+                    StationSystemsConfig.GetEffectiveStat(
+                    StationSystemType.SolarPanel,
+                    ResolvePanelId(),
+                    StationObjectStat.Generation,
+                    clearDayGeneration);
+                return Mathf.Max(0f, configuredGeneration / clearDayGeneration);
+            }
+        }
 
         private bool IsRequestedActive()
         {
@@ -79,15 +99,9 @@ namespace NERA.Energy
                 return true;
 
             string panelId = ResolvePanelId();
-            StationSystemDefinition definition =
-                stationSystems.GetDefinition(
-                    StationSystemType.SolarPanel,
-                    panelId);
             return stationSystems.IsRequestedActive(
                 StationSystemType.SolarPanel,
-                panelId,
-                definition?.InitialLevel ?? 1,
-                definition?.InitiallyActive ?? true);
+                panelId);
         }
 
         private string ActivePanelId =>

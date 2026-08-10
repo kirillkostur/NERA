@@ -545,14 +545,9 @@ namespace NERA.Energy
                 return true;
 
             StationSystemType type = consumer.StationSystem.Value;
-            StationSystemDefinition definition = systems.GetDefinition(
-                type,
-                consumer.StationObjectId);
             return systems.IsRequestedActive(
                 type,
-                consumer.StationObjectId,
-                definition?.InitialLevel ?? 0,
-                definition?.InitiallyActive ?? false);
+                consumer.StationObjectId);
         }
 
         private void HandleStationSystemsInstanceChanged(

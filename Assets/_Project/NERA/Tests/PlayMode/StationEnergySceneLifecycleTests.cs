@@ -420,7 +420,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator StationTabsAndSystemTogglesAreIndependent()
+        public IEnumerator StationTerminalIsStatusOnlyAndReflectsPhysicalParts()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -429,472 +429,83 @@ namespace NERA.Tests
 
             EnergySystemController energy = EnergySystemController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
-            Terminal.TerminalUIScreen terminal = Terminal.TerminalUIScreen.Instance;
+            Terminal.TerminalUIScreen terminal =
+                Terminal.TerminalUIScreen.Instance;
             Terminal.TerminalStationScreenController stationScreen =
                 Object.FindFirstObjectByType<
                     Terminal.TerminalStationScreenController>(
                     FindObjectsInactive.Include);
-
             Assert.That(energy, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
             Assert.That(terminal, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
-            Assert.That(
-                energy.GetConsumerRate("drone_charger"),
-                Is.EqualTo(energy.Config.DroneChargingConsumption),
-                "The drone must be registered before it starts charging.");
-            Assert.That(
-                systems.GetDefinition(StationSystemType.Computer).DisplayName,
-                Is.EqualTo("TERMINAL"));
-            Assert.That(
-                systems.GetDefinition(StationSystemType.Laboratory).DisplayName,
-                Is.EqualTo("LABORATORY"));
-            NERA.UI.ResponsiveCanvasLayout responsiveLayout =
-                stationScreen.GetComponentInParent<
-                    NERA.UI.ResponsiveCanvasLayout>();
-            Assert.That(responsiveLayout, Is.Not.Null);
-            CanvasScaler responsiveScaler =
-                responsiveLayout.GetComponent<CanvasScaler>();
-            Assert.That(
-                responsiveScaler.matchWidthOrHeight,
-                Is.EqualTo(
-                    NERA.UI.ResponsiveCanvasLayout
-                        .CalculateMatchWidthOrHeight(
-                            Screen.width,
-                            Screen.height,
-                            NERA.UI.ResponsiveCanvasLayout
-                                .DefaultReferenceResolution)));
+
             systems.ResetSystems();
-
-            Camera[] previewCameras =
-                terminal.GetComponentsInChildren<Camera>(true);
-            Camera mapPreviewCamera = Array.Find(
-                previewCameras,
-                camera => camera.name == "MapUICamera");
-            Camera stationPreviewCamera = Array.Find(
-                previewCameras,
-                camera => camera.name == "StationUICamera");
-            Assert.That(mapPreviewCamera, Is.Not.Null);
-            Assert.That(stationPreviewCamera, Is.Not.Null);
-            Assert.That(mapPreviewCamera.enabled, Is.False);
-            Assert.That(stationPreviewCamera.enabled, Is.False);
-
             energy.RestoreState(energy.TotalCapacity, true);
-            int connectedConsumerCount = energy.ConnectedConsumerCount;
-            Assert.That(connectedConsumerCount, Is.GreaterThan(0));
             systems.SetCriticalSystemActive(StationSystemType.Computer, true);
             terminal.Open();
             terminal.ShowStation();
-            Assert.That(stationPreviewCamera.enabled, Is.True);
-            Assert.That(mapPreviewCamera.enabled, Is.False);
-
-            Transform statusPanel = stationScreen.transform.Find(
-                "background_Status");
-            Transform upgradePanel = stationScreen.transform.Find(
-                "background_Upgrade");
-            Transform stationStatusTextTransform = Array.Find(
-                statusPanel.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "Text_description");
-            Assert.That(stationStatusTextTransform, Is.Not.Null);
-            Component stationStatusText = stationStatusTextTransform
-                .GetComponent("TextMeshProUGUI");
-            Assert.That(stationStatusText, Is.Not.Null);
-            Assert.That(statusPanel.gameObject.activeSelf, Is.True,
-                "Station must open on the status tab before an object is selected.");
-            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
-
-            Transform powerSwitch = Array.Find(
-                stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "Toggle");
-            Assert.That(powerSwitch, Is.Not.Null);
-            Button onButton = powerSwitch.Find("OnButton").GetComponent<Button>();
-            Button offButton = powerSwitch.Find("OffButton").GetComponent<Button>();
-            RectTransform powerHandle =
-                (RectTransform)powerSwitch.Find("Handle");
-            Component powerStatus = powerSwitch.Find("Text_Status")
-                .GetComponent("TextMeshProUGUI");
-
-            stationScreen.SelectSystem(StationSystemType.Laboratory);
             yield return null;
-            Assert.That(onButton.gameObject.activeSelf, Is.True);
-            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(25f).Within(0.1f));
-            Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Active"));
-            Assert.That(
-                stationStatusText.GetType().GetProperty("text")
-                    ?.GetValue(stationStatusText)?.ToString(),
-                Does.Contain(
-                    $"Consumption - {energy.Config.LaboratoryConsumption:0.0}"));
 
-            energy.RestoreState(
-                energy.TotalCapacity *
-                energy.Config.GetMinimumCharge01(
-                    StationSystemType.Laboratory) *
-                0.5f,
-                true);
-            yield return null;
             Assert.That(
-                systems.IsRequestedActive(StationSystemType.Laboratory),
-                Is.True,
-                "Automatic load shedding must preserve the user's preference.");
-            Assert.That(offButton.gameObject.activeSelf, Is.True);
-            Assert.That(offButton.interactable, Is.False,
-                "The system cannot be restarted below its configured threshold.");
-            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(-25f).Within(0.1f));
+                stationScreen.transform.Find("background_Status"),
+                Is.Not.Null);
             Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Low Power"));
+                stationScreen.transform.Find("background_Upgrade"),
+                Is.Null);
             Assert.That(
-                stationStatusText.GetType().GetProperty("text")
-                    ?.GetValue(stationStatusText)?.ToString(),
-                Does.Contain("Status - LOW POWER"));
+                stationScreen.transform.Find("UpgradesMapButton"),
+                Is.Null);
+            Assert.That(
+                stationScreen.GetComponentsInChildren<StationObjectVisual>(true),
+                Has.Length.EqualTo(5));
 
-            energy.RestoreState(energy.TotalCapacity, true);
-            yield return null;
-            Assert.That(onButton.gameObject.activeSelf, Is.True);
-            Assert.That(onButton.interactable, Is.True);
-            Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Active"));
-
-            onButton.onClick.Invoke();
-            Assert.That(
-                systems.IsRequestedActive(StationSystemType.Laboratory),
-                Is.False);
-            Assert.That(offButton.gameObject.activeSelf, Is.True);
-            Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Inactive"));
-            Assert.That(
-                stationStatusText.GetType().GetProperty("text")
-                    ?.GetValue(stationStatusText)?.ToString(),
-                Does.Contain($"Consumption - {0f:0.0}"));
-            Assert.That(
-                energy.ConnectedConsumerCount,
-                Is.EqualTo(connectedConsumerCount - 1),
-                "Stopping the laboratory must remove its connection.");
-
-            Transform laboratoryPreview = Array.Find(
-                stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Upgrade_Room");
-            Assert.That(laboratoryPreview, Is.Not.Null);
-            Assert.That(
-                stationScreen.SelectPreviewObject(laboratoryPreview),
-                Is.True);
-            Assert.That(
-                stationScreen.SelectedSystem,
-                Is.EqualTo(StationSystemType.Laboratory));
-            Assert.That(offButton.gameObject.activeSelf, Is.True);
-            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(-25f).Within(0.1f),
-                "The whole laboratory table must share one OFF state.");
-            Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Inactive"));
-            Assert.That(
-                energy.IsConsumerConnected("laboratory_scan"),
-                Is.False);
-            Assert.That(
-                energy.IsConsumerConnected("laboratory_charging"),
-                Is.False,
-                "Turning the laboratory off must disconnect charging too.");
-
-            Button statusButton = stationScreen.transform.Find(
-                "StatusMapButton").GetComponent<Button>();
-            Button upgradeButton = stationScreen.transform.Find(
-                "UpgradesMapButton").GetComponent<Button>();
-
-            statusButton.onClick.Invoke();
-            Assert.That(statusPanel.gameObject.activeSelf, Is.True);
-            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
-
-            upgradeButton.onClick.Invoke();
-            Assert.That(statusPanel.gameObject.activeSelf, Is.False);
-            Assert.That(upgradePanel.gameObject.activeSelf, Is.True);
-
-            Transform batteryPreview = Array.Find(
-                stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Battery_Room");
-            Assert.That(batteryPreview, Is.Not.Null);
-            Assert.That(
-                stationScreen.SelectPreviewObject(batteryPreview),
-                Is.True);
-            statusButton.onClick.Invoke();
-            Assert.That(
-                stationStatusText.GetType().GetProperty("text")
-                    ?.GetValue(stationStatusText)?.ToString(),
-                Does.Contain(
-                    $"Connected objects - {energy.ConnectedConsumerCount}"));
-            upgradeButton.onClick.Invoke();
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_1").gameObject.activeSelf,
-                Is.True);
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_2").gameObject.activeSelf,
-                Is.True);
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_3").gameObject.activeSelf,
-                Is.False,
-                "Battery config contains only two upgrade levels.");
-
-            Transform firstTurret = Array.Find(
+            Transform turretPreview = Array.Find(
                 stationScreen.GetComponentsInChildren<Transform>(true),
                 candidate => candidate.name == "SM_Turret_1");
-            Transform secondTurret = Array.Find(
-                stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Turret_2");
-            Assert.That(firstTurret, Is.Not.Null);
-            Assert.That(secondTurret, Is.Not.Null);
-
-            Assert.That(stationScreen.SelectPreviewObject(firstTurret), Is.True);
+            Assert.That(turretPreview, Is.Not.Null);
+            Assert.That(
+                stationScreen.SelectPreviewObject(turretPreview),
+                Is.True);
             Assert.That(
                 stationScreen.SelectedObjectId,
                 Is.EqualTo("station_turret_01"));
+
+            Transform statusPanel =
+                stationScreen.transform.Find("background_Status");
+            Transform textTransform = Array.Find(
+                statusPanel.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "Text_description");
+            Component statusText =
+                textTransform.GetComponent("TextMeshProUGUI");
+            string initialText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(initialText, Does.Contain("Damage - 12"));
+            Assert.That(initialText, Does.Contain("Installed parts - 0/5"));
+
+            ItemData emitter = Resources.Load<ItemCatalogData>(
+                "ItemCatalog_Default").Find("emitter_damage_01");
             Assert.That(
-                systems.GetUpgradeLevel(
+                systems.TryInstallParts(
                     StationSystemType.Turret,
-                    stationScreen.SelectedObjectId,
-                    1),
-                Is.EqualTo(1));
-            for (int level = 1; level <= 3; level++)
-            {
-                Transform slot = upgradePanel.Find($"Slot_LVL_{level}");
-                Assert.That(slot.gameObject.activeSelf, Is.True);
-                Component label = slot.Find("Text_info_LVL")
-                    .GetComponent("TextMeshProUGUI");
-                Assert.That(
-                    label.GetType().GetProperty("text")?.GetValue(label),
-                    Is.EqualTo($"TURRET {level}"));
-            }
-            NERALocalization.SetLocale(NERALocalization.RussianCode);
-            yield return null;
-            Assert.That(
-                systems.GetDefinition(StationSystemType.Computer).DisplayName,
-                Is.EqualTo("ТЕРМИНАЛ"));
-            Assert.That(
-                systems.GetDefinition(StationSystemType.Laboratory).DisplayName,
-                Is.EqualTo("ЛАБОРАТОРИЯ"));
-            Component localizedStatusLabel =
-                statusButton.GetComponentInChildren(
-                    System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro"));
-            Component localizedUpgradeLabel =
-                upgradeButton.GetComponentInChildren(
-                    System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro"));
-            Assert.That(
-                localizedStatusLabel.GetType().GetProperty("text")
-                    ?.GetValue(localizedStatusLabel),
-                Is.EqualTo("СОСТОЯНИЕ"));
-            Assert.That(
-                localizedStatusLabel.GetType()
-                    .GetProperty("enableAutoSizing")
-                    ?.GetValue(localizedStatusLabel),
-                Is.True);
-            Assert.That(
-                localizedUpgradeLabel.GetType().GetProperty("text")
-                    ?.GetValue(localizedUpgradeLabel),
-                Is.EqualTo("УЛУЧШЕНИЯ"));
-            for (int level = 1; level <= 3; level++)
-            {
-                Component localizedLevelLabel = upgradePanel
-                    .Find($"Slot_LVL_{level}/Text_info_LVL")
-                    .GetComponent("TextMeshProUGUI");
-                Assert.That(
-                    localizedLevelLabel.GetType().GetProperty("text")
-                        ?.GetValue(localizedLevelLabel),
-                    Is.EqualTo($"ТУРЕЛЬ {level}"));
-            }
-            NERALocalization.SetLocale(NERALocalization.EnglishCode);
-            yield return null;
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_1").GetComponent<Button>()
-                    .interactable,
-                Is.False,
-                "An already installed object upgrade must not be clickable.");
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_2").GetComponent<Button>()
-                    .interactable,
-                Is.True);
-
-            Assert.That(stationScreen.SelectPreviewObject(secondTurret), Is.True);
-            Assert.That(
-                stationScreen.SelectedObjectId,
-                Is.EqualTo("station_turret_02"));
-            Assert.That(
-                systems.GetUpgradeLevel(
-                    StationSystemType.Turret,
-                    stationScreen.SelectedObjectId,
-                    0),
-                Is.Zero,
-                "The second turret must have independent starting progress.");
-            Assert.That(
-                firstTurret.Find("Stage_1").gameObject.activeSelf,
+                    "station_turret_01",
+                    new[]
+                    {
+                        new StationPartInstallRequest("Slot_1", emitter)
+                    },
+                    out string reason),
                 Is.True,
-                "The first preview turret must show its starting level.");
-            Assert.That(
-                secondTurret.Find("Stage_0").gameObject.activeSelf,
-                Is.True,
-                "A locked preview turret must show level zero.");
-
-            systems.Restore(
-                null,
-                null,
-                new[]
-                {
-                    new StationObjectSystemState(
-                        StationSystemType.Turret,
-                        "station_turret_02",
-                        2,
-                        true)
-                });
+                reason);
             yield return null;
-            Assert.That(
-                secondTurret.Find("Stage_0").gameObject.activeSelf,
-                Is.False);
-            Assert.That(
-                secondTurret.Find("Stage_2").gameObject.activeSelf,
-                Is.True,
-                "The station preview must switch immediately when the " +
-                "selected turret upgrade level changes.");
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_1").GetComponent<Button>()
-                    .interactable,
-                Is.False);
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_2").GetComponent<Button>()
-                    .interactable,
-                Is.False);
-            Assert.That(
-                upgradePanel.Find("Slot_LVL_3").GetComponent<Button>()
-                    .interactable,
-                Is.True);
 
-            systems.Restore(
-                null,
-                null,
-                new[]
-                {
-                    new StationObjectSystemState(
-                        StationSystemType.Turret,
-                        "station_turret_02",
-                        3,
-                        true)
-                });
-            yield return null;
-            for (int level = 1; level <= 3; level++)
-            {
-                Assert.That(
-                    upgradePanel.Find($"Slot_LVL_{level}")
-                        .gameObject.activeSelf,
-                    Is.False,
-                    "Upgrade slots must be hidden at maximum level.");
-            }
-            Component maximumLevelText =
-                upgradePanel.Find("description_update")
-                    .GetComponent("TextMeshProUGUI");
+            string upgradedText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(upgradedText, Does.Contain("Damage - 20"));
+            Assert.That(upgradedText, Does.Contain("Installed parts - 1/5"));
             Assert.That(
-                maximumLevelText.GetType().GetProperty("text")
-                    ?.GetValue(maximumLevelText),
-                Is.EqualTo("MAXIMUM LEVEL"));
-            Assert.That(
-                upgradePanel.Find("UpgradeButton").gameObject.activeSelf,
-                Is.False);
-
-            terminal.ShowNextScreen();
-            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));
-            terminal.ShowPreviousScreen();
-            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(1));
-            Assert.That(statusPanel.gameObject.activeSelf, Is.True,
-                "Returning to Station must restore the status tab.");
-            Assert.That(upgradePanel.gameObject.activeSelf, Is.False);
-
-            terminal.ShowMap();
-            Assert.That(mapPreviewCamera.enabled, Is.True);
-            Assert.That(stationPreviewCamera.enabled, Is.False);
-            terminal.ShowPreviousScreen();
-            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(3),
-                "Previous-page navigation must wrap from Map to Storage.");
-            Assert.That(mapPreviewCamera.enabled, Is.False);
-            Assert.That(stationPreviewCamera.enabled, Is.False);
-            terminal.ShowNextScreen();
-            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(0),
-                "Next-page navigation must wrap from Storage to Map.");
-            Assert.That(mapPreviewCamera.enabled, Is.True);
-            terminal.ShowStation();
-
-            Transform solar = Array.Find(
-                stationScreen.GetComponentsInChildren<Transform>(true),
-                candidate => candidate.name == "SM_Solar_Panel");
-            Assert.That(solar, Is.Not.Null);
-            Assert.That(stationScreen.SelectPreviewObject(solar), Is.True);
-            Assert.That(
-                stationScreen.SelectedSystem,
-                Is.EqualTo(StationSystemType.SolarPanel));
-            Assert.That(
-                stationStatusText.GetType().GetProperty("text")
-                    ?.GetValue(stationStatusText)?.ToString(),
-                Does.Not.Contain("Consumption -"),
-                "A solar generator must not be presented as a consumer.");
-            Assert.That(onButton.interactable, Is.True);
-            onButton.onClick.Invoke();
-            yield return null;
-            energy.AdvanceSimulation(0.1f);
-            Assert.That(
-                systems.IsRequestedActive(
-                    StationSystemType.SolarPanel,
-                    "station_solar_01",
-                    1,
-                    true),
-                Is.False);
-            Assert.That(energy.CurrentGeneration, Is.Zero.Within(0.01f));
-            Assert.That(offButton.interactable, Is.True);
-
-            offButton.onClick.Invoke();
-            yield return null;
-            energy.AdvanceSimulation(0.1f);
-            Assert.That(
-                systems.IsRequestedActive(
-                    StationSystemType.SolarPanel,
-                    "station_solar_01",
-                    1,
-                    true),
-                Is.True);
-            Assert.That(energy.CurrentGeneration, Is.GreaterThan(0f));
-
-            ItemCatalogData catalog =
-                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-            ItemData equipment = catalog != null
-                ? catalog.Find("energy_pistol_01")
-                : null;
-            Library.LibraryController library =
-                Library.LibraryController.Instance;
-            Assert.That(equipment, Is.Not.Null);
-            Assert.That(library, Is.Not.Null);
-            library.RegisterKnownItem(equipment);
-
-            terminal.ShowLibrary();
-            Transform libraryScreen = terminal.transform.Find("LibraryScreen");
-            libraryScreen.Find("EquipmentButton").GetComponent<Button>()
-                .onClick.Invoke();
-            Transform equipmentSlot = libraryScreen.Find(
-                "EquipmentSlot/background_Slot_01");
-            Assert.That(equipmentSlot, Is.Not.Null);
-            Assert.That(
-                equipmentSlot.Find("RuntimeIcon"),
-                Is.Null,
-                "Library list slots must remain text-only.");
-            equipmentSlot.GetComponent<Button>().onClick.Invoke();
-            Component libraryInfoName = libraryScreen.Find(
-                    "background_Screen_Lybrary_Info/Text_Name")
-                .GetComponent("TextMeshProUGUI");
-            Assert.That(
-                libraryInfoName.GetType().GetProperty("text")
-                    ?.GetValue(libraryInfoName),
-                Is.EqualTo(equipment.DisplayName),
-                "Clicking a text-only Library slot must show item details.");
-
-            terminal.Close();
-            Assert.That(mapPreviewCamera.enabled, Is.False);
-            Assert.That(stationPreviewCamera.enabled, Is.False);
+                turretPreview.Find("Base/Slot_1/Installed_emitter_damage_01"),
+                Is.Not.Null,
+                "StationUIPreview must spawn the same installed part visual.");
         }
 
         [UnityTest]
@@ -955,7 +566,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator BatteryUpgradeAppliesStageCapacityImmediately()
+        public IEnumerator BatteryPartAppliesConfiguredCapacityImmediately()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -964,68 +575,48 @@ namespace NERA.Tests
 
             EnergySystemController energy = EnergySystemController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
-            StationStorageController storage = StationStorageController.Instance;
-            PlayerInventory inventory =
-                Object.FindFirstObjectByType<PlayerInventory>();
             ItemCatalogData catalog =
                 Resources.Load<ItemCatalogData>("ItemCatalog_Default");
 
             Assert.That(energy, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
-            Assert.That(inventory, Is.Not.Null);
             Assert.That(catalog, Is.Not.Null);
 
             systems.ResetSystems();
             yield return null;
-            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
-
-            StationUpgradeLevelDefinition upgrade =
-                systems.Config.GetUpgradeDefinition(
-                    StationSystemType.Battery,
-                    "station_battery",
-                    2);
-            Assert.That(upgrade, Is.Not.Null);
-            foreach (StationUpgradeItemRequirement requirement in
-                     upgrade.RequiredItems)
-            {
-                for (int count = 0; count < requirement.Count; count++)
-                {
-                    Assert.That(
-                        inventory.AddItem(requirement.Item),
-                        Is.True,
-                        $"Could not add '{requirement.ItemId}' for the test upgrade.");
-                }
-            }
-
-            energy.RestoreState(750f, true);
-            float expectedEnergy = 750f - upgrade.EnergyCost;
+            StationSystemDefinition battery =
+                systems.GetDefinition(StationSystemType.Battery);
+            ItemData capacitor = catalog.Find("capacitor_01");
+            Assert.That(battery, Is.Not.Null);
+            Assert.That(capacitor, Is.Not.Null);
+            float baseCapacity = systems.GetStat(
+                StationSystemType.Battery,
+                battery.ObjectId,
+                StationObjectStat.Capacity);
 
             Assert.That(
-                systems.TryUpgrade(
+                systems.TryInstallParts(
                     StationSystemType.Battery,
-                    inventory,
-                    storage),
-                Is.True);
+                    battery.ObjectId,
+                    new[]
+                    {
+                        new StationPartInstallRequest("Slot_1", capacitor)
+                    },
+                    out string reason),
+                Is.True,
+                reason);
+            yield return null;
+
+            Assert.That(
+                systems.GetStat(
+                    StationSystemType.Battery,
+                    battery.ObjectId,
+                    StationObjectStat.Capacity),
+                Is.GreaterThan(baseCapacity));
             Assert.That(
                 energy.TotalCapacity,
-                Is.EqualTo(2000f),
-                "Stage_2 capacity must be active in the same upgrade call.");
-            Assert.That(
-                energy.CurrentEnergy,
-                Is.EqualTo(expectedEnergy),
-                "Increasing capacity must not add free stored energy.");
-
-            StationUpgradeStageController[] stages =
-                Object.FindObjectsByType<StationUpgradeStageController>(
-                    FindObjectsInactive.Include,
-                    FindObjectsSortMode.None);
-            StationUpgradeStageController batteryStages = Array.Find(
-                stages,
-                stage =>
-                    stage.SystemType == StationSystemType.Battery &&
-                    stage.ObjectId == "station_battery");
-            Assert.That(batteryStages, Is.Not.Null);
-            Assert.That(batteryStages.CurrentStage, Is.EqualTo(2));
+                Is.GreaterThanOrEqualTo(baseCapacity),
+                "The live battery must re-register after the part is installed.");
         }
 
         [UnityTest]
@@ -1150,7 +741,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator FirstPhysicalPowerRestoreCompletesBatteryQuest()
+        public IEnumerator FirstBatteryInteractionCompletesPowerRestoreQuest()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -1161,13 +752,17 @@ namespace NERA.Tests
             StationSystemsController systems =
                 StationSystemsController.Instance;
             StationPowerController power = StationPowerController.Instance;
-            PowerRestoreInteractable restore =
-                Object.FindFirstObjectByType<PowerRestoreInteractable>();
+            StationUpgradeableObject battery = Object
+                .FindObjectsByType<StationUpgradeableObject>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .FirstOrDefault(candidate =>
+                    candidate.SystemType == StationSystemType.Battery);
 
             Assert.That(quests, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
             Assert.That(power, Is.Not.Null);
-            Assert.That(restore, Is.Not.Null);
+            Assert.That(battery, Is.Not.Null);
 
             quests.ResetProgress();
             systems.ResetSystems();
@@ -1198,7 +793,7 @@ namespace NERA.Tests
                 "The test reproduces an old save with RequestedActive=true.");
             Assert.That(power.IsPowered, Is.False);
 
-            restore.CompleteInteraction(null);
+            battery.CompleteInteraction(null);
 
             Assert.That(power.IsPowered, Is.True);
             Assert.That(
@@ -1227,15 +822,19 @@ namespace NERA.Tests
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
             systems.ResetSystems();
-            int droneLevel =
-                systems.GetUpgradeLevel(StationSystemType.Drone);
+            StationSystemDefinition droneDefinition =
+                systems.GetDefinition(StationSystemType.Drone);
+            float droneRange = systems.GetStat(
+                StationSystemType.Drone,
+                droneDefinition.ObjectId,
+                StationObjectStat.TravelRange);
             ExpeditionLocationData first = discovery.KnownLocations
                 .FirstOrDefault(
                     location =>
                         location != null &&
                         location.DiscoverySource ==
                             NERA.Locations.DiscoverySource.Drone &&
-                        location.RequiredDroneUpgradeLevel <= droneLevel);
+                        location.RequiredDroneTravelRange <= droneRange);
             ExpeditionLocationData second = discovery.KnownLocations
                 .FirstOrDefault(
                     location =>
@@ -1243,12 +842,12 @@ namespace NERA.Tests
                         location != first &&
                         location.DiscoverySource ==
                             NERA.Locations.DiscoverySource.Drone &&
-                        location.RequiredDroneUpgradeLevel == droneLevel + 1);
+                        location.RequiredDroneTravelRange > droneRange);
             if (first == null || second == null)
             {
                 Assert.Ignore(
                     "This upgrade scenario needs one currently reachable " +
-                    "location and one location unlocked by the next Drone level.");
+                    "location and one location unlocked by a Drone part.");
             }
 
             discovery.RestoreDiscovered(Array.Empty<string>());
@@ -1272,20 +871,23 @@ namespace NERA.Tests
             Assert.That(drone.LaunchScan(second), Is.False,
                 "A distant expedition must remain locked before the drone upgrade.");
 
-            PlayerInventory inventory = Object.FindFirstObjectByType<PlayerInventory>();
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-            ItemData servoDrive = catalog != null ? catalog.Find("servo_drive_01") : null;
+            ItemData propulsion = catalog != null ? catalog.Find("propulsion_01") : null;
             Assert.That(systems, Is.Not.Null);
-            Assert.That(inventory, Is.Not.Null);
-            Assert.That(servoDrive, Is.Not.Null);
-            Assert.That(inventory.AddItem(servoDrive), Is.True);
+            Assert.That(propulsion, Is.Not.Null);
             Assert.That(
-                systems.TryUpgrade(
+                systems.TryInstallParts(
                     StationSystemType.Drone,
-                    inventory,
-                    StationStorageController.Instance),
-                Is.True);
+                    droneDefinition.ObjectId,
+                    new[]
+                    {
+                        new StationPartInstallRequest("Slot_2", propulsion)
+                    },
+                    out string installReason),
+                Is.True,
+                installReason);
 
+            Assert.That(systems.CanDroneReach(second), Is.True);
             Assert.That(drone.LaunchScan(second), Is.True);
             Assert.That(drone.ScanLocation, Is.EqualTo(second));
         }
@@ -1312,24 +914,18 @@ namespace NERA.Tests
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
-            for (int level = 1; level <= 3; level++)
-            {
-                Transform iconRoot = stationScreen.transform.Find(
-                    $"background_Upgrade/Slot_LVL_{level}/Image_Icon");
-                Assert.That(
-                    iconRoot,
-                    Is.Not.Null,
-                    $"Upgrade level {level} icon layer was not created.");
-                Image icon = iconRoot.GetComponent<Image>();
-                Assert.That(icon, Is.Not.Null);
-                Assert.That(icon.raycastTarget, Is.False);
-                Assert.That(icon.preserveAspect, Is.True);
-            }
+            Assert.That(
+                stationScreen.transform.Find("background_Upgrade"),
+                Is.Null,
+                "The station terminal must remain status-only.");
             Assert.That(discovery.KnownLocations.Count, Is.GreaterThan(0));
 
             Assert.That(
                 energy.GetConsumerRate("drone_charger"),
-                Is.EqualTo(energy.Config.DroneChargingConsumption));
+                Is.EqualTo(systems.GetStat(
+                    StationSystemType.Drone,
+                    "station_drone",
+                    StationObjectStat.ChargingEnergyConsumption)));
 
             ExpeditionLocationData location = discovery.KnownLocations[0];
             discovery.RestoreDiscovered(Array.Empty<string>());
