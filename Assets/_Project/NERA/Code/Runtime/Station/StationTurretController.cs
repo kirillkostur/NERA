@@ -80,6 +80,12 @@ namespace NERA.Station
             GetConfiguredStat(
                 StationObjectStat.FireInterval,
                 0.45f));
+        public float EffectiveAimTolerance => Mathf.Clamp(
+            GetConfiguredStat(
+                StationObjectStat.AimTolerance,
+                5f),
+            0.1f,
+            45f);
 
         private void Awake()
         {
@@ -138,7 +144,9 @@ namespace NERA.Station
                     EffectiveRotationSpeed * Time.deltaTime);
             }
 
-            if (Time.time < nextShotAt || !HasLineOfSight(origin, direction))
+            if (Time.time < nextShotAt ||
+                !IsMuzzleAimedAt(target.transform.position) ||
+                !HasLineOfSight(origin, direction))
                 return;
 
             nextShotAt = Time.time + EffectiveFireInterval;
@@ -158,6 +166,29 @@ namespace NERA.Station
                     1f));
             maintenance.SetCondition(
                 maintenance.Condition - received / 100f);
+        }
+
+        public bool IsMuzzleAimedAt(Vector3 targetPosition)
+        {
+            Transform aimTransform = muzzle != null
+                ? muzzle
+                : yawPivot != null
+                    ? yawPivot
+                    : transform;
+            Vector3 targetDirection = Vector3.ProjectOnPlane(
+                targetPosition - aimTransform.position,
+                Vector3.up);
+            Vector3 muzzleDirection = Vector3.ProjectOnPlane(
+                aimTransform.forward,
+                Vector3.up);
+            if (targetDirection.sqrMagnitude <= 0.001f ||
+                muzzleDirection.sqrMagnitude <= 0.001f)
+            {
+                return false;
+            }
+
+            return Vector3.Angle(muzzleDirection, targetDirection) <=
+                EffectiveAimTolerance;
         }
 
         private IOEnemyController FindNearestTarget()

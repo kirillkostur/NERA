@@ -21,7 +21,8 @@ namespace NERA.Station
         InitialCharge,
         ChargingEnergyConsumption,
         CalibrationEnergyConsumption,
-        CalibrationDuration
+        CalibrationDuration,
+        AimTolerance
     }
 
     [Serializable]

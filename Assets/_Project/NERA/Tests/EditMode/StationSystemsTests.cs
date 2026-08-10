@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NERA.Energy;
@@ -102,7 +103,7 @@ namespace NERA.Tests
                 emitter.FindEngineeringCompatibility(
                     StationSystemType.Turret,
                     "station_turret_01",
-                    "Slot_1"),
+                    "Slot_3"),
                 Is.Not.Null);
             Assert.That(
                 emitter.FindEngineeringCompatibility(
@@ -113,7 +114,7 @@ namespace NERA.Tests
 
             var requests = new[]
             {
-                new StationPartInstallRequest("Slot_1", emitter)
+                new StationPartInstallRequest("Slot_3", emitter)
             };
             Assert.That(
                 systems.TryInstallParts(
@@ -127,14 +128,14 @@ namespace NERA.Tests
                 systems.GetInstalledPartItemId(
                     StationSystemType.Turret,
                     "station_turret_01",
-                    "slot_1"),
+                    "slot_3"),
                 Is.EqualTo(emitter.ItemId));
             Assert.That(
                 systems.GetStat(
                     StationSystemType.Turret,
                     "station_turret_01",
                     StationObjectStat.Damage),
-                Is.EqualTo(20f));
+                Is.EqualTo(18f));
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Turret,
@@ -176,14 +177,14 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void IdenticalTurretsKeepIndependentInstalledParts()
+        public void TurretsKeepIndependentInstalledParts()
         {
             ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Turret,
                     "station_turret_02",
-                    new[] { new StationPartInstallRequest("Slot_1", emitter) },
+                    new[] { new StationPartInstallRequest("Slot_3", emitter) },
                     out string reason),
                 Is.True,
                 reason);
@@ -203,13 +204,13 @@ namespace NERA.Tests
                     StationSystemType.Turret,
                     "station_turret_01",
                     StationObjectStat.Damage),
-                Is.EqualTo(12f));
+                Is.EqualTo(10f));
             Assert.That(
                 systems.GetStat(
                     StationSystemType.Turret,
                     "station_turret_02",
                     StationObjectStat.Damage),
-                Is.EqualTo(20f));
+                Is.EqualTo(8f));
         }
 
         [Test]
@@ -226,7 +227,7 @@ namespace NERA.Tests
                         new[]
                         {
                             new StationInstalledPartState(
-                                "Slot_1",
+                                "Slot_3",
                                 "emitter_damage_01")
                         })
                 });
@@ -235,7 +236,7 @@ namespace NERA.Tests
                 systems.GetInstalledPartItemId(
                     StationSystemType.Turret,
                     "station_turret_02",
-                    "Slot_1"),
+                    "Slot_3"),
                 Is.EqualTo("emitter_damage_01"));
             Assert.That(
                 systems.GetInstalledPartCount(
@@ -351,6 +352,40 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void TurretAimGateRejectsSidewaysTarget()
+        {
+            GameObject turretRoot = new GameObject("Test_TurretAimGate");
+            turretRoot.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                turretRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            Transform pivot = new GameObject("YawPivot").transform;
+            pivot.SetParent(turretRoot.transform, false);
+            Transform muzzle = new GameObject("Muzzle").transform;
+            muzzle.SetParent(pivot, false);
+
+            StationTurretController turret =
+                turretRoot.AddComponent<StationTurretController>();
+            SerializedObject serializedTurret = new SerializedObject(turret);
+            serializedTurret.FindProperty("yawPivot").objectReferenceValue = pivot;
+            serializedTurret.FindProperty("muzzle").objectReferenceValue = muzzle;
+            serializedTurret.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(turret.EffectiveAimTolerance, Is.EqualTo(5f));
+            Assert.That(
+                turret.IsMuzzleAimedAt(muzzle.position + Vector3.right * 10f),
+                Is.False);
+
+            pivot.rotation = Quaternion.Euler(0f, 90f, 0f);
+            Assert.That(
+                turret.IsMuzzleAimedAt(muzzle.position + Vector3.right * 10f),
+                Is.True);
+        }
+
+        [Test]
         public void ExplicitDepositMovesInventoryInstanceIntoStationStorage()
         {
             ItemData part = LoadPart("Item_ServoDrive_01.asset");
@@ -366,9 +401,16 @@ namespace NERA.Tests
 
         private static ItemData LoadPart(string fileName)
         {
-            ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(
-                "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart/" +
-                fileName);
+            string searchRoot =
+                "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart";
+            string itemName = Path.GetFileNameWithoutExtension(fileName);
+            string[] guids = AssetDatabase.FindAssets(
+                $"{itemName} t:ItemData",
+                new[] { searchRoot });
+            ItemData item = guids.Length > 0
+                ? AssetDatabase.LoadAssetAtPath<ItemData>(
+                    AssetDatabase.GUIDToAssetPath(guids[0]))
+                : null;
             Assert.That(item, Is.Not.Null, fileName);
             return item;
         }

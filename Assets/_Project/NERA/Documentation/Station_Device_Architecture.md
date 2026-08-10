@@ -75,6 +75,10 @@ Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset
 единицы. Это относится, например, к `Fire Interval`, `Damage Taken`, расходу
 энергии и длительности калибровки.
 
+У турели `Aim Tolerance` задаёт допустимое горизонтальное отклонение ствола от
+цели в градусах. Турель не стреляет, пока направление `Muzzle.forward` не
+войдёт в этот угол. Рекомендуемое базовое значение — `5 deg`.
+
 ### Слоты объекта
 
 Каждый элемент `Physical Upgrade Slots` содержит:
@@ -314,7 +318,7 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 
 | Объект | Характеристики |
 |---|---|
-| Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Consumption`, `Damage Taken` |
+| Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Aim Tolerance`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Consumption`, `Damage Taken` |
 | Батарея | `Capacity`, `Initial Charge` |
 | Дрон | `Travel Range`, `Charging Energy Consumption` |
 | Антенна | `Scan Range`, `Calibration Energy Consumption`, `Calibration Duration` |

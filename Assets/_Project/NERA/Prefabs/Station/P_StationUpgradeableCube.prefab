@@ -1515,7 +1515,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3470574658601676251}
   m_Layer: 0
-  m_Name: EmitterDamage
+  m_Name: Muzzle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -152,6 +152,11 @@ MonoBehaviour:
       baseValue: 30
       unit: ' deg/s'
       decimals: 0
+    - stat: 15
+      displayName: Aim tolerance
+      baseValue: 5
+      unit: ' deg'
+      decimals: 1
     - stat: 3
       displayName: Fire interval
       baseValue: 1
@@ -207,6 +212,11 @@ MonoBehaviour:
       baseValue: 30
       unit: ' deg/s'
       decimals: 0
+    - stat: 15
+      displayName: Aim tolerance
+      baseValue: 5
+      unit: ' deg'
+      decimals: 1
     - stat: 3
       displayName: Fire interval
       baseValue: 0.45
