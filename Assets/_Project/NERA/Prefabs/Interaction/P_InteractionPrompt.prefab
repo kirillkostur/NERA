@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 9130775570403704034}
   - component: {fileID: 1219027134517590379}
   - component: {fileID: 3436875991217606513}
+  - component: {fileID: 5575960901277064695}
   m_Layer: 0
   m_Name: PromptText
   m_TagString: Untagged
@@ -153,6 +154,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5575960901277064695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6958727562067793248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  table: HUD
+  key: ui.prefab.p_interactionprompt_prompttext
+  fallback: '[E] Interact'
 --- !u!1 &7165105431406201726
 GameObject:
   m_ObjectHideFlags: 0

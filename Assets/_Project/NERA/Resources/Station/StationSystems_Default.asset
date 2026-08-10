@@ -17,7 +17,7 @@ MonoBehaviour:
     objectId: station_solar_01
     displayName: SOLAR PANEL
     description: Generates station power. Clean it outside to restore efficiency.
-    controllable: 0
+    controllable: 1
     initiallyActive: 1
     initialLevel: 1
     upgradeLevels: []
@@ -47,7 +47,7 @@ MonoBehaviour:
       energyCost: 100
   - systemType: 2
     objectId: 
-    displayName: COMPUTER
+    displayName: TERMINAL
     description: Central terminal. It cannot be stopped or upgraded from itself.
     controllable: 0
     initiallyActive: 1
@@ -88,15 +88,7 @@ MonoBehaviour:
   - systemType: 4
     objectId: 
     displayName: LABORATORY
-    description: Analyzes recovered objects and unlocks Library records.
-    controllable: 1
-    initiallyActive: 1
-    initialLevel: 1
-    upgradeLevels: []
-  - systemType: 5
-    objectId: 
-    displayName: CHARGER
-    description: Restores charge to energy-powered equipment.
+    description: Analyzes recovered objects, charges equipment, and integrates anomalies.
     controllable: 1
     initiallyActive: 1
     initialLevel: 1
@@ -158,22 +150,22 @@ MonoBehaviour:
       description: Improves tracking and sustained fire.
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
         count: 1
-      energyCost: 100
+      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
+        count: 1
+      energyCost: 200
     - targetLevel: 3
       displayName: TURRET 1 / LEVEL 3
       upgradeIcon: {fileID: 0}
       description: Maximum performance for the first defense sector.
       requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
         count: 1
-      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
         count: 1
-      energyCost: 200
+      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
+        count: 1
+      energyCost: 300
   - systemType: 7
     objectId: station_turret_02
     displayName: TURRET 2
@@ -189,27 +181,29 @@ MonoBehaviour:
       requiredItems:
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
         count: 1
-      energyCost: 0
+      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
+        count: 1
+      energyCost: 100
     - targetLevel: 2
       displayName: TURRET 2 / LEVEL 2
       upgradeIcon: {fileID: 0}
       description: Reinforces its tracking assembly.
       requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
         count: 1
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
-        count: 2
-      energyCost: 100
+      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
+        count: 1
+      energyCost: 200
     - targetLevel: 3
       displayName: TURRET 2 / LEVEL 3
       upgradeIcon: {fileID: 0}
       description: Adds an autonomous long-range control core.
       requiredItems:
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
         count: 1
-      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
         count: 1
-      energyCost: 180
+      energyCost: 300
   - systemType: 7
     objectId: station_turret_03
     displayName: TURRET 3
@@ -223,29 +217,31 @@ MonoBehaviour:
       upgradeIcon: {fileID: 0}
       description: Builds the third defensive platform.
       requiredItems:
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
-        count: 2
-      energyCost: 0
+      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
+        count: 1
+      energyCost: 100
     - targetLevel: 2
       displayName: TURRET 3 / LEVEL 2
       upgradeIcon: {fileID: 0}
       description: Adds a stabilized drive and processing core.
       requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
         count: 2
-      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
+      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
         count: 1
-      energyCost: 120
+      energyCost: 200
     - targetLevel: 3
       displayName: TURRET 3 / LEVEL 3
       upgradeIcon: {fileID: 0}
       description: Installs redundant signal and targeting channels.
       requiredItems:
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
-        count: 2
-      energyCost: 220
+      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
+        count: 1
+      energyCost: 300
   - systemType: 7
     objectId: station_turret_04
     displayName: TURRET 4
@@ -259,26 +255,28 @@ MonoBehaviour:
       upgradeIcon: {fileID: 0}
       description: Restores the fourth defense sector.
       requiredItems:
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+      - item: {fileID: 11400000, guid: fd1808b8359a2ca48801a96c85502632, type: 2}
         count: 1
-      energyCost: 0
+      - item: {fileID: 11400000, guid: 4757a8d9650ef3a47b74198dcc256798, type: 2}
+        count: 1
+      energyCost: 100
     - targetLevel: 2
       displayName: TURRET 4 / LEVEL 2
       upgradeIcon: {fileID: 0}
       description: Upgrades its signal and rotation systems.
       requiredItems:
+      - item: {fileID: 11400000, guid: 719b90c28a2faf84eaea10a54bbab3bb, type: 2}
+        count: 1
       - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
         count: 1
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
-        count: 1
-      energyCost: 140
+      energyCost: 200
     - targetLevel: 3
       displayName: TURRET 4 / LEVEL 3
       upgradeIcon: {fileID: 0}
       description: Installs a high-load command assembly.
       requiredItems:
-      - item: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 1b196167b384dd045b4859e72da4df3a, type: 2}
-        count: 3
-      energyCost: 250
+      - item: {fileID: 11400000, guid: 500cb86034fc36341a12eac52639fcf8, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 9828660db644edb4c8c305076ffc4854, type: 2}
+        count: 1
+      energyCost: 300

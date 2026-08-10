@@ -46,7 +46,9 @@ namespace NERA.Antenna
         public bool IsOperational => Condition > 0.01f;
         public bool CanStartCalibration => CanCalibrate(FindNextSignalCandidate());
         public float CalibrationDuration =>
-            EnergySystemController.Instance != null
+            CalibrationTarget != null
+                ? CalibrationTarget.AntennaScanDuration
+                : EnergySystemController.Instance != null
                 ? EnergySystemController.Instance.Config.AntennaCalibrationDuration
                 : EnergyBalanceConfig.LoadDefault().AntennaCalibrationDuration;
 
@@ -136,6 +138,7 @@ namespace NERA.Antenna
                    discovery != null &&
                    target != null &&
                    target.DiscoverySource == DiscoverySource.Antenna &&
+                   HasRequiredAntennaUpgrade(target) &&
                    ActiveSignal == null &&
                    !IsConsumed(target) &&
                    HasAnyDiscoveredExpeditionSector() &&
@@ -356,6 +359,7 @@ namespace NERA.Antenna
             {
                 if (location == null ||
                     location.DiscoverySource != DiscoverySource.Antenna ||
+                    !HasRequiredAntennaUpgrade(location) ||
                     IsConsumed(location) ||
                     !HasAnyDiscoveredExpeditionSector())
                 {
@@ -366,6 +370,13 @@ namespace NERA.Antenna
             }
 
             return null;
+        }
+
+        private static bool HasRequiredAntennaUpgrade(
+            ExpeditionLocationData location)
+        {
+            StationSystemsController systems = StationSystemsController.Instance;
+            return systems == null || systems.CanAntennaReach(location);
         }
 
         private ExpeditionLocationData FindSignalById(string signalId)
@@ -568,7 +579,9 @@ namespace NERA.Antenna
                 AntennaConsumerId,
                 energy.Config.AntennaCalibrationConsumption,
                 energy.Config.GetMinimumCharge01(
-                    StationSystemType.Antenna)
+                    StationSystemType.Antenna),
+                StationSystemType.Antenna,
+                "station_antenna"
             );
             energy.SetConsumerActive(
                 AntennaConsumerId,

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8001660318522111584}
   - component: {fileID: 6365221935122308035}
   - component: {fileID: 1447980179182537944}
+  - component: {fileID: 6105596734845567750}
   m_Layer: 0
   m_Name: P_HUD_Canvas
   m_TagString: Untagged
@@ -102,6 +103,21 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &6105596734845567750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4121911899816374180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab010163d7b52c4c99a82642a1eb92c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  referenceResolution: {x: 1920, y: 1080}
+  minimumTextScale: 0.55
+  enableTextAutoSizing: 1
 --- !u!1001 &6679514033918167642
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -189,6 +205,10 @@ PrefabInstance:
     - target: {fileID: 5060670300212138158, guid: df52e6b2a8df0ee41b08dc4431ed6601, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575960901277064695, guid: df52e6b2a8df0ee41b08dc4431ed6601, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_interactionprompt_prompttext
       objectReference: {fileID: 0}
     - target: {fileID: 7165105431406201726, guid: df52e6b2a8df0ee41b08dc4431ed6601, type: 3}
       propertyPath: m_Name

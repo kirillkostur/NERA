@@ -1,3 +1,5 @@
+using NERA.Localization;
+
 namespace NERA.Interaction
 {
     public readonly struct InteractionPrompt
@@ -10,11 +12,12 @@ namespace NERA.Interaction
             string unavailableReason,
             bool isVisible = true)
         {
-            ActionText = actionText;
+            ActionText = LocalizePromptValue("action", actionText);
             Mode = mode;
             HoldDuration = holdDuration;
             IsAvailable = isAvailable;
-            UnavailableReason = unavailableReason;
+            UnavailableReason = LocalizePromptValue(
+                "unavailable", unavailableReason);
             IsVisible = isVisible;
         }
 
@@ -24,5 +27,17 @@ namespace NERA.Interaction
         public bool IsAvailable { get; }
         public string UnavailableReason { get; }
         public bool IsVisible { get; }
+
+        private static string LocalizePromptValue(string group, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return NERALocalization.Get(
+                NERALocalization.HudTable,
+                $"interaction.{group}." +
+                NERALocalization.NormalizeKeyPart(value),
+                value);
+        }
     }
 }

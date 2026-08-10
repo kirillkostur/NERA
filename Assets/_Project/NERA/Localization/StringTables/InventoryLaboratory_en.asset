@@ -1,0 +1,215 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: InventoryLaboratory_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 1291a4a1fed10fa45979fb2b13e5d7e3, type: 2}
+  m_Metadata:
+    m_Items:
+    - rid: 1138171735028269374
+  m_TableData:
+  - m_Id: 1399840768
+    m_Localized: SCANNING {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200896
+    m_Localized: Progress - {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200897
+    m_Localized: START SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200898
+    m_Localized: KNOWN ITEM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200899
+    m_Localized: SCANNED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200900
+    m_Localized: Laboratory charger ready.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200901
+    m_Localized: CHARGE {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200902
+    m_Localized: SELECT AN ITEM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200903
+    m_Localized: Laboratory ready.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200904
+    m_Localized: "Scanning paused \u2014 laboratory is stopped."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200905
+    m_Localized: "Scanning paused \u2014 insufficient station energy."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200906
+    m_Localized: This item does not require analysis.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200907
+    m_Localized: Scanning {0}...
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200908
+    m_Localized: Laboratory is stopped from the station computer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200909
+    m_Localized: This item is already identified and does not require analysis.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200910
+    m_Localized: '{0} is already scanned.'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200911
+    m_Localized: Insufficient station energy.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200912
+    m_Localized: Insufficient station power.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200913
+    m_Localized: This sample is already scanned.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200914
+    m_Localized: 'Analysis complete: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200915
+    m_Localized: 'Sample scan complete: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200916
+    m_Localized: No free inventory slot for this sample.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1429200917
+    m_Localized: '{0} type is known. This sample still requires scanning.'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 1429200918
+    m_Localized: '{0} loaded. Ready to scan.'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269374
+  - m_Id: 7980703744
+    m_Localized: Q
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8014258176
+    m_Localized: ESC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8018452480
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8018452481
+    m_Localized: E
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8022646784
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8022646785
+    m_Localized: POWER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8064589824
+    m_Localized: Slot 3 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8077172736
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8081367040
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561344
+    m_Localized: Slot 2 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561345
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561346
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561347
+    m_Localized: Slot 4 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561348
+    m_Localized: Slot 1 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8085561349
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8093949952
+    m_Localized: Inventory TAB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8098144256
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8098144257
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1138171735028269374
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 1399840768
+        - id: 1429200896
+        - id: 1429200901
+        - id: 1429200907
+        - id: 1429200910
+        - id: 1429200914
+        - id: 1429200915
+        - id: 1429200917
+        - id: 1429200918

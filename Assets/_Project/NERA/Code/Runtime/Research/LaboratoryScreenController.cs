@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Localization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +53,7 @@ namespace NERA.Research
         [SerializeField] private TMP_Text scanProgressText;
         [SerializeField] private Button upgradeButton;
         [SerializeField] private Button upgradeDropButton;
+        [SerializeField] private TMP_Text upgradeProgressText;
         [SerializeField] private TMP_Text infoName;
         [SerializeField] private TMP_Text infoDescription;
         [SerializeField] private Image infoImage;
@@ -77,6 +79,7 @@ namespace NERA.Research
             }
 
             initialized = true;
+            NERALocalization.LocaleChanged += RefreshAll;
             rootCanvas ??= GetComponentInParent<Canvas>();
             CacheHierarchy();
             BuildInventoryViews();
@@ -154,6 +157,9 @@ namespace NERA.Research
             upgradeDropButton ??= Find(
                 upgradeScreen != null ? upgradeScreen.transform : null,
                 "DropButton")?.GetComponent<Button>();
+            upgradeProgressText ??= Find(
+                upgradeScreen != null ? upgradeScreen.transform : null,
+                "Text_progress")?.GetComponent<TMP_Text>();
         }
 
         private void BuildInventoryViews()
@@ -298,7 +304,10 @@ namespace NERA.Research
                 view.gameObject.AddComponent<LaboratoryItemDropSlot>();
             drop.ItemDropped += onDrop;
             view.Button.onClick.AddListener(
-                () => ShowInfo(view.LaboratoryDrag?.Item));
+                () => ShowInfo(
+                    view.LaboratoryDrag != null
+                        ? view.LaboratoryDrag.Item
+                        : null));
             view.LaboratoryDrag.InteractionStarted += drag =>
                 ShowInfo(drag.Item);
             return view;
@@ -568,11 +577,14 @@ namespace NERA.Research
                     binding.Group,
                     binding.Index);
                 SetItemIcon(binding.Icon, binding.Item);
-                binding.Drag?.Initialize(
-                    binding.Item,
-                    rootCanvas,
-                    binding.Group,
-                    binding.Index);
+                if (binding.Drag != null)
+                {
+                    binding.Drag.Initialize(
+                        binding.Item,
+                        rootCanvas,
+                        binding.Group,
+                        binding.Index);
+                }
                 if (binding.Button != null)
                     binding.Button.interactable = true;
             }
@@ -608,7 +620,12 @@ namespace NERA.Research
             {
                 scanProgressText.gameObject.SetActive(analyzing);
                 scanProgressText.text = analyzing
-                    ? $"Progress - {Mathf.RoundToInt(Mathf.Clamp01(research.Progress) * 100f)}%"
+                    ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.progress_mixed_case",
+                        "Progress - {0}%",
+                        Mathf.RoundToInt(
+                            Mathf.Clamp01(research.Progress) * 100f))
                     : string.Empty;
             }
         }
@@ -653,6 +670,7 @@ namespace NERA.Research
         {
             LaboratoryWorkstationController workstation =
                 LaboratoryWorkstationController.Instance;
+            bool processing = workstation?.IsUpgradeProcessing == true;
             bool hasAny = false;
             for (int index = 0; index < upgradeViews.Count; index++)
             {
@@ -668,18 +686,32 @@ namespace NERA.Research
                         : InventorySlotGroup.Backpack,
                     index,
                     isUpgradeSource: true);
+                if (upgradeViews[index]?.LaboratoryDrag != null)
+                    upgradeViews[index].LaboratoryDrag.enabled = !processing;
             }
 
             if (upgradeDropButton != null)
             {
                 upgradeDropButton.interactable =
                     hasAny &&
-                    workstation?.IsUpgradeProcessing != true;
+                    !processing;
             }
             if (upgradeButton != null)
             {
                 upgradeButton.interactable =
                     workstation?.CanSynthesize(out _) == true;
+            }
+            if (upgradeProgressText != null)
+            {
+                upgradeProgressText.gameObject.SetActive(processing);
+                upgradeProgressText.text = processing
+                    ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.progress_mixed_case",
+                        "Progress - {0}%",
+                        Mathf.RoundToInt(
+                            workstation.SynthesisProgress * 100f))
+                    : string.Empty;
             }
         }
 
@@ -704,15 +736,19 @@ namespace NERA.Research
                 view.Icon.enabled = item != null;
             }
             view.SetKeyLabel(string.Empty, false);
-            view.LaboratoryDrag?.Initialize(
-                item,
-                rootCanvas,
-                group,
-                index,
-                isScanSource,
-                isChargingSource,
-                false,
-                isUpgradeSource);
+            LaboratoryInventoryItemDrag drag = view.LaboratoryDrag;
+            if (drag != null)
+            {
+                drag.Initialize(
+                    item,
+                    rootCanvas,
+                    group,
+                    index,
+                    isScanSource,
+                    isChargingSource,
+                    false,
+                    isUpgradeSource);
+            }
         }
 
         private void ShowInfo(ItemData item)
@@ -953,6 +989,7 @@ namespace NERA.Research
 
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshAll;
             UnbindDataEvents();
         }
 

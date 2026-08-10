@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Serialization;
+using NERA.Localization;
 
 namespace NERA.Library
 {
@@ -23,9 +24,11 @@ namespace NERA.Library
         [SerializeField] private Sprite illustration;
 
         public string EntryId => entryId;
-        public string Title => title;
+        public string Title => NERALocalization.Content(
+            "library", entryId, "title", title);
         public LibraryCategory Category => category;
-        public string Description => description;
+        public string Description => NERALocalization.Content(
+            "library", entryId, "description", description);
         public Sprite Illustration => illustration;
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using NERA.Localization;
 
 namespace NERA.Combat
 {
@@ -28,7 +29,8 @@ namespace NERA.Combat
         [SerializeField, Min(0f)] private float debugBeamDuration = 0.08f;
 
         public string WeaponId => weaponId;
-        public string DisplayName => displayName;
+        public string DisplayName => NERALocalization.Content(
+            "weapon", weaponId, "name", displayName);
         public float Damage => Mathf.Max(0.1f, damage);
         public float Range => Mathf.Max(0.1f, range);
         public float Cooldown => Mathf.Max(0.01f, cooldown);

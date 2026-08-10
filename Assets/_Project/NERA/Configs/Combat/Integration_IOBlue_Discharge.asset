@@ -11,11 +11,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d885c23210a04d8fa0869a5b625aca21, type: 3}
   m_Name: Integration_IOBlue_Discharge
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   integrationId: io_blue_discharge
   displayName: Blue IO Discharge
   displayColor: {r: 0.1, g: 0.65, b: 1, a: 1}
   compatibleEquipment: []
+  synthesisDuration: 5
   effect: 1
   radius: 8
   anomalyDamage: 40

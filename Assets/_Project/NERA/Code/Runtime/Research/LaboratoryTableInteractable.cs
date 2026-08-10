@@ -1,6 +1,7 @@
 using NERA.Inventory;
 using NERA.Interaction;
 using NERA.Energy;
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Research
@@ -15,9 +16,27 @@ namespace NERA.Research
         public override InteractionPrompt GetPrompt()
         {
             InteractionPrompt prompt = base.GetPrompt();
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            if (systems != null &&
+                !systems.IsRequestedActive(StationSystemType.Laboratory))
+            {
+                bool canStart = systems.CanStart(
+                    StationSystemType.Laboratory,
+                    out string reason);
+                return new InteractionPrompt(
+                    "Start Laboratory",
+                    prompt.Mode,
+                    prompt.HoldDuration,
+                    canStart,
+                    reason);
+            }
+
             ResearchController research = ResearchController.Instance;
             bool hasPower = research != null
-                ? research.HasOperationalPower
+                ? research.HasOperationalPower &&
+                  (systems == null || systems.IsRequestedActive(
+                      StationSystemType.Laboratory))
                 : EnergySystemController.Instance != null &&
                   EnergySystemController.Instance.HasUsablePower &&
                   EnergySystemController.Instance.State != EnergyState.Emergency;
@@ -35,6 +54,17 @@ namespace NERA.Research
         {
             if (!GetPrompt().IsAvailable)
                 return;
+
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            if (systems != null &&
+                !systems.IsRequestedActive(StationSystemType.Laboratory) &&
+                !systems.SetRequestedActive(
+                    StationSystemType.Laboratory,
+                    true))
+            {
+                return;
+            }
 
             InventoryLabHUDController hud = InventoryLabHUDController.Instance;
             if (hud == null)

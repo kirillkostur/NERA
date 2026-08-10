@@ -4,11 +4,14 @@ using NERA.Inventory;
 using NERA.Interaction;
 using NERA.Items;
 using NERA.Maintenance;
+using NERA.Research;
 using NERA.Station;
 using NUnit.Framework;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace NERA.Tests
 {
@@ -169,6 +172,44 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void AntennaUpgradeLevelControlsSignalRange()
+        {
+            ExpeditionLocationData signal =
+                ScriptableObject.CreateInstance<ExpeditionLocationData>();
+            SerializedObject serializedLocation = new SerializedObject(signal);
+            serializedLocation.FindProperty("requiredAntennaUpgradeLevel").intValue = 2;
+            serializedLocation.ApplyModifiedPropertiesWithoutUndo();
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Antenna,
+                        "station_antenna",
+                        1,
+                        true)
+                });
+            Assert.That(systems.CanAntennaReach(signal), Is.False);
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Antenna,
+                        "station_antenna",
+                        2,
+                        true)
+                });
+            Assert.That(systems.CanAntennaReach(signal), Is.True);
+
+            Object.DestroyImmediate(signal);
+        }
+
+        [Test]
         public void UpgradesAreSequentialAndConsumeLevelCost()
         {
             inventory.AddItem(servoDrive);
@@ -309,7 +350,11 @@ namespace NERA.Tests
                     0),
                 Is.Zero);
 
-            inventory.AddItem(servoDrive);
+            AddRequirements(
+                systems.Config.Find(
+                        StationSystemType.Turret,
+                        secondTurret)
+                    .GetUpgradeDefinition(1));
             Assert.That(
                 systems.TryUpgradeTo(
                     StationSystemType.Turret,
@@ -362,7 +407,13 @@ namespace NERA.Tests
         [Test]
         public void TurretInstancesUseTheirOwnConfiguredParts()
         {
+            const string secondTurret = "station_turret_02";
             const string thirdTurret = "station_turret_03";
+            StationUpgradeLevelDefinition secondUpgrade =
+                systems.Config.Find(
+                        StationSystemType.Turret,
+                        secondTurret)
+                    .GetUpgradeDefinition(1);
             StationSystemDefinition configuredTurret =
                 systems.Config.Find(
                     StationSystemType.Turret,
@@ -372,7 +423,18 @@ namespace NERA.Tests
                 systems.Config.FindByObjectId(thirdTurret),
                 Is.SameAs(configuredTurret));
 
-            inventory.AddItem(servoDrive);
+            StationUpgradeLevelDefinition thirdUpgrade =
+                configuredTurret.GetUpgradeDefinition(1);
+            StationUpgradeItemRequirement secondOnly =
+                secondUpgrade.RequiredItems.First(requirement =>
+                    thirdUpgrade.RequiredItems.All(other =>
+                        other.ItemId != requirement.ItemId));
+            StationUpgradeItemRequirement thirdOnly =
+                thirdUpgrade.RequiredItems.First(requirement =>
+                    secondUpgrade.RequiredItems.All(other =>
+                        other.ItemId != requirement.ItemId));
+
+            AddRequirements(secondUpgrade);
             Assert.That(
                 systems.CanUpgradeTo(
                     StationSystemType.Turret,
@@ -383,13 +445,10 @@ namespace NERA.Tests
                     storage,
                     out string reason),
                 Is.False);
-            Assert.That(reason, Does.Contain("Blue IO Shard"));
+            Assert.That(reason, Does.Contain(thirdOnly.DisplayName));
 
-            ItemData ioShard = CreateItem(
-                "io_blue_shard_01",
-                ItemType.EngineeringPart);
-            inventory.AddItem(ioShard);
-            inventory.AddItem(ioShard);
+            for (int index = 0; index < thirdOnly.Count; index++)
+                inventory.AddItem(thirdOnly.Item);
             Assert.That(
                 systems.TryUpgradeTo(
                     StationSystemType.Turret,
@@ -400,14 +459,9 @@ namespace NERA.Tests
                     storage),
                 Is.True);
             Assert.That(
-                inventory.CountItem("servo_drive_01"),
-                Is.EqualTo(1),
-                "Turret 3 must not consume turret 2's configured part.");
-            Assert.That(
-                inventory.CountItem("io_blue_shard_01"),
-                Is.Zero);
-
-            Object.DestroyImmediate(ioShard);
+                inventory.CountItem(secondOnly.ItemId),
+                Is.EqualTo(secondOnly.Count),
+                "Turret 3 must not consume turret 2's unique configured part.");
         }
 
         [Test]
@@ -632,17 +686,82 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void ComputerAndPowerSourcesCannotBeStoppedFromTerminal()
+        public void SolarPanelCanBeStoppedButCriticalSystemsCannot()
         {
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Computer, false),
                 Is.False);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.SolarPanel, false),
+                Is.True);
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.SolarPanel),
                 Is.False);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Battery, false),
                 Is.False);
+        }
+
+        [Test]
+        public void IdleConsumersStayConnectedUntilTheirSystemIsStopped()
+        {
+            energy.RegisterConsumer(
+                "test_drone",
+                energy.Config.DroneChargingConsumption,
+                energy.Config.GetMinimumCharge01(StationSystemType.Drone),
+                StationSystemType.Drone,
+                "station_drone");
+            energy.RegisterConsumer(
+                "test_laboratory",
+                energy.Config.LaboratoryConsumption,
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Laboratory),
+                StationSystemType.Laboratory);
+            energy.RegisterConsumer(
+                "test_laboratory_charging",
+                energy.Config.ItemChargingConsumption,
+                energy.Config.GetMinimumCharge01(
+                    StationSystemType.Laboratory),
+                StationSystemType.Laboratory);
+
+            Assert.That(energy.ActiveConsumerCount, Is.Zero);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(2),
+                "Research and charging belong to one laboratory connection.");
+
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, false),
+                Is.True);
+            Assert.That(energy.ConnectedConsumerCount, Is.EqualTo(1));
+
+            Assert.That(
+                systems.SetRequestedActive(
+                    StationSystemType.Laboratory,
+                    false),
+                Is.True);
+            Assert.That(energy.ConnectedConsumerCount, Is.Zero);
+
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
+            Assert.That(energy.ConnectedConsumerCount, Is.EqualTo(1));
+            Assert.That(
+                energy.ActiveConsumerCount,
+                Is.Zero,
+                "An idle enabled drone is connected without consuming power.");
+
+            energy.RestoreState(100f, true);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.Zero,
+                "The enabled idle drone must disconnect below its configured cutoff.");
+
+            energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(1),
+                "The connection must return when charge rises above the cutoff.");
         }
 
         [Test]
@@ -695,6 +814,33 @@ namespace NERA.Tests
                 systems.IsRequestedActive(StationSystemType.Laboratory),
                 Is.False,
                 "A failed physical start must not move the terminal toggle.");
+        }
+
+        [Test]
+        public void LaboratoryTableStartsTheWholeLaboratoryBeforeOpening()
+        {
+            GameObject tableRoot = new GameObject("Test_LaboratoryTable");
+            LaboratoryTableInteractable table =
+                tableRoot.AddComponent<LaboratoryTableInteractable>();
+            systems.SetRequestedActive(
+                StationSystemType.Laboratory,
+                false);
+
+            InteractionPrompt prompt = table.GetPrompt();
+            Assert.That(prompt.IsAvailable, Is.True);
+            Assert.That(prompt.ActionText, Is.EqualTo("Start Laboratory"));
+
+            LogAssert.Expect(
+                LogType.Error,
+                "Laboratory HUD was not found. Start gameplay through MainScene.");
+            table.CompleteInteraction(playerRoot);
+
+            Assert.That(
+                systems.IsRequestedActive(StationSystemType.Laboratory),
+                Is.True,
+                "Physical interaction must restore the terminal toggle.");
+
+            Object.DestroyImmediate(tableRoot);
         }
 
         [Test]
@@ -843,6 +989,18 @@ namespace NERA.Tests
             serialized.FindProperty("itemType").enumValueIndex = (int)type;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return item;
+        }
+
+        private void AddRequirements(StationUpgradeLevelDefinition upgrade)
+        {
+            Assert.That(upgrade, Is.Not.Null);
+            foreach (StationUpgradeItemRequirement requirement in
+                     upgrade.RequiredItems)
+            {
+                Assert.That(requirement.Item, Is.Not.Null);
+                for (int index = 0; index < requirement.Count; index++)
+                    Assert.That(inventory.AddItem(requirement.Item), Is.True);
+            }
         }
 
         private static void SetSingleton(System.Type controllerType, object value)

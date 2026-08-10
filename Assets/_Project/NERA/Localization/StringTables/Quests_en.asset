@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Quests_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 637d46d0290e7214292992f68204748e, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 791666688
+    m_Localized: Ancient Outpost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221120
+    m_Localized: Explore the ancient outpost discovered by the drone and investigate
+      the signal source.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221121
+    m_Localized: Travel to the Ancient Outpost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221122
+    m_Localized: Select the discovered location on the map and begin the expedition.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221123
+    m_Localized: Explore the Ancient Outpost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221124
+    m_Localized: Find the source of the Blue IO activity.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221125
+    m_Localized: Recover a Blue IO Sample
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221126
+    m_Localized: Collect the shard left after the encounter.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221127
+    m_Localized: Return to the Station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221128
+    m_Localized: Deliver the sample to the laboratory.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221129
+    m_Localized: Analyze the Sample
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221130
+    m_Localized: Analyze the Blue IO Shard in the laboratory.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221131
+    m_Localized: Launch the Drone Expedition
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221132
+    m_Localized: Send the survey drone on an expedition and wait for it to return
+      with data about a new location.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221133
+    m_Localized: Launch the Drone Expedition
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221134
+    m_Localized: Launch the survey drone and wait for the Expedition 01 scan to finish.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221135
+    m_Localized: Restart the Battery
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221136
+    m_Localized: Restore power to the station.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221137
+    m_Localized: Restore Station Power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221138
+    m_Localized: Restore power to the station.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221139
+    m_Localized: Open the Terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221140
+    m_Localized: Open the station terminal.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221141
+    m_Localized: Open the Terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221142
+    m_Localized: Open the station terminal.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415424
+    m_Localized: Clean {targetName}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415425
+    m_Localized: Contamination has reduced the efficiency of {targetName}.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415426
+    m_Localized: Clean {targetName}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415427
+    m_Localized: Restore the object's condition to at least 95%.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415428
+    m_Localized: Restart {targetName}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415429
+    m_Localized: The system was disabled by an external malfunction.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415430
+    m_Localized: Restart {targetName}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415431
+    m_Localized: Enable the object from the station terminal.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

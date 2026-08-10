@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NERA.Localization;
 using NERA.Quests;
 using TMPro;
 using UnityEngine;
@@ -42,6 +43,7 @@ namespace NERA.UI
 
         private void OnEnable()
         {
+            NERALocalization.LocaleChanged += Refresh;
             Bind(QuestController.Instance);
             Refresh();
         }
@@ -59,6 +61,7 @@ namespace NERA.UI
 
         private void OnDisable()
         {
+            NERALocalization.LocaleChanged -= Refresh;
             Bind(null);
         }
 
@@ -100,8 +103,20 @@ namespace NERA.UI
                 }
             }
 
-            SetText(mainQuestText, mainQuest, mainHeader);
-            SetText(sideQuestText, sideQuest, sideHeader);
+            SetText(
+                mainQuestText,
+                mainQuest,
+                NERALocalization.Get(
+                    NERALocalization.HudTable,
+                    "quest.main_header",
+                    mainHeader));
+            SetText(
+                sideQuestText,
+                sideQuest,
+                NERALocalization.Get(
+                    NERALocalization.HudTable,
+                    "quest.side_header",
+                    sideHeader));
 
             if (displayRoot != null && displayRoot != gameObject)
             {

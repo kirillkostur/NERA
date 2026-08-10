@@ -1,0 +1,608 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Content Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: Content
+  m_TableCollectionNameGuidString: 265add220621a73479d321287b08f1ab
+  m_Entries:
+  - m_Id: 1089462272
+    m_Key: item.ancient_record_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822400
+    m_Key: item.ancient_record_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822401
+    m_Key: item.energy_pistol_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822402
+    m_Key: item.energy_pistol_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822403
+    m_Key: item.io_blue_shard_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822404
+    m_Key: item.io_blue_shard_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016704
+    m_Key: item.io_integrator_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016705
+    m_Key: item.io_integrator_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016706
+    m_Key: item.nera_memory_core_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016707
+    m_Key: item.nera_memory_core_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016708
+    m_Key: item.nera_signal_relay_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016709
+    m_Key: item.nera_signal_relay_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016710
+    m_Key: item.servo_drive_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016711
+    m_Key: item.servo_drive_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599616
+    m_Key: location.expedition_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599617
+    m_Key: location.expedition_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599618
+    m_Key: target.expedition_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599619
+    m_Key: location.expedition02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599620
+    m_Key: location.expedition02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599621
+    m_Key: target.expedition02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793920
+    m_Key: location.expedition03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793921
+    m_Key: location.expedition03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793922
+    m_Key: target.expedition03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793923
+    m_Key: location.expedition04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793924
+    m_Key: location.expedition04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793925
+    m_Key: target.expedition04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793926
+    m_Key: location.expedition05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793927
+    m_Key: location.expedition05.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793928
+    m_Key: target.expedition05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793929
+    m_Key: location.expedition06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793930
+    m_Key: location.expedition06.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793931
+    m_Key: target.expedition06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793932
+    m_Key: location.expedition07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793933
+    m_Key: location.expedition07.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793934
+    m_Key: target.expedition07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793935
+    m_Key: location.expedition08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793936
+    m_Key: location.expedition08.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793937
+    m_Key: target.expedition08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793938
+    m_Key: location.unknownsignal01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793939
+    m_Key: location.unknownsignal01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793940
+    m_Key: target.unknownsignal01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182528
+    m_Key: library.io_blue_shard_01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182529
+    m_Key: library.io_blue_shard_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182530
+    m_Key: library.station_primer.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182531
+    m_Key: library.station_primer.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182532
+    m_Key: library.expedition01_memory_core.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182533
+    m_Key: library.expedition01_memory_core.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182534
+    m_Key: library.expedition02_ancient_record.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182535
+    m_Key: library.expedition02_ancient_record.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182536
+    m_Key: library.expedition02_signal_relay.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182537
+    m_Key: library.expedition02_signal_relay.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571136
+    m_Key: research.research_ancient_record_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571137
+    m_Key: research.research_io_blue_shard_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571138
+    m_Key: research.research_nera_memory_core_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571139
+    m_Key: research.research_nera_signal_relay_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1160765440
+    m_Key: weapon.energy_pistol_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1169154048
+    m_Key: integration.io_blue_discharge.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1177542656
+    m_Key: enemy.io_blue_relay_guard.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1177542657
+    m_Key: enemy.io_blue_weak.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736960
+    m_Key: map_slot.map_slot_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736961
+    m_Key: map_slot.map_slot_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736962
+    m_Key: map_slot.map_slot_03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736963
+    m_Key: map_slot.map_slot_04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736964
+    m_Key: map_slot.map_slot_05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736965
+    m_Key: map_slot.map_slot_06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736966
+    m_Key: map_slot.map_slot_07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736967
+    m_Key: map_slot.map_slot_08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319872
+    m_Key: station.solarpanel.station_solar_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319873
+    m_Key: station.solarpanel.station_solar_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319874
+    m_Key: target.station_solar_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319875
+    m_Key: station.battery.station_battery.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319876
+    m_Key: station.battery.station_battery.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319877
+    m_Key: target.station_battery.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319878
+    m_Key: station.battery.station_battery.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319879
+    m_Key: station.battery.station_battery.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319880
+    m_Key: station.battery.station_battery.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319881
+    m_Key: station.battery.station_battery.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319882
+    m_Key: station.computer.shared.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319883
+    m_Key: station.computer.shared.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319884
+    m_Key: station.drone.station_drone.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319885
+    m_Key: station.drone.station_drone.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319886
+    m_Key: target.station_drone.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319887
+    m_Key: station.drone.station_drone.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319888
+    m_Key: station.drone.station_drone.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319889
+    m_Key: station.drone.station_drone.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319890
+    m_Key: station.drone.station_drone.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319891
+    m_Key: station.drone.station_drone.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319892
+    m_Key: station.drone.station_drone.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319893
+    m_Key: station.laboratory.shared.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514176
+    m_Key: station.laboratory.shared.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514179
+    m_Key: station.antenna.station_antenna.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514180
+    m_Key: station.antenna.station_antenna.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514181
+    m_Key: target.station_antenna.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514182
+    m_Key: station.antenna.station_antenna.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514183
+    m_Key: station.antenna.station_antenna.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514184
+    m_Key: station.antenna.station_antenna.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514185
+    m_Key: station.antenna.station_antenna.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514186
+    m_Key: station.antenna.station_antenna.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514187
+    m_Key: station.antenna.station_antenna.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514188
+    m_Key: station.turret.station_turret_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514189
+    m_Key: station.turret.station_turret_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514190
+    m_Key: target.station_turret_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514191
+    m_Key: station.turret.station_turret_01.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514192
+    m_Key: station.turret.station_turret_01.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514193
+    m_Key: station.turret.station_turret_01.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514194
+    m_Key: station.turret.station_turret_01.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514195
+    m_Key: station.turret.station_turret_01.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514196
+    m_Key: station.turret.station_turret_01.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514197
+    m_Key: station.turret.station_turret_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514198
+    m_Key: station.turret.station_turret_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514199
+    m_Key: target.station_turret_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514200
+    m_Key: station.turret.station_turret_02.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514201
+    m_Key: station.turret.station_turret_02.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514202
+    m_Key: station.turret.station_turret_02.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514203
+    m_Key: station.turret.station_turret_02.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514204
+    m_Key: station.turret.station_turret_02.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514205
+    m_Key: station.turret.station_turret_02.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514206
+    m_Key: station.turret.station_turret_03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514207
+    m_Key: station.turret.station_turret_03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514208
+    m_Key: target.station_turret_03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514209
+    m_Key: station.turret.station_turret_03.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514210
+    m_Key: station.turret.station_turret_03.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514211
+    m_Key: station.turret.station_turret_03.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514212
+    m_Key: station.turret.station_turret_03.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514213
+    m_Key: station.turret.station_turret_03.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514214
+    m_Key: station.turret.station_turret_03.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514215
+    m_Key: station.turret.station_turret_04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514216
+    m_Key: station.turret.station_turret_04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514217
+    m_Key: target.station_turret_04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514218
+    m_Key: station.turret.station_turret_04.upgrade.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514219
+    m_Key: station.turret.station_turret_04.upgrade.1.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514220
+    m_Key: station.turret.station_turret_04.upgrade.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708480
+    m_Key: station.turret.station_turret_04.upgrade.2.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708481
+    m_Key: station.turret.station_turret_04.upgrade.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708482
+    m_Key: station.turret.station_turret_04.upgrade.3.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425879658496
+    m_Key: item.capacitor_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990144
+    m_Key: item.capacitor_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990145
+    m_Key: item.cooling_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990146
+    m_Key: item.cooling_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990147
+    m_Key: item.emitter_damage_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990148
+    m_Key: item.emitter_damage_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990149
+    m_Key: item.sensor_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990150
+    m_Key: item.sensor_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990151
+    m_Key: item.servo_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990152
+    m_Key: item.servo_01.description
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1138171735028269370
+  references:
+    version: 2
+    RefIds:
+    - rid: 1138171735028269370
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1786279464593

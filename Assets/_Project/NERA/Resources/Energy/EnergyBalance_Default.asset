@@ -45,9 +45,6 @@ MonoBehaviour:
   - systemType: 4
     objectId:
     minimumChargePercent: 25
-  - systemType: 5
-    objectId:
-    minimumChargePercent: 25
   - systemType: 6
     objectId: station_antenna
     minimumChargePercent: 25

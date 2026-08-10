@@ -1,4 +1,5 @@
 using UnityEngine;
+using NERA.Localization;
 
 namespace NERA.Enemies
 {
@@ -34,7 +35,8 @@ namespace NERA.Enemies
         [SerializeField] private Vector3 deathDropOffset = Vector3.zero;
 
         public string EnemyId => enemyId;
-        public string DisplayName => displayName;
+        public string DisplayName => NERALocalization.Content(
+            "enemy", enemyId, "name", displayName);
         public float MaxHealth => Mathf.Max(1f, maxHealth);
         public float DetectionRadius => Mathf.Max(1f, detectionRadius);
         public float AttackRange => Mathf.Clamp(attackRange, 0.5f, DetectionRadius);

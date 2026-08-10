@@ -3,6 +3,7 @@ using System.Collections;
 using System.Globalization;
 using NERA.Core;
 using NERA.Graphics;
+using NERA.Localization;
 using NERA.Save;
 using TMPro;
 using UnityEngine;
@@ -63,6 +64,16 @@ namespace NERA.UI
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+        }
+
+        private void OnEnable()
+        {
+            NERALocalization.LocaleChanged += RefreshLocalizedText;
+        }
+
+        private void OnDisable()
+        {
+            NERALocalization.LocaleChanged -= RefreshLocalizedText;
         }
 
         public void Refresh()
@@ -165,8 +176,14 @@ namespace NERA.UI
             if (slotScreenDescription != null)
             {
                 slotScreenDescription.text = mode == GameLaunchMode.NewGame
-                    ? "SELECT A SAVE SLOT"
-                    : "SELECT A GAME SAVE";
+                    ? NERALocalization.Get(
+                        NERALocalization.MainMenuTable,
+                        "save.select_new_slot",
+                        "SELECT A SAVE SLOT")
+                    : NERALocalization.Get(
+                        NERALocalization.MainMenuTable,
+                        "save.select_existing_slot",
+                        "SELECT A GAME SAVE");
             }
 
             RefreshSaveSlots();
@@ -242,10 +259,27 @@ namespace NERA.UI
 
         private void ConfirmOptions()
         {
-            Debug.Log(
-                "Main menu: Options confirmation is reserved for the " +
-                "future settings implementation.",
-                this);
+            ShowRootMenu();
+        }
+
+        private void RefreshLocalizedText()
+        {
+            if (continueScreen != null && continueScreen.activeSelf &&
+                slotScreenDescription != null)
+            {
+                slotScreenDescription.text = slotScreenMode ==
+                    GameLaunchMode.NewGame
+                        ? NERALocalization.Get(
+                            NERALocalization.MainMenuTable,
+                            "save.select_new_slot",
+                            "SELECT A SAVE SLOT")
+                        : NERALocalization.Get(
+                            NERALocalization.MainMenuTable,
+                            "save.select_existing_slot",
+                            "SELECT A GAME SAVE");
+            }
+
+            RefreshSaveSlots();
         }
 
         private void StartRuntime(GameLaunchMode mode, int saveSlot)
@@ -538,18 +572,32 @@ namespace NERA.UI
 
                 if (!occupied)
                 {
-                    dateText.text = "--.--.---- - --:--";
-                    completionText.text = "0% COMPLETE";
+                    dateText.text = NERALocalization.Get(
+                        NERALocalization.MainMenuTable,
+                        "save.empty",
+                        "EMPTY");
+                    completionText.text = NERALocalization.Get(
+                        NERALocalization.MainMenuTable,
+                        "save.completion",
+                        "{0}% COMPLETE",
+                        0);
                     return;
                 }
 
                 DateTime writeTime = SaveSlotStorage.GetLastWriteTime(Slot);
                 dateText.text = writeTime.ToString(
-                    "dd.MM.yyyy - H:mm",
+                    NERALocalization.Get(
+                        NERALocalization.MainMenuTable,
+                        "save.date_format",
+                        "MM.dd.yyyy - HH:mm"),
                     CultureInfo.InvariantCulture);
                 int completion = Mathf.RoundToInt(
                     SaveSlotStorage.GetCompletionPercent(Slot));
-                completionText.text = $"{completion}% COMPLETE";
+                completionText.text = NERALocalization.Get(
+                    NERALocalization.MainMenuTable,
+                    "save.completion",
+                    "{0}% COMPLETE",
+                    completion);
             }
         }
     }

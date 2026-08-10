@@ -1,0 +1,638 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Content_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 265add220621a73479d321287b08f1ab, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 1089462272
+    m_Localized: Ancient Relay Record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822400
+    m_Localized: A damaged maintenance tablet from the signal array. The surviving
+      fragments may reveal why the relay stopped transmitting.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822401
+    m_Localized: Energy Pistol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822402
+    m_Localized: Compact expedition weapon that fires focused energy pulses at unstable
+      IO entities.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822403
+    m_Localized: Blue IO Shard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1118822404
+    m_Localized: A condensed anomaly left by a Blue IO entity. It occupies a dedicated
+      anomaly slot.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016704
+    m_Localized: IO Integrator
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016705
+    m_Localized: Dedicated laboratory tool for integrating researched IO anomaly
+      stones.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016706
+    m_Localized: NERA Memory Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016707
+    m_Localized: A compact NERA data-storage core recovered from the Ancient Outpost.
+      Its sealed structure preserves fragmented station records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016708
+    m_Localized: NERA Signal Relay Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016709
+    m_Localized: A dense relay core recovered from Expedition 02. Its intact routing
+      lattice can be analyzed at the station laboratory.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016710
+    m_Localized: Servo Drive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1123016711
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599616
+    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599617
+    m_Localized: A newly mapped ancient site. Recover artifacts and return to the
+      station.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599618
+    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599619
+    m_Localized: "Expedition 02 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599620
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1135599621
+    m_Localized: "Expedition 02 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793920
+    m_Localized: "Expedition 03 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793921
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793922
+    m_Localized: "Expedition 03 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793923
+    m_Localized: "Expedition 04 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793924
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793925
+    m_Localized: "Expedition 04 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793926
+    m_Localized: "Expedition 05 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793927
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793928
+    m_Localized: "Expedition 05 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793929
+    m_Localized: "Expedition 06 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793930
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793931
+    m_Localized: "Expedition 06 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793932
+    m_Localized: "Expedition 07 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793933
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793934
+    m_Localized: "Expedition 07 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793935
+    m_Localized: "Expedition 08 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793936
+    m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
+      Recover the relay core and any surviving records.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793937
+    m_Localized: "Expedition 08 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793938
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793939
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139793940
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182528
+    m_Localized: BLUE IO SHARD // ANOMALY ANALYSIS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182529
+    m_Localized: A condensed energy crystal recovered from a Blue IO entity. Laboratory
+      analysis identifies a medium-strength destructive resonance. When integrated
+      into compatible equipment, the shard releases one radial pulse that damages
+      nearby IO anomalies.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182530
+    m_Localized: NERA STATION // OPERATIONS PRIMER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182531
+    m_Localized: 'The station serves as the expedition hub.
+
+
+      Restore and maintain
+      critical systems, deploy the survey drone, review discovered sites, and prepare
+      equipment before departure.
+
+
+      Recovered artifacts will expand this library
+      as research progresses.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182532
+    m_Localized: NERA MEMORY CORE // INITIAL ANALYSIS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182533
+    m_Localized: The recovered core contains fragmented station records. Its energy
+      pattern is controlled and artificial, unlike the unstable signatures associated
+      with Blue IO. The archive confirms that the outpost deliberately preserved
+      these records before it was abandoned.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182534
+    m_Localized: ANCIENT RECORD 02 // RELAY PROTOCOL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182535
+    m_Localized: 'A fragmented NERA maintenance record describes a signal network
+      designed to warn distant settlements. Several final packets were never transmitted.
+      The surviving symbols repeat the concepts: signal, warning, gate and memory.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182536
+    m_Localized: NERA SIGNAL RELAY // EXPEDITION 02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1148182537
+    m_Localized: The recovered relay core belonged to a planetary signal array. Its
+      routing table repeatedly redirects traffic toward a region marked by IO distortion.
+      The array also contains a dormant calibration sequence compatible with the
+      station antenna.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571136
+    m_Localized: Ancient Relay Record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571137
+    m_Localized: Blue IO Shard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571138
+    m_Localized: NERA Memory Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1156571139
+    m_Localized: NERA Signal Relay Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1160765440
+    m_Localized: Energy Pistol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1169154048
+    m_Localized: Blue IO Discharge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1177542656
+    m_Localized: Blue IO Relay Guard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1177542657
+    m_Localized: Weak Blue IO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736960
+    m_Localized: Map Slot 01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736961
+    m_Localized: Map Slot 02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736962
+    m_Localized: Map Slot 03
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736963
+    m_Localized: Map Slot 04
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736964
+    m_Localized: Map Slot 05
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736965
+    m_Localized: Map Slot 06
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736966
+    m_Localized: Map Slot 07
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1181736967
+    m_Localized: Map Slot 08
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319872
+    m_Localized: SOLAR PANEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319873
+    m_Localized: Generates station power. Clean it outside to restore efficiency.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319874
+    m_Localized: SOLAR PANEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319875
+    m_Localized: BATTERY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319876
+    m_Localized: Stores generated energy and supplies all active consumers.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319877
+    m_Localized: BATTERY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319878
+    m_Localized: BATTERY I
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319879
+    m_Localized: Standard station cell bank.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319880
+    m_Localized: BATTERY II
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319881
+    m_Localized: Expanded high-capacity cell bank.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319882
+    m_Localized: TERMINAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319883
+    m_Localized: Central terminal. It cannot be stopped or upgraded from itself.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319884
+    m_Localized: DRONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319885
+    m_Localized: Surveys nearby sectors. Upgrade its drive to reach distant expeditions.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319886
+    m_Localized: DRONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319887
+    m_Localized: DRONE I
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319888
+    m_Localized: Short-range expedition drive.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319889
+    m_Localized: DRONE II
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319890
+    m_Localized: Medium-range expedition drive.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319891
+    m_Localized: DRONE III
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319892
+    m_Localized: Long-range expedition drive.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1194319893
+    m_Localized: LABORATORY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514176
+    m_Localized: Analyzes recovered objects, charges equipment, and integrates anomalies.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514179
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514180
+    m_Localized: Finds unknown signals. Install a replacement drive before first
+      use.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514181
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514182
+    m_Localized: ANTENNA I
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514183
+    m_Localized: Restores short-range signal reception.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514184
+    m_Localized: ANTENNA II
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514185
+    m_Localized: Improves signal resolution and range.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514186
+    m_Localized: ANTENNA III
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514187
+    m_Localized: Enables deep-range signal acquisition.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514188
+    m_Localized: TURRET 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514189
+    m_Localized: Automatic defense platform for the first station sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514190
+    m_Localized: TURRET 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514191
+    m_Localized: TURRET 1 / LEVEL 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514192
+    m_Localized: Factory-installed defensive platform.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514193
+    m_Localized: TURRET 1 / LEVEL 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514194
+    m_Localized: Improves tracking and sustained fire.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514195
+    m_Localized: TURRET 1 / LEVEL 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514196
+    m_Localized: Maximum performance for the first defense sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514197
+    m_Localized: TURRET 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514198
+    m_Localized: Automatic defense platform for the second station sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514199
+    m_Localized: TURRET 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514200
+    m_Localized: TURRET 2 / LEVEL 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514201
+    m_Localized: Installs the second defensive platform.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514202
+    m_Localized: TURRET 2 / LEVEL 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514203
+    m_Localized: Reinforces its tracking assembly.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514204
+    m_Localized: TURRET 2 / LEVEL 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514205
+    m_Localized: Adds an autonomous long-range control core.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514206
+    m_Localized: TURRET 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514207
+    m_Localized: Automatic defense platform for the third station sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514208
+    m_Localized: TURRET 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514209
+    m_Localized: TURRET 3 / LEVEL 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514210
+    m_Localized: Builds the third defensive platform.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514211
+    m_Localized: TURRET 3 / LEVEL 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514212
+    m_Localized: Adds a stabilized drive and processing core.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514213
+    m_Localized: TURRET 3 / LEVEL 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514214
+    m_Localized: Installs redundant signal and targeting channels.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514215
+    m_Localized: TURRET 4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514216
+    m_Localized: Automatic defense platform for the fourth station sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514217
+    m_Localized: TURRET 4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514218
+    m_Localized: TURRET 4 / LEVEL 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514219
+    m_Localized: Restores the fourth defense sector.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198514220
+    m_Localized: TURRET 4 / LEVEL 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708480
+    m_Localized: Upgrades its signal and rotation systems.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708481
+    m_Localized: TURRET 4 / LEVEL 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1202708482
+    m_Localized: Installs a high-load command assembly.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425879658496
+    m_Localized: Capacitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990144
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990145
+    m_Localized: Cooling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990146
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990147
+    m_Localized: Emitter Damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990148
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990149
+    m_Localized: Sensor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990150
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990151
+    m_Localized: Servo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128425929990152
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

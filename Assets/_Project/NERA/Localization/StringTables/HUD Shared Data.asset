@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: HUD Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: HUD
+  m_TableCollectionNameGuidString: 725a1094a1671474d8d91df758d11f93
+  m_Entries:
+  - m_Id: 3601850368
+    m_Key: quest.main_header
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404800
+    m_Key: quest.side_header
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404801
+    m_Key: interaction.press
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404802
+    m_Key: interaction.hold
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404803
+    m_Key: interaction.hold_progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404804
+    m_Key: interaction.action.interact
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404805
+    m_Key: interaction.action.pick_up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404806
+    m_Key: interaction.action.use_laboratory
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404807
+    m_Key: interaction.action.restore_power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404808
+    m_Key: interaction.action.use_terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404809
+    m_Key: interaction.action.start_computer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404810
+    m_Key: interaction.action.clean_solar_panel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404811
+    m_Key: interaction.action.service_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404812
+    m_Key: interaction.action.service_turret
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404813
+    m_Key: interaction.action.service_device
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404814
+    m_Key: interaction.unavailable.unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404815
+    m_Key: interaction.unavailable.station_power_online
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3635404816
+    m_Key: interaction.unavailable.terminal_offline_restore_power_first
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3937394688
+    m_Key: ui.prefab.p_interactionprompt_prompttext
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4683980800
+    m_Key: ui.prefab.p_hud_canvas_interactionprompt_prompttext
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10300153856
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_checkpointindicator
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10354679808
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_interactionprompt_prompttext
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1826517671936
+    m_Key: interaction.action.open_terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1826559614976
+    m_Key: interaction.action.return_to_station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1826559614977
+    m_Key: interaction.unavailable.item_data_missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1826559614978
+    m_Key: interaction.unavailable.laboratory_has_no_power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1826559614979
+    m_Key: interaction.action.start_laboratory
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1138171735028269367
+  references:
+    version: 2
+    RefIds:
+    - rid: 1138171735028269367
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1786279463956

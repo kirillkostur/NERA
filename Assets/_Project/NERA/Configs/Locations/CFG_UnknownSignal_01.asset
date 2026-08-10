@@ -18,11 +18,13 @@ MonoBehaviour:
   description: Unknown signal. Antenna analysis required.
   scene:
     assetGuid: 9cc9c69f4e3b41a8a5473f31f5657d2e
-    assetPath: Assets/_Project/NERA/Scenes/UnknownSignal_01_FirstPlayable.unity
+    assetPath: Assets/_Project/NERA/Scenes/UnknownSignal_01.unity
   spawnPointId: UnknownSignal01_Start
   discoverySource: 1
   droneScanDuration: 5
   requiredDroneUpgradeLevel: 0
+  antennaScanDuration: 5
+  requiredAntennaUpgradeLevel: 1
   initialState: 0
   mapSymbol: 1
   mapSlot: {fileID: 0}

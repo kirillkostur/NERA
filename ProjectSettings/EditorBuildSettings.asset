@@ -39,8 +39,43 @@ EditorBuildSettings:
     path: Assets/_Project/NERA/Scenes/Expedition_08.unity
     guid: f1cee509233448749b53ae9e32a2a64a
   - enabled: 1
-    path: Assets/_Project/NERA/Scenes/UnknownSignal_01_FirstPlayable.unity
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_01.unity
     guid: 9cc9c69f4e3b41a8a5473f31f5657d2e
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_02.unity
+    guid: 64186d6dd4aa5e34da8d99669532a0e0
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_03.unity
+    guid: fa819c1509b338c4ba97f5316a520331
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_04.unity
+    guid: 7305a328d6cab9840ab722ebcbe0221a
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_05.unity
+    guid: 1d9b15c1db961da4eabe93ead3481bab
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_06.unity
+    guid: 6d3b7e5f09c63ff42b0ac54613100b2e
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_07.unity
+    guid: 94f114d75586ed544ab37450c53f93e0
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_08.unity
+    guid: 39a4e9107f361e648af7e2ca4749843d
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_09.unity
+    guid: 7bea3d995bc84fa458871d20a1f2d827
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_10.unity
+    guid: ca1f942f31a3a174a995041aa96dafb2
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_11.unity
+    guid: 49b91e5b7a1f65c498057c59344ec371
+  - enabled: 1
+    path: Assets/_Project/NERA/Scenes/UnknownSignal_12.unity
+    guid: 4c2fe3fa91cf60f45ba20679bf629c71
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 902e0d7171a151544afb4a0a26a8d4cf, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: 313a2beb29ed2ec49a9af18d6ba9f590, type: 2}
   m_UseUCBPForAssetBundles: 0

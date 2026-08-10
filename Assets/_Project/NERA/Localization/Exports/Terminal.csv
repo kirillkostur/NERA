@@ -1,0 +1,97 @@
+﻿Key,Id,Shared Comments,English(en),English(en) Comments,Russian(ru),Russian(ru) Comments
+"station.select_object",1857019904,"","SELECT STATION OBJECT","","ВЫБЕРИТЕ ОБЪЕКТ СТАНЦИИ",""
+"station.select_object_hint",1886380032,"","Select an object in the 3D station preview.","","Выберите объект на трёхмерной модели станции.",""
+"station.no_remote_controls",1886380033,"","Station module. No remote power controls are available.","","Модуль станции. Удалённое управление питанием недоступно.",""
+"station.power.low",1886380034,"","Low Power","","Мало энергии",""
+"station.power.active",1886380035,"","Active","","Активно",""
+"station.power.inactive",1886380036,"","Inactive","","Неактивно",""
+"station.no_object_selected",1886380037,"","NO OBJECT SELECTED","","ОБЪЕКТ НЕ ВЫБРАН",""
+"station.state.active",1886380038,"","ACTIVE","","АКТИВНО",""
+"station.state.offline",1886380039,"","OFFLINE","","ОТКЛЮЧЕНО",""
+"station.state.low_power",1886380040,"","LOW POWER","","МАЛО ЭНЕРГИИ",""
+"station.state.stopped",1886380041,"","STOPPED","","ОСТАНОВЛЕНО",""
+"station.status.battery",1886380042,"","Charge - {0}/{1}
+Consumption - {2}
+Connected objects - {3}","","Заряд — {0}/{1}
+Потребление — {2}
+Подключено объектов — {3}",""
+"station.status.solar",1886380043,"","Status - {0}
+Generation - {1}
+Efficiency - {2}%","","Состояние — {0}
+Генерация — {1}
+Эффективность — {2}%",""
+"station.status.system_with_consumption",1886380044,"","Status - {0}
+Consumption - {1}
+Condition - {2}%
+Upgrade level - {3}","","Состояние — {0}
+Потребление — {1}
+Исправность — {2}%
+Уровень улучшения — {3}",""
+"station.status.system",1886380045,"","Status - {0}
+Condition - {1}%
+Upgrade level - {2}","","Состояние — {0}
+Исправность — {1}%
+Уровень улучшения — {2}",""
+"station.maximum_level",1886380046,"","MAXIMUM LEVEL","","МАКСИМАЛЬНЫЙ УРОВЕНЬ",""
+"station.upgrade.level_label",1886380047,"","{0} {1}","","{0} {1}",""
+"station.upgrade.item_requirement",1886380048,"","{0} - {1}/{2}","","{0} — {1}/{2}",""
+"station.upgrade.energy_requirement",1886380049,"","Energy - {0}","","Энергия — {0}",""
+"station.upgrade.not_configured",1886380050,"","Upgrade level is not configured.","","Уровень улучшения не настроен.",""
+"map.travel_confirmation",1886380051,"","Travel to {0}?","","Переместиться в локацию «{0}»?",""
+"map.select_sector",1886380052,"","Select a sector on the 3D map.","","Выберите сектор на трёхмерной карте.",""
+"map.drone_target",1886380053,"","DRONE TARGET
+{0}","","ЦЕЛЬ ДРОНА
+{0}",""
+"map.drone_unavailable",1886380054,"","DRONE UNAVAILABLE","","ДРОН НЕДОСТУПЕН",""
+"map.scanning",1886380055,"","SCANNING {0}%","","СКАНИРОВАНИЕ {0}%",""
+"map.recharging",1886380056,"","RECHARGING {0}s","","ПЕРЕЗАРЯДКА {0} с",""
+"map.signal_found",1886380057,"","SIGNAL FOUND
+{0}","","СИГНАЛ ОБНАРУЖЕН
+{0}",""
+"map.antenna_hint",1886380058,"","ANTENNA
+Calibrate to reveal a hidden signal on an opened sector.","","АНТЕННА
+Выполните калибровку, чтобы обнаружить скрытый сигнал в открытом секторе.",""
+"map.antenna_unavailable",1886380059,"","ANTENNA UNAVAILABLE","","АНТЕННА НЕДОСТУПНА",""
+"map.calibrating",1886380060,"","CALIBRATING {0}%","","КАЛИБРОВКА {0}%",""
+"map.state.idle",1886380061,"","IDLE","","ОЖИДАНИЕ",""
+"map.state.scanning",1886380062,"","SCANNING","","СКАНИРОВАНИЕ",""
+"map.state.returning",1886380063,"","RETURNING","","ВОЗВРАЩЕНИЕ",""
+"map.state.charging",1886380064,"","CHARGING","","ЗАРЯДКА",""
+"map.state.ready",1886380065,"","READY","","ГОТОВО",""
+"map.state.calibrating",1886380066,"","CALIBRATING","","КАЛИБРОВКА",""
+"map.state.signalfound",1886380067,"","SIGNALFOUND","","СИГНАЛ НАЙДЕН",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_storagescreen_dropbutton_text_drop",8421105664,"","DROP","","ВЫБРОСИТЬ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button",8458854400,"","YES","","ДА",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_upgrade_upgradebutton_text_upgrade",8458854401,"","UPGRADE","","УЛУЧШИТЬ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_label",8463048704,"","ESC","","ESC",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade",8463048705,"","LAUNCHE","","ЗАПУСК",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_info_progresa",8500797440,"","Progress 100%","","Прогресс 100%",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagebutton_text_storage",8500797441,"","STORAGE","","ХРАНИЛИЩЕ",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade",8504991744,"","CALIBRATION","","КАЛИБРОВКА",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagescreen_dropbutton_text_drop",8504991745,"","DROP","","ВЫБРОСИТЬ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_exit",8504991746,"","EXIT","","ВЫХОД",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_offbutton_text_off",8509186048,"","OFF","","ВЫКЛ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_upgradesmapbutton_text_upgrade",8509186049,"","UPGRADES","","УЛУЧШЕНИЯ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_info_progresa",8509186050,"","Progress 100%","","Прогресс 100%",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_librarybutton_text_library",8563712000,"","LIBRARY","","БИБЛИОТЕКА",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_backbutton_text_storage",8563712001,"","Q","","Q",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationbutton_text_station",8563712002,"","STATION","","СТАНЦИЯ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennamapbutton_text_antenna",8563712003,"","ANTENNA","","Антенна",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron",8567906304,"","DRON","","ДРОН",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button",8572100608,"","NO","","НЕТ",""
+"ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna",8572100609,"","ANTENNA","","Антенна",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapbutton_text_map",8572100610,"","MAP","","КАРТА",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade",8580489216,"","LAUNCHE","","ЗАПУСК",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade",8580489217,"","CALIBRATION","","КАЛИБРОВКА",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_nextbutton_text_storage",8580489218,"","E","","E",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_onbutton_text_on",8584683520,"","ON","","ВКЛ",""
+"ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronmapbutton_text_dron",8584683521,"","DRON","","ДРОН",""
+"station.tab.status",60594576154624,"","STATUS","","СОСТОЯНИЕ",""
+"station.tab.upgrades",60594622291968,"","UPGRADES","","УЛУЧШЕНИЯ",""
+"station.system_name.solarpanel",60594622291969,"","SOLAR PANEL","","СОЛНЕЧНАЯ ПАНЕЛЬ",""
+"station.system_name.battery",60594622291970,"","BATTERY","","БАТАРЕЯ",""
+"station.system_name.computer",60594622291971,"","TERMINAL","","ТЕРМИНАЛ",""
+"station.system_name.drone",60594622291972,"","DRONE","","ДРОН",""
+"station.system_name.laboratory",60594622291973,"","LABORATORY","","ЛАБОРАТОРИЯ",""
+"station.system_name.antenna",60594622291975,"","ANTENNA","","АНТЕННА",""
+"station.system_name.turret",60594626486272,"","TURRET","","ТУРЕЛЬ",""

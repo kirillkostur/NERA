@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NERA.Library;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Localization;
 using NERA.Energy;
 using NERA.Station;
 using NERA.Quests;
@@ -50,6 +51,7 @@ namespace NERA.Research
             }
 
             Instance = this;
+            StatusMessage = LocalizeStatus("ready", "Laboratory ready.");
             EnsureEnergyRegistration();
         }
 
@@ -73,7 +75,9 @@ namespace NERA.Research
                 EnergySystemController.Instance?.SetConsumerActive(
                     LaboratoryConsumerId,
                     false);
-                StatusMessage = "Scanning paused — laboratory is stopped.";
+                StatusMessage = LocalizeStatus(
+                    "paused_stopped",
+                    "Scanning paused — laboratory is stopped.");
                 return;
             }
 
@@ -81,14 +85,18 @@ namespace NERA.Research
             if (energy != null &&
                 !energy.IsConsumerPowered(LaboratoryConsumerId))
             {
-                StatusMessage = "Scanning paused — insufficient station energy.";
+                StatusMessage = LocalizeStatus(
+                    "paused_energy",
+                    "Scanning paused — insufficient station energy.");
                 return;
             }
 
             ResearchDefinition definition = LoadedItem.ResearchDefinition;
             if (definition == null)
             {
-                StatusMessage = "This item does not require analysis.";
+                StatusMessage = LocalizeStatus(
+                    "analysis_not_required",
+                    "This item does not require analysis.");
                 SetState(ResearchState.ItemLoaded);
                 EnergySystemController.Instance?.SetConsumerActive(
                     LaboratoryConsumerId,
@@ -96,7 +104,10 @@ namespace NERA.Research
                 );
                 return;
             }
-            StatusMessage = $"Scanning {LoadedItem.DisplayName}...";
+            StatusMessage = LocalizeStatus(
+                "scanning_item",
+                "Scanning {0}...",
+                LoadedItem.DisplayName);
             analysisRemaining = Mathf.Max(0f, analysisRemaining - deltaTime);
             Progress = 1f - analysisRemaining / definition.AnalysisDuration;
             ProgressChanged?.Invoke(Progress);
@@ -200,13 +211,11 @@ namespace NERA.Research
                 analyzedResearchIds.Contains(definition.ResearchId);
             bool instanceScanned = sourceInstance.IsScanned;
             Progress = 0f;
-            StatusMessage = !researchable
-                ? item.DisplayName
-                : instanceScanned
-                ? $"{item.DisplayName} is already scanned."
-                : typeKnown
-                ? $"{item.DisplayName} type is known. This sample still requires scanning."
-                : $"{item.DisplayName} loaded. Ready to scan.";
+            StatusMessage = BuildLoadedItemStatus(
+                item,
+                researchable,
+                instanceScanned,
+                typeKnown);
 
             if (typeKnown)
                 UnlockLibraryEntry(definition);
@@ -245,7 +254,7 @@ namespace NERA.Research
 
             if (LoadedItemInstance == null)
             {
-                StatusMessage = "Laboratory ready.";
+                StatusMessage = LocalizeStatus("ready", "Laboratory ready.");
                 SetState(ResearchState.Idle);
             }
             else
@@ -312,19 +321,26 @@ namespace NERA.Research
 
             if (!IsSystemEnabled)
             {
-                StatusMessage = "Laboratory is stopped from the station computer.";
+                StatusMessage = LocalizeStatus(
+                    "stopped_from_terminal",
+                    "Laboratory is stopped from the station computer.");
                 return false;
             }
 
             if (!IsResearchable(LoadedItem))
             {
-                StatusMessage = "This item is already identified and does not require analysis.";
+                StatusMessage = LocalizeStatus(
+                    "already_identified",
+                    "This item is already identified and does not require analysis.");
                 return false;
             }
 
             if (LoadedItemInstance.IsScanned)
             {
-                StatusMessage = $"{LoadedItem.DisplayName} is already scanned.";
+                StatusMessage = LocalizeStatus(
+                    "already_scanned",
+                    "{0} is already scanned.",
+                    LoadedItem.DisplayName);
                 return false;
             }
 
@@ -341,20 +357,27 @@ namespace NERA.Research
                 if (!energy.IsConsumerPowered(LaboratoryConsumerId))
                 {
                     energy.SetConsumerActive(LaboratoryConsumerId, false);
-                    StatusMessage = "Insufficient station energy.";
+                    StatusMessage = LocalizeStatus(
+                        "insufficient_energy",
+                        "Insufficient station energy.");
                     return false;
                 }
             }
             else if (power == null || !power.IsPowered)
             {
-                StatusMessage = "Insufficient station power.";
+                StatusMessage = LocalizeStatus(
+                    "insufficient_power",
+                    "Insufficient station power.");
                 return false;
             }
 
             ResearchDefinition definition = LoadedItem.ResearchDefinition;
             analysisRemaining = definition.AnalysisDuration;
             Progress = 0f;
-            StatusMessage = $"Scanning {LoadedItem.DisplayName}...";
+            StatusMessage = LocalizeStatus(
+                "scanning_item",
+                "Scanning {0}...",
+                LoadedItem.DisplayName);
             SetState(ResearchState.Analyzing);
             return true;
         }
@@ -379,7 +402,8 @@ namespace NERA.Research
                 LaboratoryConsumerId,
                 energy.Config.LaboratoryConsumption,
                 energy.Config.GetMinimumCharge01(
-                    StationSystemType.Laboratory)
+                    StationSystemType.Laboratory),
+                StationSystemType.Laboratory
             );
             energy.SetConsumerActive(
                 LaboratoryConsumerId,
@@ -397,7 +421,9 @@ namespace NERA.Research
             if (LoadedItemInstance == null ||
                 !LoadedItemInstance.MarkScanned())
             {
-                StatusMessage = "This sample is already scanned.";
+                StatusMessage = LocalizeStatus(
+                    "sample_already_scanned",
+                    "This sample is already scanned.");
                 analysisRemaining = 0f;
                 Progress = 1f;
                 SetState(ResearchState.Complete);
@@ -412,8 +438,14 @@ namespace NERA.Research
             UnlockLibraryEntry(definition);
 
             StatusMessage = firstAnalysis
-                ? $"Analysis complete: {definition.DisplayName}"
-                : $"Sample scan complete: {definition.DisplayName}";
+                ? LocalizeStatus(
+                    "analysis_complete",
+                    "Analysis complete: {0}",
+                    definition.DisplayName)
+                : LocalizeStatus(
+                    "sample_complete",
+                    "Sample scan complete: {0}",
+                    definition.DisplayName);
             string completedId = definition.ResearchId;
             analysisRemaining = 0f;
             Progress = 1f;
@@ -479,7 +511,7 @@ namespace NERA.Research
 
             if (LoadedItemInstance == null)
             {
-                StatusMessage = "Laboratory ready.";
+                StatusMessage = LocalizeStatus("ready", "Laboratory ready.");
                 SetState(ResearchState.Idle);
                 return;
             }
@@ -494,14 +526,16 @@ namespace NERA.Research
 
             if (!sourceInventory.AddItem(LoadedItemInstance))
             {
-                StatusMessage = "No free inventory slot for this sample.";
+                StatusMessage = LocalizeStatus(
+                    "no_inventory_slot",
+                    "No free inventory slot for this sample.");
                 return false;
             }
 
             LoadedItemInstance = null;
             sourceInventory = null;
             Progress = 0f;
-            StatusMessage = "Laboratory ready.";
+            StatusMessage = LocalizeStatus("ready", "Laboratory ready.");
             SetState(ResearchState.Idle);
             return true;
         }
@@ -515,18 +549,59 @@ namespace NERA.Research
             bool instanceScanned = LoadedItemInstance?.IsScanned == true;
 
             Progress = 0f;
-            StatusMessage = !researchable
-                ? LoadedItem.DisplayName
-                : instanceScanned
-                ? $"{LoadedItem.DisplayName} is already scanned."
-                : typeKnown
-                ? $"{LoadedItem.DisplayName} type is known. This sample still requires scanning."
-                : $"{LoadedItem.DisplayName} loaded. Ready to scan.";
+            StatusMessage = BuildLoadedItemStatus(
+                LoadedItem,
+                researchable,
+                instanceScanned,
+                typeKnown);
 
             if (typeKnown)
                 UnlockLibraryEntry(definition);
 
             SetState(ResearchState.ItemLoaded);
+        }
+
+        private static string BuildLoadedItemStatus(
+            ItemData item,
+            bool researchable,
+            bool instanceScanned,
+            bool typeKnown)
+        {
+            if (item == null)
+                return string.Empty;
+            if (!researchable)
+                return item.DisplayName;
+            if (instanceScanned)
+            {
+                return LocalizeStatus(
+                    "already_scanned",
+                    "{0} is already scanned.",
+                    item.DisplayName);
+            }
+            if (typeKnown)
+            {
+                return LocalizeStatus(
+                    "known_type_requires_scan",
+                    "{0} type is known. This sample still requires scanning.",
+                    item.DisplayName);
+            }
+
+            return LocalizeStatus(
+                "loaded_ready",
+                "{0} loaded. Ready to scan.",
+                item.DisplayName);
+        }
+
+        private static string LocalizeStatus(
+            string key,
+            string fallback,
+            params object[] arguments)
+        {
+            return NERALocalization.Get(
+                NERALocalization.InventoryLaboratoryTable,
+                $"laboratory.status.{key}",
+                fallback,
+                arguments);
         }
 
         private void SetState(ResearchState newState)

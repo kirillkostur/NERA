@@ -5,6 +5,7 @@ using NERA.Drone;
 using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Localization;
 using NERA.Station;
 using TMPro;
 using UnityEngine;
@@ -14,8 +15,6 @@ namespace NERA.Terminal
 {
     public sealed class TerminalStationScreenController : MonoBehaviour
     {
-        private const string MaximumLevelMessage = "MAXIMUM LEVEL";
-
         private TerminalUIScreen terminal;
         [SerializeField] private RawImage stationImage;
         [SerializeField] private Camera stationCamera;
@@ -28,6 +27,10 @@ namespace NERA.Terminal
         [SerializeField] private RectTransform powerHandle;
         [SerializeField] private Animator powerHandleAnimator;
         [SerializeField] private TMP_Text powerStatusText;
+        [SerializeField] private TMP_Text statusTabLabel;
+        [SerializeField] private TMP_Text upgradesTabLabel;
+        [SerializeField] private Button statusTabButton;
+        [SerializeField] private Button upgradesTabButton;
         [SerializeField] private GameObject statusPanel;
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private GameObject upgradePanel;
@@ -112,6 +115,7 @@ namespace NERA.Terminal
                 return;
 
             initialized = true;
+            NERALocalization.LocaleChanged += RefreshIfVisible;
             CacheHierarchy();
             BindButtons();
             ConfigurePreviewPicking();
@@ -172,9 +176,20 @@ namespace NERA.Terminal
                 powerHandleAnimator ??= powerHandle != null
                     ? powerHandle.GetComponent<Animator>()
                     : null;
-                powerStatusText ??= TerminalUIUtility.FindComponent<TMP_Text>(
+            powerStatusText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                     toggleRoot, "Text_Status");
             }
+
+            statusTabButton ??= TerminalUIUtility.FindComponent<Button>(
+                transform, "StatusMapButton");
+            upgradesTabButton ??= TerminalUIUtility.FindComponent<Button>(
+                transform, "UpgradesMapButton");
+            statusTabLabel ??= statusTabButton != null
+                ? statusTabButton.GetComponentInChildren<TMP_Text>(true)
+                : null;
+            upgradesTabLabel ??= upgradesTabButton != null
+                ? upgradesTabButton.GetComponentInChildren<TMP_Text>(true)
+                : null;
 
             statusPanel ??= TerminalUIUtility.Find(
                 transform, "background_Status")?.gameObject;
@@ -247,12 +262,8 @@ namespace NERA.Terminal
 
         private void BindButtons()
         {
-            TerminalUIUtility.FindComponent<Button>(
-                transform, "StatusMapButton")?.onClick.AddListener(
-                () => ShowDetailTab(false));
-            TerminalUIUtility.FindComponent<Button>(
-                transform, "UpgradesMapButton")?.onClick.AddListener(
-                () => ShowDetailTab(true));
+            statusTabButton?.onClick.AddListener(() => ShowDetailTab(false));
+            upgradesTabButton?.onClick.AddListener(() => ShowDetailTab(true));
             powerOnButton?.onClick.AddListener(
                 () => HandlePowerSwitchChanged(false));
             powerOffButton?.onClick.AddListener(
@@ -342,10 +353,14 @@ namespace NERA.Terminal
             selectedObjectId = string.Empty;
             selectedObjectInitialLevel = 0;
             selectedObjectInitiallyActive = false;
-            TerminalUIUtility.SetText(objectNameText, "SELECT STATION OBJECT");
+            TerminalUIUtility.SetText(
+                objectNameText,
+                Localize("station.select_object", "SELECT STATION OBJECT"));
             TerminalUIUtility.SetText(
                 objectInfoText,
-                "Select an object in the 3D station preview.");
+                Localize(
+                    "station.select_object_hint",
+                    "Select an object in the 3D station preview."));
             if (powerSwitchRoot != null)
                 powerSwitchRoot.SetActive(false);
             renderedPowerSystem = null;
@@ -358,10 +373,21 @@ namespace NERA.Terminal
 
         private void RefreshAll()
         {
+            RefreshStaticLabels();
             RefreshObjectInfo();
             RefreshPowerSwitch();
             RefreshStatus();
             RefreshUpgrade();
+        }
+
+        private void RefreshStaticLabels()
+        {
+            TerminalUIUtility.SetText(
+                statusTabLabel,
+                Localize("station.tab.status", "STATUS"));
+            TerminalUIUtility.SetText(
+                upgradesTabLabel,
+                Localize("station.tab.upgrades", "UPGRADES"));
         }
 
         private void RefreshObjectInfo()
@@ -375,7 +401,9 @@ namespace NERA.Terminal
                         FormatObjectName(selectedObjectName));
                     TerminalUIUtility.SetText(
                         objectInfoText,
-                        "Station module. No remote power controls are available.");
+                        Localize(
+                            "station.no_remote_controls",
+                            "Station module. No remote power controls are available."));
                 }
                 return;
             }
@@ -466,7 +494,11 @@ namespace NERA.Terminal
 
             TerminalUIUtility.SetText(
                 powerStatusText,
-                lowPower ? "Low Power" : active ? "Active" : "Inactive");
+                lowPower
+                    ? Localize("station.power.low", "Low Power")
+                    : active
+                        ? Localize("station.power.active", "Active")
+                        : Localize("station.power.inactive", "Inactive"));
             if (powerStatusText != null)
             {
                 powerStatusText.color = lowPower
@@ -612,7 +644,9 @@ namespace NERA.Terminal
             StationSystemsController systems = StationSystemsController.Instance;
             if (!selectedSystem.HasValue)
             {
-                TerminalUIUtility.SetText(statusText, "NO OBJECT SELECTED");
+                TerminalUIUtility.SetText(
+                    statusText,
+                    Localize("station.no_object_selected", "NO OBJECT SELECTED"));
                 return;
             }
 
@@ -620,17 +654,27 @@ namespace NERA.Terminal
             string text;
             if (type == StationSystemType.Battery)
             {
-                text =
-                    $"Charge - {energy?.CurrentEnergy ?? 0f:0}/{energy?.TotalCapacity ?? 0f:0}\n" +
-                    $"Consumption - {energy?.CurrentConsumption ?? 0f:0.0}\n" +
-                    $"Connected objects - {energy?.ActiveConsumerCount ?? 0}";
+                text = Localize(
+                    "station.status.battery",
+                    "Charge - {0}/{1}\nConsumption - {2}\nConnected objects - {3}",
+                    $"{energy?.CurrentEnergy ?? 0f:0}",
+                    $"{energy?.TotalCapacity ?? 0f:0}",
+                    $"{energy?.CurrentConsumption ?? 0f:0.0}",
+                    energy?.ConnectedConsumerCount ?? 0);
             }
             else if (type == StationSystemType.SolarPanel)
             {
-                text =
-                    $"Status - {(energy?.GridEnabled == true ? "ACTIVE" : "OFFLINE")}\n" +
-                    $"Generation - {energy?.CurrentGeneration ?? 0f:0.0}\n" +
-                    $"Efficiency - {(systems?.GetCondition(type) ?? 1f) * 100f:0}%";
+                bool active =
+                    IsSelectedSystemRequestedActive(type, systems);
+                string state = active
+                    ? Localize("station.state.active", "ACTIVE")
+                    : Localize("station.state.stopped", "STOPPED");
+                text = Localize(
+                    "station.status.solar",
+                    "Status - {0}\nGeneration - {1}\nEfficiency - {2}%",
+                    state,
+                    $"{energy?.CurrentGeneration ?? 0f:0.0}",
+                    $"{(systems?.GetCondition(type) ?? 1f) * 100f:0}");
             }
             else
             {
@@ -640,17 +684,33 @@ namespace NERA.Terminal
                     HasSelectedSystemRequiredCharge(type, systems);
                 bool active = requestedActive && hasRequiredCharge;
                 string state = requestedActive && !hasRequiredCharge
-                    ? "LOW POWER"
-                    : active ? "ACTIVE" : "STOPPED";
-                float consumption = GetConfiguredConsumption(type, energy);
-                string consumptionLine = consumption > 0f
-                    ? $"\nConsumption - {consumption:0.0}"
-                    : string.Empty;
-                text =
-                    $"Status - {state}" +
-                    consumptionLine + "\n" +
-                    $"Condition - {(systems?.GetCondition(type, selectedObjectId) ?? 1f) * 100f:0}%\n" +
-                    $"Upgrade level - {GetSelectedUpgradeLevel(systems)}";
+                    ? Localize("station.state.low_power", "LOW POWER")
+                    : active
+                        ? Localize("station.state.active", "ACTIVE")
+                        : Localize("station.state.stopped", "STOPPED");
+                float configuredConsumption =
+                    GetConfiguredConsumption(type, energy);
+                bool hasConfiguredConsumption = configuredConsumption > 0f;
+                float displayedConsumption = requestedActive
+                    ? configuredConsumption
+                    : 0f;
+                string condition =
+                    $"{(systems?.GetCondition(type, selectedObjectId) ?? 1f) * 100f:0}";
+                int level = GetSelectedUpgradeLevel(systems);
+                text = hasConfiguredConsumption
+                    ? Localize(
+                        "station.status.system_with_consumption",
+                        "Status - {0}\nConsumption - {1}\nCondition - {2}%\nUpgrade level - {3}",
+                        state,
+                        $"{displayedConsumption:0.0}",
+                        condition,
+                        level)
+                    : Localize(
+                        "station.status.system",
+                        "Status - {0}\nCondition - {1}%\nUpgrade level - {2}",
+                        state,
+                        condition,
+                        level);
             }
 
             TerminalUIUtility.SetText(statusText, text);
@@ -669,7 +729,6 @@ namespace NERA.Terminal
                 StationSystemType.Computer => config.TerminalConsumption,
                 StationSystemType.Drone => config.DroneChargingConsumption,
                 StationSystemType.Laboratory => config.LaboratoryConsumption,
-                StationSystemType.Charger => config.ItemChargingConsumption,
                 StationSystemType.Antenna =>
                     config.AntennaCalibrationConsumption,
                 StationSystemType.Turret => config.TurretIdleConsumption,
@@ -865,7 +924,9 @@ namespace NERA.Terminal
             if (!selectedSystem.HasValue || systems == null)
             {
                 SetUpgradeSlotsVisible(false);
-                TerminalUIUtility.SetText(upgradeTitle, "NO OBJECT SELECTED");
+                TerminalUIUtility.SetText(
+                    upgradeTitle,
+                    Localize("station.no_object_selected", "NO OBJECT SELECTED"));
                 TerminalUIUtility.SetText(upgradeInfo, string.Empty);
                 TerminalUIUtility.SetText(upgradeRequired, string.Empty);
                 if (upgradeButton != null)
@@ -876,10 +937,7 @@ namespace NERA.Terminal
             StationSystemType type = selectedSystem.Value;
             StationSystemDefinition definition =
                 systems.GetDefinition(type, selectedObjectId);
-            string upgradeSystemName =
-                !string.IsNullOrWhiteSpace(selectedObjectId)
-                    ? type.ToString().ToUpperInvariant()
-                    : definition?.DisplayName ?? type.ToString();
+            string upgradeSystemName = GetSystemDisplayName(type);
             int currentLevel = GetSelectedUpgradeLevel(systems);
             int maxLevel = systems.Config.GetMaxLevel(
                 type,
@@ -898,7 +956,7 @@ namespace NERA.Terminal
                 SetUpgradeSlotsVisible(false);
                 TerminalUIUtility.SetText(
                     upgradeTitle,
-                    MaximumLevelMessage);
+                    Localize("station.maximum_level", "MAXIMUM LEVEL"));
                 TerminalUIUtility.SetText(upgradeInfo, string.Empty);
                 TerminalUIUtility.SetText(upgradeRequired, string.Empty);
                 if (upgradeButton != null)
@@ -926,7 +984,11 @@ namespace NERA.Terminal
                     levelRoots[i].SetActive(configured);
                 TerminalUIUtility.SetText(
                     levelLabels[i],
-                    $"{upgradeSystemName} {level}");
+                    Localize(
+                        "station.upgrade.level_label",
+                        "{0} {1}",
+                        upgradeSystemName,
+                        level));
                 if (levelIcons[i] != null)
                 {
                     levelIcons[i].sprite = levelDefinition?.UpgradeIcon;
@@ -971,13 +1033,20 @@ namespace NERA.Terminal
                     if (requirementsText.Length > 0)
                         requirementsText.Append('\n');
                     requirementsText.Append(
-                        $"{requirement.DisplayName} - " +
-                        $"{available}/{requirement.Count}");
+                        Localize(
+                            "station.upgrade.item_requirement",
+                            "{0} - {1}/{2}",
+                            requirement.DisplayName,
+                            available,
+                            requirement.Count));
                 }
 
                 if (requirementsText.Length > 0)
                     requirementsText.Append('\n');
-                requirementsText.Append($"Energy - {upgrade.EnergyCost:0}");
+                requirementsText.Append(Localize(
+                    "station.upgrade.energy_requirement",
+                    "Energy - {0}",
+                    $"{upgrade.EnergyCost:0}"));
             }
 
             TerminalUIUtility.SetText(
@@ -989,7 +1058,9 @@ namespace NERA.Terminal
             TerminalUIUtility.SetText(
                 upgradeInfo,
                 upgrade?.Description ??
-                "Upgrade level is not configured.");
+                Localize(
+                    "station.upgrade.not_configured",
+                    "Upgrade level is not configured."));
             TerminalUIUtility.SetText(
                 upgradeRequired,
                 requirementsText.ToString());
@@ -1066,8 +1137,39 @@ namespace NERA.Terminal
                 .ToUpperInvariant();
         }
 
+        private string GetSystemDisplayName(StationSystemType type)
+        {
+            string fallback = type switch
+            {
+                StationSystemType.SolarPanel => "SOLAR PANEL",
+                StationSystemType.Battery => "BATTERY",
+                StationSystemType.Computer => "TERMINAL",
+                StationSystemType.Drone => "DRONE",
+                StationSystemType.Laboratory => "LABORATORY",
+                StationSystemType.Antenna => "ANTENNA",
+                StationSystemType.Turret => "TURRET",
+                _ => type.ToString().ToUpperInvariant()
+            };
+            return Localize(
+                $"station.system_name.{type.ToString().ToLowerInvariant()}",
+                fallback);
+        }
+
+        private static string Localize(
+            string key,
+            string fallback,
+            params object[] arguments)
+        {
+            return NERALocalization.Get(
+                NERALocalization.TerminalTable,
+                key,
+                fallback,
+                arguments);
+        }
+
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshIfVisible;
             UnbindDataEvents();
         }
     }

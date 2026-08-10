@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42a74b2a1d9491a48aa48233ca137a8a, type: 3}
+  m_Name: CFG_UnknownSignal_12
+  m_EditorClassIdentifier: 
+  locationId: UnknownSignal12
+  locationType: 1
+  displayName: '?'
+  description: Unknown signal. Antenna analysis required.
+  scene:
+    assetGuid: 4c2fe3fa91cf60f45ba20679bf629c71
+    assetPath: Assets/_Project/NERA/Scenes/UnknownSignal_12.unity
+  spawnPointId: UnknownSignal12_Start
+  discoverySource: 1
+  droneScanDuration: 5
+  requiredDroneUpgradeLevel: 0
+  antennaScanDuration: 12
+  requiredAntennaUpgradeLevel: 3
+  initialState: 0
+  mapSymbol: 1
+  mapSlot: {fileID: 0}
+  mapPreview: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}

@@ -1,4 +1,5 @@
 using NERA.Interaction;
+using NERA.Localization;
 using TMPro;
 using UnityEngine;
 
@@ -25,6 +26,7 @@ namespace NERA.UI
 
         private void OnEnable()
         {
+            NERALocalization.LocaleChanged += Refresh;
             if (interactionController != null)
             {
                 interactionController.TargetChanged += Refresh;
@@ -36,6 +38,7 @@ namespace NERA.UI
 
         private void OnDisable()
         {
+            NERALocalization.LocaleChanged -= Refresh;
             if (interactionController == null)
                 return;
 
@@ -88,13 +91,28 @@ namespace NERA.UI
                 return prompt.UnavailableReason;
 
             if (prompt.Mode == InteractionMode.Press)
-                return $"[{interactionKeyLabel}] Press — {prompt.ActionText}";
+                return NERALocalization.Get(
+                    NERALocalization.HudTable,
+                    "interaction.press",
+                    "[{0}] Press — {1}",
+                    interactionKeyLabel,
+                    prompt.ActionText);
 
             if (!interactionController.IsInteracting)
-                return $"[{interactionKeyLabel}] Hold — {prompt.ActionText}";
+                return NERALocalization.Get(
+                    NERALocalization.HudTable,
+                    "interaction.hold",
+                    "[{0}] Hold — {1}",
+                    interactionKeyLabel,
+                    prompt.ActionText);
 
             int percentage = Mathf.RoundToInt(interactionController.HoldProgress * 100f);
-            return $"[{interactionKeyLabel}] Hold — {percentage}%";
+            return NERALocalization.Get(
+                NERALocalization.HudTable,
+                "interaction.hold_progress",
+                "[{0}] Hold — {1}%",
+                interactionKeyLabel,
+                percentage);
         }
 
         private void SetVisible(bool visible)

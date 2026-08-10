@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Localization;
 using NERA.Research;
 using NERA.Station;
 using TMPro;
@@ -46,6 +47,7 @@ namespace NERA.Terminal
                 return;
 
             initialized = true;
+            NERALocalization.LocaleChanged += RefreshAll;
             rootCanvas = GetComponentInParent<Canvas>();
             inventory = InventoryLabHUDController.Instance?.BoundInventory ??
                 FindFirstObjectByType<PlayerInventory>();
@@ -321,14 +323,17 @@ namespace NERA.Terminal
 
                 view.Item = instance?.ItemData;
                 TerminalUIUtility.SetItemIcon(view.Icon, view.Item);
-                view.Drag?.Initialize(
-                    view.Item,
-                    rootCanvas,
-                    view.Group,
-                    view.Index,
-                    false,
-                    false,
-                    view.IsStorage);
+                if (view.Drag != null)
+                {
+                    view.Drag.Initialize(
+                        view.Item,
+                        rootCanvas,
+                        view.Group,
+                        view.Index,
+                        false,
+                        false,
+                        view.IsStorage);
+                }
                 if (view.Button != null)
                     view.Button.interactable = true;
             }
@@ -396,6 +401,7 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshAll;
             UnbindSources();
         }
 

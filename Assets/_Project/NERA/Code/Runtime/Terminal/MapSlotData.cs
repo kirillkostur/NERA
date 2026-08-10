@@ -1,4 +1,5 @@
 using UnityEngine;
+using NERA.Localization;
 
 namespace NERA.Terminal
 {
@@ -15,9 +16,13 @@ namespace NERA.Terminal
         [SerializeField, HideInInspector] private int legacySectorIndex = -1;
 
         public string SlotId => slotId?.Trim() ?? string.Empty;
-        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
-            ? SlotId
-            : displayName.Trim();
+        public string DisplayName => NERALocalization.Content(
+            "map_slot",
+            SlotId,
+            "name",
+            string.IsNullOrWhiteSpace(displayName)
+                ? SlotId
+                : displayName.Trim());
         public int LegacySectorIndex => legacySectorIndex;
     }
 }

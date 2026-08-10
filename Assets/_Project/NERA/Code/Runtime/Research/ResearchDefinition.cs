@@ -1,4 +1,5 @@
 using NERA.Library;
+using NERA.Localization;
 using UnityEngine;
 
 namespace NERA.Research
@@ -19,7 +20,8 @@ namespace NERA.Research
         [SerializeField] private LibraryEntryData unlockedEntry;
 
         public string ResearchId => researchId;
-        public string DisplayName => displayName;
+        public string DisplayName => NERALocalization.Content(
+            "research", researchId, "name", displayName);
         public float AnalysisDuration => analysisDuration;
         public ResearchItemFate ItemFate => itemFate;
         public LibraryEntryData UnlockedEntry => unlockedEntry;

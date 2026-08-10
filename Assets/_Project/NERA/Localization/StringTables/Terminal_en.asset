@@ -1,0 +1,370 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Terminal_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: b8f00be2076ceaf4e8a7308871f4fa63, type: 2}
+  m_Metadata:
+    m_Items:
+    - rid: 1138171735028269378
+  m_TableData:
+  - m_Id: 1857019904
+    m_Localized: SELECT STATION OBJECT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380032
+    m_Localized: Select an object in the 3D station preview.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380033
+    m_Localized: Station module. No remote power controls are available.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380034
+    m_Localized: Low Power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380035
+    m_Localized: Active
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380036
+    m_Localized: Inactive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380037
+    m_Localized: NO OBJECT SELECTED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380038
+    m_Localized: ACTIVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380039
+    m_Localized: OFFLINE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380040
+    m_Localized: LOW POWER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380041
+    m_Localized: STOPPED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380042
+    m_Localized: 'Charge - {0}/{1}
+
+      Consumption - {2}
+
+      Connected objects
+      - {3}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380043
+    m_Localized: 'Status - {0}
+
+      Generation - {1}
+
+      Efficiency - {2}%'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380044
+    m_Localized: 'Status - {0}
+
+      Consumption - {1}
+
+      Condition - {2}%
+
+      Upgrade
+      level - {3}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380045
+    m_Localized: 'Status - {0}
+
+      Condition - {1}%
+
+      Upgrade level - {2}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380046
+    m_Localized: MAXIMUM LEVEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380047
+    m_Localized: '{0} {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380048
+    m_Localized: '{0} - {1}/{2}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380049
+    m_Localized: Energy - {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380050
+    m_Localized: Upgrade level is not configured.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380051
+    m_Localized: Travel to {0}?
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380052
+    m_Localized: Select a sector on the 3D map.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380053
+    m_Localized: 'DRONE TARGET
+
+      {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380054
+    m_Localized: DRONE UNAVAILABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380055
+    m_Localized: SCANNING {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380056
+    m_Localized: RECHARGING {0}s
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380057
+    m_Localized: 'SIGNAL FOUND
+
+      {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380058
+    m_Localized: 'ANTENNA
+
+      Calibrate to reveal a hidden signal on an opened
+      sector.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380059
+    m_Localized: ANTENNA UNAVAILABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380060
+    m_Localized: CALIBRATING {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269378
+  - m_Id: 1886380061
+    m_Localized: IDLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380062
+    m_Localized: SCANNING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380063
+    m_Localized: RETURNING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380064
+    m_Localized: CHARGING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380065
+    m_Localized: READY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380066
+    m_Localized: CALIBRATING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1886380067
+    m_Localized: SIGNALFOUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8421105664
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8458854400
+    m_Localized: YES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8458854401
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8463048704
+    m_Localized: ESC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8463048705
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8500797440
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8500797441
+    m_Localized: STORAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8504991744
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8504991745
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8504991746
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8509186048
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8509186049
+    m_Localized: UPGRADES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8509186050
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8563712000
+    m_Localized: LIBRARY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8563712001
+    m_Localized: Q
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8563712002
+    m_Localized: STATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8563712003
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8567906304
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8572100608
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8572100609
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8572100610
+    m_Localized: MAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8580489216
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8580489217
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8580489218
+    m_Localized: E
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8584683520
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8584683521
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594576154624
+    m_Localized: STATUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291968
+    m_Localized: UPGRADES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291969
+    m_Localized: SOLAR PANEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291970
+    m_Localized: BATTERY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291971
+    m_Localized: TERMINAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291972
+    m_Localized: DRONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291973
+    m_Localized: LABORATORY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594622291975
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 60594626486272
+    m_Localized: TURRET
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1138171735028269378
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 1886380042
+        - id: 1886380043
+        - id: 1886380044
+        - id: 1886380045
+        - id: 1886380047
+        - id: 1886380048
+        - id: 1886380049
+        - id: 1886380051
+        - id: 1886380053
+        - id: 1886380055
+        - id: 1886380056
+        - id: 1886380057
+        - id: 1886380060

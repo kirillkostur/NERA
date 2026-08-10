@@ -2,6 +2,7 @@ using System;
 using NERA.Antenna;
 using NERA.Drone;
 using NERA.Expeditions;
+using NERA.Localization;
 using NERA.Locations;
 using TMPro;
 using UnityEngine;
@@ -46,6 +47,7 @@ namespace NERA.Terminal
                 return;
 
             initialized = true;
+            NERALocalization.LocaleChanged += RefreshIfVisible;
             CacheHierarchy();
             BindButtons();
             ConfigurePreviewPicking();
@@ -264,7 +266,11 @@ namespace NERA.Terminal
             moveConfirmation.SetActive(true);
             TerminalUIUtility.SetText(
                 moveText,
-                $"Travel to {location.DisplayName}?");
+                NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.travel_confirmation",
+                    "Travel to {0}?",
+                    location.DisplayName));
         }
 
         private void HideTravelConfirmation()
@@ -409,26 +415,42 @@ namespace NERA.Terminal
 
             string selected = hasSelection
                 ? selectedLocation.DisplayName
-                : "Select a sector on the 3D map.";
+                : NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.select_sector",
+                    "Select a sector on the 3D map.");
             TerminalUIUtility.SetText(
                 droneDescription,
-                $"DRONE TARGET\n{selected}");
+                NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.drone_target",
+                    "DRONE TARGET\n{0}",
+                    selected));
 
             string progress;
             if (drone == null)
-                progress = "DRONE UNAVAILABLE";
+                progress = NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.drone_unavailable",
+                    "DRONE UNAVAILABLE");
             else if (drone.State == DroneState.Scanning)
             {
-                progress =
-                    $"SCANNING {Mathf.RoundToInt(drone.ScanProgress * 100f)}%";
+                progress = NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.scanning",
+                    "SCANNING {0}%",
+                    Mathf.RoundToInt(drone.ScanProgress * 100f));
             }
             else if (drone.IsCharging)
             {
-                progress =
-                    $"RECHARGING {Mathf.CeilToInt(drone.RechargeRemaining)}s";
+                progress = NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.recharging",
+                    "RECHARGING {0}s",
+                    Mathf.CeilToInt(drone.RechargeRemaining));
             }
             else
-                progress = drone.State.ToString().ToUpperInvariant();
+                progress = LocalizeState(drone.State.ToString());
 
             TerminalUIUtility.SetText(droneProgress, progress);
         }
@@ -443,21 +465,42 @@ namespace NERA.Terminal
             }
 
             string description = antenna?.ActiveSignal != null
-                ? $"SIGNAL FOUND\n{antenna.ActiveSignal.DisplayName}"
-                : "ANTENNA\nCalibrate to reveal a hidden signal on an opened sector.";
+                ? NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.signal_found",
+                    "SIGNAL FOUND\n{0}",
+                    antenna.ActiveSignal.DisplayName)
+                : NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.antenna_hint",
+                    "ANTENNA\nCalibrate to reveal a hidden signal on an opened sector.");
             TerminalUIUtility.SetText(antennaDescription, description);
 
             string progress;
             if (antenna == null)
-                progress = "ANTENNA UNAVAILABLE";
+                progress = NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.antenna_unavailable",
+                    "ANTENNA UNAVAILABLE");
             else if (antenna.State == AntennaState.Calibrating)
             {
-                progress =
-                    $"CALIBRATING {Mathf.RoundToInt(antenna.CalibrationProgress * 100f)}%";
+                progress = NERALocalization.Get(
+                    NERALocalization.TerminalTable,
+                    "map.calibrating",
+                    "CALIBRATING {0}%",
+                    Mathf.RoundToInt(antenna.CalibrationProgress * 100f));
             }
             else
-                progress = antenna.State.ToString().ToUpperInvariant();
+                progress = LocalizeState(antenna.State.ToString());
             TerminalUIUtility.SetText(antennaProgress, progress);
+        }
+
+        private static string LocalizeState(string state)
+        {
+            return NERALocalization.Get(
+                NERALocalization.TerminalTable,
+                "map.state." + NERALocalization.NormalizeKeyPart(state),
+                state?.ToUpperInvariant() ?? string.Empty);
         }
 
         private void RefreshSignalMarker()
@@ -503,6 +546,7 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshIfVisible;
             UnbindDataEvents();
         }
     }

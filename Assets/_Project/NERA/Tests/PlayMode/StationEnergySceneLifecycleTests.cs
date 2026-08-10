@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,7 @@ using NERA.Expeditions;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Localization;
 using NERA.Player;
 using NERA.Research;
 using NERA.Quests;
@@ -32,10 +34,23 @@ namespace NERA.Tests
     {
         private string previousSaveRoot;
         private string isolatedSaveRoot;
+        private bool hadLocalePreference;
+        private string previousLocalePreference;
 
         [OneTimeSetUp]
         public void RedirectSavesToTemporaryStorage()
         {
+            hadLocalePreference = PlayerPrefs.HasKey(
+                NERALocalization.LocalePreferenceKey);
+            previousLocalePreference = PlayerPrefs.GetString(
+                NERALocalization.LocalePreferenceKey,
+                NERALocalization.EnglishCode);
+            PlayerPrefs.SetString(
+                NERALocalization.LocalePreferenceKey,
+                NERALocalization.EnglishCode);
+            PlayerPrefs.Save();
+            NERALocalization.SetLocale(NERALocalization.EnglishCode);
+
             previousSaveRoot = Environment.GetEnvironmentVariable(
                 SaveSlotStorage.SaveRootEnvironmentVariable);
             isolatedSaveRoot = Path.Combine(
@@ -51,6 +66,20 @@ namespace NERA.Tests
         [OneTimeTearDown]
         public void RestoreSaveStorage()
         {
+            if (hadLocalePreference)
+            {
+                PlayerPrefs.SetString(
+                    NERALocalization.LocalePreferenceKey,
+                    previousLocalePreference);
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(NERALocalization.LocalePreferenceKey);
+            }
+            PlayerPrefs.Save();
+            if (hadLocalePreference)
+                NERALocalization.SetLocale(previousLocalePreference);
+
             Environment.SetEnvironmentVariable(
                 SaveSlotStorage.SaveRootEnvironmentVariable,
                 previousSaveRoot);
@@ -59,6 +88,17 @@ namespace NERA.Tests
             {
                 Directory.Delete(isolatedSaveRoot, true);
             }
+        }
+
+        [UnitySetUp]
+        public IEnumerator UseEnglishLocaleForEveryTest()
+        {
+            PlayerPrefs.SetString(
+                NERALocalization.LocalePreferenceKey,
+                NERALocalization.EnglishCode);
+            PlayerPrefs.Save();
+            NERALocalization.SetLocale(NERALocalization.EnglishCode);
+            yield return null;
         }
 
         [UnityTearDown]
@@ -136,6 +176,22 @@ namespace NERA.Tests
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.False);
             Assert.That(optionsScreen.gameObject.activeSelf, Is.True);
+            Transform languageButton = optionsScreen.Find(
+                "background_Screen_station/LanguageButton");
+            Assert.That(languageButton, Is.Not.Null);
+            Assert.That(
+                languageButton.GetComponent<LanguageToggleButton>(),
+                Is.Not.Null);
+            languageButton.GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.That(
+                NERALocalization.CurrentLocaleCode,
+                Is.EqualTo(NERALocalization.RussianCode));
+            languageButton.GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.That(
+                NERALocalization.CurrentLocaleCode,
+                Is.EqualTo(NERALocalization.EnglishCode));
             optionsScreen.Find("background_Screen_station/CloseButton")
                 .GetComponent<Button>().onClick.Invoke();
 
@@ -148,6 +204,107 @@ namespace NERA.Tests
             Assert.That(root.gameObject.activeSelf, Is.True);
             Assert.That(exitScreen.gameObject.activeSelf, Is.False);
         }
+
+        [UnityTest]
+        public IEnumerator BootSaveSlotsShowEmptyOrSaveDateAndTime()
+        {
+            SaveSlotStorage.DeleteAllSlots();
+            string occupiedPath = SaveSlotStorage.GetSlotPath(2);
+            File.WriteAllText(
+                occupiedPath,
+                JsonUtility.ToJson(new SaveGameData
+                {
+                    completionPercent = 37f
+                }));
+            File.SetLastWriteTime(
+                occupiedPath,
+                new DateTime(2030, 4, 5, 18, 7, 0));
+
+            SceneManager.LoadScene("Boot");
+            yield return null;
+
+            MainMenuController menu =
+                Object.FindFirstObjectByType<MainMenuController>();
+            Assert.That(menu, Is.Not.Null);
+            menu.ContinueGame();
+            yield return null;
+
+            Transform slots = GameObject.Find("Canvas").transform.Find(
+                "Panel/ContinueScreen/background_Screen_station");
+            Transform emptySlot = slots.Find("Panel_Save_1");
+            Component emptyDate = emptySlot.Find("Data_Text")
+                .GetComponent("TextMeshProUGUI");
+            Component emptyCompletion = emptySlot.Find("Complete_Text")
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                emptyDate.GetType().GetProperty("text")?.GetValue(emptyDate),
+                Is.EqualTo("EMPTY"));
+            Assert.That(
+                emptyCompletion.GetType().GetProperty("text")
+                    ?.GetValue(emptyCompletion),
+                Is.EqualTo("0% COMPLETE"));
+
+            DateTime writeTime = SaveSlotStorage.GetLastWriteTime(2);
+            string expectedDate = writeTime.ToString(
+                "MM.dd.yyyy - HH:mm",
+                CultureInfo.InvariantCulture);
+            Transform occupiedSlot = slots.Find("Panel_Save_2");
+            Component occupiedDate = occupiedSlot.Find("Data_Text")
+                .GetComponent("TextMeshProUGUI");
+            Component occupiedCompletion = occupiedSlot.Find("Complete_Text")
+                .GetComponent("TextMeshProUGUI");
+            Assert.That(
+                occupiedDate.GetType().GetProperty("text")
+                    ?.GetValue(occupiedDate),
+                Is.EqualTo(expectedDate));
+            Assert.That(
+                occupiedCompletion.GetType().GetProperty("text")
+                    ?.GetValue(occupiedCompletion),
+                Is.EqualTo("37% COMPLETE"));
+
+            NERALocalization.SetLocale(NERALocalization.RussianCode);
+            yield return null;
+            string expectedRussianDate = writeTime.ToString(
+                "dd.MM.yyyy - HH:mm",
+                CultureInfo.InvariantCulture);
+            Assert.That(
+                occupiedDate.GetType().GetProperty("text")
+                    ?.GetValue(occupiedDate),
+                Is.EqualTo(expectedRussianDate));
+            Assert.That(
+                emptyDate.GetType().GetProperty("text")?.GetValue(emptyDate),
+                Is.EqualTo("ПУСТО"));
+            NERALocalization.SetLocale(NERALocalization.EnglishCode);
+
+            SaveSlotStorage.DeleteAllSlots();
+        }
+
+#if UNITY_EDITOR
+        [UnityTest]
+        public IEnumerator EditorPlayModeLanguageSwitcherTogglesLocale()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return null;
+
+            PlayModeLanguageSwitcher switcher =
+                Object.FindFirstObjectByType<PlayModeLanguageSwitcher>();
+            Assert.That(switcher, Is.Not.Null);
+            Assert.That(switcher.ButtonText, Does.Contain("EN"));
+
+            switcher.Toggle();
+            yield return null;
+            Assert.That(
+                NERALocalization.CurrentLocaleCode,
+                Is.EqualTo(NERALocalization.RussianCode));
+            Assert.That(switcher.ButtonText, Does.Contain("RU"));
+
+            switcher.Toggle();
+            yield return null;
+            Assert.That(
+                NERALocalization.CurrentLocaleCode,
+                Is.EqualTo(NERALocalization.EnglishCode));
+        }
+#endif
 
         [UnityTest]
         public IEnumerator LaboratoryIsUnavailableUntilGridStarts()
@@ -282,6 +439,31 @@ namespace NERA.Tests
             Assert.That(systems, Is.Not.Null);
             Assert.That(terminal, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
+            Assert.That(
+                energy.GetConsumerRate("drone_charger"),
+                Is.EqualTo(energy.Config.DroneChargingConsumption),
+                "The drone must be registered before it starts charging.");
+            Assert.That(
+                systems.GetDefinition(StationSystemType.Computer).DisplayName,
+                Is.EqualTo("TERMINAL"));
+            Assert.That(
+                systems.GetDefinition(StationSystemType.Laboratory).DisplayName,
+                Is.EqualTo("LABORATORY"));
+            NERA.UI.ResponsiveCanvasLayout responsiveLayout =
+                stationScreen.GetComponentInParent<
+                    NERA.UI.ResponsiveCanvasLayout>();
+            Assert.That(responsiveLayout, Is.Not.Null);
+            CanvasScaler responsiveScaler =
+                responsiveLayout.GetComponent<CanvasScaler>();
+            Assert.That(
+                responsiveScaler.matchWidthOrHeight,
+                Is.EqualTo(
+                    NERA.UI.ResponsiveCanvasLayout
+                        .CalculateMatchWidthOrHeight(
+                            Screen.width,
+                            Screen.height,
+                            NERA.UI.ResponsiveCanvasLayout
+                                .DefaultReferenceResolution)));
             systems.ResetSystems();
 
             Camera[] previewCameras =
@@ -298,6 +480,8 @@ namespace NERA.Tests
             Assert.That(stationPreviewCamera.enabled, Is.False);
 
             energy.RestoreState(energy.TotalCapacity, true);
+            int connectedConsumerCount = energy.ConnectedConsumerCount;
+            Assert.That(connectedConsumerCount, Is.GreaterThan(0));
             systems.SetCriticalSystemActive(StationSystemType.Computer, true);
             terminal.Open();
             terminal.ShowStation();
@@ -382,29 +566,38 @@ namespace NERA.Tests
             Assert.That(
                 powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
                 Is.EqualTo("Inactive"));
-
-            stationScreen.SelectSystem(StationSystemType.Charger);
-            yield return null;
-            Assert.That(onButton.gameObject.activeSelf, Is.True,
-                "Charger must keep its own state when laboratory is stopped.");
-            Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(25f).Within(0.1f),
-                "Selecting an active system must move the handle to ON.");
-            Assert.That(
-                powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
-                Is.EqualTo("Active"));
             Assert.That(
                 stationStatusText.GetType().GetProperty("text")
                     ?.GetValue(stationStatusText)?.ToString(),
-                Does.Contain(
-                    $"Consumption - {energy.Config.ItemChargingConsumption:0.0}"));
-            stationScreen.SelectSystem(StationSystemType.Laboratory);
-            yield return null;
+                Does.Contain($"Consumption - {0f:0.0}"));
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(connectedConsumerCount - 1),
+                "Stopping the laboratory must remove its connection.");
+
+            Transform laboratoryPreview = Array.Find(
+                stationScreen.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name == "SM_Upgrade_Room");
+            Assert.That(laboratoryPreview, Is.Not.Null);
+            Assert.That(
+                stationScreen.SelectPreviewObject(laboratoryPreview),
+                Is.True);
+            Assert.That(
+                stationScreen.SelectedSystem,
+                Is.EqualTo(StationSystemType.Laboratory));
             Assert.That(offButton.gameObject.activeSelf, Is.True);
             Assert.That(powerHandle.anchoredPosition.x, Is.EqualTo(-25f).Within(0.1f),
-                "Returning to an inactive system must move the handle to OFF.");
+                "The whole laboratory table must share one OFF state.");
             Assert.That(
                 powerStatus.GetType().GetProperty("text")?.GetValue(powerStatus),
                 Is.EqualTo("Inactive"));
+            Assert.That(
+                energy.IsConsumerConnected("laboratory_scan"),
+                Is.False);
+            Assert.That(
+                energy.IsConsumerConnected("laboratory_charging"),
+                Is.False,
+                "Turning the laboratory off must disconnect charging too.");
 
             Button statusButton = stationScreen.transform.Find(
                 "StatusMapButton").GetComponent<Button>();
@@ -426,6 +619,13 @@ namespace NERA.Tests
             Assert.That(
                 stationScreen.SelectPreviewObject(batteryPreview),
                 Is.True);
+            statusButton.onClick.Invoke();
+            Assert.That(
+                stationStatusText.GetType().GetProperty("text")
+                    ?.GetValue(stationStatusText)?.ToString(),
+                Does.Contain(
+                    $"Connected objects - {energy.ConnectedConsumerCount}"));
+            upgradeButton.onClick.Invoke();
             Assert.That(
                 upgradePanel.Find("Slot_LVL_1").gameObject.activeSelf,
                 Is.True);
@@ -466,6 +666,45 @@ namespace NERA.Tests
                     label.GetType().GetProperty("text")?.GetValue(label),
                     Is.EqualTo($"TURRET {level}"));
             }
+            NERALocalization.SetLocale(NERALocalization.RussianCode);
+            yield return null;
+            Assert.That(
+                systems.GetDefinition(StationSystemType.Computer).DisplayName,
+                Is.EqualTo("ТЕРМИНАЛ"));
+            Assert.That(
+                systems.GetDefinition(StationSystemType.Laboratory).DisplayName,
+                Is.EqualTo("ЛАБОРАТОРИЯ"));
+            Component localizedStatusLabel =
+                statusButton.GetComponentInChildren(
+                    System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro"));
+            Component localizedUpgradeLabel =
+                upgradeButton.GetComponentInChildren(
+                    System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro"));
+            Assert.That(
+                localizedStatusLabel.GetType().GetProperty("text")
+                    ?.GetValue(localizedStatusLabel),
+                Is.EqualTo("СОСТОЯНИЕ"));
+            Assert.That(
+                localizedStatusLabel.GetType()
+                    .GetProperty("enableAutoSizing")
+                    ?.GetValue(localizedStatusLabel),
+                Is.True);
+            Assert.That(
+                localizedUpgradeLabel.GetType().GetProperty("text")
+                    ?.GetValue(localizedUpgradeLabel),
+                Is.EqualTo("УЛУЧШЕНИЯ"));
+            for (int level = 1; level <= 3; level++)
+            {
+                Component localizedLevelLabel = upgradePanel
+                    .Find($"Slot_LVL_{level}/Text_info_LVL")
+                    .GetComponent("TextMeshProUGUI");
+                Assert.That(
+                    localizedLevelLabel.GetType().GetProperty("text")
+                        ?.GetValue(localizedLevelLabel),
+                    Is.EqualTo($"ТУРЕЛЬ {level}"));
+            }
+            NERALocalization.SetLocale(NERALocalization.EnglishCode);
+            yield return null;
             Assert.That(
                 upgradePanel.Find("Slot_LVL_1").GetComponent<Button>()
                     .interactable,
@@ -595,9 +834,31 @@ namespace NERA.Tests
                     ?.GetValue(stationStatusText)?.ToString(),
                 Does.Not.Contain("Consumption -"),
                 "A solar generator must not be presented as a consumer.");
-            Assert.That(onButton.interactable, Is.False);
-            Assert.That(offButton.interactable, Is.False,
-                "Solar panel remains read-only from the computer.");
+            Assert.That(onButton.interactable, Is.True);
+            onButton.onClick.Invoke();
+            yield return null;
+            energy.AdvanceSimulation(0.1f);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.SolarPanel,
+                    "station_solar_01",
+                    1,
+                    true),
+                Is.False);
+            Assert.That(energy.CurrentGeneration, Is.Zero.Within(0.01f));
+            Assert.That(offButton.interactable, Is.True);
+
+            offButton.onClick.Invoke();
+            yield return null;
+            energy.AdvanceSimulation(0.1f);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.SolarPanel,
+                    "station_solar_01",
+                    1,
+                    true),
+                Is.True);
+            Assert.That(energy.CurrentGeneration, Is.GreaterThan(0f));
 
             ItemCatalogData catalog =
                 Resources.Load<ItemCatalogData>("ItemCatalog_Default");
@@ -835,10 +1096,10 @@ namespace NERA.Tests
                 Is.Zero);
             Assert.That(
                 questHud.DisplayedMainText,
-                Does.Contain("ОСНОВНОЕ ЗАДАНИЕ"));
+                Does.Contain("MAIN QUEST"));
             Assert.That(
                 questHud.DisplayedMainText,
-                Does.Contain("Отправляйтесь в Ancient Outpost"));
+                Does.Contain("Travel to the Ancient Outpost"));
             Assert.That(questHud.DisplayedSideText, Is.Empty);
 
             quests.ReportDeviceCondition(
@@ -847,7 +1108,7 @@ namespace NERA.Tests
                 0.3f);
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Очистите Test Solar Panel"));
+                Does.Contain("Clean Test Solar Panel"));
 
             quests.ReportStationFault(
                 "test_turret",
@@ -855,7 +1116,7 @@ namespace NERA.Tests
                 "EnemySabotage");
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Перезапустите Test Turret"),
+                Does.Contain("Restart Test Turret"),
                 "The higher-priority side quest must be displayed.");
 
             quests.Report(
@@ -864,7 +1125,7 @@ namespace NERA.Tests
                 "Test Turret");
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Очистите Test Solar Panel"),
+                Does.Contain("Clean Test Solar Panel"),
                 "HUD must fall back to the next active side quest.");
 
             quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
@@ -1066,12 +1327,18 @@ namespace NERA.Tests
             }
             Assert.That(discovery.KnownLocations.Count, Is.GreaterThan(0));
 
+            Assert.That(
+                energy.GetConsumerRate("drone_charger"),
+                Is.EqualTo(energy.Config.DroneChargingConsumption));
+
             ExpeditionLocationData location = discovery.KnownLocations[0];
             discovery.RestoreDiscovered(Array.Empty<string>());
             energy.RestoreState(energy.TotalCapacity, true);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Drone, true),
                 Is.True);
+            int connectedConsumerCount = energy.ConnectedConsumerCount;
+            Assert.That(connectedConsumerCount, Is.GreaterThan(0));
             drone.RefreshAvailability();
             Assert.That(drone.LaunchScan(location), Is.True);
 
@@ -1091,6 +1358,26 @@ namespace NERA.Tests
                 systems.IsRequestedActive(StationSystemType.Drone),
                 Is.True);
             Assert.That(drone.State, Is.EqualTo(DroneState.Scanning));
+
+            drone.AdvanceScan(drone.CurrentScanDuration);
+            Assert.That(drone.IsCharging, Is.True);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(connectedConsumerCount),
+                "Drone charging must activate an existing connection, not add one.");
+            drone.AdvanceRecharge(energy.Config.DroneRechargeDuration);
+            Assert.That(drone.IsCharging, Is.False);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(connectedConsumerCount),
+                "The drone must remain connected after charging completes.");
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, false),
+                Is.True);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(connectedConsumerCount - 1),
+                "Only switching the drone off must remove its connection.");
         }
 
         [UnityTest]
@@ -1580,11 +1867,45 @@ namespace NERA.Tests
             Button synthesisButton =
                 FindDescendant(upgradeScreen, "UpgradeButton")
                     .GetComponent<Button>();
+            Transform synthesisProgressTransform = FindDescendant(
+                upgradeScreen,
+                "Text_progress");
+            Component synthesisProgressText =
+                synthesisProgressTransform.GetComponent("TextMeshProUGUI");
+            Assert.That(synthesisProgressTransform.gameObject.activeSelf, Is.False);
             Assert.That(
                 synthesisButton.interactable,
                 Is.True,
                 "UpgradeButton stayed disabled for an analyzed IO shard.");
             synthesisButton.onClick.Invoke();
+
+            Assert.That(workstation.IsUpgradeProcessing, Is.True);
+            Assert.That(
+                workstation.GetUpgradeItem(1),
+                Is.Not.Null,
+                "The anomaly must remain in its slot until synthesis completes.");
+            Assert.That(synthesisProgressTransform.gameObject.activeSelf, Is.True);
+            Assert.That(
+                synthesisProgressText.GetType().GetProperty("text")
+                    ?.GetValue(synthesisProgressText)?.ToString(),
+                Does.Match(@"^Progress - \d+%$"));
+            Assert.That(
+                FindDescendant(upgradeScreen, "DropButton")
+                    .GetComponent<Button>().interactable,
+                Is.False,
+                "Synthesis items must stay locked while processing.");
+
+            float synthesisDuration = workstation.CurrentSynthesisDuration;
+            workstation.AdvanceSynthesis(synthesisDuration * 0.5f);
+            Assert.That(
+                synthesisProgressText.GetType().GetProperty("text")
+                    ?.GetValue(synthesisProgressText)?.ToString(),
+                Is.Not.EqualTo("Progress - 0%"),
+                "Synthesis percentage did not change.");
+
+            workstation.AdvanceSynthesis(synthesisDuration);
+            Assert.That(workstation.IsUpgradeProcessing, Is.False);
+            Assert.That(synthesisProgressTransform.gameObject.activeSelf, Is.False);
 
             ItemInstance synthesizedTool =
                 workstation.GetUpgradeItem(0);
@@ -1628,7 +1949,9 @@ namespace NERA.Tests
             Assert.That(
                 workstation.GetChargingItem(0)?.ItemData,
                 Is.SameAs(integrator));
-            workstation.AdvanceCharging(10f);
+            workstation.AdvanceCharging(
+                integrator.EnergyDefinition.Capacity /
+                integrator.EnergyDefinition.RechargePerSecond + 0.1f);
             Assert.That(
                 workstation.GetChargingItem(0)?.IsFullyCharged,
                 Is.True,
@@ -1704,6 +2027,9 @@ namespace NERA.Tests
                 Is.True,
                 "The second shard stayed locked after its own scan.");
             synthesisButton.onClick.Invoke();
+            Assert.That(workstation.IsUpgradeProcessing, Is.True);
+            workstation.AdvanceSynthesis(
+                workstation.CurrentSynthesisDuration);
             Assert.That(
                 workstation.GetUpgradeItem(0)?.IntegratedAnomaly,
                 Is.SameAs(anomaly));

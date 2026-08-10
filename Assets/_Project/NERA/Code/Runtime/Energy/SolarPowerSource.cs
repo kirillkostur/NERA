@@ -11,6 +11,7 @@ namespace NERA.Energy
         [SerializeField] private MaintainableObject maintenance;
 
         private StationObjectIdentity identity;
+        private StationSystemsController stationSystems;
         private bool registered;
         private string registeredPanelId;
 
@@ -22,6 +23,10 @@ namespace NERA.Energy
 
             if (maintenance != null)
                 maintenance.ConditionChanged += HandleConditionChanged;
+
+            StationSystemsController.InstanceChanged +=
+                HandleStationSystemsInstanceChanged;
+            BindStationSystems(StationSystemsController.Instance);
         }
 
         private void Start()
@@ -31,6 +36,8 @@ namespace NERA.Energy
 
         private void Update()
         {
+            if (stationSystems == null)
+                BindStationSystems(StationSystemsController.Instance);
             if (!registered)
                 Register();
         }
@@ -61,7 +68,27 @@ namespace NERA.Energy
         }
 
         private float EffectiveOutputMultiplier =>
-            outputMultiplier * (maintenance != null ? maintenance.Condition : 1f);
+            IsRequestedActive()
+                ? outputMultiplier *
+                  (maintenance != null ? maintenance.Condition : 1f)
+                : 0f;
+
+        private bool IsRequestedActive()
+        {
+            if (stationSystems == null)
+                return true;
+
+            string panelId = ResolvePanelId();
+            StationSystemDefinition definition =
+                stationSystems.GetDefinition(
+                    StationSystemType.SolarPanel,
+                    panelId);
+            return stationSystems.IsRequestedActive(
+                StationSystemType.SolarPanel,
+                panelId,
+                definition?.InitialLevel ?? 1,
+                definition?.InitiallyActive ?? true);
+        }
 
         private string ActivePanelId =>
             string.IsNullOrWhiteSpace(registeredPanelId)
@@ -91,8 +118,39 @@ namespace NERA.Energy
                 UpdateRegisteredOutput();
         }
 
+        private void HandleStationSystemsInstanceChanged(
+            StationSystemsController controller)
+        {
+            BindStationSystems(controller);
+        }
+
+        private void BindStationSystems(StationSystemsController controller)
+        {
+            if (stationSystems == controller)
+                return;
+
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleSystemsChanged;
+            stationSystems = controller;
+            if (stationSystems != null)
+                stationSystems.SystemsChanged += HandleSystemsChanged;
+
+            if (registered)
+                UpdateRegisteredOutput();
+        }
+
+        private void HandleSystemsChanged()
+        {
+            if (registered)
+                UpdateRegisteredOutput();
+        }
+
         private void OnDestroy()
         {
+            StationSystemsController.InstanceChanged -=
+                HandleStationSystemsInstanceChanged;
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleSystemsChanged;
             if (maintenance != null)
                 maintenance.ConditionChanged -= HandleConditionChanged;
         }

@@ -4,6 +4,8 @@
   "references": [
     "NERA.Runtime",
     "Unity.Cinemachine",
+    "Unity.Localization",
+    "Unity.Localization.Editor",
     "UnityEditor.TestRunner",
     "UnityEngine.TestRunner"
   ],

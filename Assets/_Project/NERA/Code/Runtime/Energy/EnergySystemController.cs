@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Quests;
+using NERA.Station;
 using UnityEngine;
 
 namespace NERA.Energy
@@ -24,6 +25,8 @@ namespace NERA.Energy
             public float MinimumCharge01;
             public bool RequestedActive;
             public bool Powered;
+            public StationSystemType? StationSystem;
+            public string StationObjectId;
         }
 
         [SerializeField] private EnergyBalanceConfig config;
@@ -40,6 +43,7 @@ namespace NERA.Energy
         private bool restoredFromSave;
         private EnergyState state = EnergyState.Offline;
         private float lastQuestReportedCharge01 = float.NaN;
+        private StationSystemsController stationSystems;
 
         public static EnergySystemController Instance { get; private set; }
 
@@ -59,6 +63,28 @@ namespace NERA.Energy
         public bool HasUsablePower =>
             gridEnabled && currentEnergy > 0.001f && TotalCapacity > 0f;
         public EnergyState State => state;
+        public int ConnectedConsumerCount
+        {
+            get
+            {
+                HashSet<string> connections = new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
+                foreach (KeyValuePair<string, ConsumerRecord> pair in
+                         consumers)
+                {
+                    ConsumerRecord consumer = pair.Value;
+                    if (!IsConsumerConnected(consumer))
+                        continue;
+
+                    string connectionId = consumer.StationSystem.HasValue
+                        ? $"system:{(int)consumer.StationSystem.Value}:" +
+                          consumer.StationObjectId
+                        : $"consumer:{pair.Key}";
+                    connections.Add(connectionId);
+                }
+                return connections.Count;
+            }
+        }
         public int RegisteredConsumerCount => consumers.Count;
         public int ActiveConsumerCount
         {
@@ -83,6 +109,9 @@ namespace NERA.Energy
             }
 
             Instance = this;
+            StationSystemsController.InstanceChanged +=
+                HandleStationSystemsInstanceChanged;
+            BindStationSystems(StationSystemsController.Instance);
             RefreshState();
         }
 
@@ -228,6 +257,38 @@ namespace NERA.Energy
             float minimumCharge01
         )
         {
+            RegisterConsumerInternal(
+                consumerId,
+                rate,
+                minimumCharge01,
+                null,
+                null);
+        }
+
+        public void RegisterConsumer(
+            string consumerId,
+            float rate,
+            float minimumCharge01,
+            StationSystemType stationSystem,
+            string stationObjectId = null
+        )
+        {
+            RegisterConsumerInternal(
+                consumerId,
+                rate,
+                minimumCharge01,
+                stationSystem,
+                stationObjectId);
+        }
+
+        private void RegisterConsumerInternal(
+            string consumerId,
+            float rate,
+            float minimumCharge01,
+            StationSystemType? stationSystem,
+            string stationObjectId
+        )
+        {
             if (string.IsNullOrWhiteSpace(consumerId))
                 return;
 
@@ -241,14 +302,23 @@ namespace NERA.Energy
             else if (Mathf.Approximately(consumer.Rate, clampedRate) &&
                      Mathf.Approximately(
                          consumer.MinimumCharge01,
-                         clampedMinimumCharge))
+                         clampedMinimumCharge) &&
+                     consumer.StationSystem == stationSystem &&
+                     string.Equals(
+                         consumer.StationObjectId,
+                         stationObjectId,
+                         StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
             consumer.Rate = clampedRate;
             consumer.MinimumCharge01 = clampedMinimumCharge;
+            consumer.StationSystem = stationSystem;
+            consumer.StationObjectId = stationObjectId?.Trim() ?? string.Empty;
             RefreshConsumers();
+            EnergyChanged?.Invoke();
+            ReportQuestCharge();
         }
 
         public void SetConsumerActive(string consumerId, bool active)
@@ -306,6 +376,14 @@ namespace NERA.Energy
         {
             return consumers.TryGetValue(consumerId, out ConsumerRecord consumer) &&
                 consumer.RequestedActive;
+        }
+
+        public bool IsConsumerConnected(string consumerId)
+        {
+            return consumers.TryGetValue(
+                    consumerId,
+                    out ConsumerRecord consumer) &&
+                IsConsumerConnected(consumer);
         }
 
         public float GetConsumerRate(string consumerId)
@@ -447,9 +525,61 @@ namespace NERA.Energy
             foreach (ConsumerRecord consumer in consumers.Values)
             {
                 consumer.Powered =
+                    IsConsumerConnected(consumer) &&
                     consumer.RequestedActive &&
                     HasSufficientCharge(consumer.MinimumCharge01);
             }
+        }
+
+        private bool IsConsumerConnected(ConsumerRecord consumer)
+        {
+            if (!HasSufficientCharge(consumer.MinimumCharge01))
+                return false;
+
+            if (!consumer.StationSystem.HasValue)
+                return true;
+
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            if (systems == null)
+                return true;
+
+            StationSystemType type = consumer.StationSystem.Value;
+            StationSystemDefinition definition = systems.GetDefinition(
+                type,
+                consumer.StationObjectId);
+            return systems.IsRequestedActive(
+                type,
+                consumer.StationObjectId,
+                definition?.InitialLevel ?? 0,
+                definition?.InitiallyActive ?? false);
+        }
+
+        private void HandleStationSystemsInstanceChanged(
+            StationSystemsController controller)
+        {
+            BindStationSystems(controller);
+        }
+
+        private void BindStationSystems(StationSystemsController controller)
+        {
+            if (stationSystems == controller)
+                return;
+
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleStationSystemsChanged;
+            stationSystems = controller;
+            if (stationSystems != null)
+                stationSystems.SystemsChanged += HandleStationSystemsChanged;
+
+            HandleStationSystemsChanged();
+        }
+
+        private void HandleStationSystemsChanged()
+        {
+            RefreshConsumers();
+            CurrentConsumption = CalculateConsumption();
+            EnergyChanged?.Invoke();
         }
 
         private void RefreshState()
@@ -475,6 +605,10 @@ namespace NERA.Energy
 
         private void OnDestroy()
         {
+            StationSystemsController.InstanceChanged -=
+                HandleStationSystemsInstanceChanged;
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleStationSystemsChanged;
             if (Instance == this)
                 Instance = null;
         }

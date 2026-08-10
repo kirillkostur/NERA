@@ -694,6 +694,13 @@ namespace NERA.Station
                 location.RequiredDroneUpgradeLevel;
         }
 
+        public bool CanAntennaReach(Expeditions.ExpeditionLocationData location)
+        {
+            return location != null &&
+                GetUpgradeLevel(StationSystemType.Antenna) >=
+                location.RequiredAntennaUpgradeLevel;
+        }
+
         public IEnumerable<KeyValuePair<StationSystemType, int>> UpgradeLevels =>
             upgradeLevels;
         public IEnumerable<KeyValuePair<StationSystemType, bool>> RequestedStates =>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Localization;
 
 namespace NERA.Quests
 {
@@ -178,10 +179,22 @@ namespace NERA.Quests
             CurrentStageIndex < Definition.Stages.Count
                 ? Definition.Stages[CurrentStageIndex]
                 : null;
-        public string Title => FormatText(Definition?.Title);
-        public string Description => FormatText(Definition?.Description);
-        public string ObjectiveTitle => FormatText(CurrentStage?.Title);
-        public string ObjectiveDescription => FormatText(CurrentStage?.Description);
+        public string Title => FormatText(NERALocalization.Quest(
+            QuestId,
+            "title",
+            Definition?.Title));
+        public string Description => FormatText(NERALocalization.Quest(
+            QuestId,
+            "description",
+            Definition?.Description));
+        public string ObjectiveTitle => FormatText(NERALocalization.Quest(
+            QuestId,
+            $"stage.{CurrentStageIndex + 1:00}.title",
+            CurrentStage?.Title));
+        public string ObjectiveDescription => FormatText(NERALocalization.Quest(
+            QuestId,
+            $"stage.{CurrentStageIndex + 1:00}.description",
+            CurrentStage?.Description));
         public IReadOnlyList<int> ConditionProgress => conditionProgress;
 
         internal int GetConditionProgress(int index)
@@ -300,9 +313,14 @@ namespace NERA.Quests
 
         private string FormatText(string value)
         {
+            string localizedTargetName = NERALocalization.Content(
+                "target",
+                ContextTargetId,
+                "name",
+                ContextTargetName);
             return (value ?? string.Empty)
                 .Replace("{targetId}", ContextTargetId)
-                .Replace("{targetName}", ContextTargetName);
+                .Replace("{targetName}", localizedTargetName);
         }
     }
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NERA.Items;
+using NERA.Localization;
 using UnityEngine;
 
 namespace NERA.Combat
@@ -33,6 +34,9 @@ namespace NERA.Combat
         [SerializeField] private List<ItemData> compatibleEquipment =
             new List<ItemData>();
 
+        [Header("Synthesis")]
+        [SerializeField, Min(0.1f)] private float synthesisDuration = 5f;
+
         [Header("Activation")]
         [SerializeField] private AnomalyIntegrationEffect effect =
             AnomalyIntegrationEffect.DamageAnomalies;
@@ -42,8 +46,10 @@ namespace NERA.Combat
         [SerializeField] private LayerMask affectedLayers = ~0;
 
         public string IntegrationId => integrationId;
-        public string DisplayName => displayName;
+        public string DisplayName => NERALocalization.Content(
+            "integration", integrationId, "name", displayName);
         public Color DisplayColor => displayColor;
+        public float SynthesisDuration => Mathf.Max(0.1f, synthesisDuration);
         public AnomalyIntegrationEffect Effect => effect;
         public int ChargesGranted => 1;
         public float Radius => Mathf.Max(0.1f, radius);
@@ -69,6 +75,7 @@ namespace NERA.Combat
         {
             integrationId = integrationId?.Trim();
             displayName = displayName?.Trim();
+            synthesisDuration = Mathf.Max(0.1f, synthesisDuration);
             radius = Mathf.Max(0.1f, radius);
             anomalyDamage = Mathf.Max(0f, anomalyDamage);
             electronicDuration = Mathf.Max(0f, electronicDuration);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NERA.Items;
 using NERA.Library;
+using NERA.Localization;
 using NERA.Research;
 using TMPro;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace NERA.Terminal
                 return;
 
             initialized = true;
+            NERALocalization.LocaleChanged += RefreshEntries;
             CacheHierarchy();
             BindTabs();
             BuildSlots();
@@ -265,6 +267,11 @@ namespace NERA.Terminal
             TerminalUIUtility.SetText(descriptionText, string.Empty);
             if (infoImage != null)
                 infoImage.enabled = false;
+        }
+
+        private void OnDestroy()
+        {
+            NERALocalization.LocaleChanged -= RefreshEntries;
         }
     }
 }

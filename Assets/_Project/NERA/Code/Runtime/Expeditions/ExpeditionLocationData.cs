@@ -1,4 +1,5 @@
 using NERA.Core;
+using NERA.Localization;
 using NERA.Locations;
 using NERA.Terminal;
 using UnityEngine;
@@ -31,6 +32,12 @@ namespace NERA.Expeditions
         [SerializeField, Min(0)]
         [Tooltip("Drone system upgrade level required to survey this location.")]
         private int requiredDroneUpgradeLevel;
+        [SerializeField, Min(0.1f)]
+        [Tooltip("Time in seconds required for the antenna to detect this location.")]
+        private float antennaScanDuration = 3f;
+        [SerializeField, Min(0)]
+        [Tooltip("Antenna system upgrade level required to detect this location.")]
+        private int requiredAntennaUpgradeLevel;
         [SerializeField] private LocationState initialState;
 
         [Header("Map")]
@@ -43,10 +50,18 @@ namespace NERA.Expeditions
 
         public string LocationId => locationId?.Trim() ?? string.Empty;
         public LocationType LocationType => locationType;
-        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
-            ? LocationId
-            : displayName.Trim();
-        public string Description => description?.Trim() ?? string.Empty;
+        public string DisplayName => NERALocalization.Content(
+            "location",
+            LocationId,
+            "name",
+            string.IsNullOrWhiteSpace(displayName)
+                ? LocationId
+                : displayName.Trim());
+        public string Description => NERALocalization.Content(
+            "location",
+            LocationId,
+            "description",
+            description?.Trim() ?? string.Empty);
         public SceneReference Scene => scene;
         public string ScenePath => scene?.ScenePath ?? string.Empty;
         public string SceneName => scene?.SceneName ?? string.Empty;
@@ -54,6 +69,9 @@ namespace NERA.Expeditions
         public DiscoverySource DiscoverySource => discoverySource;
         public float DroneScanDuration => Mathf.Max(0.1f, droneScanDuration);
         public int RequiredDroneUpgradeLevel => Mathf.Max(0, requiredDroneUpgradeLevel);
+        public float AntennaScanDuration => Mathf.Max(0.1f, antennaScanDuration);
+        public int RequiredAntennaUpgradeLevel =>
+            Mathf.Max(0, requiredAntennaUpgradeLevel);
         public LocationState InitialState => initialState;
         public MapSymbol MapSymbol => mapSymbol;
         public MapSlotData MapSlot => mapSlot;

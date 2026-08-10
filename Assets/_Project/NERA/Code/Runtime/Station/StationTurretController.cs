@@ -222,7 +222,9 @@ namespace NERA.Station
                 rate,
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Turret,
-                    TurretId));
+                    TurretId),
+                StationSystemType.Turret,
+                TurretId);
             energy.SetConsumerActive(consumerId, requested);
         }
 

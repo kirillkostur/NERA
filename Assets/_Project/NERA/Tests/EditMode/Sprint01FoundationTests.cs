@@ -109,7 +109,7 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void ItemDataUsesEquipmentConditionalInspector()
+        public void ItemDataUsesTypeConditionalInspector()
         {
             Type editorType = Type.GetType(
                 "NERA.Editor.ItemDataEditor, Assembly-CSharp-Editor");
@@ -122,8 +122,13 @@ namespace NERA.Tests
 
             foreach (string propertyName in new[]
                      {
+                         "equippedVisualPrefab",
+                         "equipmentAnchorName",
+                         "equippedLocalPosition",
+                         "equippedLocalEulerAngles",
+                         "quickAccessAction",
+                         "useKey",
                          "acceptsAnomalyIntegration",
-                         "anomalyIntegrationDefinition",
                          "weaponDefinition",
                          "energyDefinition"
                      })
@@ -135,6 +140,27 @@ namespace NERA.Tests
                     Is.EqualTo(true),
                     propertyName);
             }
+
+            Assert.That(
+                equipmentOnlyCheck.Invoke(
+                    null,
+                    new object[] { "anomalyIntegrationDefinition" }),
+                Is.EqualTo(false));
+
+            MethodInfo anomalyOnlyCheck = editorType.GetMethod(
+                "IsAnomalyOnlyProperty",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(anomalyOnlyCheck, Is.Not.Null);
+            Assert.That(
+                anomalyOnlyCheck.Invoke(
+                    null,
+                    new object[] { "anomalyIntegrationDefinition" }),
+                Is.EqualTo(true));
+            Assert.That(
+                anomalyOnlyCheck.Invoke(
+                    null,
+                    new object[] { "acceptsAnomalyIntegration" }),
+                Is.EqualTo(false));
 
             Assert.That(
                 equipmentOnlyCheck.Invoke(
@@ -1145,6 +1171,36 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void ConnectedConsumerCountIncludesInactiveConsumers()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("laboratory", 4f, 0.5f);
+            energy.RegisterConsumer("drone_charger", 4f, 0.25f);
+            energy.SetConsumerActive("laboratory", true);
+
+            Assert.That(energy.ConnectedConsumerCount, Is.EqualTo(2));
+            Assert.That(energy.ActiveConsumerCount, Is.EqualTo(1));
+
+            energy.SetConsumerActive("laboratory", false);
+
+            Assert.That(energy.ConnectedConsumerCount, Is.EqualTo(2));
+            Assert.That(energy.ActiveConsumerCount, Is.Zero);
+
+            energy.RestoreState(300f, true);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.EqualTo(1),
+                "The 50% laboratory cutoff must disconnect it before the 25% drone cutoff.");
+
+            energy.RestoreState(100f, true);
+            Assert.That(
+                energy.ConnectedConsumerCount,
+                Is.Zero,
+                "Consumers below their configured charge cutoff are disconnected.");
+        }
+
+        [Test]
         public void LaboratoryCannotReceivePowerBeforeGridStarts()
         {
             energy.RegisterBattery("battery_01", 1000f, 1000f);
@@ -1513,6 +1569,7 @@ namespace NERA.Tests
             SetSingleton(typeof(StationPowerController), null);
             SetSingleton(typeof(ExpeditionDiscoveryController), null);
             SetSingleton(typeof(AntennaController), null);
+            SetSingleton(typeof(StationSystemsController), null);
 
             root = new GameObject("Test_AntennaSystems");
             environment = root.AddComponent<StationEnvironmentController>();
@@ -1580,6 +1637,7 @@ namespace NERA.Tests
             SetSingleton(typeof(StationPowerController), null);
             SetSingleton(typeof(ExpeditionDiscoveryController), null);
             SetSingleton(typeof(AntennaController), null);
+            SetSingleton(typeof(StationSystemsController), null);
         }
 
         [Test]
@@ -1619,6 +1677,63 @@ namespace NERA.Tests
             Assert.That(antenna.StartCalibration(expedition), Is.False);
 
             Object.DestroyImmediate(expedition);
+        }
+
+        [Test]
+        public void AntennaUsesLocationScanDuration()
+        {
+            SerializedObject serializedSignal = new SerializedObject(signal);
+            serializedSignal.FindProperty("antennaScanDuration").floatValue = 0.5f;
+            serializedSignal.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(antenna.StartCalibration(signal), Is.True);
+            Assert.That(antenna.CalibrationDuration, Is.EqualTo(0.5f));
+
+            antenna.AdvanceCalibration(0.4f);
+            Assert.That(antenna.State, Is.EqualTo(AntennaState.Calibrating));
+
+            antenna.AdvanceCalibration(0.1f);
+            Assert.That(antenna.State, Is.EqualTo(AntennaState.SignalFound));
+        }
+
+        [Test]
+        public void AntennaCannotCalibrateSignalAboveItsUpgradeLevel()
+        {
+            StationSystemsController systems =
+                root.AddComponent<StationSystemsController>();
+            SetSingleton(typeof(StationSystemsController), systems);
+
+            SerializedObject serializedSignal = new SerializedObject(signal);
+            serializedSignal.FindProperty("requiredAntennaUpgradeLevel").intValue = 2;
+            serializedSignal.ApplyModifiedPropertiesWithoutUndo();
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Antenna,
+                        "station_antenna",
+                        1,
+                        true)
+                });
+            antenna.RefreshAvailability();
+            Assert.That(antenna.CanCalibrate(signal), Is.False);
+
+            systems.Restore(
+                null,
+                null,
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Antenna,
+                        "station_antenna",
+                        2,
+                        true)
+                });
+            antenna.RefreshAvailability();
+            Assert.That(antenna.CanCalibrate(signal), Is.True);
         }
 
         [Test]
@@ -2049,6 +2164,7 @@ namespace NERA.Tests
         private GameObject systems;
         private PlayerInventory inventory;
         private PlayerEquipmentController equipmentController;
+        private EnergySystemController energy;
         private ResearchController research;
         private LaboratoryWorkstationController workstation;
         private ItemData tool;
@@ -2066,6 +2182,11 @@ namespace NERA.Tests
                 player.AddComponent<PlayerEquipmentController>();
 
             systems = new GameObject("Test_AnomalyIntegrationSystems");
+            SetSingleton(typeof(EnergySystemController), null);
+            energy = systems.AddComponent<EnergySystemController>();
+            SetSingleton(typeof(EnergySystemController), energy);
+            energy.RegisterBattery("test_battery", 1000f, 1000f);
+            energy.SetGridEnabled(true);
             research = systems.AddComponent<ResearchController>();
             workstation =
                 systems.AddComponent<LaboratoryWorkstationController>();
@@ -2082,6 +2203,8 @@ namespace NERA.Tests
                 "test_io_pulse";
             serializedIntegration.FindProperty("displayName").stringValue =
                 "Test IO Pulse";
+            serializedIntegration.FindProperty("synthesisDuration").floatValue =
+                2f;
             serializedIntegration.ApplyModifiedPropertiesWithoutUndo();
 
             researchDefinition =
@@ -2129,6 +2252,7 @@ namespace NERA.Tests
             SetSingleton(
                 typeof(ResearchController),
                 null);
+            SetSingleton(typeof(EnergySystemController), null);
             Object.DestroyImmediate(systems);
             Object.DestroyImmediate(player);
             Object.DestroyImmediate(tool);
@@ -2179,6 +2303,20 @@ namespace NERA.Tests
                 Is.True,
                 reason);
             Assert.That(workstation.TrySynthesize(), Is.True);
+            Assert.That(workstation.IsUpgradeProcessing, Is.True);
+            Assert.That(workstation.SynthesisProgress, Is.Zero);
+            Assert.That(
+                workstation.GetUpgradeItem(0).IntegratedAnomaly,
+                Is.Null,
+                "Integration must not finish on the start frame.");
+            Assert.That(workstation.GetUpgradeItem(1), Is.Not.Null);
+
+            workstation.AdvanceSynthesis(1f);
+            Assert.That(workstation.SynthesisProgress, Is.EqualTo(0.5f));
+            Assert.That(workstation.IsUpgradeProcessing, Is.True);
+
+            workstation.AdvanceSynthesis(1f);
+            Assert.That(workstation.IsUpgradeProcessing, Is.False);
 
             ItemInstance integratedTool =
                 workstation.GetUpgradeItem(0);

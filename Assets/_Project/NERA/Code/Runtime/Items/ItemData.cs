@@ -1,6 +1,7 @@
 using UnityEngine;
 using NERA.Research;
 using NERA.Combat;
+using NERA.Localization;
 
 namespace NERA.Items
 {
@@ -41,8 +42,9 @@ namespace NERA.Items
         [Header("Research")]
         [SerializeField] private ResearchDefinition researchDefinition;
 
-        [Header("Anomaly Integration")]
+        [Header("Anomaly Receiver")]
         [SerializeField] private bool acceptsAnomalyIntegration;
+        [Header("Anomaly Integration")]
         [SerializeField]
         private AnomalyIntegrationDefinition anomalyIntegrationDefinition;
 
@@ -53,8 +55,10 @@ namespace NERA.Items
         [SerializeField] private ItemEnergyDefinition energyDefinition;
 
         public string ItemId => itemId;
-        public string DisplayName => displayName;
-        public string Description => description;
+        public string DisplayName => NERALocalization.Content(
+            "item", ItemId, "name", displayName);
+        public string Description => NERALocalization.Content(
+            "item", ItemId, "description", description);
         public ItemType ItemType => itemType;
         public Sprite Icon => icon;
         public WorldItem WorldPrefab => worldPrefab;

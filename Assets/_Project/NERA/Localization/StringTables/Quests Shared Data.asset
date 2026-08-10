@@ -1,0 +1,156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Quests Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: Quests
+  m_TableCollectionNameGuidString: 637d46d0290e7214292992f68204748e
+  m_Entries:
+  - m_Id: 791666688
+    m_Key: quest.main.expedition_01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221120
+    m_Key: quest.main.expedition_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221121
+    m_Key: quest.main.expedition_01.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221122
+    m_Key: quest.main.expedition_01.stage.01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221123
+    m_Key: quest.main.expedition_01.stage.02.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221124
+    m_Key: quest.main.expedition_01.stage.02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221125
+    m_Key: quest.main.expedition_01.stage.03.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221126
+    m_Key: quest.main.expedition_01.stage.03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221127
+    m_Key: quest.main.expedition_01.stage.04.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221128
+    m_Key: quest.main.expedition_01.stage.04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221129
+    m_Key: quest.main.expedition_01.stage.05.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221130
+    m_Key: quest.main.expedition_01.stage.05.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221131
+    m_Key: quest.main.launch_drone_expedition_01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221132
+    m_Key: quest.main.launch_drone_expedition_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221133
+    m_Key: quest.main.launch_drone_expedition_01.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221134
+    m_Key: quest.main.launch_drone_expedition_01.stage.01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221135
+    m_Key: quest.main.restore_battery.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221136
+    m_Key: quest.main.restore_battery.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221137
+    m_Key: quest.main.restore_battery.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221138
+    m_Key: quest.main.restore_battery.stage.01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221139
+    m_Key: quest.main.first_terminal.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221140
+    m_Key: quest.main.first_terminal.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221141
+    m_Key: quest.main.first_terminal.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 825221142
+    m_Key: quest.main.first_terminal.stage.01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415424
+    m_Key: quest.side.clean_solar_panel.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415425
+    m_Key: quest.side.clean_solar_panel.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415426
+    m_Key: quest.side.clean_solar_panel.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415427
+    m_Key: quest.side.clean_solar_panel.stage.01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415428
+    m_Key: quest.side.restore_turret.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415429
+    m_Key: quest.side.restore_turret.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415430
+    m_Key: quest.side.restore_turret.stage.01.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 829415431
+    m_Key: quest.side.restore_turret.stage.01.description
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1138171735028269371
+  references:
+    version: 2
+    RefIds:
+    - rid: 1138171735028269371
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1786279464692

@@ -1,5 +1,6 @@
 using NERA.Interaction;
 using NERA.Items;
+using NERA.Localization;
 using NERA.Research;
 using NERA.Energy;
 using NERA.Station;
@@ -77,6 +78,7 @@ namespace NERA.Inventory
             }
 
             Instance = this;
+            NERALocalization.LocaleChanged += RefreshAll;
             rootCanvas = GetComponent<Canvas>();
             authoredHud = transform.Find("InventoryScreen") != null;
             CacheHierarchy();
@@ -853,11 +855,27 @@ namespace NERA.Inventory
             if (scanButtonLabel != null)
             {
                 scanButtonLabel.text = analyzing
-                    ? $"SCANNING {Mathf.RoundToInt(controller.Progress * 100f)}%"
-                    : !hasItem ? "START SCAN"
-                    : !researchable ? "KNOWN ITEM"
-                    : scanned ? "SCANNED"
-                    : "START SCAN";
+                    ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.progress",
+                        "SCANNING {0}%",
+                        Mathf.RoundToInt(controller.Progress * 100f))
+                    : !hasItem ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.start",
+                        "START SCAN")
+                    : !researchable ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.known_item",
+                        "KNOWN ITEM")
+                    : scanned ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.scanned",
+                        "SCANNED")
+                    : NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "scan.start",
+                        "START SCAN");
             }
             if (scanButton != null)
                 scanButton.interactable = controller.CanStartAnalysis;
@@ -894,8 +912,15 @@ namespace NERA.Inventory
             if (chargingStatusLabel != null)
             {
                 chargingStatusLabel.text = !hasItem
-                    ? "Laboratory charger ready."
-                    : $"CHARGE {Mathf.RoundToInt(instance.Charge01 * 100f)}%";
+                    ? NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "charger.ready",
+                        "Laboratory charger ready.")
+                    : NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "charger.charge",
+                        "CHARGE {0}%",
+                        Mathf.RoundToInt(instance.Charge01 * 100f));
             }
             if (chargingTakeButton != null)
                 chargingTakeButton.interactable = hasItem;
@@ -934,11 +959,15 @@ namespace NERA.Inventory
                     SelectedColor
                 );
                 RefreshSlotKeyLabel(views[i], item, group, i);
-                views[i].LaboratoryDrag?.Initialize(
-                    item,
-                    rootCanvas,
-                    group,
-                    i);
+                LaboratoryInventoryItemDrag drag = views[i].LaboratoryDrag;
+                if (drag != null)
+                {
+                    drag.Initialize(
+                        item,
+                        rootCanvas,
+                        group,
+                        i);
+                }
             }
         }
 
@@ -1148,7 +1177,10 @@ namespace NERA.Inventory
             {
                 selectedItemName.text = hasSelection
                     ? selectedItem.DisplayName
-                    : "SELECT AN ITEM";
+                    : NERALocalization.Get(
+                        NERALocalization.InventoryLaboratoryTable,
+                        "inventory.select_item",
+                        "SELECT AN ITEM");
             }
             if (selectedItemDescription != null)
             {
@@ -1171,6 +1203,7 @@ namespace NERA.Inventory
 
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshAll;
             if (playerController != null)
                 playerController.SetInputEnabled(this, true);
             if (inventory != null)
