@@ -72,7 +72,9 @@ MonoBehaviour:
       upgradeIcon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
       description: Medium-range expedition drive.
       requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
+      - item: {fileID: 11400000, guid: 0b790ed76c3ac4a47926a7c546bbb17a, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: ace56722ab72c954bb904c020e503fbe, type: 2}
         count: 1
       energyCost: 100
     - targetLevel: 3
@@ -80,9 +82,11 @@ MonoBehaviour:
       upgradeIcon: {fileID: 21300000, guid: f2d11df979e77bd4eb1c80e4771f0ed9, type: 3}
       description: Long-range expedition drive.
       requiredItems:
-      - item: {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
-        count: 2
-      - item: {fileID: 11400000, guid: 73cfbf5a208db074faa4e096b9dbf161, type: 2}
+      - item: {fileID: 11400000, guid: 72d15de3259a3934cb80de739cc12eed, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: bbca9899c8eeaa04c9dc7f075b2dd11b, type: 2}
+        count: 1
+      - item: {fileID: 11400000, guid: 4e8c05f23a34d2246b4a6c0be44d5a48, type: 2}
         count: 1
       energyCost: 200
   - systemType: 4

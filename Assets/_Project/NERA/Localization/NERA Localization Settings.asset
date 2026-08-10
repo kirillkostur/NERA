@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: NERA Localization Settings
   m_EditorClassIdentifier: 
   m_StartupSelectors:
-  - rid: 1138171735028269458
-  - rid: 1138171735028269459
-  - rid: 1138171735028269460
+  - rid: 1138171735028269561
+  - rid: 1138171735028269562
+  - rid: 1138171735028269563
   m_AvailableLocales:
     rid: 1138171735028269341
   m_AssetDatabase:
@@ -193,14 +193,14 @@ MonoBehaviour:
         - default
         - d
         - 
-    - rid: 1138171735028269458
+    - rid: 1138171735028269561
       type: {class: PlayerPrefLocaleSelector, ns: UnityEngine.Localization.Settings, asm: Unity.Localization}
       data:
         m_PlayerPreferenceKey: nera.locale
-    - rid: 1138171735028269459
+    - rid: 1138171735028269562
       type: {class: SystemLocaleSelector, ns: UnityEngine.Localization.Settings, asm: Unity.Localization}
       data: 
-    - rid: 1138171735028269460
+    - rid: 1138171735028269563
       type: {class: SpecificLocaleSelector, ns: UnityEngine.Localization.Settings, asm: Unity.Localization}
       data:
         m_LocaleId:

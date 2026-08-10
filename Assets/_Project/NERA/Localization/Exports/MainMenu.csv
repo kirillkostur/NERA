@@ -3,7 +3,6 @@
 "save.select_existing_slot",4012892160,"","SELECT A GAME SAVE","","ВЫБЕРИТЕ СОХРАНЕНИЕ",""
 "save.completion",4012892161,"","{0}% COMPLETE","","ПРОЙДЕНО: {0}%",""
 "save.date_format",4017086464,"","MM.dd.yyyy - HH:mm","","dd.MM.yyyy - HH:mm",""
-"save.empty",6755966980,"","EMPTY","","ПУСТО",""
 "options.language",4017086465,"","LANGUAGE: {0}","","ЯЗЫК: {0}",""
 "ui.boot.canvas_panel_optionsscreen_background_screen_station_continuebutton_text_tmp",6739189760,"","CONTINUE","","ПРОДОЛЖИТЬ",""
 "ui.boot.canvas_panel_continuescreen_background_screen_station_background_overwrite_slot_description_text",6739189761,"","OVERWRITE SLOT","","ПЕРЕЗАПИСАТЬ СОХРАНЕНИЕ",""
@@ -21,3 +20,4 @@
 "ui.boot.canvas_panel_continuescreen_background_screen_station_description_text",6755966977,"","SELECT A GAME SAVE","","ВЫБЕРИТЕ СОХРАНЕНИЕ",""
 "ui.boot.canvas_panel_rootbutton_newgamebutton_text_tmp",6755966978,"","NEW GAME","","НОВАЯ ИГРА",""
 "ui.boot.canvas_panel_rootbutton_continuebutton_text_tmp",6755966979,"","CONTINUE","","ПРОДОЛЖИТЬ",""
+"save.empty",6755966980,"","EMPTY","","ПУСТО",""

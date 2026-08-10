@@ -633,6 +633,46 @@ MonoBehaviour:
     m_Localized: Engineering part used to restore and upgrade station mechanisms.
     m_Metadata:
       m_Items: []
+  - m_Id: 333683889266688
+    m_Localized: Sensor Array
+    m_Metadata:
+      m_Items: []
+  - m_Id: 333683935404032
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 336587186495488
+    m_Localized: Research Scanner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 336587186495489
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 337224632623104
+    m_Localized: Advanced Stabilizer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 337224632623105
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 338195530113024
+    m_Localized: Propulsion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 338195530113025
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 338885413429248
+    m_Localized: Chassis
+    m_Metadata:
+      m_Items: []
+  - m_Id: 338885413429249
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
