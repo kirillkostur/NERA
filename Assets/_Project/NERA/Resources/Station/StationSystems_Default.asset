@@ -139,22 +139,22 @@ MonoBehaviour:
     baseStats:
     - stat: 0
       displayName: Damage
-      baseValue: 12
+      baseValue: 10
       unit: 
       decimals: 0
     - stat: 1
       displayName: Detection range
-      baseValue: 18
+      baseValue: 5
       unit: ' m'
       decimals: 0
     - stat: 2
       displayName: Rotation speed
-      baseValue: 180
+      baseValue: 30
       unit: ' deg/s'
       decimals: 0
     - stat: 3
       displayName: Fire interval
-      baseValue: 0.45
+      baseValue: 1
       unit: ' s'
       decimals: 2
     - stat: 4
@@ -174,15 +174,17 @@ MonoBehaviour:
       decimals: 2
     slots:
     - slotId: Slot_1
-      displayName: Weapon emitter
+      displayName: Chassis
     - slotId: Slot_2
-      displayName: Target sensor
+      displayName: Cooling
     - slotId: Slot_3
-      displayName: Cooling unit
+      displayName: Emitter Damage
     - slotId: Slot_4
-      displayName: Rotation drive
+      displayName: Sensor
     - slotId: Slot_5
-      displayName: Armor chassis
+      displayName: Servo
+    - slotId: Slot_6
+      displayName: Servo Drive
   - systemType: 7
     objectId: station_turret_02
     displayName: TURRET 2
@@ -192,17 +194,17 @@ MonoBehaviour:
     baseStats:
     - stat: 0
       displayName: Damage
-      baseValue: 12
+      baseValue: 0
       unit: 
       decimals: 0
     - stat: 1
       displayName: Detection range
-      baseValue: 18
+      baseValue: 5
       unit: ' m'
       decimals: 0
     - stat: 2
       displayName: Rotation speed
-      baseValue: 180
+      baseValue: 30
       unit: ' deg/s'
       decimals: 0
     - stat: 3
@@ -227,12 +229,16 @@ MonoBehaviour:
       decimals: 2
     slots:
     - slotId: Slot_1
-      displayName: Weapon emitter
+      displayName: Shassis
     - slotId: Slot_2
-      displayName: Target sensor
+      displayName: Cooling
     - slotId: Slot_3
-      displayName: Cooling unit
+      displayName: Emitter Damage
     - slotId: Slot_4
-      displayName: Rotation drive
+      displayName: Sensor
     - slotId: Slot_5
-      displayName: Armor chassis
+      displayName: Servo
+    - slotId: Slot_6
+      displayName: Servo Drive
+    - slotId: Slot_7
+      displayName: Emitter Damage

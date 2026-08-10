@@ -34,18 +34,11 @@ MonoBehaviour:
     compatibleInstallations:
     - systemType: 7
       objectId: 
-      slotId: Slot_3
+      slotId: Slot_2
       modifiers:
       - stat: 3
         mode: 1
-        value: 0.75
-      - stat: 10
+        value: 0.9
+      - stat: 0
         mode: 1
         value: 0.9
-    - systemType: 1
-      objectId:
-      slotId: Slot_3
-      modifiers:
-      - stat: 6
-        mode: 0
-        value: 250

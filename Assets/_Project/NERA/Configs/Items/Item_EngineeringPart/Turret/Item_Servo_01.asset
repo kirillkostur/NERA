@@ -10,23 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
-  m_Name: Item_ServoDrive_01
+  m_Name: Item_Servo_01
   m_EditorClassIdentifier: 
-  itemId: servo_drive_01
-  displayName: Servo Drive
+  itemId: servo_01
+  displayName: Servo
   description: Engineering part used to restore and upgrade station mechanisms.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
-  worldPrefab: {fileID: 7962635430784054245, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
+  worldPrefab: {fileID: 7962635430784054245, guid: c617f3358ad8c8342937ae6f70c09fe7, type: 3}
   equippedVisualPrefab: {fileID: 0}
+  equipmentAnchorName: mixamorig1:RightHand
+  equippedLocalPosition: {x: 0, y: 0, z: 0}
+  equippedLocalEulerAngles: {x: 0, y: 0, z: 0}
+  quickAccessAction: 0
+  useKey: 323
   researchDefinition: {fileID: 0}
+  acceptsAnomalyIntegration: 0
+  anomalyIntegrationDefinition: {fileID: 0}
+  weaponDefinition: {fileID: 0}
+  energyDefinition: {fileID: 0}
   engineeringPartDefinition:
-    installedVisualPrefab: {fileID: 2278190858216321600, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
+    installedVisualPrefab: {fileID: 2278190858216321600, guid: c617f3358ad8c8342937ae6f70c09fe7, type: 3}
     compatibleInstallations:
     - systemType: 7
       objectId: 
-      slotId: Slot_4
+      slotId: Slot_5
       modifiers:
       - stat: 2
         mode: 1
-        value: 1.35
+        value: 1.2
