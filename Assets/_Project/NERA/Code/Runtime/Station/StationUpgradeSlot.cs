@@ -14,6 +14,9 @@ namespace NERA.Station
         [SerializeField] private Vector3 installedLocalScale = Vector3.one;
 
         private GameObject runtimeVisual;
+        private bool upgradeModeActive;
+        private bool hasPart;
+        private bool showEmptyFake;
 
         public string SlotId => slotId?.Trim() ?? string.Empty;
         public GameObject FakeVisual => fakeVisual;
@@ -54,16 +57,18 @@ namespace NERA.Station
         {
             ResolveReferences();
             ClearRuntimeVisual();
-            if (fakeVisual != null)
-                fakeVisual.SetActive(showFake);
+            hasPart = false;
+            showEmptyFake = showFake;
+            RefreshFakeVisual();
         }
 
         public void ShowPart(ItemData item)
         {
             ResolveReferences();
             ClearRuntimeVisual();
-            if (fakeVisual != null)
-                fakeVisual.SetActive(false);
+            hasPart = item != null;
+            showEmptyFake = false;
+            RefreshFakeVisual();
 
             if (item == null)
                 return;
@@ -83,6 +88,12 @@ namespace NERA.Station
             runtimeVisual.transform.localScale = installedLocalScale;
             SetLayerRecursively(runtimeVisual, gameObject.layer);
             MakeVisualOnly(runtimeVisual);
+        }
+
+        public void SetUpgradeModeActive(bool active)
+        {
+            upgradeModeActive = active;
+            RefreshFakeVisual();
         }
 
         private void ResolveReferences()
@@ -105,8 +116,38 @@ namespace NERA.Station
         private void ClearRuntimeVisual()
         {
             if (runtimeVisual != null)
-                Destroy(runtimeVisual);
+            {
+                if (Application.isPlaying)
+                    Destroy(runtimeVisual);
+                else
+                    DestroyImmediate(runtimeVisual);
+            }
             runtimeVisual = null;
+        }
+
+        private void RefreshFakeVisual()
+        {
+            if (fakeVisual == null)
+                return;
+
+            bool showSilhouette = !hasPart && showEmptyFake;
+            bool keepSlotHitbox = upgradeModeActive && hasPart;
+            bool keepActive = showSilhouette || keepSlotHitbox;
+            fakeVisual.SetActive(keepActive);
+            if (!keepActive)
+                return;
+
+            foreach (Renderer renderer in
+                     fakeVisual.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.enabled = showSilhouette;
+            }
+
+            foreach (Collider collider in
+                     fakeVisual.GetComponentsInChildren<Collider>(true))
+            {
+                collider.enabled = true;
+            }
         }
 
         private static void MakeVisualOnly(GameObject root)

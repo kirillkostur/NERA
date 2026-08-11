@@ -889,7 +889,7 @@ GameObject:
   - component: {fileID: 194677667}
   - component: {fileID: 194677666}
   - component: {fileID: 194677665}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2273,11 +2273,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9596245
+      value: 0.9596246
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.2812841
+      value: 0.28128406
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.y
@@ -2562,7 +2562,7 @@ Transform:
   m_GameObject: {fileID: 577469248}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.38, z: 0.1282071}
+  m_LocalPosition: {x: 0, y: 0.772, z: 0.259}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3909,27 +3909,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.13
+      value: 2.46
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.4099998
+      value: -2.3199997
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9661437
+      value: 0.95755297
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.25800446
+      value: 0.28825736
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.000000021602844
+      value: 0.00000003023277
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0000000057689458
+      value: -0.000000009101134
       objectReference: {fileID: 0}
     - target: {fileID: 3648509197931508193, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_Name
@@ -3985,7 +3985,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5411739594548437914, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_TrackedObjectOffset.y
-      value: 0.43
+      value: 0.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 6004230238036506007, guid: 006ace183918a4c42b7e697375417edf, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6285029281405692675, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4105,11 +4109,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8959928338258014090, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_FollowOffset.y
-      value: 2.13
+      value: 2.46
       objectReference: {fileID: 0}
     - target: {fileID: 8959928338258014090, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_FollowOffset.z
-      value: -2.41
+      value: -2.32
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4703,11 +4707,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9624386
+      value: 0.96243864
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.27149948
+      value: 0.27149945
       objectReference: {fileID: 0}
     - target: {fileID: 3592748252099241883, guid: 006ace183918a4c42b7e697375417edf, type: 3}
       propertyPath: m_LocalRotation.y
@@ -5955,7 +5959,7 @@ GameObject:
   - component: {fileID: 1530732296}
   - component: {fileID: 1530732295}
   - component: {fileID: 1530732294}
-  - component: {fileID: 1530732293}
+  - component: {fileID: 1530732297}
   m_Layer: 6
   m_Name: Fake
   m_TagString: Untagged
@@ -5963,27 +5967,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!65 &1530732293
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1530732292}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.059999995, y: 0.06, z: 0.23245327}
-  m_Center: {x: -9.313226e-10, y: 0, z: 0.116226636}
 --- !u!23 &1530732294
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6052,6 +6035,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 577469250}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1530732297
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530732292}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.12115905, y: 0.121159054, z: 0.46939695}
+  m_Center: {x: -0.0000000018626451, y: 0, z: 0.23469847}
 --- !u!1 &1534137777
 GameObject:
   m_ObjectHideFlags: 0

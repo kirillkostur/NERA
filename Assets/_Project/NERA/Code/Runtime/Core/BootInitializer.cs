@@ -373,6 +373,7 @@ namespace NERA.Core
         private IEnumerator ReturnToMainMenuRoutine()
         {
             isLoading = true;
+            StationUpgradeModeController.Instance?.PrepareForSessionEnd();
             AutoSaveService autoSave = GetComponent<AutoSaveService>();
             if (autoSave == null || !autoSave.Flush())
             {

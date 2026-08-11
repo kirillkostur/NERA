@@ -471,6 +471,14 @@ namespace NERA.Tests
                 stationScreen.SelectedObjectId,
                 Is.EqualTo("station_turret_01"));
 
+            StationSystemDefinition turretDefinition = systems.Config.Find(
+                StationSystemType.Turret,
+                "station_turret_01");
+            StationObjectStatDefinition damageDefinition =
+                turretDefinition?.FindStat(StationObjectStat.Damage);
+            Assert.That(turretDefinition, Is.Not.Null);
+            Assert.That(damageDefinition, Is.Not.Null);
+
             Transform statusPanel =
                 stationScreen.transform.Find("background_Status");
             Transform textTransform = Array.Find(
@@ -480,18 +488,39 @@ namespace NERA.Tests
                 textTransform.GetComponent("TextMeshProUGUI");
             string initialText = statusText.GetType().GetProperty("text")
                 ?.GetValue(statusText)?.ToString();
-            Assert.That(initialText, Does.Contain("Damage - 12"));
-            Assert.That(initialText, Does.Contain("Installed parts - 0/5"));
+            float initialDamage = systems.GetStat(
+                StationSystemType.Turret,
+                "station_turret_01",
+                StationObjectStat.Damage);
+            Assert.That(
+                initialText,
+                Does.Contain(
+                    $"Damage - {damageDefinition.Format(initialDamage)}"));
+            Assert.That(
+                initialText,
+                Does.Contain(
+                    $"Installed parts - 0/{turretDefinition.Slots.Count}"));
 
             ItemData emitter = Resources.Load<ItemCatalogData>(
                 "ItemCatalog_Default").Find("emitter_damage_01");
+            Assert.That(emitter, Is.Not.Null);
+            EngineeringPartCompatibility compatibility = turretDefinition
+                .Slots
+                .Select(slot => emitter.FindEngineeringCompatibility(
+                    StationSystemType.Turret,
+                    "station_turret_01",
+                    slot.SlotId))
+                .FirstOrDefault(candidate => candidate != null);
+            Assert.That(compatibility, Is.Not.Null);
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Turret,
                     "station_turret_01",
                     new[]
                     {
-                        new StationPartInstallRequest("Slot_1", emitter)
+                        new StationPartInstallRequest(
+                            compatibility.SlotId,
+                            emitter)
                     },
                     out string reason),
                 Is.True,
@@ -500,10 +529,24 @@ namespace NERA.Tests
 
             string upgradedText = statusText.GetType().GetProperty("text")
                 ?.GetValue(statusText)?.ToString();
-            Assert.That(upgradedText, Does.Contain("Damage - 20"));
-            Assert.That(upgradedText, Does.Contain("Installed parts - 1/5"));
+            float upgradedDamage = systems.GetStat(
+                StationSystemType.Turret,
+                "station_turret_01",
+                StationObjectStat.Damage);
             Assert.That(
-                turretPreview.Find("Base/Slot_1/Installed_emitter_damage_01"),
+                upgradedText,
+                Does.Contain(
+                    $"Damage - {damageDefinition.Format(upgradedDamage)}"));
+            Assert.That(
+                upgradedText,
+                Does.Contain(
+                    $"Installed parts - 1/{turretDefinition.Slots.Count}"));
+            Transform installedPreview = Array.Find(
+                turretPreview.GetComponentsInChildren<Transform>(true),
+                candidate => candidate.name ==
+                    "Installed_emitter_damage_01");
+            Assert.That(
+                installedPreview,
                 Is.Not.Null,
                 "StationUIPreview must spawn the same installed part visual.");
         }

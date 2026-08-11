@@ -30,6 +30,7 @@ namespace NERA.Tests
             SetSingleton(typeof(EnergySystemController), null);
             SetSingleton(typeof(StationStorageController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(StationUpgradeModeController), null);
 
             stationRoot = new GameObject("Test_StationSystems");
             energy = stationRoot.AddComponent<EnergySystemController>();
@@ -55,6 +56,7 @@ namespace NERA.Tests
             SetSingleton(typeof(EnergySystemController), null);
             SetSingleton(typeof(StationStorageController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(StationUpgradeModeController), null);
         }
 
         [Test]
@@ -95,16 +97,25 @@ namespace NERA.Tests
         public void EngineeringPartInstallationUsesConfiguredSlotAndStat()
         {
             ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            EngineeringPartCompatibility compatibility =
+                emitter.FindEngineeringCompatibility(
+                    StationSystemType.Turret,
+                    "station_turret_01",
+                    "Slot_3");
+            StationObjectStatModifierDefinition damageModifier =
+                compatibility?.Modifiers.Single(modifier =>
+                    modifier.Stat == StationObjectStat.Damage);
+            float damageBeforeInstallation = systems.GetStat(
+                StationSystemType.Turret,
+                "station_turret_01",
+                StationObjectStat.Damage);
             Assert.That(
                 emitter.EngineeringPartDefinition?.InstalledVisualPrefab,
                 Is.Not.Null,
                 "Installed meshes must come from part config.");
-            Assert.That(
-                emitter.FindEngineeringCompatibility(
-                    StationSystemType.Turret,
-                    "station_turret_01",
-                    "Slot_3"),
-                Is.Not.Null);
+            Assert.That(compatibility, Is.Not.Null);
+            Assert.That(damageModifier, Is.Not.Null);
+            Assert.That(damageModifier.Mode, Is.EqualTo(StationStatModifierMode.Add));
             Assert.That(
                 emitter.FindEngineeringCompatibility(
                     StationSystemType.Turret,
@@ -135,7 +146,7 @@ namespace NERA.Tests
                     StationSystemType.Turret,
                     "station_turret_01",
                     StationObjectStat.Damage),
-                Is.EqualTo(18f));
+                Is.EqualTo(damageBeforeInstallation + damageModifier.Value));
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Turret,
@@ -180,6 +191,26 @@ namespace NERA.Tests
         public void TurretsKeepIndependentInstalledParts()
         {
             ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            EngineeringPartCompatibility compatibility =
+                emitter.FindEngineeringCompatibility(
+                    StationSystemType.Turret,
+                    "station_turret_02",
+                    "Slot_3");
+            StationObjectStatModifierDefinition damageModifier =
+                compatibility?.Modifiers.Single(modifier =>
+                    modifier.Stat == StationObjectStat.Damage);
+            float turretOneDamageBefore = systems.GetStat(
+                StationSystemType.Turret,
+                "station_turret_01",
+                StationObjectStat.Damage);
+            float turretTwoDamageBefore = systems.GetStat(
+                StationSystemType.Turret,
+                "station_turret_02",
+                StationObjectStat.Damage);
+
+            Assert.That(compatibility, Is.Not.Null);
+            Assert.That(damageModifier, Is.Not.Null);
+            Assert.That(damageModifier.Mode, Is.EqualTo(StationStatModifierMode.Add));
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Turret,
@@ -204,13 +235,13 @@ namespace NERA.Tests
                     StationSystemType.Turret,
                     "station_turret_01",
                     StationObjectStat.Damage),
-                Is.EqualTo(10f));
+                Is.EqualTo(turretOneDamageBefore));
             Assert.That(
                 systems.GetStat(
                     StationSystemType.Turret,
                     "station_turret_02",
                     StationObjectStat.Damage),
-                Is.EqualTo(8f));
+                Is.EqualTo(turretTwoDamageBefore + damageModifier.Value));
         }
 
         [Test]
@@ -352,6 +383,40 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void InstalledUpgradePartKeepsInvisibleSlotHitbox()
+        {
+            GameObject target = new GameObject("Test_UpgradeHitbox");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(target.transform);
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            GameObject fake = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fake.name = "Fake";
+            fake.transform.SetParent(slotObject.transform);
+            slot.Configure("Slot_3", fake);
+
+            StationObjectVisual visual =
+                target.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            visual.SetUpgradeModeActive(true);
+            slot.ShowPart(LoadPart("Item_EmitterDamage_01.asset"));
+
+            Assert.That(fake.activeSelf, Is.True);
+            Assert.That(fake.GetComponent<Renderer>().enabled, Is.False);
+            Assert.That(fake.GetComponent<Collider>().enabled, Is.True);
+
+            visual.SetUpgradeModeActive(false);
+            Assert.That(fake.activeSelf, Is.False);
+        }
+
+        [Test]
         public void TurretAimGateRejectsSidewaysTarget()
         {
             GameObject turretRoot = new GameObject("Test_TurretAimGate");
@@ -383,6 +448,110 @@ namespace NERA.Tests
             Assert.That(
                 turret.IsMuzzleAimedAt(muzzle.position + Vector3.right * 10f),
                 Is.True);
+        }
+
+        [Test]
+        public void UpgradeSlotRaycastIgnoresOwnBodyButStopsAtForeignCollider()
+        {
+            GameObject targetRoot = new GameObject("Test_UpgradeClickTarget");
+            targetRoot.transform.SetParent(stationRoot.transform);
+            targetRoot.transform.position = Vector3.forward * 3f;
+            StationObjectIdentity identity =
+                targetRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+            BoxCollider bodyCollider = targetRoot.AddComponent<BoxCollider>();
+            bodyCollider.size = new Vector3(2f, 2f, 1f);
+
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(targetRoot.transform, false);
+            slotObject.transform.localPosition = Vector3.forward;
+            BoxCollider slotCollider = slotObject.AddComponent<BoxCollider>();
+            slotCollider.size = Vector3.one * 0.5f;
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            slot.Configure("Slot_3", null);
+
+            StationObjectVisual visual =
+                targetRoot.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            StationUpgradeableObject target =
+                targetRoot.AddComponent<StationUpgradeableObject>();
+            Physics.SyncTransforms();
+
+            Ray ray = new Ray(Vector3.zero, Vector3.forward);
+            Assert.That(
+                Physics.Raycast(
+                    ray,
+                    out RaycastHit firstHit,
+                    10f,
+                    ~0,
+                    QueryTriggerInteraction.Collide),
+                Is.True);
+            Assert.That(firstHit.collider, Is.EqualTo(bodyCollider));
+            Assert.That(
+                StationUpgradeModeController.FindSlotHit(ray, target, 10f),
+                Is.EqualTo(slot));
+
+            GameObject blocker = new GameObject("Test_ForeignBlocker");
+            blocker.transform.SetParent(stationRoot.transform);
+            blocker.transform.position = Vector3.forward;
+            blocker.AddComponent<BoxCollider>();
+            Physics.SyncTransforms();
+
+            Assert.That(
+                StationUpgradeModeController.FindSlotHit(ray, target, 10f),
+                Is.Null,
+                "Upgrade clicks must not pass through unrelated colliders.");
+        }
+
+        [Test]
+        public void SessionEndReturnsUnappliedPartToInventory()
+        {
+            ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            Assert.That(inventory.AddItem(emitter), Is.True);
+            ItemInstance original = inventory.BackpackItemInstances[0];
+
+            GameObject targetRoot = new GameObject("Test_UpgradeRollback");
+            targetRoot.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                targetRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(targetRoot.transform);
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            slot.Configure("Slot_3", null);
+
+            StationObjectVisual visual =
+                targetRoot.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            StationUpgradeableObject upgradeable =
+                targetRoot.AddComponent<StationUpgradeableObject>();
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(controller, "inventory", inventory);
+            SetInstanceField(controller, "storage", storage);
+
+            Assert.That(controller.ToggleSlot(slot), Is.True);
+            Assert.That(inventory.Count, Is.Zero);
+
+            Assert.That(controller.ToggleSlot(slot), Is.True);
+            Assert.That(inventory.BackpackItemInstances, Does.Contain(original));
+
+            Assert.That(controller.ToggleSlot(slot), Is.True);
+            Assert.That(inventory.Count, Is.Zero);
+
+            controller.PrepareForSessionEnd();
+
+            Assert.That(inventory.Count, Is.EqualTo(1));
+            Assert.That(inventory.BackpackItemInstances, Does.Contain(original));
+            Assert.That(controller.IsOpen, Is.False);
         }
 
         [Test]
@@ -421,6 +590,18 @@ namespace NERA.Tests
                 "Instance",
                 BindingFlags.Static | BindingFlags.Public);
             instanceProperty?.GetSetMethod(true)?.Invoke(null, new[] { value });
+        }
+
+        private static void SetInstanceField(
+            object target,
+            string fieldName,
+            object value)
+        {
+            FieldInfo field = target.GetType().GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, fieldName);
+            field.SetValue(target, value);
         }
     }
 }

@@ -245,11 +245,16 @@ namespace NERA.Save
         private void OnApplicationPause(bool paused)
         {
             if (paused)
+            {
+                StationUpgradeModeController.Instance?
+                    .PrepareForSessionEnd();
                 Flush();
+            }
         }
 
         private void OnApplicationQuit()
         {
+            StationUpgradeModeController.Instance?.PrepareForSessionEnd();
             Flush();
         }
 

@@ -74,6 +74,8 @@ namespace NERA.Station
         public void SetUpgradeModeActive(bool active)
         {
             upgradeModeActive = active;
+            foreach (StationUpgradeSlot slot in slots)
+                slot?.SetUpgradeModeActive(active);
             Refresh();
         }
 

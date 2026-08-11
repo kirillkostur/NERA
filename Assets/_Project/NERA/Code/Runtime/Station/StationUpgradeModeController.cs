@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Player;
+using NERA.Save;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -44,6 +45,9 @@ namespace NERA.Station
         private bool previousHeadingRecenteringEnabled;
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
+        private AutoSaveService guardedAutoSave;
+        private bool autoSaveWasSuspended;
+        private bool autoSaveGuardActive;
 
         public static StationUpgradeModeController Instance { get; private set; }
         public bool IsOpen => activeObject != null;
@@ -131,6 +135,7 @@ namespace NERA.Station
                 return false;
             }
 
+            BeginAutoSaveGuard();
             activeObject = target;
             target.SetUpgradeVisualsVisible(true);
             previousCameraPriority = target.UpgradeCamera.Priority;
@@ -197,6 +202,19 @@ namespace NERA.Station
 
         public void Close()
         {
+            Close(false);
+        }
+
+        public void PrepareForSessionEnd()
+        {
+            if (IsOpen)
+                Close(true);
+            else
+                EndAutoSaveGuard(true);
+        }
+
+        private void Close(bool flushReturnedParts)
+        {
             if (!IsOpen)
                 return;
 
@@ -229,6 +247,7 @@ namespace NERA.Station
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            EndAutoSaveGuard(flushReturnedParts);
             player = null;
             inventory = null;
             storage = null;
@@ -260,20 +279,23 @@ namespace NERA.Station
         private void TrySelectSlot()
         {
             Ray ray = raycastCamera.ScreenPointToRay(Input.mousePosition);
-            if (!Physics.Raycast(
-                    ray,
-                    out RaycastHit hit,
-                    clickDistance,
-                    ~0,
-                    QueryTriggerInteraction.Collide))
-            {
+            StationUpgradeSlot slot = FindSlotHit(
+                ray,
+                activeObject,
+                clickDistance);
+            if (slot == null)
                 return;
-            }
 
-            StationUpgradeSlot slot =
-                hit.collider.GetComponentInParent<StationUpgradeSlot>();
-            if (slot == null || activeObject.FindSlot(slot.SlotId) != slot)
-                return;
+            ToggleSlot(slot);
+        }
+
+        public bool ToggleSlot(StationUpgradeSlot slot)
+        {
+            if (!IsOpen || slot == null ||
+                activeObject.FindSlot(slot.SlotId) != slot)
+            {
+                return false;
+            }
 
             if (staged.TryGetValue(slot, out StagedPart existing))
             {
@@ -281,7 +303,7 @@ namespace NERA.Station
                 staged.Remove(slot);
                 activeObject.RestoreSlot(slot);
                 SetApplyButtonVisible(staged.Count > 0);
-                return;
+                return true;
             }
 
             if (!string.IsNullOrEmpty(
@@ -291,7 +313,7 @@ namespace NERA.Station
                             activeObject.ObjectId,
                             slot.SlotId)))
             {
-                return;
+                return false;
             }
 
             if (!TryTakeCompatiblePart(slot, out StagedPart stagedPart))
@@ -300,12 +322,50 @@ namespace NERA.Station
                     $"No compatible engineering part for " +
                     $"{activeObject.name}/{slot.SlotId} in inventory or storage.",
                     activeObject);
-                return;
+                return false;
             }
 
             staged[slot] = stagedPart;
             activeObject.ShowStaged(slot, stagedPart.Item.ItemData);
             SetApplyButtonVisible(true);
+            return true;
+        }
+
+        public static StationUpgradeSlot FindSlotHit(
+            Ray ray,
+            StationUpgradeableObject target,
+            float maxDistance)
+        {
+            if (target == null || maxDistance <= 0f)
+                return null;
+
+            RaycastHit[] hits = Physics.RaycastAll(
+                ray,
+                maxDistance,
+                ~0,
+                QueryTriggerInteraction.Collide);
+            if (hits.Length == 0)
+                return null;
+
+            Array.Sort(
+                hits,
+                (left, right) => left.distance.CompareTo(right.distance));
+            foreach (RaycastHit hit in hits)
+            {
+                Collider collider = hit.collider;
+                if (collider == null)
+                    continue;
+
+                StationUpgradeSlot slot =
+                    collider.GetComponentInParent<StationUpgradeSlot>();
+                if (slot != null && target.FindSlot(slot.SlotId) == slot)
+                    return slot;
+
+                if (!collider.transform.IsChildOf(target.transform))
+                    return null;
+            }
+
+            return null;
         }
 
         private bool TryTakeCompatiblePart(
@@ -427,6 +487,41 @@ namespace NERA.Station
             }
         }
 
+        private void BeginAutoSaveGuard()
+        {
+            guardedAutoSave = AutoSaveService.Instance;
+            if (guardedAutoSave == null)
+                return;
+
+            autoSaveWasSuspended = guardedAutoSave.IsSuspended;
+            if (!autoSaveWasSuspended)
+                guardedAutoSave.Flush();
+            guardedAutoSave.SetSuspended(true);
+            autoSaveGuardActive = true;
+        }
+
+        private void EndAutoSaveGuard(bool flush)
+        {
+            if (!autoSaveGuardActive)
+                return;
+
+            AutoSaveService autoSave = guardedAutoSave;
+            bool restoreSuspended = autoSaveWasSuspended;
+            guardedAutoSave = null;
+            autoSaveWasSuspended = false;
+            autoSaveGuardActive = false;
+            if (autoSave == null)
+                return;
+
+            autoSave.SetSuspended(restoreSuspended);
+            if (restoreSuspended)
+                return;
+
+            autoSave.MarkDirty();
+            if (flush)
+                autoSave.Flush();
+        }
+
         private void ResolveApplyButton()
         {
             applyButton ??= FindUpgradeButton();
@@ -502,11 +597,18 @@ namespace NERA.Station
         private void OnDestroy()
         {
             if (IsOpen)
-                Close();
+                Close(true);
+            else
+                EndAutoSaveGuard(true);
             if (applyButton != null)
                 applyButton.onClick.RemoveListener(Apply);
             if (Instance == this)
                 Instance = null;
+        }
+
+        private void OnApplicationQuit()
+        {
+            PrepareForSessionEnd();
         }
     }
 }
