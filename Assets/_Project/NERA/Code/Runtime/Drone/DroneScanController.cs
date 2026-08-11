@@ -10,6 +10,11 @@ namespace NERA.Drone
     public sealed class DroneScanController : MonoBehaviour
     {
         private const string DroneChargerConsumerId = "drone_charger";
+        private const string DroneObjectId = "station_drone";
+        private const float DefaultBatteryCharge = 100f;
+        private const float DefaultEnergyConsumption = 4f;
+        private const float DefaultFlightEnergyConsumption = 4f;
+        private const float ChargeEpsilon = 0.001f;
         [SerializeField, Min(0.1f)] private float fallbackScanDuration = 3f;
         private ExpeditionLocationData scanLocation;
 
@@ -18,6 +23,7 @@ namespace NERA.Drone
         public event Action<DroneState> StateChanged;
         public event Action<float> ScanProgressChanged;
         public event Action<float> RechargeProgressChanged;
+        public event Action<float> BatteryChargeChanged;
         public event Action<DroneScanResult> ScanCompleted;
 
         public DroneState State { get; private set; } = DroneState.Locked;
@@ -28,14 +34,51 @@ namespace NERA.Drone
         public ExpeditionLocationData ScanLocation => scanLocation;
         public float CurrentScanDuration =>
             scanLocation != null
-                ? scanLocation.DroneScanDuration
+                ? scanLocation.DroneFlightDuration
                 : fallbackScanDuration;
-        public float RechargeRemaining { get; private set; }
-        public bool IsCharging => RechargeRemaining > 0f;
+        public float BatteryCapacity => Mathf.Max(0f,
+            StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Drone,
+                DroneObjectId,
+                StationObjectStat.BatteryCharge,
+                DefaultBatteryCharge));
+        public float CurrentBatteryCharge
+        {
+            get
+            {
+                EnsureBatteryInitialized();
+                return Mathf.Clamp(
+                    currentBatteryCharge,
+                    0f,
+                    BatteryCapacity);
+            }
+        }
+        public float EnergyConsumption => Mathf.Max(0f,
+            StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Drone,
+                DroneObjectId,
+                StationObjectStat.EnergyConsumption,
+                DefaultEnergyConsumption));
+        public float FlightEnergyConsumption => Mathf.Max(0f,
+            StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Drone,
+                DroneObjectId,
+                StationObjectStat.FlightEnergyConsumption,
+                DefaultFlightEnergyConsumption));
+        public float RechargeRemaining => MissingBatteryCharge /
+            Mathf.Max(EnergyConsumption, 0.01f);
+        public bool IsCharging => State != DroneState.Scanning &&
+            MissingBatteryCharge > ChargeEpsilon;
 
         private float elapsedScanTime;
+        private float currentBatteryCharge;
+        private bool batteryInitialized;
         private StationPowerController stationPower;
         private ExpeditionDiscoveryController discovery;
+
+        private float MissingBatteryCharge => Mathf.Max(
+            0f,
+            BatteryCapacity - CurrentBatteryCharge);
 
         private void Awake()
         {
@@ -47,6 +90,7 @@ namespace NERA.Drone
 
             Instance = this;
 
+            EnsureBatteryInitialized();
             EnsureEnergyRegistration();
         }
 
@@ -83,6 +127,9 @@ namespace NERA.Drone
             scanLocation = location;
             elapsedScanTime = 0f;
             SetState(DroneState.Scanning);
+            SetCurrentBatteryCharge(
+                CurrentBatteryCharge - GetBatteryConsumption(location));
+            EnsureEnergyRegistration();
             ScanProgressChanged?.Invoke(0f);
             Debug.Log(
                 $"DroneScanController: Scan started for '{location.LocationId}'.",
@@ -96,7 +143,6 @@ namespace NERA.Drone
             CacheDependencies();
 
             return State != DroneState.Scanning &&
-                !IsCharging &&
                 IsSystemEnabled &&
                 stationPower != null &&
                 stationPower.IsPowered &&
@@ -104,8 +150,42 @@ namespace NERA.Drone
                 location != null &&
                 (StationSystemsController.Instance == null ||
                     StationSystemsController.Instance.CanDroneReach(location)) &&
+                HasEnoughBatteryFor(location) &&
                 location.DiscoverySource == Locations.DiscoverySource.Drone &&
                 !discovery.IsDiscovered(location);
+        }
+
+        public float GetBatteryConsumption(ExpeditionLocationData location)
+        {
+            if (location == null)
+                return 0f;
+
+            return Mathf.Max(
+                0f,
+                location.DroneFlightDuration * FlightEnergyConsumption);
+        }
+
+        public bool HasEnoughBatteryFor(ExpeditionLocationData location)
+        {
+            return location != null &&
+                CurrentBatteryCharge + ChargeEpsilon >=
+                GetBatteryConsumption(location);
+        }
+
+        public void RestoreBatteryCharge(float charge)
+        {
+            batteryInitialized = true;
+            SetCurrentBatteryCharge(charge);
+            EnsureEnergyRegistration();
+            RefreshAvailability();
+        }
+
+        public void ResetBatteryCharge()
+        {
+            batteryInitialized = true;
+            SetCurrentBatteryCharge(BatteryCapacity);
+            EnsureEnergyRegistration();
+            RefreshAvailability();
         }
 
         public void AdvanceScan(float deltaTime)
@@ -128,6 +208,8 @@ namespace NERA.Drone
 
         public void AdvanceRecharge(float deltaTime)
         {
+            EnsureBatteryInitialized();
+            ClampBatteryToCapacity();
             if (!IsCharging || deltaTime <= 0f)
                 return;
 
@@ -147,17 +229,11 @@ namespace NERA.Drone
                     return;
             }
 
-            RechargeRemaining = Mathf.Max(0f, RechargeRemaining - deltaTime);
+            SetCurrentBatteryCharge(
+                CurrentBatteryCharge + EnergyConsumption * deltaTime);
             RechargeProgressChanged?.Invoke(RechargeRemaining);
-            if (RechargeRemaining <= 0f)
-            {
-                energy?.SetConsumerActive(DroneChargerConsumerId, false);
-                scanLocation = null;
-                elapsedScanTime = 0f;
-                bool isPowered =
-                    stationPower != null && stationPower.IsPowered;
-                SetState(isPowered ? DroneState.Ready : DroneState.Locked);
-            }
+            if (!IsCharging)
+                FinishRecharge(energy);
         }
 
         public void RefreshAvailability()
@@ -187,12 +263,8 @@ namespace NERA.Drone
             SetState(DroneState.ScanComplete);
 
             EnergySystemController energy = EnergySystemController.Instance;
-            if (energy != null)
-            {
-                EnsureEnergyRegistration();
-                RechargeRemaining = energy.Config.DroneRechargeDuration;
-                energy.SetConsumerActive(DroneChargerConsumerId, true);
-            }
+            EnsureEnergyRegistration();
+            energy?.SetConsumerActive(DroneChargerConsumerId, IsCharging);
 
             ScanCompleted?.Invoke(
                 new DroneScanResult(scanLocation, newlyDiscovered)
@@ -210,6 +282,9 @@ namespace NERA.Drone
                     ? "new_location"
                     : "known_location");
             Debug.Log("DroneScanController: Scan complete.", this);
+
+            if (!IsCharging)
+                FinishRecharge(energy);
         }
 
         private void CacheDependencies()
@@ -231,13 +306,13 @@ namespace NERA.Drone
                 DroneChargerConsumerId,
                 StationSystemsConfig.GetEffectiveStat(
                     StationSystemType.Drone,
-                    "station_drone",
-                    StationObjectStat.ChargingEnergyConsumption,
-                    4f),
+                    DroneObjectId,
+                    StationObjectStat.EnergyConsumption,
+                    DefaultEnergyConsumption),
                 energy.Config.GetMinimumCharge01(
                     StationSystemType.Drone),
                 StationSystemType.Drone,
-                "station_drone"
+                DroneObjectId
             );
             energy.SetConsumerActive(
                 DroneChargerConsumerId,
@@ -249,6 +324,41 @@ namespace NERA.Drone
             StationSystemsController.Instance == null ||
             StationSystemsController.Instance.IsRequestedActive(
                 StationSystemType.Drone);
+
+        private void EnsureBatteryInitialized()
+        {
+            if (batteryInitialized)
+                return;
+
+            batteryInitialized = true;
+            currentBatteryCharge = BatteryCapacity;
+        }
+
+        private void ClampBatteryToCapacity()
+        {
+            float clamped = CurrentBatteryCharge;
+            if (!Mathf.Approximately(currentBatteryCharge, clamped))
+                SetCurrentBatteryCharge(clamped);
+        }
+
+        private void SetCurrentBatteryCharge(float charge)
+        {
+            float clamped = Mathf.Clamp(charge, 0f, BatteryCapacity);
+            if (Mathf.Approximately(currentBatteryCharge, clamped))
+                return;
+
+            currentBatteryCharge = clamped;
+            BatteryChargeChanged?.Invoke(CurrentBatteryCharge);
+        }
+
+        private void FinishRecharge(EnergySystemController energy)
+        {
+            energy?.SetConsumerActive(DroneChargerConsumerId, false);
+            scanLocation = null;
+            elapsedScanTime = 0f;
+            bool isPowered = stationPower != null && stationPower.IsPowered;
+            SetState(isPowered ? DroneState.Ready : DroneState.Locked);
+        }
 
         private void Subscribe()
         {

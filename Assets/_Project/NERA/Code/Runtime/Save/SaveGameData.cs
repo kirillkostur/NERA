@@ -42,7 +42,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 18;
+        public int version = 19;
         public string checkpointSceneName;
         public string checkpointSpawnPointId;
         public bool checkpointUsesWorldPose;
@@ -61,6 +61,8 @@ namespace NERA.Save
         public bool energyStateInitialized;
         public float stationEnergy;
         public bool energyGridEnabled;
+        public bool hasDroneBatteryCharge;
+        public float droneBatteryCharge;
         public float antennaCondition = 1f;
         public string activeAntennaSignalLocationId;
         public string activeAntennaSignalMapSlotId;

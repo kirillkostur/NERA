@@ -1303,6 +1303,63 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void DroneLaunchConsumesConfiguredBatteryCharge()
+        {
+            SetLocationFlightDuration(20f);
+            power.RestorePower();
+            drone.RefreshAvailability();
+
+            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(100f));
+            Assert.That(drone.LaunchScan(location), Is.True);
+            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(20f));
+        }
+
+        [Test]
+        public void DroneCannotLaunchWithoutRequiredBatteryCharge()
+        {
+            SetLocationFlightDuration(20f);
+            drone.RestoreBatteryCharge(50f);
+            power.RestorePower();
+            drone.RefreshAvailability();
+
+            Assert.That(drone.HasEnoughBatteryFor(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(50f));
+        }
+
+        [Test]
+        public void DroneRechargeUsesConfiguredEnergyConsumption()
+        {
+            power.RestorePower();
+            drone.RefreshAvailability();
+            Assert.That(drone.LaunchScan(location), Is.True);
+            drone.AdvanceScan(location.DroneFlightDuration);
+
+            float chargeBefore = drone.CurrentBatteryCharge;
+            drone.AdvanceRecharge(1f);
+
+            Assert.That(
+                drone.CurrentBatteryCharge,
+                Is.EqualTo(chargeBefore + drone.EnergyConsumption).Within(0.001f));
+        }
+
+        [Test]
+        public void DroneRechargeTimeUsesOnlyMissingBatteryCharge()
+        {
+            drone.RestoreBatteryCharge(50f);
+            power.RestorePower();
+            drone.RefreshAvailability();
+
+            Assert.That(drone.EnergyConsumption, Is.EqualTo(4f));
+            Assert.That(drone.RechargeRemaining, Is.EqualTo(12.5f));
+
+            drone.AdvanceRecharge(12.5f);
+
+            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(100f));
+            Assert.That(drone.IsCharging, Is.False);
+        }
+
+        [Test]
         public void DiscoveryCanFilterLocationsBySourceAndType()
         {
             ExpeditionLocationData expedition =
@@ -1388,6 +1445,13 @@ namespace NERA.Tests
             locations.GetArrayElementAtIndex(index).objectReferenceValue =
                 knownLocation;
             serializedDiscovery.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private void SetLocationFlightDuration(float value)
+        {
+            SerializedObject serialized = new SerializedObject(location);
+            serialized.FindProperty("droneScanDuration").floatValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static ExpeditionLocationData CreateLocation(

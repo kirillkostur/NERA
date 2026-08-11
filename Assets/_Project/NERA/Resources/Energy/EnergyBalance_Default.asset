@@ -43,7 +43,6 @@ MonoBehaviour:
   - systemType: 7
     objectId: station_turret_02
     minimumChargePercent: 25
-  droneRechargeDuration: 20
   fullDayDurationSeconds: 600
   sunriseHour: 6
   sunsetHour: 18

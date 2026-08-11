@@ -22,8 +22,9 @@ MonoBehaviour:
     assetPath: Assets/_Project/NERA/Scenes/Expedition_05.unity
   spawnPointId: Expedition05_Start
   discoverySource: 0
-  droneScanDuration: 5
-  requiredDroneTravelRange: 2
+  droneScanDuration: 3
+  requiredDroneTravelRange: 3
+  requiredAntennaScanRange: 0
   initialState: 0
   mapSymbol: 0
   mapSlot: {fileID: 11400000, guid: 36d7497d272a4c18bcaa41439c9f2222, type: 2}

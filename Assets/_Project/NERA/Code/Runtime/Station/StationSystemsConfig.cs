@@ -19,10 +19,12 @@ namespace NERA.Station
         TravelRange,
         FiringEnergyConsumption,
         InitialCharge,
-        ChargingEnergyConsumption,
+        EnergyConsumption,
         CalibrationEnergyConsumption,
         CalibrationDuration,
-        AimTolerance
+        AimTolerance,
+        BatteryCharge,
+        FlightEnergyConsumption
     }
 
     [Serializable]

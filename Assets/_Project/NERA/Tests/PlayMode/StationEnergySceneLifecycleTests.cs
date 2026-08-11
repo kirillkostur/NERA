@@ -902,12 +902,12 @@ namespace NERA.Tests
             yield return null;
 
             Assert.That(drone.LaunchScan(first), Is.True);
-            drone.AdvanceScan(first.DroneScanDuration);
+            drone.AdvanceScan(first.DroneFlightDuration);
             Assert.That(discovery.IsDiscovered(first), Is.True);
             Assert.That(drone.IsCharging, Is.True);
             Assert.That(drone.CanLaunchScan(second), Is.False);
 
-            drone.AdvanceRecharge(energy.Config.DroneRechargeDuration);
+            drone.AdvanceRecharge(drone.RechargeRemaining + 0.01f);
 
             Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
             Assert.That(drone.IsCharging, Is.False);
@@ -924,7 +924,7 @@ namespace NERA.Tests
                     droneDefinition.ObjectId,
                     new[]
                     {
-                        new StationPartInstallRequest("Slot_2", propulsion)
+                        new StationPartInstallRequest("Slot_4", propulsion)
                     },
                     out string installReason),
                 Is.True,
@@ -968,7 +968,7 @@ namespace NERA.Tests
                 Is.EqualTo(systems.GetStat(
                     StationSystemType.Drone,
                     "station_drone",
-                    StationObjectStat.ChargingEnergyConsumption)));
+                    StationObjectStat.EnergyConsumption)));
 
             ExpeditionLocationData location = discovery.KnownLocations[0];
             discovery.RestoreDiscovered(Array.Empty<string>());
@@ -1004,7 +1004,7 @@ namespace NERA.Tests
                 energy.ConnectedConsumerCount,
                 Is.EqualTo(connectedConsumerCount),
                 "Drone charging must activate an existing connection, not add one.");
-            drone.AdvanceRecharge(energy.Config.DroneRechargeDuration);
+            drone.AdvanceRecharge(drone.RechargeRemaining + 0.01f);
             Assert.That(drone.IsCharging, Is.False);
             Assert.That(
                 energy.ConnectedConsumerCount,

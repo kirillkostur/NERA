@@ -331,7 +331,7 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 |---|---|
 | Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Aim Tolerance`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Consumption`, `Damage Taken` |
 | Батарея | `Capacity`, `Initial Charge` |
-| Дрон | `Travel Range`, `Charging Energy Consumption` |
+| Дрон | `Travel Range`, `Battery Charge`, `Energy Consumption`, `Flight Energy Consumption` |
 | Антенна | `Scan Range`, `Calibration Energy Consumption`, `Calibration Duration` |
 
 Чтобы добавить новую характеристику:
@@ -346,6 +346,53 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 
 Терминал автоматически отображает эффективные значения всех характеристик,
 которые перечислены в `Base Object Stats`.
+
+### Настройка дрона и экспедиций
+
+Базовые параметры дрона находятся в `StationSystems_Default` у объекта
+`station_drone`:
+
+- `Travel Range` — максимальная доступная дальность экспедиции;
+- `Battery Charge` — максимальный заряд, базово `100`;
+- `Energy Consumption` — сколько энергии в секунду забирает зарядка у станции
+  и сколько заряда в секунду получает дрон, базово `4`;
+- `Flight Energy Consumption` — сколько заряда дрон тратит за секунду полёта,
+  базово `4 charge/s`.
+
+Текущий заряд хранится отдельно от максимального, сохраняется в save-файле и
+ограничивается эффективным `Battery Charge`. Формат в статусе остаётся одним
+числом: `Battery charge - 100`, без `100/100`.
+
+В каждом `ExpeditionLocationData` для источника `Drone` доступны:
+
+- `Required Drone Travel Range` — требуемая дальность;
+- `Drone Flight Duration` — длительность полёта/сканирования в секундах.
+
+Время зарядки:
+
+```text
+(Battery Charge - Current Battery Charge) / Energy Consumption
+```
+
+Например, текущий заряд `0`, максимальный `100`: при
+`Energy Consumption = 4` зарядка занимает `25` секунд. При текущем заряде
+`50` и максимальном `100` — `12.5` секунды. Пока идёт зарядка, станция
+потребляет те же `4` единицы энергии в секунду.
+
+Расход полёта:
+
+```text
+Drone Flight Duration * Flight Energy Consumption
+```
+
+Например, полёт длительностью `20` секунд при `Flight Energy Consumption = 4`
+спишет `80` заряда. Если текущего заряда меньше результата формулы, запуск
+недоступен даже при достаточном `Travel Range`.
+
+Чтобы создать дополнительный аккумулятор, добавьте совместимой детали
+модификатор `Battery Charge / Add / 50`. Для ускоренного зарядного блока
+увеличивайте `Energy Consumption`; для экономичного или мощного двигателя
+изменяйте `Flight Energy Consumption`.
 
 ## 7. Привязка StationUIPreview
 

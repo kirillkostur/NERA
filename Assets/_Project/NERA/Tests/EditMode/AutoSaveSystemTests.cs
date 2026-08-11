@@ -221,7 +221,9 @@ namespace NERA.Tests
                 checkpointPositionY = 3f,
                 checkpointPositionZ = -7.25f,
                 checkpointRotationY = 0.7071068f,
-                checkpointRotationW = 0.7071068f
+                checkpointRotationW = 0.7071068f,
+                hasDroneBatteryCharge = true,
+                droneBatteryCharge = 42.5f
             };
             source.consumedWorldObjectIds.Add("expedition_02/loot_a");
             source.defeatedEnemyObjectIds.Add("expedition_02/enemy_a");
@@ -230,7 +232,9 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(source));
 
-            Assert.That(restored.version, Is.EqualTo(18));
+            Assert.That(restored.version, Is.EqualTo(19));
+            Assert.That(restored.hasDroneBatteryCharge, Is.True);
+            Assert.That(restored.droneBatteryCharge, Is.EqualTo(42.5f));
             Assert.That(
                 restored.checkpointSceneName,
                 Is.EqualTo("Expedition_02"));

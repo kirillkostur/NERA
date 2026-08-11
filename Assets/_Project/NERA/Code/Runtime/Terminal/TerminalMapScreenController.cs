@@ -304,6 +304,7 @@ namespace NERA.Terminal
                     subscribedDrone.StateChanged += HandleDroneStateChanged;
                     subscribedDrone.ScanProgressChanged += HandleDroneProgressChanged;
                     subscribedDrone.RechargeProgressChanged += HandleDroneProgressChanged;
+                    subscribedDrone.BatteryChargeChanged += HandleDroneProgressChanged;
                     subscribedDrone.ScanCompleted += HandleDroneScanCompleted;
                 }
             }
@@ -363,6 +364,7 @@ namespace NERA.Terminal
             subscribedDrone.StateChanged -= HandleDroneStateChanged;
             subscribedDrone.ScanProgressChanged -= HandleDroneProgressChanged;
             subscribedDrone.RechargeProgressChanged -= HandleDroneProgressChanged;
+            subscribedDrone.BatteryChargeChanged -= HandleDroneProgressChanged;
             subscribedDrone.ScanCompleted -= HandleDroneScanCompleted;
             subscribedDrone = null;
         }
@@ -451,6 +453,17 @@ namespace NERA.Terminal
             }
             else
                 progress = LocalizeState(drone.State.ToString());
+
+            if (drone != null)
+            {
+                progress += $"\nBATTERY - {drone.CurrentBatteryCharge:0}";
+                if (hasSelection)
+                {
+                    progress +=
+                        $" | REQUIRED - " +
+                        $"{drone.GetBatteryConsumption(selectedLocation):0.#}";
+                }
+            }
 
             TerminalUIUtility.SetText(droneProgress, progress);
         }

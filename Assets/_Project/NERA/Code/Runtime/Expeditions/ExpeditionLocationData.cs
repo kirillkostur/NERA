@@ -27,7 +27,10 @@ namespace NERA.Expeditions
         [Header("Discovery")]
         [SerializeField] private DiscoverySource discoverySource;
         [SerializeField, Min(0.1f)]
-        [Tooltip("Time in seconds required for the drone to discover this location.")]
+        [InspectorName("Drone Flight Duration")]
+        [Tooltip(
+            "Drone flight/scan time in seconds. Flight battery cost equals " +
+            "this duration multiplied by the drone Flight Energy Consumption.")]
         private float droneScanDuration = 3f;
         [SerializeField, Min(0f)]
         [Tooltip("Required configured Travel Range of the station drone.")]
@@ -64,7 +67,8 @@ namespace NERA.Expeditions
         public string SceneName => scene?.SceneName ?? string.Empty;
         public string SpawnPointId => spawnPointId?.Trim() ?? string.Empty;
         public DiscoverySource DiscoverySource => discoverySource;
-        public float DroneScanDuration => Mathf.Max(0.1f, droneScanDuration);
+        public float DroneFlightDuration =>
+            Mathf.Max(0.1f, droneScanDuration);
         public float RequiredDroneTravelRange =>
             Mathf.Max(0f, requiredDroneTravelRange);
         public float RequiredAntennaScanRange =>

@@ -76,10 +76,20 @@ MonoBehaviour:
       baseValue: 1
       unit: ' sectors'
       decimals: 0
+    - stat: 16
+      displayName: Battery charge
+      baseValue: 100
+      unit:
+      decimals: 0
     - stat: 12
-      displayName: Charging consumption
+      displayName: Energy consumption
       baseValue: 4
       unit: ' kW'
+      decimals: 1
+    - stat: 17
+      displayName: Flight energy consumption
+      baseValue: 4
+      unit: ' charge/s'
       decimals: 1
     slots:
     - slotId: Slot_1
@@ -87,6 +97,12 @@ MonoBehaviour:
     - slotId: Slot_2
       displayName: Propulsion
     - slotId: Slot_3
+      displayName: Charging servo
+    - slotId: Slot_4
+      displayName: Charging servo
+    - slotId: Slot_5
+      displayName: Charging servo
+    - slotId: Slot_6
       displayName: Charging servo
   - systemType: 4
     objectId: 

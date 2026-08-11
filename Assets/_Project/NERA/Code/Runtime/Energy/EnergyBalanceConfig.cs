@@ -45,9 +45,6 @@ namespace NERA.Energy
         private List<StationObjectPowerCutoff> stationObjectCutoffs =
             new List<StationObjectPowerCutoff>();
 
-        [Header("Drone")]
-        [SerializeField, Min(0.1f)] private float droneRechargeDuration = 20f;
-
         [Header("Time")]
         [SerializeField, Min(30f)] private float fullDayDurationSeconds = 600f;
         [SerializeField, Range(0f, 24f)] private float sunriseHour = 6f;
@@ -64,7 +61,6 @@ namespace NERA.Energy
             stationObjectCutoffs != null
                 ? stationObjectCutoffs
                 : Array.Empty<StationObjectPowerCutoff>();
-        public float DroneRechargeDuration => droneRechargeDuration;
         public float FullDayDurationSeconds => fullDayDurationSeconds;
         public float SunriseHour => sunriseHour;
         public float SunsetHour => sunsetHour;

@@ -1,5 +1,6 @@
 using System;
 using NERA.Antenna;
+using NERA.Drone;
 using NERA.Energy;
 using NERA.Expeditions;
 using NERA.Inventory;
@@ -26,6 +27,7 @@ namespace NERA.Save
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
         private EnergySystemController energySystem;
+        private DroneScanController drone;
         private LaboratoryWorkstationController laboratoryWorkstation;
         private AntennaController antenna;
         private PlayerInventory inventory;
@@ -139,6 +141,8 @@ namespace NERA.Save
             discovery ??= GetComponent<ExpeditionDiscoveryController>();
             stationPower ??= GetComponent<StationPowerController>();
             energySystem ??= GetComponent<EnergySystemController>();
+            drone ??= GetComponent<DroneScanController>() ??
+                DroneScanController.Instance;
             laboratoryWorkstation ??=
                 GetComponent<LaboratoryWorkstationController>();
             antenna ??= GetComponent<AntennaController>();
@@ -163,6 +167,11 @@ namespace NERA.Save
                 stationPower.StateChanged += HandlePowerChanged;
             if (energySystem != null)
                 energySystem.StateChanged += HandleEnergyChanged;
+            if (drone != null)
+            {
+                drone.StateChanged += HandleDroneStateChanged;
+                drone.BatteryChargeChanged += HandleFloatChanged;
+            }
             if (antenna != null)
             {
                 antenna.ConditionChanged += HandleFloatChanged;
@@ -203,6 +212,11 @@ namespace NERA.Save
                 stationPower.StateChanged -= HandlePowerChanged;
             if (energySystem != null)
                 energySystem.StateChanged -= HandleEnergyChanged;
+            if (drone != null)
+            {
+                drone.StateChanged -= HandleDroneStateChanged;
+                drone.BatteryChargeChanged -= HandleFloatChanged;
+            }
             if (antenna != null)
             {
                 antenna.ConditionChanged -= HandleFloatChanged;
@@ -234,6 +248,7 @@ namespace NERA.Save
         private void HandleStringChanged(string _) => MarkDirty();
         private void HandlePowerChanged(StationPowerState _) => MarkDirty();
         private void HandleEnergyChanged(EnergyState _) => MarkDirty();
+        private void HandleDroneStateChanged(DroneState _) => MarkDirty();
         private void HandleFloatChanged(float _) => MarkDirty();
         private void HandleSignalChanged(ExpeditionLocationData _) =>
             MarkDirty();

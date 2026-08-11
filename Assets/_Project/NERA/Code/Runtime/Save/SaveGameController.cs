@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NERA.Antenna;
 using NERA.Core;
+using NERA.Drone;
 using System.IO;
 using NERA.Expeditions;
 using NERA.Energy;
@@ -48,6 +49,7 @@ namespace NERA.Save
         private ExpeditionDiscoveryController discovery;
         private StationPowerController stationPower;
         private EnergySystemController energySystem;
+        private DroneScanController drone;
         private LaboratoryWorkstationController laboratoryWorkstation;
         private AntennaController antenna;
         private PlayerInventory inventory;
@@ -505,6 +507,12 @@ namespace NERA.Save
                 data.energyGridEnabled = energySystem.GridEnabled;
             }
 
+            if (drone != null)
+            {
+                data.hasDroneBatteryCharge = true;
+                data.droneBatteryCharge = drone.CurrentBatteryCharge;
+            }
+
             if (antenna != null)
             {
                 data.antennaCondition = antenna.Condition;
@@ -826,6 +834,14 @@ namespace NERA.Save
                 stationSystems.Restore(states, objectStates);
             }
 
+            if (drone != null)
+            {
+                if (data.hasDroneBatteryCharge)
+                    drone.RestoreBatteryCharge(data.droneBatteryCharge);
+                else
+                    drone.ResetBatteryCharge();
+            }
+
             RestoreMaintenanceState(data.maintenanceObjects);
             quests?.RestoreProgress(
                 data.activeQuests,
@@ -1057,6 +1073,7 @@ namespace NERA.Save
 
             stationStorage?.ResetStorage();
             stationSystems?.ResetSystems();
+            drone?.ResetBatteryCharge();
             quests?.ResetProgress();
 
             maintenanceConditions.Clear();
@@ -1104,6 +1121,10 @@ namespace NERA.Save
 
             if (energySystem == null)
                 energySystem = GetComponent<EnergySystemController>();
+
+            if (drone == null)
+                drone = GetComponent<DroneScanController>() ??
+                    DroneScanController.Instance;
 
             if (laboratoryWorkstation == null)
                 laboratoryWorkstation =

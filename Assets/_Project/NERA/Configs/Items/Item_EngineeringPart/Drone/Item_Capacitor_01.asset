@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
-  m_Name: Item_AdvancedStabilizer_01
+  m_Name: Item_Capacitor_01
   m_EditorClassIdentifier: 
-  itemId: advanced_stabilizer_01
-  displayName: Advanced Stabilizer
+  itemId: capacitor_01
+  displayName: Capacitor
   description: Engineering part used to restore and upgrade station mechanisms.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
-  worldPrefab: {fileID: 7962635430784054245, guid: 8cbc73571b4b01e43add1d996101175c, type: 3}
+  worldPrefab: {fileID: 7962635430784054245, guid: fc3001df46b89434eadd9bb800c16f64, type: 3}
   equippedVisualPrefab: {fileID: 0}
   equipmentAnchorName: mixamorig1:RightHand
   equippedLocalPosition: {x: 0, y: 0, z: 0}
@@ -30,12 +30,15 @@ MonoBehaviour:
   weaponDefinition: {fileID: 0}
   energyDefinition: {fileID: 0}
   engineeringPartDefinition:
-    installedVisualPrefab: {fileID: 2278190858216321600, guid: 8cbc73571b4b01e43add1d996101175c, type: 3}
+    installedVisualPrefab: {fileID: 2278190858216321600, guid: fc3001df46b89434eadd9bb800c16f64, type: 3}
     compatibleInstallations:
     - systemType: 3
-      objectId:
-      slotId: Slot_1
+      objectId: 
+      slotId: Slot_2
       modifiers:
-      - stat: 9
+      - stat: 17
         mode: 0
-        value: 1
+        value: -1
+      - stat: 16
+        mode: 0
+        value: 50

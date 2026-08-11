@@ -33,9 +33,12 @@ MonoBehaviour:
     installedVisualPrefab: {fileID: 2278190858216321600, guid: 8270a64bc73cc88448358e93f6b774bd, type: 3}
     compatibleInstallations:
     - systemType: 3
-      objectId:
-      slotId: Slot_2
+      objectId: 
+      slotId: Slot_4
       modifiers:
       - stat: 9
         mode: 0
-        value: 2
+        value: 1
+      - stat: 17
+        mode: 0
+        value: 1
