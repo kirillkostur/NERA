@@ -78,32 +78,34 @@ MonoBehaviour:
       decimals: 0
     - stat: 16
       displayName: Battery charge
-      baseValue: 100
-      unit:
+      baseValue: 200
+      unit: 
       decimals: 0
     - stat: 12
       displayName: Energy consumption
-      baseValue: 4
+      baseValue: 3
       unit: ' kW'
       decimals: 1
     - stat: 17
       displayName: Flight energy consumption
-      baseValue: 4
+      baseValue: 3
       unit: ' charge/s'
       decimals: 1
     slots:
     - slotId: Slot_1
-      displayName: Stabilizer
+      displayName: Advanced Stabilizer
     - slotId: Slot_2
-      displayName: Propulsion
+      displayName: Capacitor
     - slotId: Slot_3
-      displayName: Charging servo
+      displayName: Capacitor
     - slotId: Slot_4
-      displayName: Charging servo
+      displayName: Power Core
     - slotId: Slot_5
-      displayName: Charging servo
+      displayName: Power Core
     - slotId: Slot_6
-      displayName: Charging servo
+      displayName: Propulsion
+    - slotId: Slot_7
+      displayName: Sensor Array
   - systemType: 4
     objectId: 
     displayName: LABORATORY

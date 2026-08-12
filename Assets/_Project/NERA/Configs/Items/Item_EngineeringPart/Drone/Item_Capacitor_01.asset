@@ -39,6 +39,16 @@ MonoBehaviour:
       - stat: 17
         mode: 0
         value: -1
-      - stat: 16
+      - stat: 12
         mode: 0
-        value: 50
+        value: 1
+    - systemType: 3
+      objectId: 
+      slotId: Slot_3
+      modifiers:
+      - stat: 17
+        mode: 0
+        value: -1
+      - stat: 12
+        mode: 0
+        value: 1
