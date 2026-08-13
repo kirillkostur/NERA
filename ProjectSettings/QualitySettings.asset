@@ -225,5 +225,5 @@ QualitySettings:
   m_PerPlatformDefaultQuality:
     Android: 0
     Nintendo Switch 2: 3
-    Standalone: 0
+    Standalone: 3
     iPhone: 0

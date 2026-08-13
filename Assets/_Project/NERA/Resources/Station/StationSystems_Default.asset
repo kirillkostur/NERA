@@ -133,21 +133,23 @@ MonoBehaviour:
       decimals: 0
     - stat: 13
       displayName: Calibration consumption
-      baseValue: 3
+      baseValue: 5
       unit: ' kW'
       decimals: 1
     - stat: 14
       displayName: Calibration duration
-      baseValue: 8
+      baseValue: 120
       unit: ' s'
       decimals: 1
     slots:
     - slotId: Slot_1
-      displayName: Scanner
+      displayName: Antenna Array
     - slotId: Slot_2
-      displayName: Sensor array
+      displayName: Calibration Module
     - slotId: Slot_3
-      displayName: Calibration sensor
+      displayName: Signal Amplifier
+    - slotId: Slot_4
+      displayName: Signal Processor
   - systemType: 7
     objectId: station_turret_01
     displayName: TURRET 1
