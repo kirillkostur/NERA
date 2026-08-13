@@ -42,9 +42,15 @@ namespace NERA.Station
         private Camera raycastCamera;
         private CinemachineOrbitalTransposer orbitalTransposer;
         private string previousOrbitInputAxisName;
+        private float previousOrbitAxisValue;
+        private bool hasPreviousOrbitAxisValue;
         private bool previousHeadingRecenteringEnabled;
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
+        private Transform upgradeCameraTransform;
+        private Vector3 previousCameraLocalPosition;
+        private Quaternion previousCameraLocalRotation;
+        private bool hasPreviousCameraTransform;
         private AutoSaveService guardedAutoSave;
         private bool autoSaveWasSuspended;
         private bool autoSaveGuardActive;
@@ -116,7 +122,8 @@ namespace NERA.Station
             StationUpgradeableObject target,
             GameObject interactor)
         {
-            if (target == null || interactor == null || IsOpen)
+            if (target == null || interactor == null || IsOpen ||
+                target.IsFullyUpgraded)
                 return false;
 
             player = interactor.GetComponentInParent<ParkourPlayerBridge>();
@@ -137,9 +144,17 @@ namespace NERA.Station
 
             BeginAutoSaveGuard();
             activeObject = target;
+            BindPartSources();
+            RefreshAvailableSlotVisuals();
             target.SetUpgradeVisualsVisible(true);
             previousCameraPriority = target.UpgradeCamera.Priority;
             hasPreviousCameraPriority = true;
+            upgradeCameraTransform = target.UpgradeCamera.transform;
+            previousCameraLocalPosition =
+                upgradeCameraTransform.localPosition;
+            previousCameraLocalRotation =
+                upgradeCameraTransform.localRotation;
+            hasPreviousCameraTransform = true;
             target.UpgradeCamera.Priority = cameraPriority;
             orbitalTransposer = target.UpgradeCamera
                 .GetComponentInChildren<CinemachineOrbitalTransposer>(true);
@@ -147,6 +162,8 @@ namespace NERA.Station
             {
                 previousOrbitInputAxisName =
                     orbitalTransposer.m_XAxis.m_InputAxisName;
+                previousOrbitAxisValue = orbitalTransposer.m_XAxis.Value;
+                hasPreviousOrbitAxisValue = true;
                 previousHeadingRecenteringEnabled = orbitalTransposer
                     .m_RecenterToTargetHeading.m_enabled;
                 orbitalTransposer.m_XAxis.m_InputAxisName = string.Empty;
@@ -197,7 +214,10 @@ namespace NERA.Station
 
             staged.Clear();
             activeObject.RefreshVisuals();
+            RefreshAvailableSlotVisuals();
             SetApplyButtonVisible(false);
+            if (activeObject.IsFullyUpgraded)
+                Close();
         }
 
         public void Close()
@@ -219,6 +239,7 @@ namespace NERA.Station
                 return;
 
             RollbackAll();
+            UnbindPartSources();
             if (activeObject.UpgradeCamera != null &&
                 hasPreviousCameraPriority)
             {
@@ -234,14 +255,30 @@ namespace NERA.Station
                     previousOrbitInputAxisName;
                 orbitalTransposer.m_XAxis.m_InputAxisValue = 0f;
                 orbitalTransposer.m_XAxis.Reset();
+                if (hasPreviousOrbitAxisValue)
+                    orbitalTransposer.m_XAxis.Value = previousOrbitAxisValue;
                 orbitalTransposer.m_RecenterToTargetHeading.m_enabled =
                     previousHeadingRecenteringEnabled;
                 orbitalTransposer.m_RecenterToTargetHeading
                     .CancelRecentering();
             }
+            if (upgradeCameraTransform != null &&
+                hasPreviousCameraTransform)
+            {
+                upgradeCameraTransform.localPosition =
+                    previousCameraLocalPosition;
+                upgradeCameraTransform.localRotation =
+                    previousCameraLocalRotation;
+            }
             orbitalTransposer = null;
             previousOrbitInputAxisName = null;
+            previousOrbitAxisValue = 0f;
+            hasPreviousOrbitAxisValue = false;
             previousHeadingRecenteringEnabled = false;
+            upgradeCameraTransform = null;
+            previousCameraLocalPosition = Vector3.zero;
+            previousCameraLocalRotation = Quaternion.identity;
+            hasPreviousCameraTransform = false;
             SetUpgradeScreenVisible(false);
             player?.SetInputEnabled(this, true);
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);
@@ -302,6 +339,7 @@ namespace NERA.Station
                 ReturnToSource(existing);
                 staged.Remove(slot);
                 activeObject.RestoreSlot(slot);
+                RefreshAvailableSlotVisuals();
                 SetApplyButtonVisible(staged.Count > 0);
                 return true;
             }
@@ -327,6 +365,7 @@ namespace NERA.Station
 
             staged[slot] = stagedPart;
             activeObject.ShowStaged(slot, stagedPart.Item.ItemData);
+            RefreshAvailableSlotVisuals();
             SetApplyButtonVisible(true);
             return true;
         }
@@ -444,6 +483,63 @@ namespace NERA.Station
                 slot.SlotId) != null;
         }
 
+        public void RefreshAvailableSlotVisuals()
+        {
+            if (!IsOpen)
+                return;
+
+            var availableSlotIds = new List<string>();
+            IReadOnlyList<StationUpgradeSlot> slots = activeObject.Slots;
+            if (slots != null)
+            {
+                foreach (StationUpgradeSlot slot in slots)
+                {
+                    if (slot != null && HasCompatiblePart(slot))
+                        availableSlotIds.Add(slot.SlotId);
+                }
+            }
+
+            activeObject.SetAvailableEmptySlots(availableSlotIds);
+        }
+
+        private bool HasCompatiblePart(StationUpgradeSlot slot)
+        {
+            if (slot == null)
+                return false;
+
+            InventorySlotGroup[] groups =
+            {
+                InventorySlotGroup.Backpack,
+                InventorySlotGroup.QuickAccess,
+                InventorySlotGroup.Anomaly
+            };
+            if (inventory != null)
+            {
+                foreach (InventorySlotGroup group in groups)
+                {
+                    foreach (ItemInstance candidate in GetInventorySlots(group))
+                    {
+                        if (Fits(candidate, slot))
+                            return true;
+                    }
+                }
+            }
+
+            if (storage == null)
+                return false;
+
+            foreach (InventorySlotGroup group in groups)
+            {
+                foreach (ItemInstance candidate in storage.GetSlots(group))
+                {
+                    if (Fits(candidate, slot))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private IReadOnlyList<ItemInstance> GetInventorySlots(
             InventorySlotGroup group)
         {
@@ -461,6 +557,22 @@ namespace NERA.Station
             foreach (StagedPart part in staged.Values)
                 ReturnToSource(part);
             staged.Clear();
+        }
+
+        private void BindPartSources()
+        {
+            if (inventory != null)
+                inventory.InventoryChanged += RefreshAvailableSlotVisuals;
+            if (storage != null)
+                storage.StorageChanged += RefreshAvailableSlotVisuals;
+        }
+
+        private void UnbindPartSources()
+        {
+            if (inventory != null)
+                inventory.InventoryChanged -= RefreshAvailableSlotVisuals;
+            if (storage != null)
+                storage.StorageChanged -= RefreshAvailableSlotVisuals;
         }
 
         private void ReturnToSource(StagedPart part)

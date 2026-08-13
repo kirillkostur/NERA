@@ -40,8 +40,8 @@ MonoBehaviour:
         mode: 0
         value: 1
       - stat: 14
-        mode: 1
-        value: 0.8
+        mode: 0
+        value: -20
       - stat: 13
         mode: 0
         value: 2

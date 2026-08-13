@@ -96,6 +96,13 @@ namespace NERA.Station
             RefreshFakeVisual();
         }
 
+        public void SetEmptyFakeVisible(bool visible)
+        {
+            ResolveReferences();
+            showEmptyFake = visible;
+            RefreshFakeVisual();
+        }
+
         private void ResolveReferences()
         {
             slotId = slotId?.Trim();

@@ -21,7 +21,10 @@ namespace NERA.Station
 
         private StationSystemsController subscribedSystems;
         private ItemCatalogData catalog;
+        private readonly HashSet<string> availableEmptySlots =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private bool upgradeModeActive;
+        private bool filterEmptySlots;
 
         public IReadOnlyList<StationUpgradeSlot> Slots => slots;
 
@@ -74,9 +77,43 @@ namespace NERA.Station
         public void SetUpgradeModeActive(bool active)
         {
             upgradeModeActive = active;
+            if (!active)
+            {
+                filterEmptySlots = false;
+                availableEmptySlots.Clear();
+            }
             foreach (StationUpgradeSlot slot in slots)
                 slot?.SetUpgradeModeActive(active);
             Refresh();
+        }
+
+        public void SetAvailableEmptySlots(IEnumerable<string> slotIds)
+        {
+            ResolveReferences();
+            filterEmptySlots = true;
+            availableEmptySlots.Clear();
+            if (slotIds != null)
+            {
+                foreach (string slotId in slotIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(slotId))
+                        availableEmptySlots.Add(slotId.Trim());
+                }
+            }
+
+            // Availability changes while a part is staged. Updating the
+            // silhouettes must not restore committed slot data, otherwise
+            // the staged preview is destroyed before Apply is pressed.
+            foreach (StationUpgradeSlot slot in slots)
+            {
+                if (slot == null)
+                    continue;
+
+                slot.SetEmptyFakeVisible(
+                    showFakeSlotsWhenEmpty &&
+                    upgradeModeActive &&
+                    availableEmptySlots.Contains(slot.SlotId));
+            }
         }
 
         public void Configure(bool showEmptyFakes)
@@ -101,7 +138,11 @@ namespace NERA.Station
             if (item != null)
                 slot.ShowPart(item);
             else
-                slot.ShowEmpty(showFakeSlotsWhenEmpty && upgradeModeActive);
+                slot.ShowEmpty(
+                    showFakeSlotsWhenEmpty &&
+                    upgradeModeActive &&
+                    (!filterEmptySlots ||
+                     availableEmptySlots.Contains(slot.SlotId)));
         }
 
         private void HandleSystemsChanged(StationSystemsController systems)

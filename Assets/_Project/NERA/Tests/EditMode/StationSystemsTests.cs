@@ -383,6 +383,261 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void UpgradeFakeIsVisibleOnlyWhenCompatiblePartIsAvailable()
+        {
+            GameObject target = new GameObject("Test_AvailableUpgradeFake");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(target.transform);
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            GameObject fake = new GameObject("Fake");
+            fake.transform.SetParent(slotObject.transform);
+            slot.Configure("Slot_3", fake);
+
+            StationObjectVisual visual =
+                target.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            StationUpgradeableObject upgradeable =
+                target.AddComponent<StationUpgradeableObject>();
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(controller, "inventory", inventory);
+            SetInstanceField(controller, "storage", storage);
+
+            controller.RefreshAvailableSlotVisuals();
+            upgradeable.SetUpgradeVisualsVisible(true);
+            Assert.That(fake.activeSelf, Is.False);
+
+            ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            Assert.That(inventory.AddItem(emitter), Is.True);
+            controller.RefreshAvailableSlotVisuals();
+            Assert.That(fake.activeSelf, Is.True);
+
+            Assert.That(storage.DepositBackpack(inventory), Is.EqualTo(1));
+            controller.RefreshAvailableSlotVisuals();
+            Assert.That(fake.activeSelf, Is.True,
+                "A compatible storage part must also expose the Fake.");
+
+            storage.ResetStorage();
+            controller.RefreshAvailableSlotVisuals();
+            Assert.That(fake.activeSelf, Is.False);
+        }
+
+        [Test]
+        public void StagedPartPreviewRemainsVisibleBeforeApply()
+        {
+            GameObject target = new GameObject("Test_StagedPartPreview");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(target.transform);
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            GameObject fake = new GameObject("Fake");
+            fake.transform.SetParent(slotObject.transform);
+            slot.Configure("Slot_3", fake);
+
+            StationObjectVisual visual =
+                target.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            StationUpgradeableObject upgradeable =
+                target.AddComponent<StationUpgradeableObject>();
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(controller, "inventory", inventory);
+            SetInstanceField(controller, "storage", storage);
+
+            ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            Assert.That(inventory.AddItem(emitter), Is.True);
+            upgradeable.SetUpgradeVisualsVisible(true);
+            controller.RefreshAvailableSlotVisuals();
+
+            Assert.That(controller.ToggleSlot(slot), Is.True);
+            Assert.That(
+                slotObject.transform.Find("Installed_emitter_damage_01"),
+                Is.Not.Null,
+                "The selected part must be previewed before Apply.");
+            Assert.That(
+                systems.GetInstalledPartItemId(
+                    StationSystemType.Turret,
+                    "station_turret_01",
+                    "Slot_3"),
+                Is.Empty,
+                "Previewing must not commit the upgrade yet.");
+        }
+
+        [Test]
+        public void FullyUpgradedObjectHidesAndBlocksUpgradeInteraction()
+        {
+            GameObject target = new GameObject("Test_FullyUpgradedTurret");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+            target.AddComponent<StationObjectVisual>();
+            StationUpgradeableObject upgradeable =
+                target.AddComponent<StationUpgradeableObject>();
+
+            StationSystemDefinition definition = systems.GetDefinition(
+                StationSystemType.Turret,
+                "station_turret_01");
+            var installed = definition.Slots.Select(slot =>
+                new StationInstalledPartState(slot.SlotId, "installed_part"));
+            systems.Restore(
+                new Dictionary<StationSystemType, bool>(),
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Turret,
+                        "station_turret_01",
+                        true,
+                        installed)
+                });
+
+            Assert.That(upgradeable.IsFullyUpgraded, Is.True);
+            InteractionPrompt prompt = upgradeable.GetPrompt();
+            Assert.That(prompt.IsVisible, Is.False);
+            Assert.That(prompt.IsAvailable, Is.False);
+
+            upgradeable.CompleteInteraction(playerRoot);
+            Assert.That(StationUpgradeModeController.Instance, Is.Null);
+        }
+
+        [Test]
+        public void ApplyingLastConfiguredPartsClosesUpgradeMode()
+        {
+            GameObject target = new GameObject("Test_CompleteUpgradeTurret");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+
+            string[] slotIds =
+            {
+                "Slot_1", "Slot_2", "Slot_3",
+                "Slot_4", "Slot_5", "Slot_6"
+            };
+            foreach (string slotId in slotIds)
+            {
+                GameObject slotObject = new GameObject(slotId);
+                slotObject.transform.SetParent(target.transform);
+                StationUpgradeSlot slot =
+                    slotObject.AddComponent<StationUpgradeSlot>();
+                GameObject fake = new GameObject("Fake");
+                fake.transform.SetParent(slotObject.transform);
+                slot.Configure(slotId, fake);
+            }
+
+            StationObjectVisual visual =
+                target.AddComponent<StationObjectVisual>();
+            visual.Configure(true);
+            StationUpgradeableObject upgradeable =
+                target.AddComponent<StationUpgradeableObject>();
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(controller, "inventory", inventory);
+            SetInstanceField(controller, "storage", storage);
+
+            string[] partFiles =
+            {
+                "Item_Chassis_01.asset",
+                "Item_Cooling_01.asset",
+                "Item_EmitterDamage_01.asset",
+                "Item_Sensor_01.asset",
+                "Item_Servo_01.asset",
+                "Item_ServoDrive_01.asset"
+            };
+            foreach (string partFile in partFiles)
+                Assert.That(inventory.AddItem(LoadPart(partFile)), Is.True);
+
+            foreach (string slotId in slotIds)
+            {
+                Assert.That(
+                    controller.ToggleSlot(upgradeable.FindSlot(slotId)),
+                    Is.True,
+                    slotId);
+            }
+
+            controller.Apply();
+
+            Assert.That(upgradeable.IsFullyUpgraded, Is.True);
+            Assert.That(controller.IsOpen, Is.False);
+            Assert.That(upgradeable.GetPrompt().IsVisible, Is.False);
+        }
+
+        [Test]
+        public void ClosingUpgradeRestoresAuthoredCameraLocalPose()
+        {
+            GameObject target = new GameObject("Test_UpgradeCameraTarget");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+            target.AddComponent<StationObjectVisual>();
+            StationUpgradeableObject upgradeable =
+                target.AddComponent<StationUpgradeableObject>();
+            Transform cameraTransform =
+                new GameObject("VirtualCamOrbit").transform;
+            cameraTransform.SetParent(target.transform, false);
+
+            Vector3 authoredPosition = new Vector3(1f, 2f, -4f);
+            Quaternion authoredRotation = Quaternion.Euler(10f, 35f, 0f);
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(
+                controller,
+                "upgradeCameraTransform",
+                cameraTransform);
+            SetInstanceField(
+                controller,
+                "previousCameraLocalPosition",
+                authoredPosition);
+            SetInstanceField(
+                controller,
+                "previousCameraLocalRotation",
+                authoredRotation);
+            SetInstanceField(
+                controller,
+                "hasPreviousCameraTransform",
+                true);
+            cameraTransform.localPosition = Vector3.one * 9f;
+            cameraTransform.localRotation = Quaternion.Euler(0f, 170f, 0f);
+
+            controller.Close();
+
+            Assert.That(
+                cameraTransform.localPosition,
+                Is.EqualTo(authoredPosition));
+            Assert.That(
+                Quaternion.Angle(
+                    cameraTransform.localRotation,
+                    authoredRotation),
+                Is.LessThan(0.001f));
+        }
+
+        [Test]
         public void InstalledUpgradePartKeepsInvisibleSlotHitbox()
         {
             GameObject target = new GameObject("Test_UpgradeHitbox");

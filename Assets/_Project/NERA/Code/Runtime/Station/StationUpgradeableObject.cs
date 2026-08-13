@@ -38,6 +38,35 @@ namespace NERA.Station
         public string ObjectId => identity != null
             ? identity.ObjectId
             : string.Empty;
+        public bool IsFullyUpgraded
+        {
+            get
+            {
+                ResolveReferences();
+                StationSystemDefinition definition = identity?.Definition;
+                if (definition == null || definition.Slots.Count == 0)
+                    return true;
+
+                StationSystemsController systems =
+                    StationSystemsController.Instance;
+                if (systems == null)
+                    return false;
+
+                foreach (StationObjectSlotDefinition slot in definition.Slots)
+                {
+                    if (slot == null || string.IsNullOrWhiteSpace(slot.SlotId) ||
+                        string.IsNullOrEmpty(systems.GetInstalledPartItemId(
+                            SystemType,
+                            ObjectId,
+                            slot.SlotId)))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
 
         private void Awake()
         {
@@ -81,6 +110,17 @@ namespace NERA.Station
                     RequiredActionHoldDuration,
                     actionAvailable,
                     unavailableReason);
+            }
+
+            if (IsFullyUpgraded)
+            {
+                return new InteractionPrompt(
+                    string.Empty,
+                    InteractionMode.Press,
+                    0f,
+                    false,
+                    string.Empty,
+                    false);
             }
 
             bool available = StationUpgradeModeController.Instance == null ||
@@ -142,6 +182,9 @@ namespace NERA.Station
                 return;
             }
 
+            if (IsFullyUpgraded)
+                return;
+
             StationUpgradeModeController controller =
                 StationUpgradeModeController.GetOrCreate();
             if (controller == null || !controller.Open(this, interactor))
@@ -162,6 +205,11 @@ namespace NERA.Station
         public void SetUpgradeVisualsVisible(bool visible)
         {
             visual?.SetUpgradeModeActive(visible);
+        }
+
+        public void SetAvailableEmptySlots(IEnumerable<string> slotIds)
+        {
+            visual?.SetAvailableEmptySlots(slotIds);
         }
 
         public void ShowStaged(StationUpgradeSlot slot, ItemData item)
