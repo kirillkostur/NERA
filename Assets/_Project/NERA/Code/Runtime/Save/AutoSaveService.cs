@@ -43,6 +43,9 @@ namespace NERA.Save
         private bool dirty;
         private float dirtySince;
         private float saveAt;
+        private bool hasObservedEnergyState;
+        private float observedStationEnergy;
+        private bool observedEnergyGridEnabled;
 
         public static AutoSaveService Instance { get; private set; }
         public bool IsDirty => dirty;
@@ -166,7 +169,10 @@ namespace NERA.Save
             if (stationPower != null)
                 stationPower.StateChanged += HandlePowerChanged;
             if (energySystem != null)
-                energySystem.StateChanged += HandleEnergyChanged;
+            {
+                ObserveEnergyState();
+                energySystem.EnergyChanged += HandleEnergyChanged;
+            }
             if (drone != null)
             {
                 drone.StateChanged += HandleDroneStateChanged;
@@ -211,7 +217,7 @@ namespace NERA.Save
             if (stationPower != null)
                 stationPower.StateChanged -= HandlePowerChanged;
             if (energySystem != null)
-                energySystem.StateChanged -= HandleEnergyChanged;
+                energySystem.EnergyChanged -= HandleEnergyChanged;
             if (drone != null)
             {
                 drone.StateChanged -= HandleDroneStateChanged;
@@ -247,7 +253,37 @@ namespace NERA.Save
 
         private void HandleStringChanged(string _) => MarkDirty();
         private void HandlePowerChanged(StationPowerState _) => MarkDirty();
-        private void HandleEnergyChanged(EnergyState _) => MarkDirty();
+        private void HandleEnergyChanged()
+        {
+            if (energySystem == null)
+                return;
+
+            float currentEnergy = energySystem.CurrentEnergy;
+            bool gridEnabled = energySystem.GridEnabled;
+            bool changed = !hasObservedEnergyState ||
+                currentEnergy != observedStationEnergy ||
+                gridEnabled != observedEnergyGridEnabled;
+
+            observedStationEnergy = currentEnergy;
+            observedEnergyGridEnabled = gridEnabled;
+            hasObservedEnergyState = true;
+
+            if (changed)
+                MarkDirty();
+        }
+
+        private void ObserveEnergyState()
+        {
+            if (energySystem == null)
+            {
+                hasObservedEnergyState = false;
+                return;
+            }
+
+            observedStationEnergy = energySystem.CurrentEnergy;
+            observedEnergyGridEnabled = energySystem.GridEnabled;
+            hasObservedEnergyState = true;
+        }
         private void HandleDroneStateChanged(DroneState _) => MarkDirty();
         private void HandleFloatChanged(float _) => MarkDirty();
         private void HandleSignalChanged(ExpeditionLocationData _) =>

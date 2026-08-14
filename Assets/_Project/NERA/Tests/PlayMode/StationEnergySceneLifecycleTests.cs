@@ -330,6 +330,38 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator SavedChargeSurvivesStartupBeforeBatterySceneLoads()
+        {
+            SaveSlotStorage.DeleteAllSlots();
+            string savePath = SaveSlotStorage.GetSlotPath(
+                SaveSlotStorage.DefaultSlot);
+            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+            File.WriteAllText(
+                savePath,
+                JsonUtility.ToJson(new SaveGameData
+                {
+                    energyStateInitialized = true,
+                    stationEnergy = 1000f,
+                    energyGridEnabled = true
+                }));
+            GameSessionLaunchState.Request(
+                GameLaunchMode.Continue,
+                SaveSlotStorage.DefaultSlot);
+
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(energy.TotalCapacity, Is.GreaterThanOrEqualTo(1000f));
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(1000f).Within(0.01f),
+                "Startup must preserve charge loaded before station batteries register.");
+        }
+
+        [UnityTest]
         public IEnumerator ReturningToStationDoesNotDuplicateEnergySources()
         {
             SceneManager.LoadScene("MainScene");

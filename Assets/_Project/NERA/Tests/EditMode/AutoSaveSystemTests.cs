@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using NERA.Energy;
 using NERA.Items;
 using NERA.Save;
 using NUnit.Framework;
@@ -254,6 +255,38 @@ namespace NERA.Tests
             Assert.That(
                 restored.completedWorldFlagIds,
                 Is.EquivalentTo(new[] { "expedition_02/puzzle_a" }));
+        }
+
+        [Test]
+        public void StationChargeChangeMarksDirtyWithoutChangingEnergyState()
+        {
+            GameObject root = new GameObject("EnergyAutoSave_Test");
+            try
+            {
+                EnergySystemController energy =
+                    root.AddComponent<EnergySystemController>();
+                AutoSaveService autoSave =
+                    root.AddComponent<AutoSaveService>();
+
+                energy.RegisterBattery("station_battery", 1000f, 1000f);
+                energy.RestoreState(750f, true);
+                autoSave.InitializeSession();
+
+                Assert.That(energy.State, Is.EqualTo(EnergyState.Normal));
+                Assert.That(
+                    energy.TrySpendEnergy(25f),
+                    Is.True,
+                    "The configured grid should allow spending station energy.");
+                Assert.That(energy.State, Is.EqualTo(EnergyState.Normal));
+                Assert.That(
+                    autoSave.IsDirty,
+                    Is.True,
+                    "Changing charge inside one EnergyState must dirty the save.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
     }
 }

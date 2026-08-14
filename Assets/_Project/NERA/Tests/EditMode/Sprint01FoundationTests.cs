@@ -1081,6 +1081,28 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void RestoredChargeSurvivesFramesBeforeBatteryRegisters()
+        {
+            energy.RestoreState(1000f, true);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.TotalCapacity, Is.Zero);
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(1000f),
+                "Loading frames must not erase charge before the station scene is ready.");
+
+            energy.RegisterBattery("station_battery", 1000f, 0f);
+
+            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(1000f),
+                "The battery must receive the charge restored before registration.");
+        }
+
+        [Test]
         public void ReRegisteringBatteryUpdatesCapacityAndPreservesCharge()
         {
             energy.RegisterBattery("battery_01", 1000f, 1000f);

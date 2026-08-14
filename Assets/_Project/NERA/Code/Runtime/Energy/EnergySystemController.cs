@@ -41,6 +41,8 @@ namespace NERA.Energy
             new Dictionary<string, ConsumerRecord>(StringComparer.Ordinal);
 
         private bool restoredFromSave;
+        private bool hasPendingRestoredEnergy;
+        private float pendingRestoredEnergy;
         private EnergyState state = EnergyState.Offline;
         private float lastQuestReportedCharge01 = float.NaN;
         private StationSystemsController stationSystems;
@@ -132,13 +134,21 @@ namespace NERA.Energy
 
             if (TotalCapacity > 0f)
             {
+                if (hasPendingRestoredEnergy)
+                {
+                    currentEnergy = Mathf.Min(
+                        pendingRestoredEnergy,
+                        TotalCapacity);
+                    hasPendingRestoredEnergy = false;
+                }
+
                 currentEnergy = Mathf.Clamp(
                     currentEnergy + (CurrentGeneration - CurrentConsumption) * deltaTime,
                     0f,
                     TotalCapacity
                 );
             }
-            else
+            else if (!hasPendingRestoredEnergy)
             {
                 currentEnergy = 0f;
             }
@@ -179,9 +189,12 @@ namespace NERA.Energy
                     TotalCapacity - existing.Capacity + capacity);
                 existing.Capacity = capacity;
                 existing.InitialCharge = clampedInitialCharge;
+                float energyToPreserve = hasPendingRestoredEnergy
+                    ? pendingRestoredEnergy
+                    : currentEnergy;
                 currentEnergy = TotalCapacity > 0f
-                    ? Mathf.Min(currentEnergy, TotalCapacity)
-                    : 0f;
+                    ? Mathf.Min(energyToPreserve, TotalCapacity)
+                    : energyToPreserve;
 
                 RefreshState();
                 RefreshConsumers();
@@ -200,7 +213,11 @@ namespace NERA.Energy
             );
             TotalCapacity += capacity;
 
-            if (!restoredFromSave)
+            if (hasPendingRestoredEnergy)
+                currentEnergy = Mathf.Min(
+                    pendingRestoredEnergy,
+                    TotalCapacity);
+            else if (!restoredFromSave)
                 currentEnergy = Mathf.Min(
                     TotalCapacity,
                     currentEnergy + clampedInitialCharge);
@@ -421,7 +438,9 @@ namespace NERA.Energy
             try
             {
                 restoredFromSave = true;
-                currentEnergy = Mathf.Max(0f, savedEnergy);
+                pendingRestoredEnergy = Mathf.Max(0f, savedEnergy);
+                hasPendingRestoredEnergy = TotalCapacity <= 0f;
+                currentEnergy = pendingRestoredEnergy;
                 gridEnabled = savedGridEnabled;
 
                 if (TotalCapacity > 0f)
@@ -441,6 +460,8 @@ namespace NERA.Energy
         public void ResetForNewGame()
         {
             restoredFromSave = false;
+            hasPendingRestoredEnergy = false;
+            pendingRestoredEnergy = 0f;
             gridEnabled = false;
             currentEnergy = 0f;
 
