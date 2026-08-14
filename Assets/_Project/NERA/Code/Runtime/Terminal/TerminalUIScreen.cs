@@ -5,6 +5,7 @@ using NERA.Inventory;
 using NERA.Player;
 using NERA.Station;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace NERA.Terminal
@@ -13,7 +14,7 @@ namespace NERA.Terminal
     /// Coordinates the authored terminal HUD. Individual screens own their
     /// content; this component only controls terminal lifetime and navigation.
     /// </summary>
-    public sealed class TerminalUIScreen : MonoBehaviour
+    public sealed class TerminalUIScreen : MonoBehaviour, IPointerClickHandler
     {
         private const string TerminalConsumerId = "central_terminal";
 
@@ -37,8 +38,10 @@ namespace NERA.Terminal
         private GameObject[] screens;
         private int activeScreenIndex = 1;
         private int navigationInputUnlockFrame;
+        [SerializeField, Min(1f)] private float worldClickDistance = 1000f;
 
         private ParkourPlayerBridge playerController;
+        private TerminalAccessInteractable activeWorldTerminal;
 
         private TerminalMapScreenController mapController;
         private TerminalStationScreenController stationController;
@@ -95,6 +98,11 @@ namespace NERA.Terminal
 
         public void Open()
         {
+            Open(null);
+        }
+
+        public void Open(TerminalAccessInteractable worldTerminal)
+        {
             if (IsOpen)
                 return;
 
@@ -118,6 +126,9 @@ namespace NERA.Terminal
             }
 
             CachePlayerControllers();
+            activeWorldTerminal = worldTerminal;
+            mapController?.SetWorldPreviewRoot(
+                activeWorldTerminal?.MapVisualRoot);
             IsOpen = true;
             navigationInputUnlockFrame = Time.frameCount + 1;
             SetPlayerControl(false);
@@ -125,6 +136,7 @@ namespace NERA.Terminal
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             SetVisible(true);
+            activeWorldTerminal?.BeginTerminalView(activeScreenIndex);
             ShowScreen(activeScreenIndex);
         }
 
@@ -142,6 +154,9 @@ namespace NERA.Terminal
             mapController?.SetScreenActive(false);
             stationController?.SetScreenActive(false);
             SetVisible(false);
+            activeWorldTerminal?.EndTerminalView();
+            activeWorldTerminal = null;
+            mapController?.SetWorldPreviewRoot(null);
             SetPlayerControl(true);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -284,6 +299,57 @@ namespace NERA.Terminal
             stationController?.SetScreenActive(activeScreenIndex == 1);
             libraryController?.SetScreenActive(activeScreenIndex == 2);
             storageController?.SetScreenActive(activeScreenIndex == 3);
+            if (IsOpen)
+                activeWorldTerminal?.SetTerminalScreen(activeScreenIndex);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!IsOpen ||
+                activeWorldTerminal == null ||
+                eventData == null ||
+                eventData.button != PointerEventData.InputButton.Left)
+            {
+                return;
+            }
+
+            Transform visualRoot = activeScreenIndex switch
+            {
+                0 => activeWorldTerminal.MapVisualRoot,
+                1 => activeWorldTerminal.StationVisualRoot,
+                _ => null
+            };
+            Camera raycastCamera = playerController?.GameplayCamera ?? Camera.main;
+            if (visualRoot == null || raycastCamera == null)
+                return;
+
+            Ray ray = raycastCamera.ScreenPointToRay(eventData.position);
+            RaycastHit[] hits = Physics.RaycastAll(
+                ray,
+                worldClickDistance,
+                ~0,
+                QueryTriggerInteraction.Collide);
+            System.Array.Sort(
+                hits,
+                (left, right) => left.distance.CompareTo(right.distance));
+
+            foreach (RaycastHit hit in hits)
+            {
+                Transform target = hit.collider != null
+                    ? hit.collider.transform
+                    : hit.transform;
+                if (target == null ||
+                    target != visualRoot && !target.IsChildOf(visualRoot))
+                {
+                    continue;
+                }
+
+                if (activeScreenIndex == 0)
+                    mapController?.HandleWorldHit(hit);
+                else if (activeScreenIndex == 1)
+                    stationController?.HandleWorldHit(hit);
+                return;
+            }
         }
 
         private void RegisterTerminalConsumer()
@@ -331,6 +397,8 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            activeWorldTerminal?.EndTerminalView();
+            activeWorldTerminal = null;
             if (playerController != null)
                 playerController.SetInputEnabled(this, true);
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);

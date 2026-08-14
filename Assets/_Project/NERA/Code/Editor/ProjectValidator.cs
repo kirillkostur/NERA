@@ -28,6 +28,8 @@ namespace NERA.Editor
     {
         private const string MainScenePath =
             "Assets/_Project/NERA/Scenes/MainScene.unity";
+        private const string PlayerStationScenePath =
+            "Assets/_Project/NERA/Scenes/Player_Station.unity";
         private const string PlayerPrefabPath =
             "Assets/_Project/NERA/Prefabs/Player/Player.prefab";
         private const string LocationConfigRoot =
@@ -39,7 +41,7 @@ namespace NERA.Editor
         {
             "Assets/_Project/NERA/Scenes/Boot.unity",
             MainScenePath,
-            "Assets/_Project/NERA/Scenes/Player_Station.unity"
+            PlayerStationScenePath
         };
 
         private static readonly QualityPresetExpectation[]
@@ -478,23 +480,37 @@ namespace NERA.Editor
                     OpenSceneMode.Additive);
             }
 
+            Scene stationScene =
+                SceneManager.GetSceneByPath(PlayerStationScenePath);
+            bool stationOpenedByValidator = !stationScene.IsValid() ||
+                !stationScene.isLoaded;
+            if (stationOpenedByValidator)
+            {
+                stationScene = EditorSceneManager.OpenScene(
+                    PlayerStationScenePath,
+                    OpenSceneMode.Additive);
+            }
+
             try
             {
                 ExpeditionDiscoveryController discovery = null;
-                MapLocationSlotRegistry mapSlotRegistry = null;
                 QuestController questController = null;
                 foreach (GameObject root in mainScene.GetRootGameObjects())
                 {
                     discovery ??= root.GetComponentInChildren<
                         ExpeditionDiscoveryController>(true);
-                    mapSlotRegistry ??=
-                        root.GetComponentInChildren<
-                            MapLocationSlotRegistry>(true);
                     questController ??=
                         root.GetComponentInChildren<QuestController>(true);
-                    if (discovery != null &&
-                        mapSlotRegistry != null &&
-                        questController != null)
+                    if (discovery != null && questController != null)
+                        break;
+                }
+
+                MapLocationSlotRegistry mapSlotRegistry = null;
+                foreach (GameObject root in stationScene.GetRootGameObjects())
+                {
+                    mapSlotRegistry = root.GetComponentInChildren<
+                        MapLocationSlotRegistry>(true);
+                    if (mapSlotRegistry != null)
                         break;
                 }
 
@@ -546,7 +562,7 @@ namespace NERA.Editor
                 if (mapSlotRegistry == null)
                 {
                     errors.Add(
-                        $"{MainScenePath} has no " +
+                        $"{PlayerStationScenePath} has no " +
                         nameof(MapLocationSlotRegistry));
                     return;
                 }
@@ -562,7 +578,7 @@ namespace NERA.Editor
                     if (authoredSlot.Slot == null)
                     {
                         errors.Add(
-                            $"{MainScenePath}: map object " +
+                            $"{PlayerStationScenePath}: map object " +
                             $"'{authoredSlot.name}' has no Map Slot asset.");
                         continue;
                     }
@@ -570,7 +586,7 @@ namespace NERA.Editor
                     if (!authoredSlots.Add(authoredSlot.Slot))
                     {
                         errors.Add(
-                            $"{MainScenePath}: Map Slot " +
+                            $"{PlayerStationScenePath}: Map Slot " +
                             $"'{authoredSlot.Slot.DisplayName}' is assigned " +
                             "to more than one 3D object.");
                     }
@@ -584,7 +600,8 @@ namespace NERA.Editor
                     else if (!authoredSlotIds.Add(authoredSlot.Slot.SlotId))
                     {
                         errors.Add(
-                            $"{MainScenePath}: duplicate stable Map Slot ID " +
+                            $"{PlayerStationScenePath}: duplicate stable " +
+                            "Map Slot ID " +
                             $"'{authoredSlot.Slot.SlotId}'.");
                     }
                 }
@@ -597,7 +614,7 @@ namespace NERA.Editor
                         !authoredSlots.Contains(location.MapSlot))
                     {
                         errors.Add(
-                            $"{MainScenePath}: location " +
+                            $"{PlayerStationScenePath}: location " +
                             $"'{location.LocationId}' references Map Slot " +
                             $"'{location.MapSlot.DisplayName}', but no 3D " +
                             "MapLocationSlot uses it.");
@@ -606,6 +623,8 @@ namespace NERA.Editor
             }
             finally
             {
+                if (stationOpenedByValidator && stationScene.IsValid())
+                    EditorSceneManager.CloseScene(stationScene, true);
                 if (openedByValidator && mainScene.IsValid())
                     EditorSceneManager.CloseScene(mainScene, true);
             }

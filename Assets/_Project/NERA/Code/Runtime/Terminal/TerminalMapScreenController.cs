@@ -215,6 +215,29 @@ namespace NERA.Terminal
             RefreshAll();
         }
 
+        public void HandleWorldHit(RaycastHit hit)
+        {
+            HandlePreviewHit(hit);
+        }
+
+        public void SetWorldPreviewRoot(Transform root)
+        {
+            if (mapModelRoot == root)
+                return;
+
+            if (signalMarker != null)
+            {
+                Destroy(signalMarker);
+                signalMarker = null;
+            }
+
+            mapModelRoot = root;
+            mapSlotRegistry = mapModelRoot != null
+                ? mapModelRoot.GetComponent<MapLocationSlotRegistry>()
+                : null;
+            mapSlotRegistry?.Rebuild();
+        }
+
         private ExpeditionLocationData ResolveLocationForMarker(Transform target)
         {
             if (mapSlotRegistry == null ||

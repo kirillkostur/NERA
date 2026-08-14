@@ -180,6 +180,11 @@ namespace NERA.Terminal
                 SelectPreviewObject(target);
         }
 
+        public void HandleWorldHit(RaycastHit hit)
+        {
+            HandlePreviewHit(hit);
+        }
+
         private void ResolveStationObject(
             Transform hit,
             out string objectName,
