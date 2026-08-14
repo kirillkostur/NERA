@@ -330,6 +330,156 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator TerminalWorldDecorationFollowsPowerAndLastTab()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Terminal.TerminalUIScreen terminal =
+                Terminal.TerminalUIScreen.Instance;
+            Terminal.TerminalAccessInteractable access =
+                Object.FindFirstObjectByType<
+                    Terminal.TerminalAccessInteractable>(
+                    FindObjectsInactive.Include);
+            ParkourPlayerBridge player =
+                Object.FindFirstObjectByType<ParkourPlayerBridge>();
+
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(terminal, Is.Not.Null);
+            Assert.That(access, Is.Not.Null);
+            Assert.That(player, Is.Not.Null);
+
+            Transform visualRoot = access.transform.Find("Visual_3D");
+            Transform stationVisual =
+                visualRoot?.Find("SM_Station_Mini_3D");
+            Transform mapVisual = visualRoot?.Find("SM_Map_Mini_3D");
+            Transform interactionPoint =
+                access.transform.Find("InteractionPoint");
+            Assert.That(visualRoot, Is.Not.Null);
+            Assert.That(stationVisual, Is.Not.Null);
+            Assert.That(mapVisual, Is.Not.Null);
+            Assert.That(interactionPoint, Is.Not.Null);
+            Assert.That(access.InteractionTransform, Is.EqualTo(interactionPoint));
+            Assert.That(
+                access.gameObject.layer,
+                Is.EqualTo(LayerMask.NameToLayer("Environment")));
+            Assert.That(
+                interactionPoint.gameObject.layer,
+                Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+            SphereCollider interactionCollider =
+                interactionPoint.GetComponent<SphereCollider>();
+            Assert.That(interactionCollider, Is.Not.Null);
+            Assert.That(interactionCollider.isTrigger, Is.True);
+
+            int environmentMask =
+                1 << LayerMask.NameToLayer("Environment");
+            Vector3 frontOrigin = interactionPoint.position +
+                access.transform.forward * 1.2f;
+            Vector3 frontTarget =
+                interactionCollider.ClosestPoint(frontOrigin);
+            Vector3 frontOffset = frontTarget - frontOrigin;
+            Assert.That(
+                Physics.Raycast(
+                    frontOrigin,
+                    frontOffset.normalized,
+                    frontOffset.magnitude,
+                    environmentMask,
+                    QueryTriggerInteraction.Ignore),
+                Is.False,
+                "The terminal must be approachable from its screen side.");
+
+            Vector3 backOrigin = interactionPoint.position -
+                access.transform.forward * 2f;
+            Vector3 backTarget = interactionCollider.ClosestPoint(backOrigin);
+            Vector3 backOffset = backTarget - backOrigin;
+            Assert.That(
+                Physics.Raycast(
+                    backOrigin,
+                    backOffset.normalized,
+                    backOffset.magnitude,
+                    environmentMask,
+                    QueryTriggerInteraction.Ignore),
+                Is.True,
+                "The terminal body must block interaction from behind.");
+
+            energy.RestoreState(energy.TotalCapacity, false);
+            yield return null;
+            Assert.That(visualRoot.gameObject.activeSelf, Is.False);
+            Assert.That(stationVisual.gameObject.activeSelf, Is.False);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.False);
+
+            energy.RestoreState(energy.TotalCapacity, true);
+            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            yield return null;
+            Assert.That(visualRoot.gameObject.activeSelf, Is.True);
+            Assert.That(stationVisual.gameObject.activeSelf, Is.True);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.False);
+            Assert.That(
+                stationVisual.GetComponentsInChildren<StationObjectVisual>(true),
+                Has.Length.GreaterThan(0),
+                "World terminal station must mirror installed upgrade parts.");
+            Assert.That(
+                visualRoot.GetComponentsInChildren<Collider>(true)
+                    .All(collider => !collider.enabled),
+                Is.True,
+                "World terminal decoration must never receive clicks.");
+
+            access.CompleteInteraction(player.gameObject);
+            Assert.That(terminal.IsOpening, Is.True);
+            Assert.That(terminal.IsOpen, Is.False);
+            Assert.That(terminal.GetComponent<CanvasGroup>().alpha, Is.Zero);
+
+            float openingDeadline = Time.realtimeSinceStartup + 6f;
+            while (!terminal.IsOpen &&
+                   Time.realtimeSinceStartup < openingDeadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(terminal.IsOpen, Is.True);
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(1));
+            terminal.ShowMap();
+            Assert.That(stationVisual.gameObject.activeSelf, Is.False);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.True);
+            terminal.Close();
+            Assert.That(mapVisual.gameObject.activeSelf, Is.True);
+
+            access.CompleteInteraction(player.gameObject);
+            Assert.That(stationVisual.gameObject.activeSelf, Is.False);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.True);
+            openingDeadline = Time.realtimeSinceStartup + 6f;
+            while (!terminal.IsOpen &&
+                   Time.realtimeSinceStartup < openingDeadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(terminal.IsOpen, Is.True);
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(0));
+            terminal.ShowLibrary();
+            terminal.Close();
+            Assert.That(stationVisual.gameObject.activeSelf, Is.True);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.False);
+
+            access.CompleteInteraction(player.gameObject);
+            openingDeadline = Time.realtimeSinceStartup + 6f;
+            while (!terminal.IsOpen &&
+                   Time.realtimeSinceStartup < openingDeadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(terminal.IsOpen, Is.True);
+            Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));
+            terminal.Close();
+        }
+
+        [UnityTest]
         public IEnumerator SavedChargeSurvivesStartupBeforeBatterySceneLoads()
         {
             SaveSlotStorage.DeleteAllSlots();

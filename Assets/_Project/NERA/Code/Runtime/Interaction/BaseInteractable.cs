@@ -6,6 +6,11 @@ namespace NERA.Interaction
 {
     public class BaseInteractable : MonoBehaviour, IInteractable
     {
+        [Header("Interaction Point (Optional)")]
+        [Tooltip("Dedicated point/collider used to approach this object. " +
+                 "Falls back to this transform when it is not assigned.")]
+        [SerializeField] private Transform interactionPoint;
+
         [Header("Prompt")]
         [SerializeField] private string actionText = "Interact";
         [SerializeField] private InteractionMode mode = InteractionMode.Press;
@@ -25,7 +30,8 @@ namespace NERA.Interaction
         [SerializeField] private string questInteractionId;
         [SerializeField] private string questInteractionName;
 
-        public Transform InteractionTransform => transform;
+        public virtual Transform InteractionTransform =>
+            interactionPoint != null ? interactionPoint : transform;
 
         public virtual InteractionPrompt GetPrompt()
         {

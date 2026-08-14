@@ -1,3 +1,4 @@
+using System.Collections;
 using NERA.Core;
 using NERA.Energy;
 using NERA.Interaction;
@@ -19,6 +20,7 @@ namespace NERA.Terminal
 
         public static TerminalUIScreen Instance { get; private set; }
         public bool IsOpen { get; private set; }
+        public bool IsOpening { get; private set; }
         public int ActiveScreenIndex => activeScreenIndex;
 
         private CanvasGroup canvasGroup;
@@ -39,6 +41,8 @@ namespace NERA.Terminal
         private int navigationInputUnlockFrame;
 
         private ParkourPlayerBridge playerController;
+        private TerminalAccessInteractable activeTerminal;
+        private Coroutine openingRoutine;
 
         private TerminalMapScreenController mapController;
         private TerminalStationScreenController stationController;
@@ -65,7 +69,7 @@ namespace NERA.Terminal
 
         private void Update()
         {
-            if (!IsOpen)
+            if (!IsOpen && !IsOpening)
                 return;
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -74,7 +78,7 @@ namespace NERA.Terminal
                 return;
             }
 
-            if (Time.frameCount > navigationInputUnlockFrame)
+            if (IsOpen && Time.frameCount > navigationInputUnlockFrame)
             {
                 if (Input.GetKeyDown(KeyCode.Q))
                     ShowPreviousScreen();
@@ -95,44 +99,44 @@ namespace NERA.Terminal
 
         public void Open()
         {
-            if (IsOpen)
+            if (!TryBeginSession())
                 return;
 
-            StationSystemsController systems = StationSystemsController.Instance;
-            if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Computer))
+            CompleteOpen();
+        }
+
+        public void Open(TerminalAccessInteractable terminal)
+        {
+            if (terminal == null)
             {
+                Open();
                 return;
             }
 
-            RegisterTerminalConsumer();
-            EnergySystemController energy = EnergySystemController.Instance;
-            if (energy != null)
+            if (!TryBeginSession())
+                return;
+
+            activeTerminal = terminal;
+            activeTerminal.ShowDecorationForScreen(activeScreenIndex);
+            if (!activeTerminal.BeginTerminalView(playerController))
             {
-                energy.SetConsumerActive(TerminalConsumerId, true);
-                if (!energy.IsConsumerPowered(TerminalConsumerId))
-                {
-                    energy.SetConsumerActive(TerminalConsumerId, false);
-                    return;
-                }
+                CompleteOpen();
+                return;
             }
 
-            CachePlayerControllers();
-            IsOpen = true;
-            navigationInputUnlockFrame = Time.frameCount + 1;
-            SetPlayerControl(false);
-            InventoryLabHUDController.Instance?.SetExternalUiLock(true);
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-            SetVisible(true);
-            ShowScreen(activeScreenIndex);
+            IsOpening = true;
+            openingRoutine = StartCoroutine(OpenAfterCameraTransition());
         }
 
         public void Close()
         {
-            if (!IsOpen)
+            if (!IsOpen && !IsOpening)
                 return;
 
+            if (openingRoutine != null)
+                StopCoroutine(openingRoutine);
+            openingRoutine = null;
+            IsOpening = false;
             IsOpen = false;
             EnergySystemController.Instance?.SetConsumerActive(
                 TerminalConsumerId,
@@ -142,9 +146,19 @@ namespace NERA.Terminal
             mapController?.SetScreenActive(false);
             stationController?.SetScreenActive(false);
             SetVisible(false);
+            activeTerminal?.ShowDecorationForScreen(activeScreenIndex);
+            activeTerminal?.EndTerminalView();
+            activeTerminal = null;
             SetPlayerControl(true);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+        }
+
+        public void HandleTerminalUnavailable(
+            TerminalAccessInteractable terminal)
+        {
+            if (activeTerminal == terminal)
+                Close();
         }
 
         public bool TravelTo(NERA.Expeditions.ExpeditionLocationData location)
@@ -274,6 +288,7 @@ namespace NERA.Terminal
                 return;
 
             activeScreenIndex = Mathf.Clamp(index, 0, screens.Length - 1);
+            activeTerminal?.ShowDecorationForScreen(activeScreenIndex);
             for (int i = 0; i < screens.Length; i++)
             {
                 if (screens[i] != null)
@@ -306,6 +321,76 @@ namespace NERA.Terminal
             energy.SetConsumerActive(TerminalConsumerId, IsOpen);
         }
 
+        private bool TryBeginSession()
+        {
+            if (IsOpen || IsOpening)
+                return false;
+
+            StationSystemsController systems = StationSystemsController.Instance;
+            if (systems != null &&
+                !systems.IsRequestedActive(StationSystemType.Computer))
+            {
+                return false;
+            }
+
+            RegisterTerminalConsumer();
+            EnergySystemController energy = EnergySystemController.Instance;
+            if (energy != null)
+            {
+                energy.SetConsumerActive(TerminalConsumerId, true);
+                if (!energy.IsConsumerPowered(TerminalConsumerId))
+                {
+                    energy.SetConsumerActive(TerminalConsumerId, false);
+                    return false;
+                }
+            }
+
+            CachePlayerControllers();
+            SetPlayerControl(false);
+            InventoryLabHUDController.Instance?.SetExternalUiLock(true);
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            SetVisible(false);
+            return true;
+        }
+
+        private IEnumerator OpenAfterCameraTransition()
+        {
+            int startedFrame = Time.frameCount;
+            float startedAt = Time.unscaledTime;
+            yield return null;
+
+            while (IsOpening && activeTerminal != null)
+            {
+                bool completed =
+                    activeTerminal.IsTerminalCameraReady(playerController);
+                bool timedOut = Time.unscaledTime - startedAt >=
+                    Mathf.Max(0.1f, activeTerminal.CameraBlendTimeout);
+                if (Time.frameCount > startedFrame &&
+                    (completed || timedOut))
+                {
+                    break;
+                }
+
+                yield return null;
+            }
+
+            openingRoutine = null;
+            if (IsOpening)
+                CompleteOpen();
+        }
+
+        private void CompleteOpen()
+        {
+            IsOpening = false;
+            IsOpen = true;
+            navigationInputUnlockFrame = Time.frameCount + 1;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            SetVisible(true);
+            ShowScreen(activeScreenIndex);
+        }
+
         private void CachePlayerControllers()
         {
             if (playerController == null)
@@ -331,6 +416,12 @@ namespace NERA.Terminal
 
         private void OnDestroy()
         {
+            if (openingRoutine != null)
+                StopCoroutine(openingRoutine);
+            openingRoutine = null;
+            IsOpening = false;
+            activeTerminal?.EndTerminalView();
+            activeTerminal = null;
             if (playerController != null)
                 playerController.SetInputEnabled(this, true);
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);
