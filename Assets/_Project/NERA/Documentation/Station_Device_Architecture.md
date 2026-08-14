@@ -90,14 +90,19 @@ Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset
 но каждый объявленный слот должен иметь соответствующий `StationUpgradeSlot`
 на физическом объекте и на его терминальном превью.
 
-Текущая раскладка:
+Текущая раскладка в `StationSystems_Default` на 2026-08-14:
 
 | Объект | Слоты |
 |---|---|
-| Турель | `Slot_1` Weapon emitter, `Slot_2` Target sensor, `Slot_3` Cooling unit, `Slot_4` Rotation drive, `Slot_5` Armor chassis |
-| Антенна | `Slot_1` Scanner, `Slot_2` Sensor array, `Slot_3` Calibration sensor |
-| Дрон | `Slot_1` Stabilizer, `Slot_2` Propulsion, `Slot_3` Charging servo |
+| Turret 1 | `Slot_1` Chassis, `Slot_2` Cooling, `Slot_3` Emitter Damage, `Slot_4` Sensor, `Slot_5` Servo, `Slot_6` Servo Drive |
+| Turret 2 | те же `Slot_1..Slot_6` и дополнительный `Slot_7` Emitter Damage |
+| Антенна | `Slot_1` Antenna Array, `Slot_2` Calibration Module, `Slot_3` Signal Amplifier, `Slot_4` Signal Processor |
+| Дрон | `Slot_1` Advanced Stabilizer, `Slot_2` Capacitor, `Slot_3` Capacitor, `Slot_4` Power Core, `Slot_5` Power Core, `Slot_6` Propulsion, `Slot_7` Sensor Array |
 | Батарея | `Slot_1` Capacitor bank, `Slot_2` Reinforced housing, `Slot_3` Thermal pack |
+
+Это не программный лимит и не универсальная схема. Таблица является снимком
+текущего центрального конфига; при изменении слотов одновременно обновите
+physical prefab, `StationUIPreview`, совместимость `ItemData` и tests.
 
 ## 2. Подготовка физического объекта
 
@@ -225,9 +230,11 @@ Station_Object
 - необходимые дочерние визуальные объекты.
 
 Не добавляйте в установленный визуал игровую логику. После создания система
-отключает все `MonoBehaviour` и физику `Rigidbody`, но лишние коллайдеры всё
-равно могут мешать кликам по другим слотам. Для обычной детали коллайдеры в
-визуальном prefab не нужны.
+отключает все `MonoBehaviour` и физику `Rigidbody`, но текущая runtime-защита
+не отключает дочерние `Collider`. Они могут мешать кликам, игроку, снарядам и
+другим слотам. Поэтому `Installed Visual Prefab` должен быть отдельным
+mesh-only prefab без `WorldItem`, interactable, `Rigidbody` и `Collider`.
+Единственным click hitbox слота остаётся Collider на `Fake`.
 
 Ориентация prefab не обязана идеально совпадать со всеми объектами: финальная
 позиция, поворот и масштаб задаются отдельно на каждом `StationUpgradeSlot`.
@@ -363,11 +370,15 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 `station_drone`:
 
 - `Travel Range` — максимальная доступная дальность экспедиции;
-- `Battery Charge` — максимальный заряд, базово `100`;
+- `Battery Charge` — максимальный заряд;
 - `Energy Consumption` — сколько энергии в секунду забирает зарядка у станции
-  и сколько заряда в секунду получает дрон, базово `4`;
-- `Flight Energy Consumption` — сколько заряда дрон тратит за секунду полёта,
-  базово `4 charge/s`.
+  и сколько заряда в секунду получает дрон;
+- `Flight Energy Consumption` — сколько заряда дрон тратит за секунду полёта.
+
+Текущий tuning snapshot на 2026-08-14: `Battery Charge = 200`,
+`Energy Consumption = 3`, `Flight Energy Consumption = 3`. Эти числа не
+зашиты в коде и могут меняться; источником истины всегда является
+`StationSystems_Default`.
 
 Текущий заряд хранится отдельно от максимального, сохраняется в save-файле и
 ограничивается эффективным `Battery Charge`. Формат в статусе остаётся одним
@@ -456,7 +467,8 @@ Drone Flight Duration * Flight Energy Consumption
 - `Slot Id` одинаков в `StationSystems_Default`, `StationUpgradeSlot` и детали;
 - слот объявлен в `Physical Upgrade Slots`;
 - `Fake Visual` назначен и имеет Collider;
-- `Installed Visual Prefab` назначен;
+- `Installed Visual Prefab` назначен и не содержит `WorldItem`, interactable,
+  `Rigidbody` или Collider;
 - в инвентаре или на складе действительно есть экземпляр детали;
 - слот ещё не занят применённой деталью;
 - `StationObjectVisual` видит все дочерние слоты;
@@ -469,6 +481,11 @@ Drone Flight Duration * Flight Energy Consumption
 - значение характеристики изменилось в терминале;
 - та же модель появилась на `StationUIPreview`;
 - после сохранения и загрузки деталь и бонус сохранились.
+
+Текущий `NERA > Validate Project` ещё не проверяет весь station upgrade graph.
+До расширения валидатора этот список обязателен при каждом изменении объекта,
+слота или Engineering Part. Отдельно вручную проверяйте ESC, scene unload и
+выход из приложения с временно установленной, но не применённой деталью.
 
 ## Прототипный rebuild
 

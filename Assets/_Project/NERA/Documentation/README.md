@@ -2,7 +2,8 @@
 
 ## Актуальные документы
 
-- [`First_Playable_Status_and_Roadmap_2026-08-04.md`](First_Playable_Status_and_Roadmap_2026-08-04.md) — текущее состояние проекта, границы первого полноценного среза, пробелы и порядок работ.
+- [`Current_Project_Audit_2026-08-14.md`](Current_Project_Audit_2026-08-14.md) — текущий проверенный технический baseline, дефекты, cleanup-кандидаты, оптимизации и рекомендуемые архитектурные переносы.
+- [`First_Playable_Status_and_Roadmap_2026-08-04.md`](First_Playable_Status_and_Roadmap_2026-08-04.md) — границы первого полноценного среза и продуктовый порядок работ; фактический baseline обновлён аудитом от 2026-08-14.
 - [`Sprint_Finalization_Backlog.md`](Sprint_Finalization_Backlog.md) — рабочий backlog с актуальными статусами.
 
 ## Руководства

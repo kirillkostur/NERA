@@ -1,12 +1,14 @@
 # NERA Sprint Finalization Backlog
 
-Updated: 2026-08-04
+Updated: 2026-08-14
 
 This file is the working source of truth for closing Sprint 01-10 in order.
 Status values: `DONE`, `PARTIAL`, `TODO`, `BLOCKED`.
 
 Definition of Done and the milestone order are documented in
-`First_Playable_Status_and_Roadmap_2026-08-04.md`.
+`First_Playable_Status_and_Roadmap_2026-08-04.md`. Текущий проверенный
+технический baseline и приоритеты находятся в
+`Current_Project_Audit_2026-08-14.md`.
 
 ## Sprint 01 - Project Foundation
 
@@ -65,7 +67,7 @@ Status: `PARTIAL`
 - DONE: research-capable Ancient Record and NERA Memory Core interaction
   prototypes.
 - DONE: weak Blue IO enemy prototype with detection, pursuit and energy attack.
-- DONE: data-driven Expedition 01 quest stages are persisted in save version 16.
+- DONE: data-driven Expedition 01 quest stages are persisted in save version 19.
 - DONE: Dynamic Parkour Player and parkour surfaces are integrated into the
   production Player prefab and Expedition 01.
 - PARTIAL: Expedition 01 currently contains a package-style parkour playground
@@ -106,7 +108,7 @@ Status: `PARTIAL`
 - DONE: pre-slot `nera_save.json` migration into `nera_save_1.json`; the selected
   slot is carried through Boot -> MainScene and owns all later autosaves.
 - DONE: config-driven static/dynamic QuestController and Expedition 01 quest.
-- DONE: save version 16 for quest progress/history, maintainable objects,
+- DONE: save version 19 for quest progress/history, maintainable objects,
   checkpoint scene/authored spawn or player pose, and supported world-object
   state.
 - DONE: compact HUD with highest-priority main and side quest objectives.
@@ -150,12 +152,23 @@ Status: `PARTIAL`
 
 Status: `PARTIAL`
 
-- PARTIAL: save/checkpoint rewrite baseline — 119/119 EditMode and 19/20
-  graphical batch PlayMode pass on Unity 6000.0.71f1. The remaining existing
-  UI drag-test needs a normal Game View because batch uses 640x480; repeat the
-  full 20-test run in the connected Editor.
+- PARTIAL: current Unity 6000.0.71f1 baseline — 133/139 EditMode and 21/24
+  PlayMode. One PlayMode failure is order-dependent and passes alone; the
+  remaining failures are stale production-config assumptions, slot drift and
+  one missing localization entry. Full details are in the 2026-08-14 audit.
 - DONE: permanent editor validation command for required scenes and station
-  upgrade prefabs, including production Company/Product identity.
+  foundations, including production Company/Product identity.
+- TODO: inject synthetic StationSystemsConfig into controller tests instead of
+  reading mutable production Resources assets.
+- TODO: isolate every PlayMode fixture with an explicit clean scene and teardown.
+- TODO: add station upgrade graph, installed-visual purity, localization and
+  persistent-ID checks to ProjectValidator.
+- TODO: add regression tests for authored turret initial condition, failed
+  scene transition, staged-part teardown recovery, invalid installed-part
+  restore and turret per-shot energy at different FPS.
+- DONE: exact-energy session-end snapshot and regression coverage; pause,
+  application quit and Return To Main Menu force a current-state save without
+  turning continuous energy changes into periodic disk writes.
 - DONE: Standalone Low, Medium and High URP quality preset baseline.
 - DONE: IO target registry, projectile pooling and event-driven refresh for the
   main terminal/laboratory screens.
@@ -202,16 +215,23 @@ Status: `PARTIAL`
 ## Current Order
 
 1. Freeze First Playable scope to Boot, MainScene, Player Station and
-   Expedition 01. Production identity and save-path migration were finalized
-   on 2026-08-04.
-2. Persist one-time scene-object completion and define checkpoint/resume rules.
-3. Add health HUD, damage/death feedback and respawn/reload flow.
-4. Remove test content from Player Station and turn Expedition 01 from a
+   Expedition 01; create a dedicated build profile and deterministic
+   Addressables build.
+2. Restore a fully green, isolated EditMode/PlayMode baseline and expand
+   ProjectValidator over the station/content graph.
+3. Fix authored maintainable initial conditions, stable persistent IDs and
+   scene-transition failure handling.
+4. Make installed upgrade visuals collider-free and guarantee staged-part
+   recovery on ESC, scene unload and application quit.
+5. Make turret firing energy independent of FPS.
+6. Add health HUD, damage/death feedback and respawn/reload flow.
+7. Remove test content from Player Station and turn Expedition 01 from a
    parkour playground into a focused production blockout.
-5. Add the post-research coda, objective notifications and minimum quest
+8. Add the post-research coda, objective notifications and minimum quest
    history/journal presentation.
-6. Complete combat, audio, VFX and route-readability feedback.
-7. Build and pass the current standalone full-flow and performance baseline.
-8. Close blocker/critical issues and create the First Playable lock.
-9. Only then author Expedition 02-08 or split large controllers behind focused
-   regression tests.
+9. Complete combat, audio, VFX and route-readability feedback.
+10. Build and pass the current standalone full-flow and performance baseline.
+11. Close blocker/critical issues and create the First Playable lock.
+12. Only then remove confirmed dead/demo dependencies and split large
+   controllers behind focused regression tests.
+13. Only then author Expedition 02-08 or expand Unknown Signal content.
