@@ -32,6 +32,7 @@ namespace NERA.Station
         [SerializeField, Min(1)] private int cameraPriority = 100;
         [SerializeField, Min(1f)] private float clickDistance = 1000f;
         [SerializeField, Min(1f)] private float orbitDegreesPerSecond = 90f;
+        [SerializeField, Min(0.1f)] private float cameraBlendTimeout = 5f;
 
         private readonly Dictionary<StationUpgradeSlot, StagedPart> staged =
             new Dictionary<StationUpgradeSlot, StagedPart>();
@@ -42,21 +43,24 @@ namespace NERA.Station
         private Camera raycastCamera;
         private CinemachineOrbitalTransposer orbitalTransposer;
         private string previousOrbitInputAxisName;
-        private float previousOrbitAxisValue;
-        private bool hasPreviousOrbitAxisValue;
         private bool previousHeadingRecenteringEnabled;
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
-        private Transform upgradeCameraTransform;
-        private Vector3 previousCameraLocalPosition;
-        private Quaternion previousCameraLocalRotation;
-        private bool hasPreviousCameraTransform;
+        private CinemachineBrain cameraBrain;
+        private CinemachineVirtualCameraBase gameplayVirtualCamera;
+        private bool isClosing;
+        private bool isWaitingForGameplayBlend;
+        private bool closeFlushReturnedParts;
+        private int gameplayBlendStartedFrame;
+        private float gameplayBlendStartedAt;
         private AutoSaveService guardedAutoSave;
         private bool autoSaveWasSuspended;
         private bool autoSaveGuardActive;
 
         public static StationUpgradeModeController Instance { get; private set; }
         public bool IsOpen => activeObject != null;
+        public bool IsClosing => isClosing;
+        public bool IsBlendingToGameplay => isWaitingForGameplayBlend;
         public StationUpgradeableObject ActiveObject => activeObject;
 
         private void Awake()
@@ -77,6 +81,12 @@ namespace NERA.Station
         {
             if (!IsOpen)
                 return;
+
+            if (isClosing)
+            {
+                UpdateClosingBlend();
+                return;
+            }
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -149,21 +159,12 @@ namespace NERA.Station
             target.SetUpgradeVisualsVisible(true);
             previousCameraPriority = target.UpgradeCamera.Priority;
             hasPreviousCameraPriority = true;
-            upgradeCameraTransform = target.UpgradeCamera.transform;
-            previousCameraLocalPosition =
-                upgradeCameraTransform.localPosition;
-            previousCameraLocalRotation =
-                upgradeCameraTransform.localRotation;
-            hasPreviousCameraTransform = true;
-            target.UpgradeCamera.Priority = cameraPriority;
             orbitalTransposer = target.UpgradeCamera
                 .GetComponentInChildren<CinemachineOrbitalTransposer>(true);
             if (orbitalTransposer != null)
             {
                 previousOrbitInputAxisName =
                     orbitalTransposer.m_XAxis.m_InputAxisName;
-                previousOrbitAxisValue = orbitalTransposer.m_XAxis.Value;
-                hasPreviousOrbitAxisValue = true;
                 previousHeadingRecenteringEnabled = orbitalTransposer
                     .m_RecenterToTargetHeading.m_enabled;
                 orbitalTransposer.m_XAxis.m_InputAxisName = string.Empty;
@@ -172,7 +173,22 @@ namespace NERA.Station
                 orbitalTransposer.m_RecenterToTargetHeading.m_enabled = false;
                 orbitalTransposer.m_RecenterToTargetHeading
                     .CancelRecentering();
+
+                float closestValue = orbitalTransposer.GetAxisClosestValue(
+                    raycastCamera.transform.position,
+                    Vector3.up);
+                if (!float.IsNaN(closestValue) &&
+                    !float.IsInfinity(closestValue))
+                {
+                    orbitalTransposer.m_XAxis.Value =
+                        NormalizeOrbitAngle(closestValue);
+                    target.UpgradeCamera.PreviousStateIsValid = false;
+                }
             }
+            cameraBrain = raycastCamera.GetComponent<CinemachineBrain>();
+            gameplayVirtualCamera = cameraBrain?.ActiveVirtualCamera as
+                CinemachineVirtualCameraBase;
+            target.UpgradeCamera.Priority = cameraPriority;
             player?.SetInputEnabled(this, false);
             InventoryLabHUDController.Instance?.SetExternalUiLock(true);
             Cursor.lockState = CursorLockMode.None;
@@ -184,7 +200,7 @@ namespace NERA.Station
 
         public void Apply()
         {
-            if (!IsOpen || staged.Count == 0)
+            if (!IsOpen || isClosing || staged.Count == 0)
                 return;
 
             var requests = new List<StationPartInstallRequest>(staged.Count);
@@ -222,73 +238,144 @@ namespace NERA.Station
 
         public void Close()
         {
-            Close(false);
+            BeginClose(false, !Application.isPlaying);
         }
 
         public void PrepareForSessionEnd()
         {
             if (IsOpen)
-                Close(true);
+                BeginClose(true, true);
             else
                 EndAutoSaveGuard(true);
         }
 
-        private void Close(bool flushReturnedParts)
+        private void BeginClose(bool flushReturnedParts, bool immediate)
         {
             if (!IsOpen)
                 return;
 
-            RollbackAll();
-            UnbindPartSources();
-            if (activeObject.UpgradeCamera != null &&
-                hasPreviousCameraPriority)
+            closeFlushReturnedParts |= flushReturnedParts;
+            if (isClosing)
             {
-                activeObject.UpgradeCamera.Priority = previousCameraPriority;
+                if (immediate)
+                    CompleteClose();
+                return;
             }
 
+            isClosing = true;
+            UnbindPartSources();
+            RollbackAll();
             activeObject.SetUpgradeVisualsVisible(false);
-            activeObject = null;
-            hasPreviousCameraPriority = false;
+            SetUpgradeScreenVisible(false);
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            if (orbitalTransposer != null)
+                orbitalTransposer.m_XAxis.m_InputAxisValue = 0f;
+
+            if (!immediate)
+                AlignGameplayCameraToExitView();
+            BeginGameplayCameraBlend();
+            if (immediate)
+                CompleteClose();
+        }
+
+        private void UpdateClosingBlend()
+        {
+            // Priority is processed by Cinemachine in LateUpdate. Waiting at
+            // least one complete frame prevents input from being unlocked
+            // before the outgoing blend has actually started.
+            if (Time.frameCount <= gameplayBlendStartedFrame)
+                return;
+
+            bool upgradeCameraStillLive =
+                cameraBrain != null &&
+                activeObject?.UpgradeCamera != null &&
+                ReferenceEquals(
+                    cameraBrain.ActiveVirtualCamera,
+                    activeObject.UpgradeCamera);
+            bool blendFinished = cameraBrain == null ||
+                !cameraBrain.IsBlending && !upgradeCameraStillLive;
+            bool timedOut = Time.unscaledTime - gameplayBlendStartedAt >=
+                Mathf.Max(0.1f, cameraBlendTimeout);
+            if (blendFinished || timedOut)
+                CompleteClose();
+        }
+
+        private void AlignGameplayCameraToExitView()
+        {
+            if (gameplayVirtualCamera == null || raycastCamera == null)
+                return;
+
+            Transform output = raycastCamera.transform;
+            gameplayVirtualCamera.ForceCameraPosition(
+                output.position,
+                output.rotation);
+        }
+
+        private void BeginGameplayCameraBlend()
+        {
+            if (isWaitingForGameplayBlend)
+                return;
+
+            RestoreUpgradeCameraPriority();
+            isWaitingForGameplayBlend = true;
+            gameplayBlendStartedFrame = Time.frameCount;
+            gameplayBlendStartedAt = Time.unscaledTime;
+        }
+
+        private void CompleteClose()
+        {
+            if (!IsOpen)
+                return;
+
+            RestoreUpgradeCameraPriority();
             if (orbitalTransposer != null)
             {
                 orbitalTransposer.m_XAxis.m_InputAxisName =
                     previousOrbitInputAxisName;
                 orbitalTransposer.m_XAxis.m_InputAxisValue = 0f;
                 orbitalTransposer.m_XAxis.Reset();
-                if (hasPreviousOrbitAxisValue)
-                    orbitalTransposer.m_XAxis.Value = previousOrbitAxisValue;
                 orbitalTransposer.m_RecenterToTargetHeading.m_enabled =
                     previousHeadingRecenteringEnabled;
                 orbitalTransposer.m_RecenterToTargetHeading
                     .CancelRecentering();
             }
-            if (upgradeCameraTransform != null &&
-                hasPreviousCameraTransform)
-            {
-                upgradeCameraTransform.localPosition =
-                    previousCameraLocalPosition;
-                upgradeCameraTransform.localRotation =
-                    previousCameraLocalRotation;
-            }
+            activeObject = null;
+            hasPreviousCameraPriority = false;
             orbitalTransposer = null;
             previousOrbitInputAxisName = null;
-            previousOrbitAxisValue = 0f;
-            hasPreviousOrbitAxisValue = false;
             previousHeadingRecenteringEnabled = false;
-            upgradeCameraTransform = null;
-            previousCameraLocalPosition = Vector3.zero;
-            previousCameraLocalRotation = Quaternion.identity;
-            hasPreviousCameraTransform = false;
+            cameraBrain = null;
+            gameplayVirtualCamera = null;
+            isClosing = false;
+            isWaitingForGameplayBlend = false;
+            gameplayBlendStartedFrame = 0;
+            gameplayBlendStartedAt = 0f;
             SetUpgradeScreenVisible(false);
             player?.SetInputEnabled(this, true);
             InventoryLabHUDController.Instance?.SetExternalUiLock(false);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-            EndAutoSaveGuard(flushReturnedParts);
+            EndAutoSaveGuard(closeFlushReturnedParts);
+            closeFlushReturnedParts = false;
             player = null;
             inventory = null;
             storage = null;
             raycastCamera = null;
+        }
+
+        private void RestoreUpgradeCameraPriority()
+        {
+            if (activeObject?.UpgradeCamera != null &&
+                hasPreviousCameraPriority)
+            {
+                activeObject.UpgradeCamera.Priority = previousCameraPriority;
+            }
+        }
+
+        private static float NormalizeOrbitAngle(float value)
+        {
+            return Mathf.Repeat(value + 180f, 360f) - 180f;
         }
 
         private void UpdateOrbit()
@@ -328,7 +415,7 @@ namespace NERA.Station
 
         public bool ToggleSlot(StationUpgradeSlot slot)
         {
-            if (!IsOpen || slot == null ||
+            if (!IsOpen || isClosing || slot == null ||
                 activeObject.FindSlot(slot.SlotId) != slot)
             {
                 return false;
@@ -709,7 +796,7 @@ namespace NERA.Station
         private void OnDestroy()
         {
             if (IsOpen)
-                Close(true);
+                BeginClose(true, true);
             else
                 EndAutoSaveGuard(true);
             if (applyButton != null)

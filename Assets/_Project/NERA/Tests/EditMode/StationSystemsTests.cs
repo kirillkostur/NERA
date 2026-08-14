@@ -585,59 +585,6 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void ClosingUpgradeRestoresAuthoredCameraLocalPose()
-        {
-            GameObject target = new GameObject("Test_UpgradeCameraTarget");
-            target.transform.SetParent(stationRoot.transform);
-            StationObjectIdentity identity =
-                target.AddComponent<StationObjectIdentity>();
-            identity.Configure(
-                StationSystemType.Turret,
-                "station_turret_01");
-            target.AddComponent<StationObjectVisual>();
-            StationUpgradeableObject upgradeable =
-                target.AddComponent<StationUpgradeableObject>();
-            Transform cameraTransform =
-                new GameObject("VirtualCamOrbit").transform;
-            cameraTransform.SetParent(target.transform, false);
-
-            Vector3 authoredPosition = new Vector3(1f, 2f, -4f);
-            Quaternion authoredRotation = Quaternion.Euler(10f, 35f, 0f);
-            StationUpgradeModeController controller =
-                stationRoot.AddComponent<StationUpgradeModeController>();
-            SetInstanceField(controller, "activeObject", upgradeable);
-            SetInstanceField(
-                controller,
-                "upgradeCameraTransform",
-                cameraTransform);
-            SetInstanceField(
-                controller,
-                "previousCameraLocalPosition",
-                authoredPosition);
-            SetInstanceField(
-                controller,
-                "previousCameraLocalRotation",
-                authoredRotation);
-            SetInstanceField(
-                controller,
-                "hasPreviousCameraTransform",
-                true);
-            cameraTransform.localPosition = Vector3.one * 9f;
-            cameraTransform.localRotation = Quaternion.Euler(0f, 170f, 0f);
-
-            controller.Close();
-
-            Assert.That(
-                cameraTransform.localPosition,
-                Is.EqualTo(authoredPosition));
-            Assert.That(
-                Quaternion.Angle(
-                    cameraTransform.localRotation,
-                    authoredRotation),
-                Is.LessThan(0.001f));
-        }
-
-        [Test]
         public void InstalledUpgradePartKeepsInvisibleSlotHitbox()
         {
             GameObject target = new GameObject("Test_UpgradeHitbox");

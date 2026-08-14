@@ -21,6 +21,7 @@ using NERA.Save;
 using NERA.Station;
 using NERA.UI;
 using NUnit.Framework;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -549,6 +550,134 @@ namespace NERA.Tests
                 installedPreview,
                 Is.Not.Null,
                 "StationUIPreview must spawn the same installed part visual.");
+        }
+
+        [UnityTest]
+        public IEnumerator UpgradeCameraAlignsOnEntryAndPlayerCameraOnExit()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            StationSystemsController systems =
+                StationSystemsController.Instance;
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            ParkourPlayerBridge player =
+                inventory?.GetComponent<ParkourPlayerBridge>();
+            StationUpgradeableObject target = Object
+                .FindObjectsByType<StationUpgradeableObject>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .FirstOrDefault(candidate =>
+                    candidate.SystemType == StationSystemType.Turret &&
+                    candidate.ObjectId == "station_turret_01");
+
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(player, Is.Not.Null);
+            Assert.That(player.GameplayCamera, Is.Not.Null);
+            Assert.That(target, Is.Not.Null);
+            Assert.That(target.UpgradeCamera, Is.Not.Null);
+            systems.ResetSystems();
+
+            CinemachineOrbitalTransposer orbit = target.UpgradeCamera
+                .GetComponentInChildren<CinemachineOrbitalTransposer>(true);
+            Assert.That(orbit, Is.Not.Null);
+            float expectedEntryAxis = orbit.GetAxisClosestValue(
+                player.GameplayCamera.transform.position,
+                Vector3.up);
+            CinemachineBrain brain =
+                player.GameplayCamera.GetComponent<CinemachineBrain>();
+            Assert.That(brain, Is.Not.Null);
+            CinemachineFreeLook gameplayFreeLook =
+                brain.ActiveVirtualCamera as CinemachineFreeLook;
+            Assert.That(
+                gameplayFreeLook,
+                Is.Not.Null,
+                "The active gameplay camera must be the player FreeLookCam.");
+            CinemachineOrbitalTransposer gameplayOrbit = gameplayFreeLook
+                .GetRig(1)
+                .GetCinemachineComponent<CinemachineOrbitalTransposer>();
+            Assert.That(gameplayOrbit, Is.Not.Null);
+
+            StationUpgradeModeController controller =
+                StationUpgradeModeController.GetOrCreate();
+            Assert.That(
+                controller.Open(target, inventory.gameObject),
+                Is.True);
+            Assert.That(
+                Mathf.Abs(Mathf.DeltaAngle(
+                    orbit.m_XAxis.Value,
+                    expectedEntryAxis)),
+                Is.LessThan(0.01f));
+            Assert.That(player.IsInputEnabled, Is.False);
+
+            float entryTimeoutAt = Time.realtimeSinceStartup + 6f;
+            while ((brain.IsBlending ||
+                    !ReferenceEquals(
+                        brain.ActiveVirtualCamera,
+                        target.UpgradeCamera)) &&
+                   Time.realtimeSinceStartup < entryTimeoutAt)
+            {
+                yield return null;
+            }
+            Assert.That(
+                ReferenceEquals(
+                    brain.ActiveVirtualCamera,
+                    target.UpgradeCamera),
+                Is.True,
+                "Upgrade camera did not finish its entry blend.");
+
+            float exitObjectAxis = expectedEntryAxis + 60f;
+            orbit.m_XAxis.Value = exitObjectAxis;
+            yield return null;
+            Vector3 exitCameraPosition =
+                player.GameplayCamera.transform.position;
+            float expectedGameplayAxis = gameplayOrbit.GetAxisClosestValue(
+                exitCameraPosition,
+                gameplayFreeLook.State.ReferenceUp);
+
+            controller.Close();
+            Assert.That(controller.IsOpen, Is.True);
+            Assert.That(controller.IsClosing, Is.True);
+            Assert.That(controller.IsBlendingToGameplay, Is.True);
+            Assert.That(player.IsInputEnabled, Is.False);
+            Assert.That(
+                Mathf.Abs(Mathf.DeltaAngle(
+                    gameplayFreeLook.m_XAxis.Value,
+                    expectedGameplayAxis)),
+                Is.LessThan(0.1f),
+                "Player FreeLookCam must align to the object exit view.");
+            Assert.That(
+                Mathf.Abs(Mathf.DeltaAngle(
+                    orbit.m_XAxis.Value,
+                    exitObjectAxis)),
+                Is.LessThan(0.1f),
+                "Object camera must not orbit back during exit.");
+
+            yield return null;
+            Assert.That(
+                player.IsInputEnabled,
+                Is.False,
+                "Input must remain locked throughout camera blending.");
+
+            float timeoutAt = Time.realtimeSinceStartup + 8f;
+            while (controller.IsOpen &&
+                   Time.realtimeSinceStartup < timeoutAt)
+            {
+                yield return null;
+            }
+
+            Assert.That(controller.IsOpen, Is.False);
+            Assert.That(player.IsInputEnabled, Is.True);
+            Assert.That(
+                Mathf.Abs(Mathf.DeltaAngle(
+                    orbit.m_XAxis.Value,
+                    exitObjectAxis)),
+                Is.LessThan(0.01f),
+                "The object camera must keep its last upgrade orbit angle.");
         }
 
         [UnityTest]
