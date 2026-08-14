@@ -16,10 +16,10 @@ MonoBehaviour:
     height: 3
     radius: 1.5
   middleRig:
-    height: 2.7
-    radius: 3
+    height: 2.5
+    radius: 2.5
   bottomRig:
     height: 1.5
-    radius: 3
+    radius: 2.5
   blendInDuration: 0.35
   blendOutDuration: 0.35
