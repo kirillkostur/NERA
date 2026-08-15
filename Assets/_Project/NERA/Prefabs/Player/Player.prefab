@@ -1692,9 +1692,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011093f185c3cda40b9da033c63ff632, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectionOffset: {x: 0, y: 0.9, z: 0}
-  interactionDistance: 0.5
-  releaseDistance: 0.5
+  detectionOffset: {x: 0, y: 0.69, z: 0}
+  interactionDistance: 0.7
+  releaseDistance: 0.7
   overlapMask:
     serializedVersion: 2
     m_Bits: 192
