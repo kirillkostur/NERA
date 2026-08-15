@@ -1693,8 +1693,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   detectionOffset: {x: 0, y: 0.9, z: 0}
-  interactionDistance: 1.23
-  releaseDistance: 1.33
+  interactionDistance: 0.5
+  releaseDistance: 0.5
   overlapMask:
     serializedVersion: 2
     m_Bits: 192

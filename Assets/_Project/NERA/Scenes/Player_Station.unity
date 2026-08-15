@@ -6823,6 +6823,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Station_Terminal
       objectReference: {fileID: 0}
+    - target: {fileID: 4588632844002283257, guid: 6837c48a394732f47a55898ee5feab41, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.92
+      objectReference: {fileID: 0}
+    - target: {fileID: 5958207077791360055, guid: 6837c48a394732f47a55898ee5feab41, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.0989321
+      objectReference: {fileID: 0}
+    - target: {fileID: 7829420632448909356, guid: 6837c48a394732f47a55898ee5feab41, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8140161921120917377, guid: 6837c48a394732f47a55898ee5feab41, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.112
