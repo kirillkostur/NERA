@@ -481,6 +481,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 8473599444135731462}
   - {fileID: 2041356482193900769}
   - {fileID: 1912965170338610683}
   - {fileID: 6149391553652854513}
@@ -512,6 +513,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8844260d487a1664ba3354d336266ecf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactionPoint: {fileID: 8473599444135731462}
   actionText: Interact
   mode: 0
   holdDuration: 1
@@ -554,6 +556,7 @@ MonoBehaviour:
   - {fileID: 5168694928204183254}
   - {fileID: 2500699699437527233}
   showFakeSlotsWhenEmpty: 1
+  removeRuntimePartColliders: 0
 --- !u!114 &2570040988405219681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -621,6 +624,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1912965170338610683}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3314743005141431601
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8473599444135731462}
+  - component: {fileID: 625175083997097652}
+  m_Layer: 6
+  m_Name: InteractionPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8473599444135731462
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3314743005141431601}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.542, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8530883646693800988}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &625175083997097652
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3314743005141431601}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.8
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3985243607559936822
 GameObject:
   m_ObjectHideFlags: 0
@@ -1271,7 +1327,7 @@ GameObject:
   - component: {fileID: 363838434217769457}
   - component: {fileID: 4516270204388028784}
   - component: {fileID: 8880775804975613101}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: SM_Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -424,10 +424,35 @@ namespace NERA.Tests
                 Has.Length.GreaterThan(0),
                 "World terminal station must mirror installed upgrade parts.");
             Assert.That(
-                visualRoot.GetComponentsInChildren<Collider>(true)
-                    .All(collider => !collider.enabled),
+                stationVisual.GetComponentsInChildren<Collider>(true),
+                Is.Empty,
+                "The decorative mini station must not contain colliders.");
+            Assert.That(
+                stationVisual.GetComponentsInChildren<Transform>(true)
+                    .All(item => item.gameObject.layer ==
+                        LayerMask.NameToLayer("Default")),
                 Is.True,
-                "World terminal decoration must never receive clicks.");
+                "The decorative mini station must stay on the Default layer.");
+            Assert.That(
+                mapVisual.GetComponentsInChildren<Collider>(true),
+                Is.Empty,
+                "The decorative mini map must not contain colliders.");
+            Assert.That(
+                mapVisual.GetComponentsInChildren<
+                    Terminal.MapLocationSlotRegistry>(true),
+                Is.Empty,
+                "The decorative mini map must not contain a slot registry.");
+            Assert.That(
+                mapVisual.GetComponentsInChildren<
+                    Terminal.MapLocationSlot>(true),
+                Is.Empty,
+                "The decorative mini map must not contain interactive slots.");
+            Assert.That(
+                mapVisual.GetComponentsInChildren<Transform>(true)
+                    .All(item => item.gameObject.layer ==
+                        LayerMask.NameToLayer("Default")),
+                Is.True,
+                "The decorative mini map must stay on the Default layer.");
 
             access.CompleteInteraction(player.gameObject);
             Assert.That(terminal.IsOpening, Is.True);

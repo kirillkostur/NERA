@@ -17,6 +17,7 @@ namespace NERA.Station
         private bool upgradeModeActive;
         private bool hasPart;
         private bool showEmptyFake;
+        private bool removeRuntimeColliders;
 
         public string SlotId => slotId?.Trim() ?? string.Empty;
         public GameObject FakeVisual => fakeVisual;
@@ -41,6 +42,11 @@ namespace NERA.Station
             installedLocalPosition = localPosition;
             installedLocalEulerAngles = localEulerAngles;
             installedLocalScale = localScale;
+        }
+
+        public void SetRemoveRuntimeColliders(bool remove)
+        {
+            removeRuntimeColliders = remove;
         }
 
         public bool Owns(Collider collider)
@@ -88,6 +94,8 @@ namespace NERA.Station
             runtimeVisual.transform.localScale = installedLocalScale;
             SetLayerRecursively(runtimeVisual, gameObject.layer);
             MakeVisualOnly(runtimeVisual);
+            if (removeRuntimeColliders)
+                RemoveColliders(runtimeVisual);
         }
 
         public void SetUpgradeModeActive(bool active)
@@ -179,6 +187,18 @@ namespace NERA.Station
             root.layer = layer;
             foreach (Transform child in root.transform)
                 SetLayerRecursively(child.gameObject, layer);
+        }
+
+        private static void RemoveColliders(GameObject root)
+        {
+            foreach (Collider collider in
+                     root.GetComponentsInChildren<Collider>(true))
+            {
+                if (Application.isPlaying)
+                    Destroy(collider);
+                else
+                    DestroyImmediate(collider);
+            }
         }
 
         private void OnValidate()

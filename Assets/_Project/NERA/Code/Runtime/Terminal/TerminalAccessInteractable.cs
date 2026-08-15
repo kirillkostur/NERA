@@ -22,10 +22,8 @@ namespace NERA.Terminal
         [SerializeField] private GameObject mapVisual;
 
         private StationPowerController subscribedPower;
-        private StationSystemsController subscribedSystems;
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
-        private bool passiveCleanupPending;
         private int decorScreenIndex = StationScreenIndex;
         public float CameraBlendTimeout => cameraBlendTimeout;
 
@@ -37,10 +35,7 @@ namespace NERA.Terminal
 
         private void OnEnable()
         {
-            StationSystemsController.InstanceChanged +=
-                HandleSystemsControllerChanged;
             BindPowerController(StationPowerController.Instance);
-            BindSystemsController(StationSystemsController.Instance);
             RefreshPoweredDecoration();
         }
 
@@ -48,15 +43,6 @@ namespace NERA.Terminal
         {
             if (subscribedPower != StationPowerController.Instance)
                 BindPowerController(StationPowerController.Instance);
-        }
-
-        private void LateUpdate()
-        {
-            if (!passiveCleanupPending)
-                return;
-
-            passiveCleanupPending = false;
-            DisableDecorationInteraction();
         }
 
         public override InteractionPrompt GetPrompt()
@@ -188,33 +174,6 @@ namespace NERA.Terminal
             RefreshPoweredDecoration();
         }
 
-        private void BindSystemsController(StationSystemsController systems)
-        {
-            if (subscribedSystems == systems)
-                return;
-
-            if (subscribedSystems != null)
-                subscribedSystems.SystemsChanged -= HandleSystemsChanged;
-
-            subscribedSystems = systems;
-            if (subscribedSystems != null)
-                subscribedSystems.SystemsChanged += HandleSystemsChanged;
-            passiveCleanupPending = true;
-        }
-
-        private void HandleSystemsControllerChanged(
-            StationSystemsController systems)
-        {
-            BindSystemsController(systems);
-        }
-
-        private void HandleSystemsChanged()
-        {
-            // StationObjectVisual rebuilds installed part prefabs on this
-            // event. Disable their colliders after every rebuild as well.
-            passiveCleanupPending = true;
-        }
-
         private void HandlePowerStateChanged(StationPowerState state)
         {
             bool powered = state == StationPowerState.Online;
@@ -253,20 +212,6 @@ namespace NERA.Terminal
                 mapVisual.SetActive(showMap);
             if (visualRoot != null)
                 visualRoot.gameObject.SetActive(true);
-            DisableDecorationInteraction();
-        }
-
-        private void DisableDecorationInteraction()
-        {
-            if (visualRoot == null)
-                return;
-
-            foreach (Collider collider in
-                     visualRoot.GetComponentsInChildren<Collider>(true))
-            {
-                if (collider != null)
-                    collider.enabled = false;
-            }
         }
 
         private void ResolveReferences()
@@ -284,13 +229,8 @@ namespace NERA.Terminal
             TerminalUIScreen.Instance?.HandleTerminalUnavailable(this);
             EndTerminalView();
 
-            StationSystemsController.InstanceChanged -=
-                HandleSystemsControllerChanged;
-            if (subscribedSystems != null)
-                subscribedSystems.SystemsChanged -= HandleSystemsChanged;
             if (subscribedPower != null)
                 subscribedPower.StateChanged -= HandlePowerStateChanged;
-            subscribedSystems = null;
             subscribedPower = null;
         }
 

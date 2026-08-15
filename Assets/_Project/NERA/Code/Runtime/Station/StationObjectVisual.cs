@@ -18,6 +18,9 @@ namespace NERA.Station
             Array.Empty<StationUpgradeSlot>();
         [Tooltip("Allows empty slot silhouettes while this object is being upgraded.")]
         [SerializeField] private bool showFakeSlotsWhenEmpty = true;
+        [Tooltip("Removes colliders brought in by installed-part prefabs. " +
+                 "Use for passive world decoration only.")]
+        [SerializeField] private bool removeRuntimePartColliders;
 
         private StationSystemsController subscribedSystems;
         private ItemCatalogData catalog;
@@ -165,6 +168,12 @@ namespace NERA.Station
             identity ??= GetComponent<StationObjectIdentity>();
             if (slots == null || slots.Length == 0)
                 slots = GetComponentsInChildren<StationUpgradeSlot>(true);
+
+            foreach (StationUpgradeSlot slot in slots)
+            {
+                slot?.SetRemoveRuntimeColliders(
+                    removeRuntimePartColliders);
+            }
         }
 
         private void OnDisable()

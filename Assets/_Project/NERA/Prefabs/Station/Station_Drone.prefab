@@ -566,6 +566,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 4821152324154256753}
   - {fileID: 2395260431430439678}
   - {fileID: 1984414910242210901}
   - {fileID: 8895946943891416108}
@@ -597,6 +598,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8844260d487a1664ba3354d336266ecf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactionPoint: {fileID: 4821152324154256753}
   actionText: Interact
   mode: 0
   holdDuration: 1
@@ -640,6 +642,7 @@ MonoBehaviour:
   - {fileID: 8387814213526714869}
   - {fileID: 4671401657519205080}
   showFakeSlotsWhenEmpty: 1
+  removeRuntimePartColliders: 0
 --- !u!114 &3622600354023003158
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -670,6 +673,7 @@ GameObject:
   - component: {fileID: 8895946943891416108}
   - component: {fileID: 4057409174249982710}
   - component: {fileID: 5096255330865129991}
+  - component: {fileID: 3715751742082413729}
   m_Layer: 0
   m_Name: SM_Drone_Platform
   m_TagString: Untagged
@@ -746,6 +750,27 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3715751742082413729
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4653464154363696318}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 0.25, z: 2.5}
+  m_Center: {x: 0, y: 0.1225, z: 0}
 --- !u!1 &5030335390650046660
 GameObject:
   m_ObjectHideFlags: 0
@@ -1381,7 +1406,7 @@ GameObject:
   - component: {fileID: 3020663817527765190}
   - component: {fileID: 3362225619943273615}
   - component: {fileID: 5088039755981033790}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: SM_Drone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1700,3 +1725,56 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.07242698, y: 0.07242698, z: 0.15138924}
   m_Center: {x: 0, y: 0.03621349, z: 0.000000040978193}
+--- !u!1 &9012011477122853485
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4821152324154256753}
+  - component: {fileID: 4387131046554441794}
+  m_Layer: 6
+  m_Name: InteractionPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4821152324154256753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9012011477122853485}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1.126, y: 0.542, z: 1.31}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6089123769139469598}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &4387131046554441794
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9012011477122853485}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.3
+  m_Center: {x: 0, y: 0, z: 0}
