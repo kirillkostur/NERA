@@ -11,24 +11,19 @@ namespace NERA.Core
         public string SpawnPointId =>
             spawnPointId?.Trim() ?? string.Empty;
 
-        private void Start()
+        public bool TryTeleport(ParkourPlayerBridge player)
         {
-            if (!SceneTransitionState.TryConsumeSpawnPoint(SpawnPointId))
-                return;
-
-            ParkourPlayerBridge player =
-                FindFirstObjectByType<ParkourPlayerBridge>();
-
             if (player == null)
             {
                 Debug.LogError(
                     $"SceneSpawnPoint '{SpawnPointId}': parkour player not found.",
                     this
                 );
-                return;
+                return false;
             }
 
             player.Teleport(transform.position, transform.rotation);
+            return true;
         }
     }
 }

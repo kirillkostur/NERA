@@ -488,6 +488,46 @@ MonoBehaviour:
     m_Localized: Engineering part used to restore and upgrade station mechanisms.
     m_Metadata:
       m_Items: []
+  - m_Id: 339000000000000
+    m_Localized: Antenna Array
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000001
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000002
+    m_Localized: Calibration Module
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000003
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000004
+    m_Localized: Signal Amplifier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000005
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000006
+    m_Localized: Signal Processor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000007
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000008
+    m_Localized: Power Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000009
+    m_Localized: Engineering part used to restore and upgrade station mechanisms.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

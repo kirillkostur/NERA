@@ -17,7 +17,7 @@ namespace NERA.Station
         Generation,
         ScanRange,
         TravelRange,
-        FiringEnergyConsumption,
+        FiringEnergyPerShot,
         InitialCharge,
         EnergyConsumption,
         CalibrationEnergyConsumption,

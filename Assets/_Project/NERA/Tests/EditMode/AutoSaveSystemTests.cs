@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using NERA.Energy;
-using NERA.Items;
 using NERA.Save;
 using NUnit.Framework;
 using UnityEngine;
@@ -149,21 +148,41 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void WorldItemFallbackKeyDoesNotChangeWhenSiblingIsRemoved()
+        public void AuthoredPersistentKeyDoesNotChangeWhenSiblingIsRemoved()
         {
             GameObject parent = new GameObject("LootRoot");
             GameObject first = new GameObject("FirstLoot");
             GameObject second = new GameObject("SecondLoot");
             first.transform.SetParent(parent.transform);
             second.transform.SetParent(parent.transform);
-            first.AddComponent<WorldItem>();
-            WorldItem tracked = second.AddComponent<WorldItem>();
-            string keyBeforeRemoval = tracked.PersistentKey;
+            string keyBeforeRemoval = PersistentSceneIdentity.CreateKey(
+                second.transform,
+                "loot-7d7167f83e2b42f397a41d08cba83cc1");
 
             UnityEngine.Object.DestroyImmediate(first);
 
-            Assert.That(tracked.PersistentKey, Is.EqualTo(keyBeforeRemoval));
+            Assert.That(
+                PersistentSceneIdentity.CreateKey(
+                    second.transform,
+                    "loot-7d7167f83e2b42f397a41d08cba83cc1"),
+                Is.EqualTo(keyBeforeRemoval));
             UnityEngine.Object.DestroyImmediate(parent);
+        }
+
+        [Test]
+        public void MissingAuthoredPersistentIdDoesNotUseHierarchyFallback()
+        {
+            GameObject tracked = new GameObject("TrackedObject");
+            try
+            {
+                Assert.That(
+                    PersistentSceneIdentity.CreateKey(tracked.transform),
+                    Is.Empty);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(tracked);
+            }
         }
 
         [Test]

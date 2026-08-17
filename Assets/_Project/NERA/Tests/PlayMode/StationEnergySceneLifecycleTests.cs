@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,7 @@ using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Localization;
+using NERA.Maintenance;
 using NERA.Player;
 using NERA.Research;
 using NERA.Quests;
@@ -94,6 +96,7 @@ namespace NERA.Tests
         [UnitySetUp]
         public IEnumerator UseEnglishLocaleForEveryTest()
         {
+            yield return ResetSceneState();
             PlayerPrefs.SetString(
                 NERALocalization.LocalePreferenceKey,
                 NERALocalization.EnglishCode);
@@ -105,12 +108,7 @@ namespace NERA.Tests
         [UnityTearDown]
         public IEnumerator TearDownPersistentBootRoot()
         {
-            BootInitializer boot =
-                Object.FindFirstObjectByType<BootInitializer>();
-            if (boot != null)
-                Object.Destroy(boot.gameObject);
-
-            yield return null;
+            yield return ResetSceneState();
         }
 
         [UnityTest]
@@ -628,6 +626,83 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator FailedSceneTransitionKeepsCurrentSceneAndCheckpoint()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+
+            BootInitializer runtime = BootInitializer.Instance;
+            SaveGameController save =
+                Object.FindFirstObjectByType<SaveGameController>();
+            Assert.That(runtime, Is.Not.Null);
+            Assert.That(save, Is.Not.Null);
+            string checkpointSceneBefore = save.CheckpointSceneName;
+            string checkpointIdBefore = save.CheckpointSpawnPointId;
+
+            const string missingSpawn = "missing_transition_test_spawn";
+            LogAssert.Expect(
+                LogType.Error,
+                $"BootInitializer: Scene 'Expedition_01' has no spawn point " +
+                $"'{missingSpawn}'.");
+            Assert.That(
+                runtime.LoadGameplayScene("Expedition_01", missingSpawn),
+                Is.True,
+                "A valid scene request should start asynchronously.");
+            while (runtime.IsLoading)
+                yield return null;
+
+            Assert.That(
+                runtime.LastTransitionResult,
+                Is.EqualTo(SceneTransitionResult.Failure));
+            Assert.That(
+                runtime.CurrentGameplaySceneName,
+                Is.EqualTo("Player_Station"));
+            Assert.That(
+                SceneManager.GetActiveScene().name,
+                Is.EqualTo("Player_Station"));
+            Assert.That(
+                SceneManager.GetSceneByName("Expedition_01").isLoaded,
+                Is.False,
+                "A scene loaded by a failed transition must be rolled back.");
+            Assert.That(SceneTransitionState.HasPendingSpawnPoint, Is.False);
+            Assert.That(save.CheckpointSceneName, Is.EqualTo(checkpointSceneBefore));
+            Assert.That(save.CheckpointSpawnPointId, Is.EqualTo(checkpointIdBefore));
+        }
+
+        [UnityTest]
+        public IEnumerator TurretEnergyCostIsAtomicPerShot()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationTurretController turret =
+                StationTurretController.FindById("station_turret_01");
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(turret, Is.Not.Null);
+            energy.RestoreState(energy.TotalCapacity, true);
+
+            float energyBefore = energy.CurrentEnergy;
+            float consumerRateBefore = energy.CurrentConsumption;
+            float shotCost = turret.EffectiveEnergyPerShot;
+            Assert.That(shotCost, Is.GreaterThan(0f));
+
+            Assert.That(turret.TrySpendFiringEnergy(), Is.True);
+            Assert.That(turret.TrySpendFiringEnergy(), Is.True);
+
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(energyBefore - shotCost * 2f).Within(0.001f));
+            Assert.That(
+                energy.CurrentConsumption,
+                Is.EqualTo(consumerRateBefore).Within(0.001f),
+                "A shot must not replace the idle consumer rate for one frame.");
+        }
+
+        [UnityTest]
         public IEnumerator StationTerminalIsStatusOnlyAndReflectsPhysicalParts()
         {
             SceneManager.LoadScene("MainScene");
@@ -954,48 +1029,60 @@ namespace NERA.Tests
 
             EnergySystemController energy = EnergySystemController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
-            ItemCatalogData catalog =
-                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-
             Assert.That(energy, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
-            Assert.That(catalog, Is.Not.Null);
 
             systems.ResetSystems();
             yield return null;
             StationSystemDefinition battery =
                 systems.GetDefinition(StationSystemType.Battery);
-            ItemData capacitor = catalog.Find("capacitor_01");
             Assert.That(battery, Is.Not.Null);
-            Assert.That(capacitor, Is.Not.Null);
             float baseCapacity = systems.GetStat(
                 StationSystemType.Battery,
                 battery.ObjectId,
                 StationObjectStat.Capacity);
+            ItemData capacityPart = CreateEngineeringPart(
+                "test_battery_capacity",
+                StationSystemType.Battery,
+                battery.ObjectId,
+                "Slot_1",
+                StationObjectStat.Capacity,
+                250f);
+            ItemCatalogData testCatalog = CreateCatalog(capacityPart);
+            try
+            {
+                SetPrivateField(systems, "itemCatalog", testCatalog);
+                Assert.That(
+                    systems.TryInstallParts(
+                        StationSystemType.Battery,
+                        battery.ObjectId,
+                        new[]
+                        {
+                            new StationPartInstallRequest(
+                                "Slot_1",
+                                capacityPart)
+                        },
+                        out string reason),
+                    Is.True,
+                    reason);
+                yield return null;
 
-            Assert.That(
-                systems.TryInstallParts(
-                    StationSystemType.Battery,
-                    battery.ObjectId,
-                    new[]
-                    {
-                        new StationPartInstallRequest("Slot_1", capacitor)
-                    },
-                    out string reason),
-                Is.True,
-                reason);
-            yield return null;
-
-            Assert.That(
-                systems.GetStat(
-                    StationSystemType.Battery,
-                    battery.ObjectId,
-                    StationObjectStat.Capacity),
-                Is.GreaterThan(baseCapacity));
-            Assert.That(
-                energy.TotalCapacity,
-                Is.GreaterThanOrEqualTo(baseCapacity),
-                "The live battery must re-register after the part is installed.");
+                Assert.That(
+                    systems.GetStat(
+                        StationSystemType.Battery,
+                        battery.ObjectId,
+                        StationObjectStat.Capacity),
+                    Is.EqualTo(baseCapacity + 250f));
+                Assert.That(
+                    energy.TotalCapacity,
+                    Is.GreaterThanOrEqualTo(baseCapacity + 250f),
+                    "The live battery must re-register after the part is installed.");
+            }
+            finally
+            {
+                Object.Destroy(testCatalog);
+                Object.Destroy(capacityPart);
+            }
         }
 
         [UnityTest]
@@ -1183,6 +1270,55 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator NewGameRestoresAuthoredMaintenanceConditions()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+
+            SaveGameController save =
+                Object.FindFirstObjectByType<SaveGameController>();
+            Assert.That(save, Is.Not.Null);
+
+            GameObject firstRoot = new GameObject("Test_InitialTurret_01");
+            GameObject secondRoot = new GameObject("Test_InitialTurret_02");
+            try
+            {
+                StationObjectIdentity firstIdentity =
+                    firstRoot.AddComponent<StationObjectIdentity>();
+                firstIdentity.Configure(
+                    StationSystemType.Turret,
+                    "test_initial_turret_01");
+                MaintainableObject first =
+                    firstRoot.AddComponent<MaintainableObject>();
+                SetPrivateField(first, "initialCondition", 0.25f);
+
+                StationObjectIdentity secondIdentity =
+                    secondRoot.AddComponent<StationObjectIdentity>();
+                secondIdentity.Configure(
+                    StationSystemType.Turret,
+                    "test_initial_turret_02");
+                MaintainableObject second =
+                    secondRoot.AddComponent<MaintainableObject>();
+                SetPrivateField(second, "initialCondition", 0.75f);
+
+                first.SetCondition(1f);
+                second.SetCondition(0f);
+                save.ClearSave(resetProgress: true);
+
+                Assert.That(first.Condition, Is.EqualTo(0.25f));
+                Assert.That(second.Condition, Is.EqualTo(0.75f));
+            }
+            finally
+            {
+                Object.Destroy(firstRoot);
+                Object.Destroy(secondRoot);
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator DroneCanSurveySecondLocationAfterRecharge()
         {
             SceneManager.LoadScene("MainScene");
@@ -1254,13 +1390,32 @@ namespace NERA.Tests
             ItemData propulsion = catalog != null ? catalog.Find("propulsion_01") : null;
             Assert.That(systems, Is.Not.Null);
             Assert.That(propulsion, Is.Not.Null);
+            EngineeringPartCompatibility propulsionCompatibility =
+                propulsion.EngineeringPartDefinition?.CompatibleInstallations
+                    .FirstOrDefault(candidate =>
+                        candidate != null &&
+                        candidate.Matches(
+                            StationSystemType.Drone,
+                            droneDefinition.ObjectId,
+                            candidate.SlotId) &&
+                        droneDefinition.FindSlot(candidate.SlotId) != null &&
+                        candidate.Modifiers.Any(modifier =>
+                            modifier != null &&
+                            modifier.Stat == StationObjectStat.TravelRange &&
+                            modifier.Value > 0f));
+            Assert.That(
+                propulsionCompatibility,
+                Is.Not.Null,
+                "Propulsion must declare a valid travel-range slot for the drone.");
             Assert.That(
                 systems.TryInstallParts(
                     StationSystemType.Drone,
                     droneDefinition.ObjectId,
                     new[]
                     {
-                        new StationPartInstallRequest("Slot_4", propulsion)
+                        new StationPartInstallRequest(
+                            propulsionCompatibility.SlotId,
+                            propulsion)
                     },
                     out string installReason),
                 Is.True,
@@ -2734,6 +2889,86 @@ namespace NERA.Tests
                 Object.Destroy(save);
 
             yield return null;
+        }
+
+        private static IEnumerator ResetSceneState()
+        {
+            BootInitializer[] bootRoots =
+                Object.FindObjectsByType<BootInitializer>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            foreach (BootInitializer boot in bootRoots)
+            {
+                if (boot != null)
+                    Object.Destroy(boot.gameObject);
+            }
+
+            yield return null;
+            GameSessionLaunchState.Clear();
+            SaveSlotStorage.DeleteAllSlots();
+            SceneManager.LoadScene("Boot", LoadSceneMode.Single);
+            yield return null;
+        }
+
+        private static ItemData CreateEngineeringPart(
+            string itemId,
+            StationSystemType systemType,
+            string objectId,
+            string slotId,
+            StationObjectStat stat,
+            float value)
+        {
+            var modifier = new StationObjectStatModifierDefinition();
+            SetPrivateField(modifier, "stat", stat);
+            SetPrivateField(modifier, "mode", StationStatModifierMode.Add);
+            SetPrivateField(modifier, "value", value);
+
+            var compatibility = new EngineeringPartCompatibility();
+            SetPrivateField(compatibility, "systemType", systemType);
+            SetPrivateField(compatibility, "objectId", objectId);
+            SetPrivateField(compatibility, "slotId", slotId);
+            SetPrivateField(
+                compatibility,
+                "modifiers",
+                new List<StationObjectStatModifierDefinition> { modifier });
+
+            var definition = new EngineeringPartDefinition();
+            SetPrivateField(
+                definition,
+                "compatibleInstallations",
+                new List<EngineeringPartCompatibility> { compatibility });
+
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+            item.name = $"Test_{itemId}";
+            SetPrivateField(item, "itemId", itemId);
+            SetPrivateField(item, "displayName", itemId);
+            SetPrivateField(item, "itemType", ItemType.EngineeringPart);
+            SetPrivateField(item, "engineeringPartDefinition", definition);
+            return item;
+        }
+
+        private static ItemCatalogData CreateCatalog(params ItemData[] items)
+        {
+            ItemCatalogData catalog =
+                ScriptableObject.CreateInstance<ItemCatalogData>();
+            catalog.name = "Test_ItemCatalog";
+            SetPrivateField(catalog, "items", new List<ItemData>(items));
+            return catalog;
+        }
+
+        private static void SetPrivateField(
+            object target,
+            string fieldName,
+            object value)
+        {
+            FieldInfo field = target.GetType().GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(
+                field,
+                Is.Not.Null,
+                $"Missing field {target.GetType().Name}.{fieldName}");
+            field.SetValue(target, value);
         }
     }
 

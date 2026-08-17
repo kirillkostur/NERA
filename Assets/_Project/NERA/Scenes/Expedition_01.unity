@@ -10134,6 +10134,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IO_Blue_Weak (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: c96a850173374b579f6d139c94aed95f
+      objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: -9.7
@@ -13023,6 +13027,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3929cb8202698f4699364dbdfd8dd5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactionPoint: {fileID: 0}
   actionText: Interact
   mode: 0
   holdDuration: 1
@@ -13041,7 +13046,7 @@ MonoBehaviour:
   questInteractionName: 
   itemData: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
   destroyAfterPickup: 1
-  persistentId: 
+  persistentId: 27e9fca9ce2a42089f051eba37c6f814
   trackWorldState: 1
 --- !u!23 &1295145794
 MeshRenderer:
@@ -21840,6 +21845,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_Name
       value: IO_Blue_Weak
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 9f358ac09e374ff48daf07f60da4e1fd
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x

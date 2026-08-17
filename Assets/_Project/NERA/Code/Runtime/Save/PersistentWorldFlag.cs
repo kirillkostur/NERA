@@ -38,6 +38,7 @@ namespace NERA.Save
 
         public bool IsCompleted => worldState != null &&
             worldState.IsWorldFlagCompleted(PersistentKey);
+        public string AuthoredPersistentId => persistentId?.Trim();
 
         private void Awake()
         {

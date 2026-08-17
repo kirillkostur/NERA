@@ -19,7 +19,7 @@ namespace NERA.Enemies
         }
 
         [SerializeField] private IOEnemyConfig config;
-        [Tooltip("Optional stable ID. If empty, scene hierarchy is used.")]
+        [Tooltip("Stable ID required for every authored enemy instance.")]
         [SerializeField] private string persistentId;
 
         private static readonly HashSet<IOEnemyController> ActiveEnemySet =
@@ -37,8 +37,14 @@ namespace NERA.Enemies
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
+        public string AuthoredPersistentId => persistentId?.Trim();
         public bool IsAlive => state != State.Dead;
         public string PersistentKey => persistentKey;
+
+        private void OnValidate()
+        {
+            persistentId = persistentId?.Trim();
+        }
 
         private void Awake()
         {

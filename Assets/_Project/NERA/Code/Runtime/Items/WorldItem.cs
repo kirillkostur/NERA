@@ -12,7 +12,7 @@ namespace NERA.Items
         [Header("Item")]
         [SerializeField] private ItemData itemData;
         [SerializeField] private bool destroyAfterPickup = true;
-        [Tooltip("Optional stable ID. If empty, scene hierarchy is used.")]
+        [Tooltip("Stable ID required for authored items that track world state.")]
         [SerializeField] private string persistentId;
         [SerializeField] private bool trackWorldState = true;
 
@@ -22,6 +22,8 @@ namespace NERA.Items
 
         public ItemData ItemData => itemData;
         public ItemInstance ItemInstance => itemInstance;
+        public string AuthoredPersistentId => persistentId?.Trim();
+        public bool TracksWorldState => trackWorldState;
         public string PersistentKey => GetPersistentKey();
 
         private void Awake()
@@ -67,6 +69,11 @@ namespace NERA.Items
         private void Reset()
         {
             SetActionText("Pick Up");
+        }
+
+        private void OnValidate()
+        {
+            persistentId = persistentId?.Trim();
         }
 
         public override InteractionPrompt GetPrompt()

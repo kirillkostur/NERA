@@ -234,15 +234,26 @@ namespace NERA.Save
             string checkpointId = saveController.CheckpointSpawnPointId;
             if (!saveController.CheckpointUsesWorldPose)
                 SuppressNextActivation(sceneName, checkpointId);
-            playerHealth?.Revive();
-
-            if (boot != null)
+            if (boot == null)
             {
-                yield return boot.ReloadGameplayFromCheckpoint(
-                    sceneName,
-                    checkpointId);
+                ActivityChanged?.Invoke(CheckpointActivity.RestoreFailed);
+                autoSave?.SetSuspended(false);
+                restoring = false;
+                yield break;
             }
 
+            yield return boot.ReloadGameplayFromCheckpoint(
+                sceneName,
+                checkpointId);
+            if (boot.LastTransitionResult != SceneTransitionResult.Success)
+            {
+                ActivityChanged?.Invoke(CheckpointActivity.RestoreFailed);
+                autoSave?.SetSuspended(false);
+                restoring = false;
+                yield break;
+            }
+
+            playerHealth?.Revive();
             ActivityChanged?.Invoke(CheckpointActivity.Restored);
             autoSave?.SetSuspended(false);
             restoring = false;

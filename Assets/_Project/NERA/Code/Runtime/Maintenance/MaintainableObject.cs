@@ -51,6 +51,7 @@ namespace NERA.Maintenance
         public MaintenanceRole Role => role;
         public bool ExposedToWeather => exposedToWeather;
         public float Condition => condition;
+        public float InitialCondition => Mathf.Clamp01(initialCondition);
         public bool IsOperational => condition > 0.01f;
         public bool NeedsService => condition < 0.999f;
         public string ServiceActionText => GetServiceActionText();
@@ -142,6 +143,11 @@ namespace NERA.Maintenance
 
             SetCondition(1f);
             return true;
+        }
+
+        public void ResetToInitialCondition()
+        {
+            SetCondition(InitialCondition);
         }
 
         private void ApplyWeatherWear(float deltaTime)

@@ -1080,7 +1080,7 @@ namespace NERA.Save
             foreach (MaintainableObject maintainable in
                      MaintainableObject.ActiveObjects)
             {
-                maintainable?.SetCondition(1f);
+                maintainable?.ResetToInitialCondition();
             }
 
             research?.RestoreAnalyzed(Array.Empty<string>());

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace NERA.Save
@@ -12,10 +11,11 @@ namespace NERA.Save
             if (target == null)
                 return string.Empty;
 
+            if (string.IsNullOrWhiteSpace(authoredId))
+                return string.Empty;
+
             string sceneName = target.gameObject.scene.name;
-            string localId = string.IsNullOrWhiteSpace(authoredId)
-                ? BuildHierarchyPath(target)
-                : authoredId.Trim();
+            string localId = authoredId.Trim();
             return Normalize($"{sceneName}/{localId}");
         }
 
@@ -26,18 +26,5 @@ namespace NERA.Save
                 : value.Trim().Replace('\\', '/').ToLowerInvariant();
         }
 
-        private static string BuildHierarchyPath(Transform target)
-        {
-            var segments = new List<string>();
-            Transform current = target;
-            while (current != null)
-            {
-                segments.Add($"{current.name}[{current.GetSiblingIndex()}]");
-                current = current.parent;
-            }
-
-            segments.Reverse();
-            return string.Join("/", segments);
-        }
     }
 }

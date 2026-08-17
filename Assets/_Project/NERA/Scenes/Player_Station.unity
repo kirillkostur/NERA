@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_NERAMemoryCore
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: b7a7a4a5e7764b1f95cc311e99bb124a, type: 3}
+      propertyPath: persistentId
+      value: 2123a53b8e1547c295020420e08719da
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -281,6 +285,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_Cooling
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: d6724414c5c4eab4ebaf8562b9f4710e, type: 3}
+      propertyPath: persistentId
+      value: 449cfb8d6c754c18bef7dfb2d68b0bbe
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -338,6 +346,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_EnergyPistol
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 55712239d57d46d49f68e38140506330, type: 3}
+      propertyPath: persistentId
+      value: aeae627277fd468d8913e3c9f4833e44
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -394,6 +406,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: fc3001df46b89434eadd9bb800c16f64, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_Capacitor (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: fc3001df46b89434eadd9bb800c16f64, type: 3}
+      propertyPath: persistentId
+      value: 3e78870d63be4dffb3a32d3b7d601eb4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -573,6 +589,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_ServoDrive
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 8941b83a5f3f9f74fb4bd39f4d4fff9c, type: 3}
+      propertyPath: persistentId
+      value: 926252e2f80049189726ce8705fe7b44
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -945,6 +965,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_Capacitor
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: fc3001df46b89434eadd9bb800c16f64, type: 3}
+      propertyPath: persistentId
+      value: 4d6c57a8912a44bdabfea9ea087c408d
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1230,6 +1254,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_IOBlueShard
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 8cfef65c4fe154149a1054233a5086bf, type: 3}
+      propertyPath: persistentId
+      value: a681678ae1bd4b7983f9644fdddec073
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1356,6 +1384,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 9dcf06cd9ab543ffaaa3efb416066868
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1559,6 +1591,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 271b04ed086564f4e89960eb68b8e7fb, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_PowerCore
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 271b04ed086564f4e89960eb68b8e7fb, type: 3}
+      propertyPath: persistentId
+      value: 950b430f96ed4baea7319ce79aa1e01c
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2207,6 +2243,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_Propulsion
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 8270a64bc73cc88448358e93f6b774bd, type: 3}
+      propertyPath: persistentId
+      value: 3a0b4d0e79ba4031b94fb2f4e452d4ae
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2317,6 +2357,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_AntennaArray
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 87a4b8b0471621c4095629c647619a1b, type: 3}
+      propertyPath: persistentId
+      value: 92ad87c9055e45379d30a3375c3c0101
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2426,6 +2470,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 1b1d0a758565bf04a9291ed9f06fb11e, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_SignalProcessor
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 1b1d0a758565bf04a9291ed9f06fb11e, type: 3}
+      propertyPath: persistentId
+      value: 6e744addf18946879598e981e060bc72
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2700,6 +2748,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_Servo
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: c617f3358ad8c8342937ae6f70c09fe7, type: 3}
+      propertyPath: persistentId
+      value: feb7eccdf7c6476f96b6d4c2120ba1df
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2720,6 +2772,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 2bfaa8ba607a4159a048d152745b7e61
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2817,6 +2873,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 6668d9d37f9f7574f8ef04da60dd07a2, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_CalibrationModule
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 6668d9d37f9f7574f8ef04da60dd07a2, type: 3}
+      propertyPath: persistentId
+      value: e93d453dd3534ba69b319aaacabc01c1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3225,6 +3285,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_EmitterDamage (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 4d9d459be61211a468a442def6f8479d, type: 3}
+      propertyPath: persistentId
+      value: 7ca8e3ca294147c6bb531525889fd6cc
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3481,6 +3545,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_Sensor
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 2c7f5e6472c1556439538783f5128498, type: 3}
+      propertyPath: persistentId
+      value: 3f4dc2946b5d41789d7857e4a3a648c7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3537,6 +3605,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 4d9d459be61211a468a442def6f8479d, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_EmitterDamage
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 4d9d459be61211a468a442def6f8479d, type: 3}
+      propertyPath: persistentId
+      value: c592caed03994960b5ff132774801e56
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4034,6 +4106,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_AdvancedStabilizer
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 8cbc73571b4b01e43add1d996101175c, type: 3}
+      propertyPath: persistentId
+      value: 37859e622223488da39650e6fa520971
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4228,6 +4304,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 8d21ee9db41793b4abc4372fa83dcb8d, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_Chassis
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 8d21ee9db41793b4abc4372fa83dcb8d, type: 3}
+      propertyPath: persistentId
+      value: 082f24ab3cdb441d9fca98c4c81908fc
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4583,6 +4663,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_IOIntegrator
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: e811af5e970aa934db2c7a3122e52b52, type: 3}
+      propertyPath: persistentId
+      value: 8d77cc8db5e34e5ab70fd27e7a434033
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4745,6 +4829,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: c54bb16caa126b34dba9713721c921ee, type: 3}
       propertyPath: m_Name
       value: P_WorldItem_SignalAmplifier
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: c54bb16caa126b34dba9713721c921ee, type: 3}
+      propertyPath: persistentId
+      value: cf8cb2b706e249f0984c668df46c6af1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5485,6 +5573,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_WorldItem_SensorArray
       objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 987367efac8630743bcc08244ef1b8b5, type: 3}
+      propertyPath: persistentId
+      value: 15f69b6884c941fdaaf79721cf2ac7d3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6080,6 +6172,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 251f8b9fd8694b93b747078a1fcfdeb8
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x

@@ -42,7 +42,9 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public int version = 19;
+        public const int CurrentVersion = 19;
+
+        public int version = CurrentVersion;
         public string checkpointSceneName;
         public string checkpointSpawnPointId;
         public bool checkpointUsesWorldPose;

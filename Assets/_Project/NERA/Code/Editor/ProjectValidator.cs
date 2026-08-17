@@ -4,12 +4,15 @@ using System.Linq;
 using Climbing;
 using NERA.Combat;
 using NERA.Core;
+using NERA.Enemies;
 using NERA.Expeditions;
 using NERA.Interaction;
 using NERA.Inventory;
+using NERA.Items;
 using NERA.Locations;
 using NERA.Player;
 using NERA.Quests;
+using NERA.Save;
 using NERA.Station;
 using NERA.Terminal;
 using UnityEditor;
@@ -66,6 +69,65 @@ namespace NERA.Editor
                 $"enabled build scenes, " +
                 $"{FindLocationAssets().Length} location configs and " +
                 $"{PCQualityPresetExpectations.Length} PC quality presets.");
+        }
+
+        [MenuItem("NERA/Assign Missing Persistent IDs")]
+        public static void AssignMissingPersistentIds()
+        {
+            int assignedCount = 0;
+            foreach (EditorBuildSettingsScene buildScene in
+                     EditorBuildSettings.scenes.Where(scene => scene.enabled))
+            {
+                Scene scene = SceneManager.GetSceneByPath(buildScene.path);
+                bool openedByUtility = !scene.IsValid() || !scene.isLoaded;
+                if (openedByUtility)
+                {
+                    scene = EditorSceneManager.OpenScene(
+                        buildScene.path,
+                        OpenSceneMode.Additive);
+                }
+
+                try
+                {
+                    int assignedInScene = 0;
+                    foreach (Component component in
+                             FindPersistentSceneComponents(scene))
+                    {
+                        SerializedObject serialized =
+                            new SerializedObject(component);
+                        SerializedProperty idProperty =
+                            serialized.FindProperty("persistentId");
+                        if (idProperty == null ||
+                            !string.IsNullOrWhiteSpace(
+                                idProperty.stringValue))
+                        {
+                            continue;
+                        }
+
+                        idProperty.stringValue =
+                            Guid.NewGuid().ToString("N");
+                        serialized.ApplyModifiedPropertiesWithoutUndo();
+                        EditorUtility.SetDirty(component);
+                        assignedInScene++;
+                    }
+
+                    if (assignedInScene > 0)
+                    {
+                        EditorSceneManager.MarkSceneDirty(scene);
+                        EditorSceneManager.SaveScene(scene);
+                        assignedCount += assignedInScene;
+                    }
+                }
+                finally
+                {
+                    if (openedByUtility && scene.IsValid())
+                        EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log(
+                $"Assigned {assignedCount} missing persistent scene IDs.");
         }
 
         public static void ValidateOrThrow()
@@ -276,12 +338,103 @@ namespace NERA.Editor
                         }
                     }
                 }
+
+                ValidatePersistentSceneIds(scenePath, scene, errors);
             }
             finally
             {
                 if (openedByValidator && scene.IsValid())
                     EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        private static void ValidatePersistentSceneIds(
+            string scenePath,
+            Scene scene,
+            List<string> errors)
+        {
+            Dictionary<string, Component> ownersById =
+                new Dictionary<string, Component>(
+                    StringComparer.OrdinalIgnoreCase);
+            foreach (Component component in
+                     FindPersistentSceneComponents(scene))
+            {
+                string authoredId = GetAuthoredPersistentId(component);
+                string objectPath = GetHierarchyPath(component.transform);
+                if (string.IsNullOrWhiteSpace(authoredId))
+                {
+                    errors.Add(
+                        $"{scenePath}: {objectPath} " +
+                        $"({component.GetType().Name}) has no persistent ID.");
+                    continue;
+                }
+
+                string normalizedId =
+                    PersistentSceneIdentity.Normalize(authoredId);
+                if (ownersById.TryGetValue(
+                        normalizedId,
+                        out Component existing))
+                {
+                    errors.Add(
+                        $"{scenePath}: duplicate persistent ID " +
+                        $"'{authoredId}' on {GetHierarchyPath(existing.transform)} " +
+                        $"and {objectPath}.");
+                    continue;
+                }
+
+                ownersById.Add(normalizedId, component);
+            }
+        }
+
+        private static IEnumerable<Component> FindPersistentSceneComponents(
+            Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (WorldItem worldItem in
+                         root.GetComponentsInChildren<WorldItem>(true))
+                {
+                    if (worldItem.TracksWorldState)
+                        yield return worldItem;
+                }
+
+                foreach (IOEnemyController enemy in
+                         root.GetComponentsInChildren<IOEnemyController>(true))
+                {
+                    yield return enemy;
+                }
+
+                foreach (PersistentWorldFlag flag in
+                         root.GetComponentsInChildren<PersistentWorldFlag>(true))
+                {
+                    yield return flag;
+                }
+            }
+        }
+
+        private static string GetAuthoredPersistentId(Component component)
+        {
+            return component switch
+            {
+                WorldItem worldItem => worldItem.AuthoredPersistentId,
+                IOEnemyController enemy => enemy.AuthoredPersistentId,
+                PersistentWorldFlag flag => flag.AuthoredPersistentId,
+                _ => string.Empty
+            };
+        }
+
+        private static string GetHierarchyPath(Transform target)
+        {
+            List<string> segments = new List<string>();
+            Transform current = target;
+            while (current != null)
+            {
+                segments.Add(current.name);
+                current = current.parent;
+            }
+
+            segments.Reverse();
+            return string.Join("/", segments);
         }
 
         private static void ValidateExpeditionLocations(List<string> errors)

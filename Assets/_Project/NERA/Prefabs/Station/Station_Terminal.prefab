@@ -924,7 +924,7 @@ GameObject:
   - component: {fileID: 2448816263421046914}
   - component: {fileID: 3801989220083819724}
   - component: {fileID: 4105943490659284836}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Station_Terminal
   m_TagString: Untagged
   m_Icon: {fileID: 0}

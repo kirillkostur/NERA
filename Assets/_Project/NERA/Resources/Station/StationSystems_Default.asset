@@ -188,9 +188,9 @@ MonoBehaviour:
       unit: ' kW'
       decimals: 1
     - stat: 10
-      displayName: Firing consumption
+      displayName: Energy per shot
       baseValue: 5
-      unit: ' kW'
+      unit: ' charge/shot'
       decimals: 1
     - stat: 5
       displayName: Damage taken
@@ -248,9 +248,9 @@ MonoBehaviour:
       unit: ' kW'
       decimals: 1
     - stat: 10
-      displayName: Firing consumption
+      displayName: Energy per shot
       baseValue: 5
-      unit: ' kW'
+      unit: ' charge/shot'
       decimals: 1
     - stat: 5
       displayName: Damage taken

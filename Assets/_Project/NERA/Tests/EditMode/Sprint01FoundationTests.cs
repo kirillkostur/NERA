@@ -851,7 +851,7 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void SaveVersion14SerializesQuestAndMaintenanceState()
+        public void CurrentSaveVersionSerializesQuestAndMaintenanceState()
         {
             SaveGameData data = new SaveGameData();
             data.activeQuests.Add(new QuestInstanceSaveData
@@ -870,7 +870,7 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(data));
 
-            Assert.That(restored.version, Is.EqualTo(18));
+            Assert.That(restored.version, Is.EqualTo(SaveGameData.CurrentVersion));
             Assert.That(restored.activeQuests[0].currentStageIndex,
                 Is.EqualTo(2));
             Assert.That(restored.maintenanceObjects[0].objectId,
@@ -1257,6 +1257,8 @@ namespace NERA.Tests
     public sealed class Sprint03DroneStateTests
     {
         private GameObject root;
+        private StationSystemsConfig stationConfig;
+        private StationSystemsController systems;
         private StationPowerController power;
         private ExpeditionDiscoveryController discovery;
         private DroneScanController drone;
@@ -1265,7 +1267,17 @@ namespace NERA.Tests
         [SetUp]
         public void SetUp()
         {
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(StationSystemsController),
+                null);
             root = new GameObject("Test_DroneState");
+            stationConfig =
+                TestStationSystemsConfigFactory.CreateControllerConfig();
+            systems = root.AddComponent<StationSystemsController>();
+            TestStationSystemsConfigFactory.AssignConfig(systems, stationConfig);
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(StationSystemsController),
+                systems);
             power = root.AddComponent<StationPowerController>();
             discovery = root.AddComponent<ExpeditionDiscoveryController>();
             drone = root.AddComponent<DroneScanController>();
@@ -1284,6 +1296,10 @@ namespace NERA.Tests
         {
             Object.DestroyImmediate(location);
             Object.DestroyImmediate(root);
+            Object.DestroyImmediate(stationConfig);
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(StationSystemsController),
+                null);
         }
 
         [Test]
@@ -1331,9 +1347,21 @@ namespace NERA.Tests
             power.RestorePower();
             drone.RefreshAvailability();
 
-            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(100f));
+            float configuredCapacity = systems.GetStat(
+                StationSystemType.Drone,
+                "station_drone",
+                StationObjectStat.BatteryCharge);
+            float configuredFlightCost = systems.GetStat(
+                StationSystemType.Drone,
+                "station_drone",
+                StationObjectStat.FlightEnergyConsumption);
+            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(configuredCapacity));
             Assert.That(drone.LaunchScan(location), Is.True);
-            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(20f));
+            Assert.That(
+                drone.CurrentBatteryCharge,
+                Is.EqualTo(
+                    configuredCapacity -
+                    location.DroneFlightDuration * configuredFlightCost));
         }
 
         [Test]
@@ -1372,12 +1400,21 @@ namespace NERA.Tests
             power.RestorePower();
             drone.RefreshAvailability();
 
-            Assert.That(drone.EnergyConsumption, Is.EqualTo(4f));
-            Assert.That(drone.RechargeRemaining, Is.EqualTo(12.5f));
+            float configuredRate = systems.GetStat(
+                StationSystemType.Drone,
+                "station_drone",
+                StationObjectStat.EnergyConsumption);
+            float expectedDuration =
+                (drone.BatteryCapacity - drone.CurrentBatteryCharge) /
+                configuredRate;
+            Assert.That(drone.EnergyConsumption, Is.EqualTo(configuredRate));
+            Assert.That(drone.RechargeRemaining, Is.EqualTo(expectedDuration));
 
-            drone.AdvanceRecharge(12.5f);
+            drone.AdvanceRecharge(expectedDuration);
 
-            Assert.That(drone.CurrentBatteryCharge, Is.EqualTo(100f));
+            Assert.That(
+                drone.CurrentBatteryCharge,
+                Is.EqualTo(drone.BatteryCapacity));
             Assert.That(drone.IsCharging, Is.False);
         }
 
@@ -1637,6 +1674,8 @@ namespace NERA.Tests
     public sealed class AntennaControllerTests
     {
         private GameObject root;
+        private StationSystemsConfig stationConfig;
+        private StationSystemsController systems;
         private StationEnvironmentController environment;
         private EnergySystemController energy;
         private StationPowerController power;
@@ -1658,6 +1697,11 @@ namespace NERA.Tests
             SetSingleton(typeof(StationSystemsController), null);
 
             root = new GameObject("Test_AntennaSystems");
+            stationConfig =
+                TestStationSystemsConfigFactory.CreateControllerConfig();
+            systems = root.AddComponent<StationSystemsController>();
+            TestStationSystemsConfigFactory.AssignConfig(systems, stationConfig);
+            SetSingleton(typeof(StationSystemsController), systems);
             environment = root.AddComponent<StationEnvironmentController>();
             energy = root.AddComponent<EnergySystemController>();
             power = root.AddComponent<StationPowerController>();
@@ -1718,6 +1762,7 @@ namespace NERA.Tests
             Object.DestroyImmediate(expedition);
             Object.DestroyImmediate(mapSlot);
             Object.DestroyImmediate(root);
+            Object.DestroyImmediate(stationConfig);
             SetSingleton(typeof(StationEnvironmentController), null);
             SetSingleton(typeof(EnergySystemController), null);
             SetSingleton(typeof(StationPowerController), null);
@@ -1768,10 +1813,16 @@ namespace NERA.Tests
         [Test]
         public void AntennaUsesCentralObjectCalibrationDuration()
         {
+            float configuredDuration = systems.GetStat(
+                StationSystemType.Antenna,
+                "station_antenna",
+                StationObjectStat.CalibrationDuration);
             Assert.That(antenna.StartCalibration(signal), Is.True);
-            Assert.That(antenna.CalibrationDuration, Is.EqualTo(8f));
+            Assert.That(
+                antenna.CalibrationDuration,
+                Is.EqualTo(configuredDuration));
 
-            antenna.AdvanceCalibration(7.9f);
+            antenna.AdvanceCalibration(configuredDuration - 0.1f);
             Assert.That(antenna.State, Is.EqualTo(AntennaState.Calibrating));
 
             antenna.AdvanceCalibration(0.1f);
@@ -1781,10 +1832,6 @@ namespace NERA.Tests
         [Test]
         public void AntennaCannotCalibrateSignalBeyondConfiguredScanRange()
         {
-            StationSystemsController systems =
-                root.AddComponent<StationSystemsController>();
-            SetSingleton(typeof(StationSystemsController), systems);
-
             SerializedObject serializedSignal = new SerializedObject(signal);
             serializedSignal.FindProperty("requiredAntennaScanRange").floatValue = 2f;
             serializedSignal.ApplyModifiedPropertiesWithoutUndo();
@@ -1801,23 +1848,42 @@ namespace NERA.Tests
             antenna.RefreshAvailability();
             Assert.That(antenna.CanCalibrate(signal), Is.False);
 
-            systems.Restore(
-                null,
-                new[]
-                {
-                    new StationObjectSystemState(
-                        StationSystemType.Antenna,
-                        "station_antenna",
-                        true,
-                        new[]
-                        {
-                            new StationInstalledPartState(
-                                "Slot_1",
-                                "research_scanner_01")
-                        })
-                });
-            antenna.RefreshAvailability();
-            Assert.That(antenna.CanCalibrate(signal), Is.True);
+            ItemData rangePart =
+                TestStationSystemsConfigFactory.CreateEngineeringPart(
+                    "test_antenna_range",
+                    StationSystemType.Antenna,
+                    "station_antenna",
+                    "Slot_1",
+                    StationObjectStat.ScanRange,
+                    1f);
+            ItemCatalogData catalog =
+                TestStationSystemsConfigFactory.CreateCatalog(rangePart);
+            try
+            {
+                TestStationSystemsConfigFactory.AssignCatalog(systems, catalog);
+                systems.Restore(
+                    null,
+                    new[]
+                    {
+                        new StationObjectSystemState(
+                            StationSystemType.Antenna,
+                            "station_antenna",
+                            true,
+                            new[]
+                            {
+                                new StationInstalledPartState(
+                                    "Slot_1",
+                                    rangePart.ItemId)
+                            })
+                    });
+                antenna.RefreshAvailability();
+                Assert.That(antenna.CanCalibrate(signal), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(rangePart);
+            }
         }
 
         [Test]

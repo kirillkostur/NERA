@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NERA.Antenna;
 using NERA.Interaction;
@@ -41,6 +42,7 @@ namespace NERA.Core
 
         public static BootInitializer Instance => instance;
         public bool IsLoading => isLoading;
+        public SceneTransitionResult LastTransitionResult { get; private set; }
         public string CurrentGameplaySceneName => currentGameplaySceneName;
 
         private void Awake()
@@ -150,21 +152,33 @@ namespace NERA.Core
                 yield return SceneManager.UnloadSceneAsync(menuScene);
             }
 
+            LastTransitionResult = SceneTransitionResult.None;
+            SceneTransitionResult transitionResult =
+                SceneTransitionResult.Failure;
             yield return SwitchGameplayScene(
                 startSceneName,
-                startSpawnPointId);
-            if (resumeCheckpoint)
-                RestorePlayerCheckpointPose(saveController);
+                startSpawnPointId,
+                result => transitionResult = result);
+            LastTransitionResult = transitionResult;
             autoSave?.SetSuspended(false);
-            if (!resumeCheckpoint)
+            if (transitionResult == SceneTransitionResult.Success)
             {
-                checkpoints?.ActivateCheckpoint(
-                    startSceneName,
-                    startSpawnPointId);
-                checkpoints?.SuppressNextActivation(
-                    startSceneName,
-                    startSpawnPointId);
+                if (resumeCheckpoint)
+                {
+                    RestorePlayerCheckpointPose(saveController);
+                }
+                else
+                {
+                    checkpoints?.ActivateCheckpoint(
+                        startSceneName,
+                        startSpawnPointId);
+                    checkpoints?.SuppressNextActivation(
+                        startSceneName,
+                        startSpawnPointId);
+                }
             }
+
+            RestorePresentationAfterTransition();
             isLoading = false;
         }
 
@@ -194,11 +208,22 @@ namespace NERA.Core
             autoSave?.Flush();
             autoSave?.SetSuspended(true);
             SetGameplayInputActive(false);
-            yield return SwitchGameplayScene(sceneName, spawnPointId);
+            LastTransitionResult = SceneTransitionResult.None;
+            SceneTransitionResult transitionResult =
+                SceneTransitionResult.Failure;
+            yield return SwitchGameplayScene(
+                sceneName,
+                spawnPointId,
+                result => transitionResult = result);
+            LastTransitionResult = transitionResult;
             autoSave?.SetSuspended(false);
-            checkpoints?.ActivateCheckpoint(sceneName, spawnPointId);
-            checkpoints?.SuppressNextActivation(sceneName, spawnPointId);
-            SetGameplayInputActive(true);
+            if (transitionResult == SceneTransitionResult.Success)
+            {
+                checkpoints?.ActivateCheckpoint(sceneName, spawnPointId);
+                checkpoints?.SuppressNextActivation(sceneName, spawnPointId);
+            }
+
+            RestorePresentationAfterTransition();
             isLoading = false;
         }
 
@@ -215,13 +240,19 @@ namespace NERA.Core
                 saveController.CheckpointUsesWorldPose
                     ? string.Empty
                     : spawnPointId;
+            LastTransitionResult = SceneTransitionResult.None;
+            SceneTransitionResult transitionResult =
+                SceneTransitionResult.Failure;
             yield return SwitchGameplayScene(
                 sceneName,
                 transitionSpawnPointId,
+                result => transitionResult = result,
                 forceReload: true,
                 reportSignals: false);
-            RestorePlayerCheckpointPose(saveController);
-            SetGameplayInputActive(true);
+            LastTransitionResult = transitionResult;
+            if (transitionResult == SceneTransitionResult.Success)
+                RestorePlayerCheckpointPose(saveController);
+            RestorePresentationAfterTransition();
             isLoading = false;
         }
 
@@ -244,83 +275,204 @@ namespace NERA.Core
         private IEnumerator SwitchGameplayScene(
             string sceneName,
             string spawnPointId,
+            Action<SceneTransitionResult> completed,
             bool forceReload = false,
             bool reportSignals = true)
         {
-            bool sameScene = string.Equals(
+            SceneTransitionResult result = SceneTransitionResult.Failure;
+            bool loadedByTransition = false;
+            Scene targetScene = default;
+            try
+            {
+                bool sameScene = string.Equals(
                     currentGameplaySceneName,
                     sceneName,
-                    System.StringComparison.Ordinal);
-            if (sameScene && !forceReload)
-            {
-                SetGameplayPresentationActive(true);
-                yield break;
-            }
+                    StringComparison.Ordinal);
+                string previousSceneName = currentGameplaySceneName;
+                SceneTransitionState.SetPendingSpawnPoint(spawnPointId);
 
-            string previousSceneName = currentGameplaySceneName;
-            if (sameScene && forceReload)
-            {
-                SetGameplayPresentationActive(false);
-                Scene currentScene =
-                    SceneManager.GetSceneByName(currentGameplaySceneName);
-                if (currentScene.IsValid() && currentScene.isLoaded)
-                    yield return SceneManager.UnloadSceneAsync(currentScene);
-                currentGameplaySceneName = null;
-            }
+                if (sameScene && !forceReload)
+                {
+                    targetScene = SceneManager.GetSceneByName(sceneName);
+                    if (!TryApplyPendingSpawnPoint(
+                            targetScene,
+                            spawnPointId))
+                    {
+                        yield break;
+                    }
 
-            SceneTransitionState.SetPendingSpawnPoint(spawnPointId);
+                    result = SceneTransitionResult.Success;
+                    yield break;
+                }
 
-            Scene targetScene = SceneManager.GetSceneByName(sceneName);
-            if (!targetScene.IsValid() || !targetScene.isLoaded)
-            {
-                AsyncOperation loadOperation = SceneManager.LoadSceneAsync(
-                    sceneName,
-                    LoadSceneMode.Additive);
-                if (loadOperation == null)
+                if (sameScene && forceReload)
+                {
+                    SetGameplayPresentationActive(false);
+                    Scene currentScene =
+                        SceneManager.GetSceneByName(currentGameplaySceneName);
+                    if (currentScene.IsValid() && currentScene.isLoaded)
+                    {
+                        yield return SceneManager.UnloadSceneAsync(
+                            currentScene);
+                    }
+
+                    currentGameplaySceneName = null;
+                }
+
+                targetScene = SceneManager.GetSceneByName(sceneName);
+                if (!targetScene.IsValid() || !targetScene.isLoaded)
+                {
+                    AsyncOperation loadOperation = null;
+                    try
+                    {
+                        loadOperation = SceneManager.LoadSceneAsync(
+                            sceneName,
+                            LoadSceneMode.Additive);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError(
+                            $"BootInitializer: Could not start loading scene " +
+                            $"'{sceneName}': {exception.Message}",
+                            this);
+                    }
+
+                    if (loadOperation == null)
+                    {
+                        if (!Application.CanStreamedLevelBeLoaded(sceneName))
+                        {
+                            Debug.LogError(
+                                $"BootInitializer: Could not start loading " +
+                                $"scene '{sceneName}'.",
+                                this);
+                        }
+
+                        yield break;
+                    }
+
+                    loadedByTransition = true;
+                    yield return loadOperation;
+                    targetScene = SceneManager.GetSceneByName(sceneName);
+                }
+
+                if (!targetScene.IsValid() || !targetScene.isLoaded)
                 {
                     Debug.LogError(
-                        $"BootInitializer: Could not start loading scene " +
-                        $"'{sceneName}'.",
+                        $"BootInitializer: Scene '{sceneName}' did not load.",
                         this);
                     yield break;
                 }
 
-                yield return loadOperation;
-                targetScene = SceneManager.GetSceneByName(sceneName);
+                if (!TryApplyPendingSpawnPoint(
+                        targetScene,
+                        spawnPointId))
+                {
+                    if (loadedByTransition)
+                        yield return SceneManager.UnloadSceneAsync(targetScene);
+                    yield break;
+                }
+
+                if (reportSignals &&
+                    !string.IsNullOrWhiteSpace(previousSceneName))
+                {
+                    ReportSceneSignal(
+                        QuestSignalType.LocationExited,
+                        previousSceneName);
+                }
+
+                SceneManager.SetActiveScene(targetScene);
+                currentGameplaySceneName = sceneName;
+                if (reportSignals)
+                    ReportSceneEntered(sceneName);
+
+                if (!string.IsNullOrWhiteSpace(previousSceneName) &&
+                    !string.Equals(
+                        previousSceneName,
+                        sceneName,
+                        StringComparison.Ordinal))
+                {
+                    Scene previousScene =
+                        SceneManager.GetSceneByName(previousSceneName);
+                    if (previousScene.IsValid() && previousScene.isLoaded)
+                    {
+                        yield return SceneManager.UnloadSceneAsync(
+                            previousScene);
+                    }
+                }
+
+                result = SceneTransitionResult.Success;
+            }
+            finally
+            {
+                SceneTransitionState.ClearPendingSpawnPoint();
+                completed?.Invoke(result);
+            }
+        }
+
+        private bool TryApplyPendingSpawnPoint(
+            Scene targetScene,
+            string spawnPointId)
+        {
+            if (string.IsNullOrWhiteSpace(spawnPointId))
+                return true;
+
+            SceneSpawnPoint match = null;
+            foreach (GameObject root in targetScene.GetRootGameObjects())
+            {
+                foreach (SceneSpawnPoint spawnPoint in
+                         root.GetComponentsInChildren<SceneSpawnPoint>(true))
+                {
+                    if (!string.Equals(
+                            spawnPoint.SpawnPointId,
+                            spawnPointId,
+                            StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (match != null)
+                    {
+                        Debug.LogError(
+                            $"BootInitializer: Scene '{targetScene.name}' " +
+                            $"has duplicate spawn point '{spawnPointId}'.",
+                            this);
+                        return false;
+                    }
+
+                    match = spawnPoint;
+                }
             }
 
-            if (!targetScene.IsValid() || !targetScene.isLoaded)
+            if (match == null)
             {
                 Debug.LogError(
-                    $"BootInitializer: Scene '{sceneName}' did not load.",
+                    $"BootInitializer: Scene '{targetScene.name}' has no " +
+                    $"spawn point '{spawnPointId}'.",
                     this);
-                yield break;
+                return false;
             }
 
-            if (reportSignals &&
-                !string.IsNullOrWhiteSpace(previousSceneName))
-                ReportSceneSignal(
-                    QuestSignalType.LocationExited,
-                    previousSceneName);
-
-            SceneManager.SetActiveScene(targetScene);
-            currentGameplaySceneName = sceneName;
-            if (reportSignals)
-                ReportSceneEntered(sceneName);
-
-            if (!string.IsNullOrWhiteSpace(previousSceneName) &&
-                !string.Equals(
-                    previousSceneName,
-                    sceneName,
-                    System.StringComparison.Ordinal))
+            if (player == null)
+                player = FindFirstObjectByType<ParkourPlayerBridge>();
+            if (player == null ||
+                !SceneTransitionState.TryConsumeSpawnPoint(spawnPointId))
             {
-                Scene previousScene =
-                    SceneManager.GetSceneByName(previousSceneName);
-                if (previousScene.IsValid() && previousScene.isLoaded)
-                    yield return SceneManager.UnloadSceneAsync(previousScene);
+                Debug.LogError(
+                    $"BootInitializer: Could not apply spawn point " +
+                    $"'{spawnPointId}' in scene '{targetScene.name}'.",
+                    this);
+                return false;
             }
 
-            SetGameplayPresentationActive(true);
+            return match.TryTeleport(player);
+        }
+
+        private void RestorePresentationAfterTransition()
+        {
+            Scene gameplayScene = SceneManager.GetSceneByName(
+                currentGameplaySceneName);
+            SetGameplayPresentationActive(
+                gameplayScene.IsValid() && gameplayScene.isLoaded);
         }
 
         private void ReportSceneEntered(string sceneName)

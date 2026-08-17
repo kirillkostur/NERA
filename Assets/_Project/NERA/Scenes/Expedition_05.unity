@@ -1986,6 +1986,10 @@ PrefabInstance:
       propertyPath: config
       value: 
       objectReference: {fileID: 11400000, guid: 5db16f0cd41102649b0aceb4da8c5232, type: 2}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: d81097319d854cc8bfa3f30476768620
+      objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: 10
@@ -2424,6 +2428,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 55585850d6fc1cd4fa1d3ce951d48776, type: 3}
       propertyPath: m_Name
       value: EXP02_NERA_SignalRelay_Core
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 55585850d6fc1cd4fa1d3ce951d48776, type: 3}
+      propertyPath: persistentId
+      value: 84372d74dd4f40789e6b8d698908c271
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3420,6 +3428,10 @@ PrefabInstance:
       propertyPath: config
       value: 
       objectReference: {fileID: 11400000, guid: 5db16f0cd41102649b0aceb4da8c5232, type: 2}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 78962fb3bf9946f6ac2a32f765eb1e67
+      objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4.2
@@ -3888,6 +3900,10 @@ PrefabInstance:
     - target: {fileID: 2278190858216321600, guid: 113c687aba60eb64f96609090d686897, type: 3}
       propertyPath: m_Name
       value: EXP02_AncientRecord_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962635430784054245, guid: 113c687aba60eb64f96609090d686897, type: 3}
+      propertyPath: persistentId
+      value: f7f40f242e0a4d93a2925534a2191b27
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5801,6 +5817,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_Name
       value: IO_Blue_Guard_A
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 6cb2ab8aeb8c4df5b3c7a3175a28106c
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x

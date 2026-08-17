@@ -451,6 +451,46 @@ MonoBehaviour:
     m_Key: item.chassis_01.description
     m_Metadata:
       m_Items: []
+  - m_Id: 339000000000000
+    m_Key: item.antenna_array_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000001
+    m_Key: item.antenna_array_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000002
+    m_Key: item.calibration_module_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000003
+    m_Key: item.calibration_module_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000004
+    m_Key: item.signal_amplifier_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000005
+    m_Key: item.signal_amplifier_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000006
+    m_Key: item.signal_processor_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000007
+    m_Key: item.signal_processor_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000008
+    m_Key: item.power_core_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000009
+    m_Key: item.power_core_01.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

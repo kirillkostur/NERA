@@ -86,6 +86,11 @@ namespace NERA.Station
                 5f),
             0.1f,
             45f);
+        public float EffectiveEnergyPerShot => Mathf.Max(
+            0f,
+            GetConfiguredStat(
+                StationObjectStat.FiringEnergyPerShot,
+                5f));
 
         private void Awake()
         {
@@ -104,7 +109,7 @@ namespace NERA.Station
 
         private void Start()
         {
-            RefreshEnergy(false);
+            RefreshEnergy();
         }
 
         private void Update()
@@ -118,7 +123,7 @@ namespace NERA.Station
             if (!available)
             {
                 target = null;
-                RefreshEnergy(false);
+                RefreshEnergy();
                 return;
             }
 
@@ -128,7 +133,7 @@ namespace NERA.Station
                 target = FindNearestTarget();
             }
 
-            RefreshEnergy(false);
+            RefreshEnergy();
             if (!IsOperational || target == null || !target.IsAlive)
                 return;
 
@@ -149,8 +154,10 @@ namespace NERA.Station
                 !HasLineOfSight(origin, direction))
                 return;
 
+            if (!TrySpendFiringEnergy())
+                return;
+
             nextShotAt = Time.time + EffectiveFireInterval;
-            RefreshEnergy(true);
             target.TakeDamage(EffectiveDamage, gameObject);
         }
 
@@ -232,7 +239,14 @@ namespace NERA.Station
             return hit.collider.GetComponentInParent<IOEnemyController>() == target;
         }
 
-        private void RefreshEnergy(bool firing)
+        public bool TrySpendFiringEnergy()
+        {
+            EnergySystemController energy = EnergySystemController.Instance;
+            return energy != null &&
+                energy.TrySpendEnergy(EffectiveEnergyPerShot);
+        }
+
+        private void RefreshEnergy()
         {
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy == null || string.IsNullOrWhiteSpace(consumerId))
@@ -243,13 +257,11 @@ namespace NERA.Station
                  StationSystemsController.Instance.IsRequestedActive(
                      StationSystemType.Turret,
                      TurretId));
-            StationObjectStat consumptionStat = firing
-                ? StationObjectStat.FiringEnergyConsumption
-                : StationObjectStat.IdleEnergyConsumption;
-            float fallback = firing ? 5f : 2f;
             float rate = Mathf.Max(
                 0f,
-                GetConfiguredStat(consumptionStat, fallback));
+                GetConfiguredStat(
+                    StationObjectStat.IdleEnergyConsumption,
+                    2f));
             energy.RegisterConsumer(
                 consumerId,
                 rate,

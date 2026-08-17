@@ -131,6 +131,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IO_Blue_Weak (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: a3e9a129f50f48aca4053cf808c6a303
+      objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5.18
@@ -509,6 +513,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3929cb8202698f4699364dbdfd8dd5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactionPoint: {fileID: 0}
   actionText: Interact
   mode: 0
   holdDuration: 1
@@ -527,7 +532,7 @@ MonoBehaviour:
   questInteractionName: 
   itemData: {fileID: 11400000, guid: d61334f299759914a854f7d15fe457a7, type: 2}
   destroyAfterPickup: 1
-  persistentId: 
+  persistentId: 25ad59d1a50546c1a7487638772d6693
   trackWorldState: 1
 --- !u!1 &1090774082
 GameObject:
@@ -749,6 +754,10 @@ PrefabInstance:
     - target: {fileID: 441556683877514516, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_Name
       value: IO_Blue_Weak
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+      propertyPath: persistentId
+      value: 2530811d03de43d8b0ab31d5d4df87e4
       objectReference: {fileID: 0}
     - target: {fileID: 3755384241818002039, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
       propertyPath: m_LocalPosition.x
