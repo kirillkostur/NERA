@@ -477,6 +477,31 @@ namespace NERA.Station
             return true;
         }
 
+        public bool DisableFromPowerLimit(
+            StationSystemType type,
+            string objectId)
+        {
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            if (definition == null)
+                return false;
+
+            string resolvedId = ResolveObjectId(definition, objectId);
+            if (!IsRequestedActive(type, resolvedId))
+                return false;
+
+            SetRuntimeActive(
+                type,
+                resolvedId,
+                false,
+                definition.InitiallyActive);
+            ReportSystemDeactivated(
+                definition,
+                resolvedId,
+                "Insufficient battery power output.");
+            SystemsChanged?.Invoke();
+            return true;
+        }
+
         public bool CanDroneReach(Expeditions.ExpeditionLocationData location)
         {
             if (location == null)

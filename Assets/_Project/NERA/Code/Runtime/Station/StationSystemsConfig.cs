@@ -24,7 +24,9 @@ namespace NERA.Station
         CalibrationDuration,
         AimTolerance,
         BatteryCharge,
-        FlightEnergyConsumption
+        FlightEnergyConsumption,
+        DischargeEfficiency,
+        PowerOutput
     }
 
     [Serializable]
@@ -75,6 +77,9 @@ namespace NERA.Station
         [SerializeField, TextArea] private string description;
         [SerializeField] private bool controllable;
         [SerializeField] private bool initiallyActive = true;
+        [Tooltip(
+            "Higher values keep power first. A newly enabled object wins ties.")]
+        [SerializeField, Min(0)] private int powerPriority;
         [Header("Base Object Stats")]
         [SerializeField] private List<StationObjectStatDefinition> baseStats =
             new List<StationObjectStatDefinition>();
@@ -100,6 +105,7 @@ namespace NERA.Station
                 description ?? string.Empty);
         public bool Controllable => controllable;
         public bool InitiallyActive => initiallyActive;
+        public int PowerPriority => Mathf.Max(0, powerPriority);
         public IReadOnlyList<StationObjectStatDefinition> BaseStats =>
             baseStats ?? (IReadOnlyList<StationObjectStatDefinition>)
                 Array.Empty<StationObjectStatDefinition>();

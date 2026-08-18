@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Item_EmitterDamage_01
   m_EditorClassIdentifier: 
   itemId: emitter_damage_01
-  displayName: Emitter Damage
-  description: Engineering part used to restore and upgrade station mechanisms.
+  displayName: Damage Emitter
+  description: Increases the damage of every turret shot.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 4d9d459be61211a468a442def6f8479d, type: 3}

@@ -138,13 +138,49 @@ namespace NERA.Editor.Localization
                 ["item.nera_memory_core_01.description"] = "Компактное ядро хранения данных NERA, найденное на Древнем аванпосте. Герметичная конструкция сохранила фрагменты записей станции.",
                 ["item.nera_signal_relay_02.name"] = "Ядро сигнального ретранслятора NERA",
                 ["item.nera_signal_relay_02.description"] = "Плотное ядро ретранслятора, найденное в Экспедиции 02. Сохранившуюся структуру маршрутизации можно исследовать в лаборатории станции.",
+                ["item.antenna_array_01.name"] = "Антенная решётка",
+                ["item.antenna_array_01.description"] = "Расширяет зону приёма антенны и дальность сканирования сигналов.",
+                ["item.calibration_module_01.name"] = "Модуль калибровки",
+                ["item.calibration_module_01.description"] = "Ускоряет калибровку антенны и увеличивает дальность сканирования.",
+                ["item.signal_amplifier_01.name"] = "Усилитель сигнала",
+                ["item.signal_amplifier_01.description"] = "Усиливает слабые сигналы и сокращает время калибровки.",
+                ["item.signal_processor_01.name"] = "Сигнальный процессор",
+                ["item.signal_processor_01.description"] = "Обрабатывает сигналы, расширяя область сканирования и ускоряя калибровку.",
+                ["item.cooling_system_01.name"] = "Система охлаждения",
+                ["item.cooling_system_01.description"] = "Отводит тепло от батареи при высокой нагрузке.",
+                ["item.energy_cells_01.name"] = "Энергетические ячейки",
+                ["item.energy_cells_01.description"] = "Хранят основной запас энергии станции.",
+                ["item.power_bus_01.name"] = "Силовые шины",
+                ["item.power_bus_01.description"] = "Передают энергию батареи системам станции.",
+                ["item.power_controller_01.name"] = "Силовой контроллер",
+                ["item.power_controller_01.description"] = "Управляет разрядом батареи и выходной мощностью.",
+                ["item.power_converter_01.name"] = "Преобразователь энергии",
+                ["item.power_converter_01.description"] = "Преобразует запасённую энергию батареи для систем станции.",
+                ["item.voltage_regulator_01.name"] = "Стабилизатор напряжения",
+                ["item.voltage_regulator_01.description"] = "Стабилизирует напряжение батареи при пиковой нагрузке.",
+                ["station.battery.station_battery.description"] = "Накапливает выработанную энергию. Физические детали улучшают ёмкость, эффективность разряда и выходную мощность.",
+                ["item.advanced_stabilizer_01.name"] = "Улучшенный стабилизатор",
+                ["item.advanced_stabilizer_01.description"] = "Стабилизирует дрон в полёте и увеличивает дальность перемещения.",
                 ["item.capacitor_01.name"] = "Конденсатор",
+                ["item.capacitor_01.description"] = "Накапливает энергию для систем дрона во время полёта.",
+                ["item.power_core_01.name"] = "Силовое ядро",
+                ["item.power_core_01.description"] = "Увеличивает ёмкость батареи и дальность полёта дрона.",
+                ["item.propulsion_01.name"] = "Двигательная установка",
+                ["item.propulsion_01.description"] = "Создаёт тягу и увеличивает дальность полёта дрона.",
+                ["item.sensor_array_01.name"] = "Сенсорный комплекс",
+                ["item.sensor_array_01.description"] = "Улучшает навигацию дрона и сканирование на большой дистанции.",
+                ["item.chassis_01.name"] = "Корпус",
+                ["item.chassis_01.description"] = "Укрепляет турель и снижает получаемый урон.",
                 ["item.cooling_01.name"] = "Система охлаждения",
+                ["item.cooling_01.description"] = "Отводит тепло для более скоростной непрерывной стрельбы.",
                 ["item.emitter_damage_01.name"] = "Эмиттер урона",
+                ["item.emitter_damage_01.description"] = "Увеличивает урон каждого выстрела турели.",
                 ["item.sensor_01.name"] = "Датчик",
+                ["item.sensor_01.description"] = "Увеличивает дальность обнаружения целей турелью.",
                 ["item.servo_01.name"] = "Сервомеханизм",
+                ["item.servo_01.description"] = "Повышает скорость поворота турели.",
                 ["item.servo_drive_01.name"] = "Сервопривод",
-                ["item.servo_drive_01.description"] = "Инженерная деталь для восстановления и улучшения механизмов станции.",
+                ["item.servo_drive_01.description"] = "Добавляет тяговый привод для более быстрого поворота турели.",
                 ["library.io_blue_shard_01.title"] = "ОСКОЛОК BLUE IO // АНАЛИЗ АНОМАЛИИ",
                 ["library.io_blue_shard_01.description"] = "Сконденсированный энергетический кристалл, извлечённый из сущности Blue IO. Лабораторный анализ выявил разрушительный резонанс средней силы. После интеграции в совместимое оборудование осколок создаёт один радиальный импульс, повреждающий ближайшие аномалии IO.",
                 ["library.station_primer.title"] = "СТАНЦИЯ NERA // РУКОВОДСТВО ПО ЭКСПЛУАТАЦИИ",
@@ -260,6 +296,20 @@ namespace NERA.Editor.Localization
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("NERA item localization synchronized. Existing Russian translations were preserved.");
+        }
+
+        [MenuItem("NERA/Localization/Sync Engineering Parts")]
+        public static void SyncEngineeringPartTables()
+        {
+            EnsureFolders();
+            (Locale english, Locale russian) = EnsureSettingsAndLocales();
+            EnsureCollections(english, russian);
+            AddRuntimeEntries();
+            AddEngineeringPartContent();
+            ExportCsv();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("NERA engineering-part localization synchronized in English and Russian.");
         }
 
         public static void SelectContentTable()
@@ -382,6 +432,38 @@ namespace NERA.Editor.Localization
             AddT("station.power.active", "Active", "Активно");
             AddT("station.power.inactive", "Inactive", "Неактивно");
             AddT("station.no_object_selected", "NO OBJECT SELECTED", "ОБЪЕКТ НЕ ВЫБРАН");
+            AddT("station.status.label", "Status", "Состояние");
+            AddT("station.status.active", "ACTIVE", "АКТИВНО");
+            AddT("station.status.stopped", "STOPPED", "ОСТАНОВЛЕНО");
+            AddT("station.status.condition", "Condition", "Состояние объекта");
+            AddT("station.status.installed_parts", "Installed parts", "Установлено деталей");
+            AddT("station.stat.damage", "Damage", "Урон");
+            AddT("station.stat.detectionrange", "Detection range", "Дальность обнаружения");
+            AddT("station.stat.rotationspeed", "Rotation speed", "Скорость поворота");
+            AddT("station.stat.fireinterval", "Fire interval", "Интервал выстрелов");
+            AddT("station.stat.idleenergyconsumption", "Idle consumption", "Потребление в простое");
+            AddT("station.stat.damagetaken", "Damage taken", "Получаемый урон");
+            AddT("station.stat.capacity", "Capacity", "Ёмкость");
+            AddT("station.stat.generation", "Generation", "Генерация");
+            AddT("station.stat.scanrange", "Scan range", "Дальность сканирования");
+            AddT("station.stat.travelrange", "Travel range", "Дальность полёта");
+            AddT("station.stat.firingenergypershot", "Energy per shot", "Энергия на выстрел");
+            AddT("station.stat.initialcharge", "Initial charge", "Начальный заряд");
+            AddT("station.stat.energyconsumption", "Energy consumption", "Энергопотребление");
+            AddT("station.stat.calibrationenergyconsumption", "Calibration consumption", "Потребление при калибровке");
+            AddT("station.stat.calibrationduration", "Calibration duration", "Длительность калибровки");
+            AddT("station.stat.aimtolerance", "Aim tolerance", "Допуск наведения");
+            AddT("station.stat.batterycharge", "Battery capacity", "Ёмкость батареи");
+            AddT("station.stat.flightenergyconsumption", "Flight consumption", "Потребление в полёте");
+            AddT(
+                "station.stat.dischargeefficiency",
+                "Discharge Efficiency",
+                "Эффективность разряда");
+            AddT("station.stat.poweroutput", "Power Output", "Выходная мощность");
+            AddT(
+                "station.stat.currentconsumption",
+                "Current Consumption",
+                "Текущее потребление");
             AddT("map.travel_confirmation", "Travel to {0}?", "Переместиться в локацию «{0}»?", true);
             AddT("map.select_sector", "Select a sector on the 3D map.", "Выберите сектор на трёхмерной карте.");
             AddT("map.drone_target", "DRONE TARGET\n{0}", "ЦЕЛЬ ДРОНА\n{0}", true);
@@ -435,6 +517,33 @@ namespace NERA.Editor.Localization
             AddSimpleContent<IOEnemyConfig>("enemy", "enemyId", "displayName", null);
             AddSimpleContent<MapSlotData>("map_slot", "slotId", "displayName", null);
             AddStationContent();
+        }
+
+        private static void AddEngineeringPartContent()
+        {
+            const string engineeringPartRoot =
+                "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart/";
+            foreach (ItemData asset in LoadAssets<ItemData>())
+            {
+                string path = AssetDatabase.GetAssetPath(asset);
+                if (!path.StartsWith(
+                        engineeringPartRoot,
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                SerializedObject serialized = new SerializedObject(asset);
+                string id = ReadString(serialized.FindProperty("itemId"));
+                if (string.IsNullOrWhiteSpace(id))
+                    continue;
+
+                string baseKey = "item." + KeyPart(id);
+                AddContent(
+                    baseKey + ".name",
+                    ReadString(serialized.FindProperty("displayName")));
+                AddContent(
+                    baseKey + ".description",
+                    ReadString(serialized.FindProperty("description")));
+            }
         }
 
         private static void AddSimpleContent<T>(

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: cooling_system_01
   displayName: Cooling System
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Removes heat from the battery under heavy load.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 56cdf0ad87894d44ca9039ac498bbf0d, type: 3}
@@ -36,6 +36,6 @@ MonoBehaviour:
       objectId: 
       slotId: Slot_3
       modifiers:
-      - stat: 16
+      - stat: 19
         mode: 0
-        value: 1
+        value: 5

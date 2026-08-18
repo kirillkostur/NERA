@@ -1055,6 +1055,7 @@ namespace NERA.Tests
         {
             ClearSingleton(typeof(StationEnvironmentController));
             ClearSingleton(typeof(EnergySystemController));
+            ClearSingleton(typeof(StationSystemsController));
             root = new GameObject("Test_EnergySystem");
             environment = root.AddComponent<StationEnvironmentController>();
             energy = root.AddComponent<EnergySystemController>();
@@ -1068,6 +1069,7 @@ namespace NERA.Tests
             Object.DestroyImmediate(root);
             ClearSingleton(typeof(StationEnvironmentController));
             ClearSingleton(typeof(EnergySystemController));
+            ClearSingleton(typeof(StationSystemsController));
         }
 
         [Test]
@@ -1159,6 +1161,105 @@ namespace NERA.Tests
             environment.SetTime(0f);
             energy.AdvanceSimulation(1f);
             Assert.That(energy.CurrentGeneration, Is.Zero);
+        }
+
+        [Test]
+        public void SolarPanelGenerationDeterminesBatteryCharging()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 0f, 1f, 1000f);
+            energy.RegisterSolarPanel("panel_01", 1f);
+            environment.SetWeather(StationWeather.Clear);
+            environment.SetTime(12f);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(energy.Config.ClearDayGeneration));
+        }
+
+        [Test]
+        public void BatteryDischargeEfficiencyControlsStoredEnergyDrain()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 100f, 0.5f, 5f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("load", 5f, 0f);
+            energy.SetConsumerActive("load", true);
+            environment.SetTime(0f);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(5f));
+            Assert.That(energy.TotalDischargeEfficiency, Is.EqualTo(0.5f));
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(90f));
+        }
+
+        [Test]
+        public void BatteryPowerOutputTracksActualPoweredLoad()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 3f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("load", 3f, 0f);
+            energy.SetConsumerActive("load", true);
+            environment.SetTime(0f);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.TotalPowerOutput, Is.EqualTo(3f));
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(3f));
+            Assert.That(energy.AvailablePowerOutput, Is.Zero);
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(97f));
+        }
+
+        [Test]
+        public void HigherPriorityConsumerDisplacesLowerPriorityConsumer()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 4f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("low", 4f, 0f, 10);
+            energy.RegisterConsumer("high", 4f, 0f, 20);
+
+            energy.SetConsumerActive("low", true);
+            energy.SetConsumerActive("high", true);
+
+            Assert.That(energy.IsConsumerPowered("low"), Is.False);
+            Assert.That(energy.IsConsumerPowered("high"), Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void NewestConsumerWinsWhenPowerPrioritiesAreEqual()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 4f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("first", 4f, 0f, 10);
+            energy.RegisterConsumer("second", 4f, 0f, 10);
+
+            energy.SetConsumerActive("first", true);
+            energy.SetConsumerActive("second", true);
+
+            Assert.That(energy.IsConsumerPowered("first"), Is.False);
+            Assert.That(energy.IsConsumerPowered("second"), Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void OversizedHigherPriorityConsumerDoesNotReserveOutput()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 5f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("oversized", 6f, 0f, 20);
+            energy.RegisterConsumer("candidate", 3f, 0f, 10);
+
+            energy.SetConsumerActive("oversized", true);
+
+            Assert.That(energy.IsConsumerPowered("oversized"), Is.False);
+            Assert.That(energy.CanPowerConsumer("candidate"), Is.True);
+
+            energy.SetConsumerActive("candidate", true);
+
+            Assert.That(energy.IsConsumerPowered("candidate"), Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(3f));
         }
 
         [Test]

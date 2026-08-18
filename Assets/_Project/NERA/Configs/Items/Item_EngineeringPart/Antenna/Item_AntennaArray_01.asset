@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: antenna_array_01
   displayName: Antenna Array
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Extends antenna reception and signal scan range.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 87a4b8b0471621c4095629c647619a1b, type: 3}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: advanced_stabilizer_01
   displayName: Advanced Stabilizer
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Stabilizes the drone in flight and extends its travel range.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 8cbc73571b4b01e43add1d996101175c, type: 3}

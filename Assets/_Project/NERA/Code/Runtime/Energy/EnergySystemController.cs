@@ -12,6 +12,8 @@ namespace NERA.Energy
         {
             public float Capacity;
             public float InitialCharge;
+            public float DischargeEfficiency;
+            public float PowerOutput;
         }
 
         private sealed class SolarRecord
@@ -27,6 +29,8 @@ namespace NERA.Energy
             public bool Powered;
             public StationSystemType? StationSystem;
             public string StationObjectId;
+            public int PowerPriority;
+            public long ActivationSequence;
         }
 
         [SerializeField] private EnergyBalanceConfig config;
@@ -46,6 +50,8 @@ namespace NERA.Energy
         private EnergyState state = EnergyState.Offline;
         private float lastQuestReportedCharge01 = float.NaN;
         private StationSystemsController stationSystems;
+        private long nextActivationSequence;
+        private bool resolvingPowerOutput;
 
         public static EnergySystemController Instance { get; private set; }
 
@@ -56,8 +62,12 @@ namespace NERA.Energy
             config != null ? config : config = EnergyBalanceConfig.LoadDefault();
         public float CurrentEnergy => currentEnergy;
         public float TotalCapacity { get; private set; }
+        public float TotalDischargeEfficiency { get; private set; } = 1f;
+        public float TotalPowerOutput { get; private set; }
         public float CurrentGeneration { get; private set; }
         public float CurrentConsumption { get; private set; }
+        public float AvailablePowerOutput =>
+            Mathf.Max(0f, TotalPowerOutput - CurrentConsumption);
         public float Charge01 =>
             TotalCapacity > 0f ? Mathf.Clamp01(currentEnergy / TotalCapacity) : 0f;
         public bool GridEnabled => gridEnabled;
@@ -142,8 +152,15 @@ namespace NERA.Energy
                     hasPendingRestoredEnergy = false;
                 }
 
+                float netPower = CurrentGeneration - CurrentConsumption;
+                if (netPower < 0f)
+                {
+                    netPower /= Mathf.Max(
+                        0.01f,
+                        TotalDischargeEfficiency);
+                }
                 currentEnergy = Mathf.Clamp(
-                    currentEnergy + (CurrentGeneration - CurrentConsumption) * deltaTime,
+                    currentEnergy + netPower * deltaTime,
                     0f,
                     TotalCapacity
                 );
@@ -165,9 +182,30 @@ namespace NERA.Energy
             float initialCharge
         )
         {
+            return RegisterBattery(
+                batteryId,
+                capacity,
+                initialCharge,
+                1f,
+                capacity);
+        }
+
+        public bool RegisterBattery(
+            string batteryId,
+            float capacity,
+            float initialCharge,
+            float dischargeEfficiency,
+            float powerOutput
+        )
+        {
             if (string.IsNullOrWhiteSpace(batteryId) || capacity <= 0f)
                 return false;
 
+            dischargeEfficiency = Mathf.Clamp(
+                dischargeEfficiency,
+                0.01f,
+                1f);
+            powerOutput = Mathf.Max(0f, powerOutput);
             float clampedInitialCharge = Mathf.Clamp(
                 initialCharge,
                 0f,
@@ -179,7 +217,11 @@ namespace NERA.Energy
                 if (Mathf.Approximately(existing.Capacity, capacity) &&
                     Mathf.Approximately(
                         existing.InitialCharge,
-                        clampedInitialCharge))
+                        clampedInitialCharge) &&
+                    Mathf.Approximately(
+                        existing.DischargeEfficiency,
+                        dischargeEfficiency) &&
+                    Mathf.Approximately(existing.PowerOutput, powerOutput))
                 {
                     return true;
                 }
@@ -187,8 +229,14 @@ namespace NERA.Energy
                 TotalCapacity = Mathf.Max(
                     0f,
                     TotalCapacity - existing.Capacity + capacity);
+                TotalPowerOutput = Mathf.Max(
+                    0f,
+                    TotalPowerOutput - existing.PowerOutput + powerOutput);
                 existing.Capacity = capacity;
                 existing.InitialCharge = clampedInitialCharge;
+                existing.DischargeEfficiency = dischargeEfficiency;
+                existing.PowerOutput = powerOutput;
+                RefreshTotalDischargeEfficiency();
                 float energyToPreserve = hasPendingRestoredEnergy
                     ? pendingRestoredEnergy
                     : currentEnergy;
@@ -208,10 +256,14 @@ namespace NERA.Energy
                 new BatteryRecord
                 {
                     Capacity = capacity,
-                    InitialCharge = clampedInitialCharge
+                    InitialCharge = clampedInitialCharge,
+                    DischargeEfficiency = dischargeEfficiency,
+                    PowerOutput = powerOutput
                 }
             );
             TotalCapacity += capacity;
+            TotalPowerOutput += powerOutput;
+            RefreshTotalDischargeEfficiency();
 
             if (hasPendingRestoredEnergy)
                 currentEnergy = Mathf.Min(
@@ -225,6 +277,7 @@ namespace NERA.Energy
                 currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
 
             RefreshState();
+            RefreshConsumers();
             EnergyChanged?.Invoke();
             ReportQuestCharge();
             return true;
@@ -279,7 +332,24 @@ namespace NERA.Energy
                 rate,
                 minimumCharge01,
                 null,
-                null);
+                null,
+                0);
+        }
+
+        public void RegisterConsumer(
+            string consumerId,
+            float rate,
+            float minimumCharge01,
+            int powerPriority
+        )
+        {
+            RegisterConsumerInternal(
+                consumerId,
+                rate,
+                minimumCharge01,
+                null,
+                null,
+                powerPriority);
         }
 
         public void RegisterConsumer(
@@ -295,7 +365,8 @@ namespace NERA.Energy
                 rate,
                 minimumCharge01,
                 stationSystem,
-                stationObjectId);
+                stationObjectId,
+                ResolvePowerPriority(stationSystem, stationObjectId));
         }
 
         private void RegisterConsumerInternal(
@@ -303,7 +374,8 @@ namespace NERA.Energy
             float rate,
             float minimumCharge01,
             StationSystemType? stationSystem,
-            string stationObjectId
+            string stationObjectId,
+            int powerPriority
         )
         {
             if (string.IsNullOrWhiteSpace(consumerId))
@@ -324,7 +396,8 @@ namespace NERA.Energy
                      string.Equals(
                          consumer.StationObjectId,
                          stationObjectId,
-                         StringComparison.OrdinalIgnoreCase))
+                         StringComparison.OrdinalIgnoreCase) &&
+                     consumer.PowerPriority == Mathf.Max(0, powerPriority))
             {
                 return;
             }
@@ -333,6 +406,7 @@ namespace NERA.Energy
             consumer.MinimumCharge01 = clampedMinimumCharge;
             consumer.StationSystem = stationSystem;
             consumer.StationObjectId = stationObjectId?.Trim() ?? string.Empty;
+            consumer.PowerPriority = Mathf.Max(0, powerPriority);
             RefreshConsumers();
             EnergyChanged?.Invoke();
             ReportQuestCharge();
@@ -346,6 +420,8 @@ namespace NERA.Energy
                 return;
 
             consumer.RequestedActive = active;
+            if (active)
+                consumer.ActivationSequence = ++nextActivationSequence;
             RefreshConsumers();
             EnergyChanged?.Invoke();
             ReportQuestCharge();
@@ -359,8 +435,68 @@ namespace NERA.Energy
 
         public bool CanPowerConsumer(string consumerId)
         {
-            return consumers.TryGetValue(consumerId, out ConsumerRecord consumer) &&
-                   HasSufficientCharge(consumer.MinimumCharge01);
+            if (!consumers.TryGetValue(
+                    consumerId,
+                    out ConsumerRecord consumer) ||
+                !IsConsumerConnected(consumer))
+            {
+                return false;
+            }
+
+            if (consumer.RequestedActive)
+                return consumer.Powered;
+
+            var eligible =
+                new List<KeyValuePair<string, ConsumerRecord>>();
+            foreach (KeyValuePair<string, ConsumerRecord> pair in consumers)
+            {
+                ConsumerRecord other = pair.Value;
+                if (!ReferenceEquals(other, consumer) &&
+                    (!other.RequestedActive ||
+                     !IsConsumerConnected(other)))
+                {
+                    continue;
+                }
+                eligible.Add(pair);
+            }
+
+            eligible.Sort((left, right) =>
+            {
+                int priority = right.Value.PowerPriority.CompareTo(
+                    left.Value.PowerPriority);
+                if (priority != 0)
+                    return priority;
+
+                long leftSequence = ReferenceEquals(left.Value, consumer)
+                    ? long.MaxValue
+                    : left.Value.ActivationSequence;
+                long rightSequence = ReferenceEquals(right.Value, consumer)
+                    ? long.MaxValue
+                    : right.Value.ActivationSequence;
+                int activation = rightSequence.CompareTo(leftSequence);
+                return activation != 0
+                    ? activation
+                    : string.Compare(
+                        left.Key,
+                        right.Key,
+                        StringComparison.Ordinal);
+            });
+
+            float remainingOutput = Mathf.Max(0f, TotalPowerOutput);
+            foreach (KeyValuePair<string, ConsumerRecord> pair in eligible)
+            {
+                bool fits = pair.Value.Rate <=
+                    remainingOutput + 0.0001f;
+                if (ReferenceEquals(pair.Value, consumer))
+                    return fits;
+                if (fits)
+                {
+                    remainingOutput = Mathf.Max(
+                        0f,
+                        remainingOutput - pair.Value.Rate);
+                }
+            }
+            return false;
         }
 
         public bool HasSufficientCharge(float minimumCharge01)
@@ -530,6 +666,26 @@ namespace NERA.Energy
             return total;
         }
 
+        private void RefreshTotalDischargeEfficiency()
+        {
+            if (TotalCapacity <= 0f || batteries.Count == 0)
+            {
+                TotalDischargeEfficiency = 1f;
+                return;
+            }
+
+            float weightedEfficiency = 0f;
+            foreach (BatteryRecord battery in batteries.Values)
+            {
+                weightedEfficiency += battery.Capacity *
+                    battery.DischargeEfficiency;
+            }
+            TotalDischargeEfficiency = Mathf.Clamp(
+                weightedEfficiency / TotalCapacity,
+                0.01f,
+                1f);
+        }
+
         private float CalculateConsumption()
         {
             float total = 0f;
@@ -543,13 +699,116 @@ namespace NERA.Energy
 
         private void RefreshConsumers()
         {
-            foreach (ConsumerRecord consumer in consumers.Values)
+            List<KeyValuePair<string, ConsumerRecord>> rejected =
+                AllocateConsumerPower();
+            StationSystemsController systems =
+                stationSystems ?? StationSystemsController.Instance;
+            if (resolvingPowerOutput || systems == null ||
+                rejected.Count == 0)
             {
-                consumer.Powered =
-                    IsConsumerConnected(consumer) &&
-                    consumer.RequestedActive &&
-                    HasSufficientCharge(consumer.MinimumCharge01);
+                return;
             }
+
+            resolvingPowerOutput = true;
+            try
+            {
+                var disabledObjects = new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
+                foreach (KeyValuePair<string, ConsumerRecord> pair in rejected)
+                {
+                    ConsumerRecord consumer = pair.Value;
+                    if (!consumer.StationSystem.HasValue)
+                        continue;
+
+                    string objectKey =
+                        $"{(int)consumer.StationSystem.Value}:" +
+                        consumer.StationObjectId;
+                    if (!disabledObjects.Add(objectKey))
+                        continue;
+
+                    systems.DisableFromPowerLimit(
+                        consumer.StationSystem.Value,
+                        consumer.StationObjectId);
+                }
+            }
+            finally
+            {
+                resolvingPowerOutput = false;
+            }
+
+            AllocateConsumerPower();
+        }
+
+        private List<KeyValuePair<string, ConsumerRecord>>
+            AllocateConsumerPower()
+        {
+            var eligible =
+                new List<KeyValuePair<string, ConsumerRecord>>();
+            foreach (KeyValuePair<string, ConsumerRecord> pair in consumers)
+            {
+                ConsumerRecord consumer = pair.Value;
+                consumer.Powered = false;
+                if (consumer.RequestedActive &&
+                    IsConsumerConnected(consumer))
+                {
+                    eligible.Add(pair);
+                }
+            }
+
+            eligible.Sort((left, right) =>
+            {
+                int priority = right.Value.PowerPriority.CompareTo(
+                    left.Value.PowerPriority);
+                if (priority != 0)
+                    return priority;
+                int activation = right.Value.ActivationSequence.CompareTo(
+                    left.Value.ActivationSequence);
+                return activation != 0
+                    ? activation
+                    : string.Compare(
+                        left.Key,
+                        right.Key,
+                        StringComparison.Ordinal);
+            });
+
+            float remainingOutput = Mathf.Max(0f, TotalPowerOutput);
+            var rejected =
+                new List<KeyValuePair<string, ConsumerRecord>>();
+            foreach (KeyValuePair<string, ConsumerRecord> pair in eligible)
+            {
+                ConsumerRecord consumer = pair.Value;
+                if (consumer.Rate <= remainingOutput + 0.0001f)
+                {
+                    consumer.Powered = true;
+                    remainingOutput = Mathf.Max(
+                        0f,
+                        remainingOutput - consumer.Rate);
+                }
+                else
+                {
+                    rejected.Add(pair);
+                }
+            }
+
+            CurrentConsumption = CalculateConsumption();
+            return rejected;
+        }
+
+        private int ResolvePowerPriority(
+            StationSystemType stationSystem,
+            string stationObjectId)
+        {
+            StationSystemDefinition definition =
+                stationSystems?.GetDefinition(
+                    stationSystem,
+                    stationObjectId) ??
+                StationSystemsController.Instance?.GetDefinition(
+                    stationSystem,
+                    stationObjectId) ??
+                StationSystemsConfig.LoadDefault()?.Find(
+                    stationSystem,
+                    stationObjectId);
+            return definition?.PowerPriority ?? 0;
         }
 
         private bool IsConsumerConnected(ConsumerRecord consumer)
@@ -593,8 +852,16 @@ namespace NERA.Energy
 
         private void HandleStationSystemsChanged()
         {
+            foreach (ConsumerRecord consumer in consumers.Values)
+            {
+                if (consumer.StationSystem.HasValue)
+                {
+                    consumer.PowerPriority = ResolvePowerPriority(
+                        consumer.StationSystem.Value,
+                        consumer.StationObjectId);
+                }
+            }
             RefreshConsumers();
-            CurrentConsumption = CalculateConsumption();
             EnergyChanged?.Invoke();
         }
 

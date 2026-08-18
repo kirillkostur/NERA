@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: energy_cells_01
   displayName: Energy Cells
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Stores the station's main energy reserve.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 096ece83be33dea4c811ecb5cedeafd9, type: 3}
@@ -36,13 +36,13 @@ MonoBehaviour:
       objectId: 
       slotId: Slot_1
       modifiers:
-      - stat: 16
+      - stat: 6
         mode: 0
-        value: 1
+        value: 250
     - systemType: 1
       objectId: 
       slotId: Slot_2
       modifiers:
-      - stat: 16
+      - stat: 6
         mode: 0
-        value: 1
+        value: 250

@@ -430,7 +430,6 @@ namespace NERA.Terminal
 
             StationSystemType type = selectedSystem.Value;
             StationSystemsController systems = StationSystemsController.Instance;
-            EnergySystemController energy = EnergySystemController.Instance;
             StationSystemDefinition definition = systems?.GetDefinition(
                 type,
                 selectedObjectId) ?? StationSystemsConfig.LoadDefault()?.Find(
@@ -440,21 +439,17 @@ namespace NERA.Terminal
             bool requested = IsSelectedSystemRequestedActive(type, systems);
             bool powered = type == StationSystemType.Battery ||
                 HasSelectedSystemRequiredCharge(type, systems);
-            builder.Append("Status - ");
-            builder.AppendLine(requested && powered ? "ACTIVE" : "STOPPED");
-            builder.Append("Condition - ");
+            builder.Append(Localize("station.status.label", "Status"));
+            builder.Append(" - ");
+            builder.AppendLine(requested && powered
+                ? Localize("station.status.active", "ACTIVE")
+                : Localize("station.status.stopped", "STOPPED"));
+            builder.Append(Localize("station.status.condition", "Condition"));
+            builder.Append(" - ");
             builder.Append(
                 ((systems?.GetCondition(type, selectedObjectId) ?? 1f) * 100f)
                     .ToString("F0"));
             builder.AppendLine("%");
-
-            if (type == StationSystemType.Battery)
-            {
-                builder.Append("Charge - ");
-                builder.Append((energy?.CurrentEnergy ?? 0f).ToString("F0"));
-                builder.Append('/');
-                builder.AppendLine((energy?.TotalCapacity ?? 0f).ToString("F0"));
-            }
 
             if (definition != null)
             {
@@ -467,11 +462,49 @@ namespace NERA.Terminal
                         selectedObjectId,
                         stat.Stat,
                         stat.BaseValue) ?? stat.BaseValue;
-                    builder.Append(stat.DisplayName);
+                    string statKey = NERALocalization.NormalizeKeyPart(
+                        stat.Stat.ToString());
+                    builder.Append(Localize(
+                        $"station.stat.{statKey}",
+                        stat.DisplayName));
                     builder.Append(" - ");
+                    if (type == StationSystemType.Battery &&
+                        stat.Stat == StationObjectStat.Capacity)
+                    {
+                        EnergySystemController energy =
+                            EnergySystemController.Instance;
+                        float currentCharge = energy?.CurrentEnergy ?? value;
+                        float maximumCharge = energy?.TotalCapacity ?? value;
+                        string numberFormat = $"F{stat.Decimals}";
+                        builder.Append(currentCharge.ToString(numberFormat));
+                        builder.Append('/');
+                        builder.Append(maximumCharge.ToString(numberFormat));
+                        if (!string.IsNullOrEmpty(stat.Unit))
+                        {
+                            builder.Append(' ');
+                            builder.Append(stat.Unit);
+                        }
+                        builder.AppendLine();
+                        continue;
+                    }
                     builder.AppendLine(stat.Format(value));
                 }
-                builder.Append("Installed parts - ");
+                if (type == StationSystemType.Battery)
+                {
+                    EnergySystemController energy =
+                        EnergySystemController.Instance;
+                    builder.Append(Localize(
+                        "station.stat.currentconsumption",
+                        "Current Consumption"));
+                    builder.Append(" - ");
+                    builder.Append(
+                        (energy?.CurrentConsumption ?? 0f).ToString("F1"));
+                    builder.AppendLine(" kW");
+                }
+                builder.Append(Localize(
+                    "station.status.installed_parts",
+                    "Installed parts"));
+                builder.Append(" - ");
                 builder.Append(systems?.GetInstalledPartCount(
                     type,
                     selectedObjectId) ?? 0);

@@ -94,6 +94,145 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void BatteryUsesSevenSlotsAndOnlyItsThreeUsefulStats()
+        {
+            StationSystemDefinition battery = systems.Config.Find(
+                StationSystemType.Battery,
+                "station_battery");
+            Assert.That(battery, Is.Not.Null);
+            Assert.That(battery.Slots, Has.Count.EqualTo(7));
+            Assert.That(
+                battery.BaseStats.Select(stat => stat.Stat),
+                Is.EquivalentTo(new[]
+                {
+                    StationObjectStat.Capacity,
+                    StationObjectStat.DischargeEfficiency,
+                    StationObjectStat.PowerOutput
+                }));
+
+            string searchRoot =
+                "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart/Battery";
+            string[] guids = AssetDatabase.FindAssets(
+                "t:ItemData",
+                new[] { searchRoot });
+            Assert.That(guids, Has.Length.EqualTo(6));
+
+            var coveredSlots = new HashSet<string>(
+                System.StringComparer.OrdinalIgnoreCase);
+            var allowedStats = new HashSet<StationObjectStat>
+            {
+                StationObjectStat.Capacity,
+                StationObjectStat.DischargeEfficiency,
+                StationObjectStat.PowerOutput
+            };
+            foreach (string guid in guids)
+            {
+                ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(
+                    AssetDatabase.GUIDToAssetPath(guid));
+                Assert.That(item?.EngineeringPartDefinition, Is.Not.Null);
+                foreach (EngineeringPartCompatibility compatibility in
+                         item.EngineeringPartDefinition.CompatibleInstallations)
+                {
+                    Assert.That(
+                        compatibility.SystemType,
+                        Is.EqualTo(StationSystemType.Battery),
+                        item.ItemId);
+                    Assert.That(
+                        battery.FindSlot(compatibility.SlotId),
+                        Is.Not.Null,
+                        $"{item.ItemId}/{compatibility.SlotId}");
+                    coveredSlots.Add(compatibility.SlotId);
+                    Assert.That(
+                        compatibility.Modifiers,
+                        Is.Not.Empty,
+                        item.ItemId);
+                    foreach (StationObjectStatModifierDefinition modifier in
+                             compatibility.Modifiers)
+                    {
+                        Assert.That(allowedStats, Does.Contain(modifier.Stat));
+                        Assert.That(modifier.Value, Is.GreaterThan(0f));
+                    }
+                }
+            }
+
+            Assert.That(
+                coveredSlots,
+                Is.EquivalentTo(battery.Slots.Select(slot => slot.SlotId)));
+        }
+
+        [Test]
+        public void StationPowerPrioritiesProtectMoreImportantObjects()
+        {
+            StationSystemsConfig config = systems.Config;
+            int computer = config.Find(StationSystemType.Computer).PowerPriority;
+            int turret = config.Find(
+                StationSystemType.Turret,
+                "station_turret_01").PowerPriority;
+            int antenna = config.Find(
+                StationSystemType.Antenna,
+                "station_antenna").PowerPriority;
+            int laboratory =
+                config.Find(StationSystemType.Laboratory).PowerPriority;
+            int drone = config.Find(
+                StationSystemType.Drone,
+                "station_drone").PowerPriority;
+
+            Assert.That(computer, Is.GreaterThan(turret));
+            Assert.That(turret, Is.GreaterThan(antenna));
+            Assert.That(antenna, Is.GreaterThan(laboratory));
+            Assert.That(laboratory, Is.GreaterThan(drone));
+            Assert.That(
+                config.Find(
+                    StationSystemType.Turret,
+                    "station_turret_02").PowerPriority,
+                Is.EqualTo(turret));
+        }
+
+        [Test]
+        public void NewEqualPriorityObjectTurnsOffPreviouslyPoweredObject()
+        {
+            energy.RegisterBattery(
+                "test_battery",
+                1000f,
+                1000f,
+                1f,
+                2f);
+            energy.RegisterConsumer(
+                "turret_01_load",
+                2f,
+                0f,
+                StationSystemType.Turret,
+                "station_turret_01");
+            energy.RegisterConsumer(
+                "turret_02_load",
+                2f,
+                0f,
+                StationSystemType.Turret,
+                "station_turret_02");
+
+            energy.SetConsumerActive("turret_01_load", true);
+            energy.SetConsumerActive("turret_02_load", true);
+
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Turret,
+                    "station_turret_01"),
+                Is.False);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Turret,
+                    "station_turret_02"),
+                Is.True);
+            Assert.That(
+                energy.IsConsumerPowered("turret_01_load"),
+                Is.False);
+            Assert.That(
+                energy.IsConsumerPowered("turret_02_load"),
+                Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(2f));
+        }
+
+        [Test]
         public void EngineeringPartInstallationUsesConfiguredSlotAndStat()
         {
             ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Item_Cooling_01
   m_EditorClassIdentifier: 
   itemId: cooling_01
-  displayName: Cooling
-  description: Engineering part used to restore and upgrade station mechanisms.
+  displayName: Cooling System
+  description: Removes heat to support faster sustained fire.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: d6724414c5c4eab4ebaf8562b9f4710e, type: 3}

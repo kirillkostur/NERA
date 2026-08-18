@@ -228,6 +228,110 @@ MonoBehaviour:
     m_Localized: STATUS
     m_Metadata:
       m_Items: []
+  - m_Id: 339100000000000
+    m_Localized: Status
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000001
+    m_Localized: ACTIVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000002
+    m_Localized: STOPPED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000003
+    m_Localized: Condition
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000004
+    m_Localized: Installed parts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000005
+    m_Localized: Damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000006
+    m_Localized: Detection range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000007
+    m_Localized: Rotation speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000008
+    m_Localized: Fire interval
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000009
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000010
+    m_Localized: Damage taken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000011
+    m_Localized: Capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000012
+    m_Localized: Generation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000013
+    m_Localized: Scan range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000014
+    m_Localized: Travel range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000015
+    m_Localized: Energy per shot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000016
+    m_Localized: Initial charge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000017
+    m_Localized: Energy consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000018
+    m_Localized: Calibration consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000019
+    m_Localized: Calibration duration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000020
+    m_Localized: Aim tolerance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000021
+    m_Localized: Battery capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000022
+    m_Localized: Flight consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000023
+    m_Localized: Discharge Efficiency
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000024
+    m_Localized: Power Output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000025
+    m_Localized: Current Consumption
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

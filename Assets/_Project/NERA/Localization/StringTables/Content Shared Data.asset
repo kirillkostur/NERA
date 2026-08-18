@@ -491,6 +491,54 @@ MonoBehaviour:
     m_Key: item.power_core_01.description
     m_Metadata:
       m_Items: []
+  - m_Id: 339000000000010
+    m_Key: item.cooling_system_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000011
+    m_Key: item.cooling_system_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000012
+    m_Key: item.energy_cells_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000013
+    m_Key: item.energy_cells_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000014
+    m_Key: item.power_bus_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000015
+    m_Key: item.power_bus_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000016
+    m_Key: item.power_controller_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000017
+    m_Key: item.power_controller_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000018
+    m_Key: item.power_converter_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000019
+    m_Key: item.power_converter_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000020
+    m_Key: item.voltage_regulator_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339000000000021
+    m_Key: item.voltage_regulator_01.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

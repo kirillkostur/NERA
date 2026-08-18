@@ -55,16 +55,23 @@ namespace NERA.Energy
                 identity.ObjectId,
                 StationObjectStat.Capacity,
                 1000f);
-            float initialCharge = StationSystemsConfig.GetEffectiveStat(
+            float dischargeEfficiency = StationSystemsConfig.GetEffectiveStat(
                 StationSystemType.Battery,
                 identity.ObjectId,
-                StationObjectStat.InitialCharge,
-                capacity);
+                StationObjectStat.DischargeEfficiency,
+                85f);
+            float powerOutput = StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.Battery,
+                identity.ObjectId,
+                StationObjectStat.PowerOutput,
+                20f);
 
             if (energy.RegisterBattery(
                     identity.ObjectId,
                     Mathf.Max(1f, capacity),
-                    Mathf.Clamp(initialCharge, 0f, capacity)))
+                    Mathf.Max(1f, capacity),
+                    Mathf.Clamp(dischargeEfficiency / 100f, 0.01f, 1f),
+                    Mathf.Max(0f, powerOutput)))
             {
                 registeredEnergy = energy;
             }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: servo_01
   displayName: Servo
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Improves turret rotation speed.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: c617f3358ad8c8342937ae6f70c09fe7, type: 3}

@@ -211,6 +211,110 @@ MonoBehaviour:
     m_Key: station.tab.status
     m_Metadata:
       m_Items: []
+  - m_Id: 339100000000000
+    m_Key: station.status.label
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000001
+    m_Key: station.status.active
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000002
+    m_Key: station.status.stopped
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000003
+    m_Key: station.status.condition
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000004
+    m_Key: station.status.installed_parts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000005
+    m_Key: station.stat.damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000006
+    m_Key: station.stat.detectionrange
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000007
+    m_Key: station.stat.rotationspeed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000008
+    m_Key: station.stat.fireinterval
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000009
+    m_Key: station.stat.idleenergyconsumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000010
+    m_Key: station.stat.damagetaken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000011
+    m_Key: station.stat.capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000012
+    m_Key: station.stat.generation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000013
+    m_Key: station.stat.scanrange
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000014
+    m_Key: station.stat.travelrange
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000015
+    m_Key: station.stat.firingenergypershot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000016
+    m_Key: station.stat.initialcharge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000017
+    m_Key: station.stat.energyconsumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000018
+    m_Key: station.stat.calibrationenergyconsumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000019
+    m_Key: station.stat.calibrationduration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000020
+    m_Key: station.stat.aimtolerance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000021
+    m_Key: station.stat.batterycharge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000022
+    m_Key: station.stat.flightenergyconsumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000023
+    m_Key: station.stat.dischargeefficiency
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000024
+    m_Key: station.stat.poweroutput
+    m_Metadata:
+      m_Items: []
+  - m_Id: 339100000000025
+    m_Key: station.stat.currentconsumption
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

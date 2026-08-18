@@ -108,6 +108,71 @@ namespace NERA.Tests
             }
         }
 
+        [Test]
+        public void EveryEngineeringPartHasSpecificEnglishAndRussianText()
+        {
+            const string engineeringPartsRoot =
+                "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart";
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.ContentTable);
+            Assert.That(collection, Is.Not.Null);
+
+            StringTable english = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.EnglishCode);
+            StringTable russian = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.RussianCode);
+            string[] guids = AssetDatabase.FindAssets(
+                "t:ItemData",
+                new[] { engineeringPartsRoot });
+
+            Assert.That(guids, Has.Length.EqualTo(21));
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(assetPath);
+                SerializedObject serialized = new SerializedObject(item);
+                string sourceName =
+                    serialized.FindProperty("displayName").stringValue;
+                string sourceDescription =
+                    serialized.FindProperty("description").stringValue;
+                string nameKey = $"item.{item.ItemId}.name";
+                string descriptionKey = $"item.{item.ItemId}.description";
+                string englishName = english.GetEntry(nameKey)?.Value;
+                string russianName = russian.GetEntry(nameKey)?.Value;
+                string englishDescription = english.GetEntry(descriptionKey)?.Value;
+                string russianDescription = russian.GetEntry(descriptionKey)?.Value;
+
+                Assert.That(
+                    sourceDescription,
+                    Is.Not.EqualTo(
+                        "Engineering part used to restore and upgrade station mechanisms."),
+                    assetPath);
+                Assert.That(
+                    englishName,
+                    Is.EqualTo(sourceName),
+                    $"English name is stale for {assetPath}");
+                Assert.That(
+                    englishDescription,
+                    Is.EqualTo(sourceDescription),
+                    $"English description is stale for {assetPath}");
+                Assert.That(
+                    russianName,
+                    Does.Match("[А-Яа-яЁё]"),
+                    $"Russian name is not localized for {assetPath}");
+                Assert.That(
+                    russianDescription,
+                    Does.Match("[А-Яа-яЁё]"),
+                    $"Russian description is not localized for {assetPath}");
+                Assert.That(
+                    russianDescription,
+                    Is.Not.EqualTo(englishDescription),
+                    $"Russian description duplicates English for {assetPath}");
+            }
+        }
+
         private static void AssertLocalizedItemEntry(
             StringTable english,
             StringTable russian,

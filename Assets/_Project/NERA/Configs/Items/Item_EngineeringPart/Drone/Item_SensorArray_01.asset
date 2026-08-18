@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: sensor_array_01
   displayName: Sensor Array
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Improves drone navigation and long-range scanning.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 987367efac8630743bcc08244ef1b8b5, type: 3}

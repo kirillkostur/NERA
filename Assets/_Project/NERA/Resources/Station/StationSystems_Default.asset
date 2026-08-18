@@ -19,6 +19,7 @@ MonoBehaviour:
     description: Generates station power. Clean it outside to restore efficiency.
     controllable: 1
     initiallyActive: 1
+    powerPriority: 100
     baseStats:
     - stat: 7
       displayName: Generation
@@ -29,19 +30,26 @@ MonoBehaviour:
   - systemType: 1
     objectId: station_battery
     displayName: BATTERY
-    description: Stores generated energy. Physical parts expand its capacity.
+    description: Stores generated energy. Physical parts improve capacity, discharge
+      efficiency, and power output.
     controllable: 0
     initiallyActive: 0
+    powerPriority: 100
     baseStats:
     - stat: 6
       displayName: Capacity
       baseValue: 1000
       unit: ' kWh'
       decimals: 0
-    - stat: 11
-      displayName: Initial charge
-      baseValue: 1000
-      unit: ' kWh'
+    - stat: 18
+      displayName: Discharge Efficiency
+      baseValue: 85
+      unit: '%'
+      decimals: 0
+    - stat: 19
+      displayName: Power Output
+      baseValue: 20
+      unit: ' kW'
       decimals: 0
     slots:
     - slotId: Slot_1
@@ -64,6 +72,7 @@ MonoBehaviour:
     description: Central terminal. It cannot be stopped or physically upgraded.
     controllable: 0
     initiallyActive: 1
+    powerPriority: 100
     baseStats:
     - stat: 4
       displayName: Idle consumption
@@ -78,6 +87,7 @@ MonoBehaviour:
       and charging.
     controllable: 1
     initiallyActive: 1
+    powerPriority: 20
     baseStats:
     - stat: 9
       displayName: Travel range
@@ -120,6 +130,7 @@ MonoBehaviour:
     description: Analyzes objects, charges equipment, and integrates anomalies.
     controllable: 1
     initiallyActive: 1
+    powerPriority: 40
     baseStats:
     - stat: 4
       displayName: Idle consumption
@@ -133,6 +144,7 @@ MonoBehaviour:
     description: Finds unknown signals. Installed parts improve scan range and calibration.
     controllable: 1
     initiallyActive: 0
+    powerPriority: 60
     baseStats:
     - stat: 8
       displayName: Scan range
@@ -164,6 +176,7 @@ MonoBehaviour:
     description: Automatic defense platform. Uses the shared turret part layout.
     controllable: 1
     initiallyActive: 1
+    powerPriority: 80
     baseStats:
     - stat: 0
       displayName: Damage
@@ -224,6 +237,7 @@ MonoBehaviour:
     description: Automatic defense platform. Uses the shared turret part layout.
     controllable: 1
     initiallyActive: 1
+    powerPriority: 80
     baseStats:
     - stat: 0
       displayName: Damage

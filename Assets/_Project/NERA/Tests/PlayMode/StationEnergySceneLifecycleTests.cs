@@ -784,6 +784,18 @@ namespace NERA.Tests
                 Does.Contain(
                     $"Installed parts - 0/{turretDefinition.Slots.Count}"));
 
+            energy.RestoreState(750f, true);
+            stationScreen.SelectSystem(StationSystemType.Battery);
+            string batteryText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(
+                batteryText,
+                Does.Contain(
+                    $"Capacity - 750/{energy.TotalCapacity:F0} kWh"));
+            Assert.That(
+                stationScreen.SelectPreviewObject(turretPreview),
+                Is.True);
+
             ItemData emitter = Resources.Load<ItemCatalogData>(
                 "ItemCatalog_Default").Find("emitter_damage_01");
             Assert.That(emitter, Is.Not.Null);

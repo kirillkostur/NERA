@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: signal_processor_01
   displayName: Signal Processor
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Processes signal data for wider scans and faster calibration.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 1b1d0a758565bf04a9291ed9f06fb11e, type: 3}

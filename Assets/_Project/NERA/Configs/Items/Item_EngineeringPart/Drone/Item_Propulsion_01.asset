@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: propulsion_01
   displayName: Propulsion
-  description: Engineering part used to restore and upgrade station mechanisms.
+  description: Provides thrust and extends the drone's travel range.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: 8270a64bc73cc88448358e93f6b774bd, type: 3}
