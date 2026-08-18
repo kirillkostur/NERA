@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: power_converter_01
   displayName: Power Converter
-  description: Converts stored battery energy for station systems.
+  description: Stores converted energy in the battery backup reserve.
   itemType: 0
   icon: {fileID: 21300000, guid: 28d2c2677149d45e290e8fa042b1b80f, type: 3}
   worldPrefab: {fileID: 7962635430784054245, guid: dc974690c0fe5e849a80402d185a9ec3, type: 3}
@@ -38,4 +38,4 @@ MonoBehaviour:
       modifiers:
       - stat: 18
         mode: 0
-        value: 10
+        value: 100

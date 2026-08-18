@@ -337,7 +337,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319876
-    m_Localized: Stores generated energy. Physical parts improve capacity, discharge efficiency, and power output.
+    m_Localized: Stores generated energy. Physical parts improve capacity, backup reserve, and power output.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319877
@@ -557,7 +557,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 339000000000017
-    m_Localized: Controls battery discharge and power output.
+    m_Localized: Controls backup power routing and station output.
     m_Metadata:
       m_Items: []
   - m_Id: 339000000000018
@@ -565,7 +565,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 339000000000019
-    m_Localized: Converts stored battery energy for station systems.
+    m_Localized: Stores converted energy in the battery backup reserve.
     m_Metadata:
       m_Items: []
   - m_Id: 339000000000020

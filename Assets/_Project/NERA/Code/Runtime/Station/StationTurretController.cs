@@ -243,7 +243,9 @@ namespace NERA.Station
         {
             EnergySystemController energy = EnergySystemController.Instance;
             return energy != null &&
-                energy.TrySpendEnergy(EffectiveEnergyPerShot);
+                energy.TrySpendConsumerEnergy(
+                    consumerId,
+                    EffectiveEnergyPerShot);
         }
 
         private void RefreshEnergy()

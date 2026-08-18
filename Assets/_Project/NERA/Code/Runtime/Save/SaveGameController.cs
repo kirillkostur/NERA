@@ -504,6 +504,9 @@ namespace NERA.Save
             {
                 data.energyStateInitialized = true;
                 data.stationEnergy = energySystem.CurrentEnergy;
+                data.backupReserveStateInitialized = true;
+                data.stationBackupReserve =
+                    energySystem.CurrentBackupReserve;
                 data.energyGridEnabled = energySystem.GridEnabled;
             }
 
@@ -687,10 +690,19 @@ namespace NERA.Save
 
             if (energySystem != null && data.energyStateInitialized)
             {
-                energySystem.RestoreState(
-                    data.stationEnergy,
-                    data.energyGridEnabled
-                );
+                if (data.backupReserveStateInitialized)
+                {
+                    energySystem.RestoreState(
+                        data.stationEnergy,
+                        data.stationBackupReserve,
+                        data.energyGridEnabled);
+                }
+                else
+                {
+                    energySystem.RestoreState(
+                        data.stationEnergy,
+                        data.energyGridEnabled);
+                }
             }
 
             if (stationPower != null &&

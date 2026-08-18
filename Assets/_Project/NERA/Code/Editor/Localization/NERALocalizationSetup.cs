@@ -153,12 +153,12 @@ namespace NERA.Editor.Localization
                 ["item.power_bus_01.name"] = "Силовые шины",
                 ["item.power_bus_01.description"] = "Передают энергию батареи системам станции.",
                 ["item.power_controller_01.name"] = "Силовой контроллер",
-                ["item.power_controller_01.description"] = "Управляет разрядом батареи и выходной мощностью.",
+                ["item.power_controller_01.description"] = "Управляет резервным питанием и выходной мощностью.",
                 ["item.power_converter_01.name"] = "Преобразователь энергии",
-                ["item.power_converter_01.description"] = "Преобразует запасённую энергию батареи для систем станции.",
+                ["item.power_converter_01.description"] = "Сохраняет преобразованную энергию в резерве батареи.",
                 ["item.voltage_regulator_01.name"] = "Стабилизатор напряжения",
                 ["item.voltage_regulator_01.description"] = "Стабилизирует напряжение батареи при пиковой нагрузке.",
-                ["station.battery.station_battery.description"] = "Накапливает выработанную энергию. Физические детали улучшают ёмкость, эффективность разряда и выходную мощность.",
+                ["station.battery.station_battery.description"] = "Накапливает выработанную энергию. Физические детали улучшают ёмкость, резервное питание и выходную мощность.",
                 ["item.advanced_stabilizer_01.name"] = "Улучшенный стабилизатор",
                 ["item.advanced_stabilizer_01.description"] = "Стабилизирует дрон в полёте и увеличивает дальность перемещения.",
                 ["item.capacitor_01.name"] = "Конденсатор",
@@ -456,9 +456,9 @@ namespace NERA.Editor.Localization
             AddT("station.stat.batterycharge", "Battery capacity", "Ёмкость батареи");
             AddT("station.stat.flightenergyconsumption", "Flight consumption", "Потребление в полёте");
             AddT(
-                "station.stat.dischargeefficiency",
-                "Discharge Efficiency",
-                "Эффективность разряда");
+                "station.stat.backupreserve",
+                "Backup Reserve",
+                "Резервное питание");
             AddT("station.stat.poweroutput", "Power Output", "Выходная мощность");
             AddT(
                 "station.stat.currentconsumption",

@@ -1096,8 +1096,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   referenceResolution: {x: 1920, y: 1080}
-  minimumTextScale: 0.55
-  enableTextAutoSizing: 1
 --- !u!21 &263439755
 Material:
   serializedVersion: 8

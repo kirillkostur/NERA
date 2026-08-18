@@ -853,7 +853,11 @@ namespace NERA.Tests
         [Test]
         public void CurrentSaveVersionSerializesQuestAndMaintenanceState()
         {
-            SaveGameData data = new SaveGameData();
+            SaveGameData data = new SaveGameData
+            {
+                backupReserveStateInitialized = true,
+                stationBackupReserve = 42f
+            };
             data.activeQuests.Add(new QuestInstanceSaveData
             {
                 instanceId = "main.expedition_01",
@@ -877,6 +881,8 @@ namespace NERA.Tests
                 Is.EqualTo("station_solar_01"));
             Assert.That(restored.maintenanceObjects[0].condition,
                 Is.EqualTo(0.25f));
+            Assert.That(restored.backupReserveStateInitialized, Is.True);
+            Assert.That(restored.stationBackupReserve, Is.EqualTo(42f));
         }
 
         private static void ConfigureQuestCondition(
@@ -1166,7 +1172,7 @@ namespace NERA.Tests
         [Test]
         public void SolarPanelGenerationDeterminesBatteryCharging()
         {
-            energy.RegisterBattery("battery_01", 1000f, 0f, 1f, 1000f);
+            energy.RegisterBattery("battery_01", 1000f, 0f, 0f, 1000f);
             energy.RegisterSolarPanel("panel_01", 1f);
             environment.SetWeather(StationWeather.Clear);
             environment.SetTime(12f);
@@ -1179,25 +1185,95 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void BatteryDischargeEfficiencyControlsStoredEnergyDrain()
+        public void MainBatteryIsUsedBeforeBackupReserve()
         {
-            energy.RegisterBattery("battery_01", 1000f, 100f, 0.5f, 5f);
+            energy.RegisterBattery("battery_01", 1000f, 100f, 50f, 5f);
             energy.SetGridEnabled(true);
-            energy.RegisterConsumer("load", 5f, 0f);
+            energy.RegisterConsumer("load", 5f, 0.25f, 80);
             energy.SetConsumerActive("load", true);
             environment.SetTime(0f);
 
             energy.AdvanceSimulation(1f);
 
             Assert.That(energy.CurrentConsumption, Is.EqualTo(5f));
-            Assert.That(energy.TotalDischargeEfficiency, Is.EqualTo(0.5f));
-            Assert.That(energy.CurrentEnergy, Is.EqualTo(90f));
+            Assert.That(energy.CurrentEnergy, Is.EqualTo(95f));
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(50f));
+        }
+
+        [Test]
+        public void BackupReservePowersOnlyHighPriorityConsumers()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 0f, 50f, 10f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("regular", 3f, 0f, 40);
+            energy.RegisterConsumer("priority", 2f, 0.25f, 80);
+            energy.SetConsumerActive("regular", true);
+            energy.SetConsumerActive("priority", true);
+            environment.SetTime(0f);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.IsConsumerPowered("regular"), Is.False);
+            Assert.That(energy.IsConsumerPowered("priority"), Is.True);
+            Assert.That(energy.CurrentConsumption, Is.EqualTo(2f));
+            Assert.That(energy.CurrentEnergy, Is.Zero);
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(48f));
+            Assert.That(
+                energy.TrySpendConsumerEnergy("regular", 1f),
+                Is.False);
+            Assert.That(
+                energy.TrySpendConsumerEnergy("priority", 5f),
+                Is.True);
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(43f));
+        }
+
+        [Test]
+        public void SwitchingToBackupReserveStopsRegularDrainImmediately()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 1f, 50f, 10f);
+            energy.SetGridEnabled(true);
+            energy.RegisterConsumer("regular", 3f, 0f, 40);
+            energy.RegisterConsumer("priority", 2f, 0f, 80);
+            energy.SetConsumerActive("regular", true);
+            energy.SetConsumerActive("priority", true);
+            environment.SetTime(0f);
+
+            energy.AdvanceSimulation(1f);
+
+            Assert.That(energy.CurrentEnergy, Is.Zero);
+            Assert.That(energy.IsConsumerPowered("regular"), Is.False);
+            Assert.That(energy.IsConsumerPowered("priority"), Is.True);
+            Assert.That(
+                energy.CurrentBackupReserve,
+                Is.EqualTo(48.4f).Within(0.001f));
+        }
+
+        [Test]
+        public void RestoredBackupReserveSurvivesUntilBatteryRegisters()
+        {
+            energy.RestoreState(0f, 35f, true);
+
+            energy.AdvanceSimulation(1f);
+            energy.RegisterBattery("battery_01", 1000f, 0f, 100f, 10f);
+
+            Assert.That(energy.TotalBackupReserve, Is.EqualTo(100f));
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(35f));
+        }
+
+        [Test]
+        public void LegacyEnergyRestoreStartsWithFullBackupReserve()
+        {
+            energy.RegisterBattery("battery_01", 1000f, 0f, 100f, 10f);
+
+            energy.RestoreState(0f, true);
+
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(100f));
         }
 
         [Test]
         public void BatteryPowerOutputTracksActualPoweredLoad()
         {
-            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 3f);
+            energy.RegisterBattery("battery_01", 1000f, 100f, 0f, 3f);
             energy.SetGridEnabled(true);
             energy.RegisterConsumer("load", 3f, 0f);
             energy.SetConsumerActive("load", true);
@@ -1214,7 +1290,7 @@ namespace NERA.Tests
         [Test]
         public void HigherPriorityConsumerDisplacesLowerPriorityConsumer()
         {
-            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 4f);
+            energy.RegisterBattery("battery_01", 1000f, 100f, 0f, 4f);
             energy.SetGridEnabled(true);
             energy.RegisterConsumer("low", 4f, 0f, 10);
             energy.RegisterConsumer("high", 4f, 0f, 20);
@@ -1230,7 +1306,7 @@ namespace NERA.Tests
         [Test]
         public void NewestConsumerWinsWhenPowerPrioritiesAreEqual()
         {
-            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 4f);
+            energy.RegisterBattery("battery_01", 1000f, 100f, 0f, 4f);
             energy.SetGridEnabled(true);
             energy.RegisterConsumer("first", 4f, 0f, 10);
             energy.RegisterConsumer("second", 4f, 0f, 10);
@@ -1246,7 +1322,7 @@ namespace NERA.Tests
         [Test]
         public void OversizedHigherPriorityConsumerDoesNotReserveOutput()
         {
-            energy.RegisterBattery("battery_01", 1000f, 100f, 1f, 5f);
+            energy.RegisterBattery("battery_01", 1000f, 100f, 0f, 5f);
             energy.SetGridEnabled(true);
             energy.RegisterConsumer("oversized", 6f, 0f, 20);
             energy.RegisterConsumer("candidate", 3f, 0f, 10);

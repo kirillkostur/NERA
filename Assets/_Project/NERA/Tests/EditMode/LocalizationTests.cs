@@ -1,4 +1,6 @@
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NERA.Items;
 using NERA.Localization;
 using NERA.UI;
@@ -214,7 +216,55 @@ namespace NERA.Tests
             Assert.That(
                 hud.GetComponentInChildren<ResponsiveCanvasLayout>(true),
                 Is.Not.Null,
-                "HUD root must adapt its CanvasScaler and TMP text to the screen aspect.");
+                "HUD root must adapt its CanvasScaler to the screen aspect.");
+        }
+
+        [Test]
+        public void ProductionUiOwnsAllTextSizing()
+        {
+            const string projectRoot = "Assets/_Project/NERA";
+            foreach (string path in Directory.EnumerateFiles(
+                         projectRoot,
+                         "*.*",
+                         SearchOption.AllDirectories))
+            {
+                string extension = Path.GetExtension(path);
+                if (extension != ".prefab" &&
+                    extension != ".unity" &&
+                    extension != ".asset")
+                {
+                    continue;
+                }
+
+                string serializedAsset = File.ReadAllText(path);
+                Assert.That(
+                    Regex.IsMatch(
+                        serializedAsset,
+                        @"m_enableAutoSizing:\s*1\b|" +
+                        @"m_ResizeTextForBestFit:\s*1\b|" +
+                        @"m_BestFit:\s*1\b"),
+                    Is.False,
+                    $"Automatic text sizing is enabled in {path}.");
+            }
+
+            string codeRoot = Path.Combine(projectRoot, "Code");
+            foreach (string path in Directory.EnumerateFiles(
+                         codeRoot,
+                         "*.cs",
+                         SearchOption.AllDirectories))
+            {
+                string source = File.ReadAllText(path);
+                Assert.That(
+                    Regex.IsMatch(
+                        source,
+                        @"\bfontSize\b|" +
+                        @"enableAutoSizing|" +
+                        @"resizeTextForBestFit|" +
+                        @"autoSizeTextContainer|" +
+                        @"<size="),
+                    Is.False,
+                    $"Text sizing must be configured in UI assets, not {path}.");
+            }
         }
     }
 }

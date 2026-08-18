@@ -304,7 +304,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000023
-    m_Key: station.stat.dischargeefficiency
+    m_Key: station.stat.backupreserve
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000024
@@ -315,10 +315,14 @@ MonoBehaviour:
     m_Key: station.stat.currentconsumption
     m_Metadata:
       m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1138171960057397420
   references:
     version: 2
     RefIds:
-    - rid: 1138171735028269368
+    - rid: 1138171960057397420
       type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
       data:
-        m_CustomEpoch: 1786279464381
+        m_CustomEpoch: 1787092483602

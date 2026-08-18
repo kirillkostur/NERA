@@ -40,6 +40,9 @@ namespace NERA.Energy
         [SerializeField, Range(0f, 100f)]
         private float defaultConsumerMinimumChargePercent = 25f;
         [Tooltip(
+            "Consumers at or above this priority may use battery backup reserve.")]
+        [SerializeField, Min(0)] private int backupReserveMinimumPriority = 80;
+        [Tooltip(
             "Per-object battery cutoffs. Repeated systems use their station object id.")]
         [SerializeField]
         private List<StationObjectPowerCutoff> stationObjectCutoffs =
@@ -57,6 +60,8 @@ namespace NERA.Energy
         public float ItemChargingConsumption => itemChargingConsumption;
         public float DefaultConsumerMinimumCharge01 =>
             Mathf.Clamp(defaultConsumerMinimumChargePercent, 0f, 100f) / 100f;
+        public int BackupReserveMinimumPriority =>
+            Mathf.Max(0, backupReserveMinimumPriority);
         public IReadOnlyList<StationObjectPowerCutoff> StationObjectCutoffs =>
             stationObjectCutoffs != null
                 ? stationObjectCutoffs

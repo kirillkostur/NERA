@@ -18,7 +18,6 @@ namespace NERA.UI
         [Header("Labels")]
         [SerializeField] private string mainHeader = "ОСНОВНОЕ ЗАДАНИЕ";
         [SerializeField] private string sideHeader = "ПОБОЧНОЕ ЗАДАНИЕ";
-        [SerializeField, Min(8)] private int objectiveFontSize = 20;
 
         private QuestController questController;
 
@@ -196,8 +195,7 @@ namespace NERA.UI
                 : state.ObjectiveTitle;
 
             label.text =
-                $"<b>{header}</b>\n{title}\n" +
-                $"<size={objectiveFontSize}>{objective}</size>";
+                $"<b>{header}</b>\n{title}\n{objective}";
         }
     }
 }

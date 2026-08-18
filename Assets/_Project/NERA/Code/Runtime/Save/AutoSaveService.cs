@@ -45,6 +45,7 @@ namespace NERA.Save
         private float saveAt;
         private bool hasObservedEnergyState;
         private float observedStationEnergy;
+        private float observedStationBackupReserve;
         private bool observedEnergyGridEnabled;
 
         public static AutoSaveService Instance { get; private set; }
@@ -259,12 +260,16 @@ namespace NERA.Save
                 return;
 
             float currentEnergy = energySystem.CurrentEnergy;
+            float currentBackupReserve =
+                energySystem.CurrentBackupReserve;
             bool gridEnabled = energySystem.GridEnabled;
             bool changed = !hasObservedEnergyState ||
                 currentEnergy != observedStationEnergy ||
+                currentBackupReserve != observedStationBackupReserve ||
                 gridEnabled != observedEnergyGridEnabled;
 
             observedStationEnergy = currentEnergy;
+            observedStationBackupReserve = currentBackupReserve;
             observedEnergyGridEnabled = gridEnabled;
             hasObservedEnergyState = true;
 
@@ -281,6 +286,8 @@ namespace NERA.Save
             }
 
             observedStationEnergy = energySystem.CurrentEnergy;
+            observedStationBackupReserve =
+                energySystem.CurrentBackupReserve;
             observedEnergyGridEnabled = energySystem.GridEnabled;
             hasObservedEnergyState = true;
         }

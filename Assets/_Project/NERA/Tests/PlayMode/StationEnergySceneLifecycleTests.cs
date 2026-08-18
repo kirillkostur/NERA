@@ -793,6 +793,12 @@ namespace NERA.Tests
                 Does.Contain(
                     $"Capacity - 750/{energy.TotalCapacity:F0} kWh"));
             Assert.That(
+                batteryText,
+                Does.Contain(
+                    "Backup Reserve - " +
+                    $"{energy.CurrentBackupReserve:F0}/" +
+                    $"{energy.TotalBackupReserve:F0} kWh"));
+            Assert.That(
                 stationScreen.SelectPreviewObject(turretPreview),
                 Is.True);
 

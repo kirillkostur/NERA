@@ -58,10 +58,6 @@ namespace NERA.Localization
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold
             };
-            buttonStyle.fontSize = Mathf.Clamp(
-                Mathf.RoundToInt(Screen.height * 0.025f),
-                14,
-                36);
             buttonStyle.normal.textColor = Color.white;
             buttonStyle.hover.textColor = Color.white;
             buttonStyle.active.textColor = Color.white;

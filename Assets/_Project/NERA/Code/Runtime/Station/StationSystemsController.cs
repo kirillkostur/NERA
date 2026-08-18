@@ -98,7 +98,8 @@ namespace NERA.Station
             return definition != null &&
                 energy != null &&
                 energy.HasSufficientCharge(
-                    energy.Config.GetMinimumCharge01(type, objectId));
+                    energy.Config.GetMinimumCharge01(type, objectId),
+                    definition.PowerPriority);
         }
 
         public string GetInstalledPartItemId(

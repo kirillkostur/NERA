@@ -106,7 +106,7 @@ namespace NERA.Tests
                 Is.EquivalentTo(new[]
                 {
                     StationObjectStat.Capacity,
-                    StationObjectStat.DischargeEfficiency,
+                    StationObjectStat.BackupReserve,
                     StationObjectStat.PowerOutput
                 }));
 
@@ -122,7 +122,7 @@ namespace NERA.Tests
             var allowedStats = new HashSet<StationObjectStat>
             {
                 StationObjectStat.Capacity,
-                StationObjectStat.DischargeEfficiency,
+                StationObjectStat.BackupReserve,
                 StationObjectStat.PowerOutput
             };
             foreach (string guid in guids)
@@ -195,7 +195,7 @@ namespace NERA.Tests
                 "test_battery",
                 1000f,
                 1000f,
-                1f,
+                0f,
                 2f);
             energy.RegisterConsumer(
                 "turret_01_load",

@@ -1,5 +1,3 @@
-using NERA.Localization;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,9 +13,6 @@ namespace NERA.UI
 
         [SerializeField] private Vector2 referenceResolution =
             new Vector2(1920f, 1080f);
-        [SerializeField, Range(0.35f, 1f)]
-        private float minimumTextScale = 0.55f;
-        [SerializeField] private bool enableTextAutoSizing = true;
 
         private CanvasScaler scaler;
         private int lastScreenWidth = -1;
@@ -32,13 +27,7 @@ namespace NERA.UI
 
         private void OnEnable()
         {
-            NERALocalization.LocaleChanged += HandleLocaleChanged;
             ApplyNow();
-        }
-
-        private void OnDisable()
-        {
-            NERALocalization.LocaleChanged -= HandleLocaleChanged;
         }
 
         private void Update()
@@ -64,7 +53,6 @@ namespace NERA.UI
             applying = true;
             CacheComponents();
             ConfigureCanvasScale();
-            ConfigureTextSizing();
             Canvas.ForceUpdateCanvases();
             if (transform is RectTransform root)
                 LayoutRebuilder.MarkLayoutForRebuild(root);
@@ -108,33 +96,5 @@ namespace NERA.UI
             lastScreenHeight = Screen.height;
         }
 
-        private void ConfigureTextSizing()
-        {
-            if (!enableTextAutoSizing)
-                return;
-
-            foreach (TMP_Text label in GetComponentsInChildren<TMP_Text>(true))
-            {
-                if (label == null)
-                    continue;
-
-                float maximum = label.enableAutoSizing
-                    ? label.fontSizeMax
-                    : label.fontSize;
-                maximum = Mathf.Max(8f, maximum);
-                label.enableAutoSizing = true;
-                label.fontSizeMax = maximum;
-                label.fontSizeMin = Mathf.Min(
-                    maximum,
-                    Mathf.Max(8f, maximum * minimumTextScale));
-                if (label.rectTransform != null)
-                    LayoutRebuilder.MarkLayoutForRebuild(label.rectTransform);
-            }
-        }
-
-        private void HandleLocaleChanged()
-        {
-            ApplyNow();
-        }
     }
 }

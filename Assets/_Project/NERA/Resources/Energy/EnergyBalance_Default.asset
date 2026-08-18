@@ -18,6 +18,7 @@ MonoBehaviour:
   outdoorDeviceConditionLossPerSecond: 0.005
   itemChargingConsumption: 4
   defaultConsumerMinimumChargePercent: 25
+  backupReserveMinimumPriority: 80
   stationObjectCutoffs:
   - systemType: 0
     objectId: station_solar_01

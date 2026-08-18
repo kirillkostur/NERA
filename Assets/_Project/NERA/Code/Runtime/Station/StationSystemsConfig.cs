@@ -25,7 +25,7 @@ namespace NERA.Station
         AimTolerance,
         BatteryCharge,
         FlightEnergyConsumption,
-        DischargeEfficiency,
+        BackupReserve,
         PowerOutput
     }
 

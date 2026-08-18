@@ -469,12 +469,19 @@ namespace NERA.Terminal
                         stat.DisplayName));
                     builder.Append(" - ");
                     if (type == StationSystemType.Battery &&
-                        stat.Stat == StationObjectStat.Capacity)
+                        (stat.Stat == StationObjectStat.Capacity ||
+                         stat.Stat == StationObjectStat.BackupReserve))
                     {
                         EnergySystemController energy =
                             EnergySystemController.Instance;
-                        float currentCharge = energy?.CurrentEnergy ?? value;
-                        float maximumCharge = energy?.TotalCapacity ?? value;
+                        bool isMainBattery =
+                            stat.Stat == StationObjectStat.Capacity;
+                        float currentCharge = isMainBattery
+                            ? energy?.CurrentEnergy ?? value
+                            : energy?.CurrentBackupReserve ?? value;
+                        float maximumCharge = isMainBattery
+                            ? energy?.TotalCapacity ?? value
+                            : energy?.TotalBackupReserve ?? value;
                         string numberFormat = $"F{stat.Decimals}";
                         builder.Append(currentCharge.ToString(numberFormat));
                         builder.Append('/');

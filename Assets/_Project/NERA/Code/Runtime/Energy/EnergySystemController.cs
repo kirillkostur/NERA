@@ -12,7 +12,7 @@ namespace NERA.Energy
         {
             public float Capacity;
             public float InitialCharge;
-            public float DischargeEfficiency;
+            public float BackupReserve;
             public float PowerOutput;
         }
 
@@ -36,6 +36,7 @@ namespace NERA.Energy
         [SerializeField] private EnergyBalanceConfig config;
         [SerializeField] private bool gridEnabled;
         [SerializeField] private float currentEnergy;
+        [SerializeField] private float currentBackupReserve;
 
         private readonly Dictionary<string, BatteryRecord> batteries =
             new Dictionary<string, BatteryRecord>(StringComparer.Ordinal);
@@ -47,6 +48,9 @@ namespace NERA.Energy
         private bool restoredFromSave;
         private bool hasPendingRestoredEnergy;
         private float pendingRestoredEnergy;
+        private bool hasPendingRestoredBackupReserve;
+        private float pendingRestoredBackupReserve;
+        private bool restoreBackupReserveToFull;
         private EnergyState state = EnergyState.Offline;
         private float lastQuestReportedCharge01 = float.NaN;
         private StationSystemsController stationSystems;
@@ -62,7 +66,8 @@ namespace NERA.Energy
             config != null ? config : config = EnergyBalanceConfig.LoadDefault();
         public float CurrentEnergy => currentEnergy;
         public float TotalCapacity { get; private set; }
-        public float TotalDischargeEfficiency { get; private set; } = 1f;
+        public float CurrentBackupReserve => currentBackupReserve;
+        public float TotalBackupReserve { get; private set; }
         public float TotalPowerOutput { get; private set; }
         public float CurrentGeneration { get; private set; }
         public float CurrentConsumption { get; private set; }
@@ -73,7 +78,8 @@ namespace NERA.Energy
         public bool GridEnabled => gridEnabled;
         public bool IsRestoringState { get; private set; }
         public bool HasUsablePower =>
-            gridEnabled && currentEnergy > 0.001f && TotalCapacity > 0f;
+            gridEnabled && TotalCapacity > 0f &&
+            (currentEnergy > 0.001f || currentBackupReserve > 0.001f);
         public EnergyState State => state;
         public int ConnectedConsumerCount
         {
@@ -137,6 +143,8 @@ namespace NERA.Energy
             if (deltaTime <= 0f)
                 return;
 
+            ApplyPendingRestoredEnergy();
+
             CurrentGeneration = CalculateGeneration();
             RefreshState();
             RefreshConsumers();
@@ -144,26 +152,7 @@ namespace NERA.Energy
 
             if (TotalCapacity > 0f)
             {
-                if (hasPendingRestoredEnergy)
-                {
-                    currentEnergy = Mathf.Min(
-                        pendingRestoredEnergy,
-                        TotalCapacity);
-                    hasPendingRestoredEnergy = false;
-                }
-
-                float netPower = CurrentGeneration - CurrentConsumption;
-                if (netPower < 0f)
-                {
-                    netPower /= Mathf.Max(
-                        0.01f,
-                        TotalDischargeEfficiency);
-                }
-                currentEnergy = Mathf.Clamp(
-                    currentEnergy + netPower * deltaTime,
-                    0f,
-                    TotalCapacity
-                );
+                ApplyEnergyBalance(deltaTime);
             }
             else if (!hasPendingRestoredEnergy)
             {
@@ -172,6 +161,8 @@ namespace NERA.Energy
 
             RefreshState();
             RefreshConsumers();
+            if (batteries.Count > 0)
+                restoreBackupReserveToFull = false;
             EnergyChanged?.Invoke();
             ReportQuestCharge();
         }
@@ -186,7 +177,7 @@ namespace NERA.Energy
                 batteryId,
                 capacity,
                 initialCharge,
-                1f,
+                0f,
                 capacity);
         }
 
@@ -194,17 +185,14 @@ namespace NERA.Energy
             string batteryId,
             float capacity,
             float initialCharge,
-            float dischargeEfficiency,
+            float backupReserve,
             float powerOutput
         )
         {
             if (string.IsNullOrWhiteSpace(batteryId) || capacity <= 0f)
                 return false;
 
-            dischargeEfficiency = Mathf.Clamp(
-                dischargeEfficiency,
-                0.01f,
-                1f);
+            backupReserve = Mathf.Max(0f, backupReserve);
             powerOutput = Mathf.Max(0f, powerOutput);
             float clampedInitialCharge = Mathf.Clamp(
                 initialCharge,
@@ -219,8 +207,8 @@ namespace NERA.Energy
                         existing.InitialCharge,
                         clampedInitialCharge) &&
                     Mathf.Approximately(
-                        existing.DischargeEfficiency,
-                        dischargeEfficiency) &&
+                        existing.BackupReserve,
+                        backupReserve) &&
                     Mathf.Approximately(existing.PowerOutput, powerOutput))
                 {
                     return true;
@@ -229,20 +217,31 @@ namespace NERA.Energy
                 TotalCapacity = Mathf.Max(
                     0f,
                     TotalCapacity - existing.Capacity + capacity);
+                TotalBackupReserve = Mathf.Max(
+                    0f,
+                    TotalBackupReserve - existing.BackupReserve +
+                    backupReserve);
                 TotalPowerOutput = Mathf.Max(
                     0f,
                     TotalPowerOutput - existing.PowerOutput + powerOutput);
                 existing.Capacity = capacity;
                 existing.InitialCharge = clampedInitialCharge;
-                existing.DischargeEfficiency = dischargeEfficiency;
+                existing.BackupReserve = backupReserve;
                 existing.PowerOutput = powerOutput;
-                RefreshTotalDischargeEfficiency();
                 float energyToPreserve = hasPendingRestoredEnergy
                     ? pendingRestoredEnergy
                     : currentEnergy;
                 currentEnergy = TotalCapacity > 0f
                     ? Mathf.Min(energyToPreserve, TotalCapacity)
                     : energyToPreserve;
+                float reserveToPreserve = restoreBackupReserveToFull
+                    ? TotalBackupReserve
+                    : hasPendingRestoredBackupReserve
+                        ? pendingRestoredBackupReserve
+                        : currentBackupReserve;
+                currentBackupReserve = Mathf.Min(
+                    reserveToPreserve,
+                    TotalBackupReserve);
 
                 RefreshState();
                 RefreshConsumers();
@@ -257,13 +256,13 @@ namespace NERA.Energy
                 {
                     Capacity = capacity,
                     InitialCharge = clampedInitialCharge,
-                    DischargeEfficiency = dischargeEfficiency,
+                    BackupReserve = backupReserve,
                     PowerOutput = powerOutput
                 }
             );
             TotalCapacity += capacity;
+            TotalBackupReserve += backupReserve;
             TotalPowerOutput += powerOutput;
-            RefreshTotalDischargeEfficiency();
 
             if (hasPendingRestoredEnergy)
                 currentEnergy = Mathf.Min(
@@ -275,6 +274,29 @@ namespace NERA.Energy
                     currentEnergy + clampedInitialCharge);
             else
                 currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
+
+            if (restoreBackupReserveToFull)
+            {
+                currentBackupReserve = TotalBackupReserve;
+            }
+            else if (hasPendingRestoredBackupReserve)
+            {
+                currentBackupReserve = Mathf.Min(
+                    pendingRestoredBackupReserve,
+                    TotalBackupReserve);
+            }
+            else if (!restoredFromSave)
+            {
+                currentBackupReserve = Mathf.Min(
+                    TotalBackupReserve,
+                    currentBackupReserve + backupReserve);
+            }
+            else
+            {
+                currentBackupReserve = Mathf.Min(
+                    currentBackupReserve,
+                    TotalBackupReserve);
+            }
 
             RefreshState();
             RefreshConsumers();
@@ -501,8 +523,21 @@ namespace NERA.Energy
 
         public bool HasSufficientCharge(float minimumCharge01)
         {
-            return HasUsablePower &&
+            return gridEnabled && TotalCapacity > 0f &&
+                   currentEnergy > 0.001f &&
                    Charge01 + 0.0001f >= Mathf.Clamp01(minimumCharge01);
+        }
+
+        public bool HasSufficientCharge(
+            float minimumCharge01,
+            int powerPriority)
+        {
+            if (powerPriority < Config.BackupReserveMinimumPriority)
+                return HasSufficientCharge(minimumCharge01);
+
+            return gridEnabled && TotalCapacity > 0f &&
+                (currentEnergy > 0.001f ||
+                 currentBackupReserve > 0.001f);
         }
 
         public bool CanSpendEnergy(float amount)
@@ -520,6 +555,52 @@ namespace NERA.Energy
             currentEnergy = Mathf.Max(0f, currentEnergy - amount);
             RefreshConsumers();
             RefreshState();
+            EnergyChanged?.Invoke();
+            ReportQuestCharge();
+            return true;
+        }
+
+        public bool CanSpendConsumerEnergy(
+            string consumerId,
+            float amount)
+        {
+            amount = Mathf.Max(0f, amount);
+            if (amount <= 0f)
+                return true;
+
+            if (!gridEnabled ||
+                !consumers.TryGetValue(
+                    consumerId,
+                    out ConsumerRecord consumer) ||
+                !consumer.Powered)
+            {
+                return false;
+            }
+
+            if (currentEnergy >= amount)
+                return true;
+
+            return IsBackupReserveEligible(consumer) &&
+                currentEnergy + currentBackupReserve >= amount;
+        }
+
+        public bool TrySpendConsumerEnergy(
+            string consumerId,
+            float amount)
+        {
+            amount = Mathf.Max(0f, amount);
+            if (!CanSpendConsumerEnergy(consumerId, amount))
+                return false;
+
+            float mainBatterySpend = Mathf.Min(currentEnergy, amount);
+            currentEnergy = Mathf.Max(
+                0f,
+                currentEnergy - mainBatterySpend);
+            currentBackupReserve = Mathf.Max(
+                0f,
+                currentBackupReserve - (amount - mainBatterySpend));
+            RefreshState();
+            RefreshConsumers();
             EnergyChanged?.Invoke();
             ReportQuestCharge();
             return true;
@@ -570,6 +651,31 @@ namespace NERA.Energy
 
         public void RestoreState(float savedEnergy, bool savedGridEnabled)
         {
+            RestoreStateInternal(
+                savedEnergy,
+                0f,
+                savedGridEnabled,
+                true);
+        }
+
+        public void RestoreState(
+            float savedEnergy,
+            float savedBackupReserve,
+            bool savedGridEnabled)
+        {
+            RestoreStateInternal(
+                savedEnergy,
+                savedBackupReserve,
+                savedGridEnabled,
+                false);
+        }
+
+        private void RestoreStateInternal(
+            float savedEnergy,
+            float savedBackupReserve,
+            bool savedGridEnabled,
+            bool fillBackupReserve)
+        {
             IsRestoringState = true;
             try
             {
@@ -581,6 +687,18 @@ namespace NERA.Energy
 
                 if (TotalCapacity > 0f)
                     currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
+
+                restoreBackupReserveToFull = fillBackupReserve;
+                pendingRestoredBackupReserve = Mathf.Max(
+                    0f,
+                    savedBackupReserve);
+                hasPendingRestoredBackupReserve =
+                    !fillBackupReserve && batteries.Count == 0;
+                currentBackupReserve = fillBackupReserve
+                    ? TotalBackupReserve
+                    : Mathf.Min(
+                        pendingRestoredBackupReserve,
+                        TotalBackupReserve);
 
                 RefreshState();
                 RefreshConsumers();
@@ -598,13 +716,23 @@ namespace NERA.Energy
             restoredFromSave = false;
             hasPendingRestoredEnergy = false;
             pendingRestoredEnergy = 0f;
+            hasPendingRestoredBackupReserve = false;
+            pendingRestoredBackupReserve = 0f;
+            restoreBackupReserveToFull = false;
             gridEnabled = false;
             currentEnergy = 0f;
+            currentBackupReserve = 0f;
 
             foreach (BatteryRecord battery in batteries.Values)
+            {
                 currentEnergy += battery.InitialCharge;
+                currentBackupReserve += battery.BackupReserve;
+            }
 
             currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
+            currentBackupReserve = Mathf.Min(
+                currentBackupReserve,
+                TotalBackupReserve);
 
             RefreshState();
             RefreshConsumers();
@@ -666,24 +794,87 @@ namespace NERA.Energy
             return total;
         }
 
-        private void RefreshTotalDischargeEfficiency()
+        private void ApplyPendingRestoredEnergy()
         {
-            if (TotalCapacity <= 0f || batteries.Count == 0)
+            if (TotalCapacity > 0f && hasPendingRestoredEnergy)
             {
-                TotalDischargeEfficiency = 1f;
+                currentEnergy = Mathf.Min(
+                    pendingRestoredEnergy,
+                    TotalCapacity);
+                hasPendingRestoredEnergy = false;
+            }
+
+            if (batteries.Count > 0 && hasPendingRestoredBackupReserve)
+            {
+                currentBackupReserve = Mathf.Min(
+                    pendingRestoredBackupReserve,
+                    TotalBackupReserve);
+                hasPendingRestoredBackupReserve = false;
+            }
+        }
+
+        private void ApplyEnergyBalance(float deltaTime)
+        {
+            float netPower = CurrentGeneration - CurrentConsumption;
+            if (netPower >= 0f)
+            {
+                StoreGeneratedEnergy(netPower * deltaTime);
                 return;
             }
 
-            float weightedEfficiency = 0f;
-            foreach (BatteryRecord battery in batteries.Values)
+            float mainDrainRate = -netPower;
+            float requestedMainEnergy = mainDrainRate * deltaTime;
+            if (currentEnergy + 0.0001f >= requestedMainEnergy)
             {
-                weightedEfficiency += battery.Capacity *
-                    battery.DischargeEfficiency;
+                currentEnergy = Mathf.Max(
+                    0f,
+                    currentEnergy - requestedMainEnergy);
+                return;
             }
-            TotalDischargeEfficiency = Mathf.Clamp(
-                weightedEfficiency / TotalCapacity,
-                0.01f,
-                1f);
+
+            float secondsPoweredByMain = mainDrainRate > 0.0001f
+                ? currentEnergy / mainDrainRate
+                : 0f;
+            currentEnergy = 0f;
+
+            float reserveDuration = Mathf.Max(
+                0f,
+                deltaTime - secondsPoweredByMain);
+            float reserveNetPower = CurrentGeneration -
+                CalculateBackupReserveConsumption();
+            if (reserveNetPower >= 0f)
+            {
+                StoreGeneratedEnergy(reserveNetPower * reserveDuration);
+                return;
+            }
+
+            currentBackupReserve = Mathf.Max(
+                0f,
+                currentBackupReserve + reserveNetPower * reserveDuration);
+        }
+
+        private void StoreGeneratedEnergy(float generatedEnergy)
+        {
+            float remainingEnergy = Mathf.Max(0f, generatedEnergy);
+            float mainSpace = Mathf.Max(0f, TotalCapacity - currentEnergy);
+            float storedInMain = Mathf.Min(remainingEnergy, mainSpace);
+            currentEnergy += storedInMain;
+            remainingEnergy -= storedInMain;
+
+            currentBackupReserve = Mathf.Min(
+                TotalBackupReserve,
+                currentBackupReserve + remainingEnergy);
+        }
+
+        private float CalculateBackupReserveConsumption()
+        {
+            float total = 0f;
+            foreach (ConsumerRecord consumer in consumers.Values)
+            {
+                if (consumer.Powered && IsBackupReserveEligible(consumer))
+                    total += consumer.Rate;
+            }
+            return total;
         }
 
         private float CalculateConsumption()
@@ -813,7 +1004,9 @@ namespace NERA.Energy
 
         private bool IsConsumerConnected(ConsumerRecord consumer)
         {
-            if (!HasSufficientCharge(consumer.MinimumCharge01))
+            if (!HasSufficientCharge(
+                    consumer.MinimumCharge01,
+                    consumer.PowerPriority))
                 return false;
 
             if (!consumer.StationSystem.HasValue)
@@ -828,6 +1021,12 @@ namespace NERA.Energy
             return systems.IsRequestedActive(
                 type,
                 consumer.StationObjectId);
+        }
+
+        private bool IsBackupReserveEligible(ConsumerRecord consumer)
+        {
+            return consumer != null &&
+                consumer.PowerPriority >= Config.BackupReserveMinimumPriority;
         }
 
         private void HandleStationSystemsInstanceChanged(
@@ -870,8 +1069,12 @@ namespace NERA.Energy
             EnergyState newState;
             if (!gridEnabled)
                 newState = EnergyState.Offline;
-            else if (currentEnergy <= 0.001f || TotalCapacity <= 0f)
+            else if (TotalCapacity <= 0f)
                 newState = EnergyState.Blackout;
+            else if (currentEnergy <= 0.001f)
+                newState = currentBackupReserve > 0.001f
+                    ? EnergyState.Emergency
+                    : EnergyState.Blackout;
             else if (Charge01 <= 0.25f)
                 newState = EnergyState.Emergency;
             else if (Charge01 <= 0.5f)

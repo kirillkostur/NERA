@@ -748,7 +748,6 @@ MonoBehaviour:
   sideQuestText: {fileID: 115565422}
   mainHeader: "\u041E\u0421\u041D\u041E\u0412\u041D\u041E\u0415 \u0417\u0410\u0414\u0410\u041D\u0418\u0415"
   sideHeader: "\u041F\u041E\u0411\u041E\u0427\u041D\u041E\u0415 \u0417\u0410\u0414\u0410\u041D\u0418\u0415"
-  objectiveFontSize: 20
 --- !u!1 &31557222
 GameObject:
   m_ObjectHideFlags: 0
@@ -10526,8 +10525,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 43}
-  m_SizeDelta: {x: 500, y: 125}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 550, y: 450}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &490155466
 MonoBehaviour:
@@ -12392,6 +12391,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: d1ad1fc49eab72242a941f751b8837af, type: 2}
   gridEnabled: 0
   currentEnergy: 0
+  currentBackupReserve: 0
 --- !u!114 &550046525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17972,8 +17972,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 608, y: -47}
-  m_SizeDelta: {x: 600, y: 300}
+  m_AnchoredPosition: {x: 608, y: -149}
+  m_SizeDelta: {x: 600, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &753049788
 MonoBehaviour:

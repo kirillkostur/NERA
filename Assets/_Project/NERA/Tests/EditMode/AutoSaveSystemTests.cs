@@ -307,5 +307,38 @@ namespace NERA.Tests
                 UnityEngine.Object.DestroyImmediate(root);
             }
         }
+
+        [Test]
+        public void BackupReserveChangeMarksAutoSaveDirty()
+        {
+            GameObject root = new GameObject("BackupReserveAutoSave_Test");
+            try
+            {
+                EnergySystemController energy =
+                    root.AddComponent<EnergySystemController>();
+                AutoSaveService autoSave =
+                    root.AddComponent<AutoSaveService>();
+
+                energy.RegisterBattery(
+                    "station_battery",
+                    1000f,
+                    0f,
+                    100f,
+                    10f);
+                energy.SetGridEnabled(true);
+                energy.RegisterConsumer("priority", 0f, 0f, 80);
+                energy.SetConsumerActive("priority", true);
+                autoSave.InitializeSession();
+
+                Assert.That(
+                    energy.TrySpendConsumerEnergy("priority", 5f),
+                    Is.True);
+                Assert.That(autoSave.IsDirty, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
     }
 }

@@ -77,6 +77,6 @@ Calibrate to reveal a hidden signal on an opened sector.","","АНТЕННА
 "station.stat.aimtolerance",339100000000020,"","Aim tolerance","","Допуск наведения",""
 "station.stat.batterycharge",339100000000021,"","Battery capacity","","Ёмкость батареи",""
 "station.stat.flightenergyconsumption",339100000000022,"","Flight consumption","","Потребление в полёте",""
-"station.stat.dischargeefficiency",339100000000023,"","Discharge Efficiency","","Эффективность разряда",""
+"station.stat.backupreserve",339100000000023,"","Backup Reserve","","Резервное питание",""
 "station.stat.poweroutput",339100000000024,"","Power Output","","Выходная мощность",""
 "station.stat.currentconsumption",339100000000025,"","Current Consumption","","Текущее потребление",""

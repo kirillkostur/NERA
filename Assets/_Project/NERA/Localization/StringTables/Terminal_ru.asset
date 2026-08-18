@@ -325,7 +325,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000023
-    m_Localized: "Эффективность разряда"
+    m_Localized: "Резервное питание"
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000024

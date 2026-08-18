@@ -30,8 +30,8 @@ MonoBehaviour:
   - systemType: 1
     objectId: station_battery
     displayName: BATTERY
-    description: Stores generated energy. Physical parts improve capacity, discharge
-      efficiency, and power output.
+    description: Stores generated energy. Physical parts improve capacity, backup
+      reserve, and power output.
     controllable: 0
     initiallyActive: 0
     powerPriority: 100
@@ -42,9 +42,9 @@ MonoBehaviour:
       unit: ' kWh'
       decimals: 0
     - stat: 18
-      displayName: Discharge Efficiency
-      baseValue: 85
-      unit: '%'
+      displayName: Backup Reserve
+      baseValue: 100
+      unit: ' kWh'
       decimals: 0
     - stat: 19
       displayName: Power Output
