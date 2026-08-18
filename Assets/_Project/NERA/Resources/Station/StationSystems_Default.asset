@@ -45,11 +45,19 @@ MonoBehaviour:
       decimals: 0
     slots:
     - slotId: Slot_1
-      displayName: Capacitor bank
+      displayName: Energy Cells
     - slotId: Slot_2
-      displayName: Reinforced housing
+      displayName: Energy Cells
     - slotId: Slot_3
-      displayName: Thermal pack
+      displayName: Cooling System
+    - slotId: Slot_4
+      displayName: Power Bus
+    - slotId: Slot_5
+      displayName: Power Controller
+    - slotId: Slot_6
+      displayName: Power Converter
+    - slotId: Slot_7
+      displayName: Voltage Regulator
   - systemType: 2
     objectId: 
     displayName: TERMINAL
