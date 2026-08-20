@@ -7,11 +7,11 @@ Shader "Tutorial/VolumetricFog"
         _StepSize("Step size", Range(0.1, 20)) = 1
         _DensityMultiplier("Density multiplier", Range(0, 10)) = 1
         _NoiseOffset("Noise offset", float) = 0
-        
+
         _FogNoise("Fog noise", 3D) = "white" {}
         _NoiseTiling("Noise tiling", float) = 1
         _DensityThreshold("Density threshold", Range(0, 1)) = 0.1
-        
+
         [HDR]_LightContribution("Light contribution", Color) = (1, 1, 1, 1)
         _LightScattering("Light scattering", Range(0, 1)) = 0.2
     }
@@ -43,19 +43,61 @@ Shader "Tutorial/VolumetricFog"
             float4 _LightContribution;
             float _LightScattering;
 
+            #define NERA_MAX_FOG_EXCLUSION_VOLUMES 16
+            int _FogExclusionCount;
+            float4x4 _FogExclusionWorldToLocal[NERA_MAX_FOG_EXCLUSION_VOLUMES];
+            float4 _FogExclusionParameters[NERA_MAX_FOG_EXCLUSION_VOLUMES];
+
             float henyey_greenstein(float angle, float scattering)
             {
                 return (1.0 - angle * angle) / (4.0 * PI * pow(1.0 + scattering * scattering - (2.0 * scattering) * angle, 1.5f));
             }
-            
+
+            float get_fog_visibility(float3 worldPos)
+            {
+                float visibility = 1.0;
+                int volumeCount = min(
+                    _FogExclusionCount,
+                    NERA_MAX_FOG_EXCLUSION_VOLUMES);
+
+                [loop]
+                for (int index = 0; index < volumeCount; index++)
+                {
+                    float3 boxPosition = mul(
+                        _FogExclusionWorldToLocal[index],
+                        float4(worldPos, 1.0)).xyz;
+                    float3 worldSize =
+                        _FogExclusionParameters[index].xyz;
+                    float3 offset =
+                        (abs(boxPosition) - 0.5) * worldSize;
+                    float signedDistance =
+                        length(max(offset, 0.0)) +
+                        min(max(offset.x, max(offset.y, offset.z)), 0.0);
+                    float edgeFade = max(
+                        _FogExclusionParameters[index].w,
+                        0.0001);
+                    float volumeVisibility = smoothstep(
+                        0.0,
+                        edgeFade,
+                        signedDistance);
+                    visibility = min(visibility, volumeVisibility);
+                }
+
+                return visibility;
+            }
+
             float get_density(float3 worldPos)
             {
+                float fogVisibility = get_fog_visibility(worldPos);
+                if (fogVisibility <= 0.0)
+                    return 0.0;
+
                 // The generator stores density in a compact single-channel R8
                 // Texture3D, so only the red channel is meaningful.
                 float noise = _FogNoise.SampleLevel(sampler_TrilinearRepeat, worldPos * 0.01 * _NoiseTiling, 0).r;
                 float density = noise;
                 density = saturate(density - _DensityThreshold) * _DensityMultiplier;
-                return density;
+                return density * fogVisibility;
             }
 
             half4 frag(Varyings IN) : SV_Target
@@ -87,7 +129,7 @@ Shader "Tutorial/VolumetricFog"
                     }
                     distTravelled += _StepSize;
                 }
-                
+
                 return lerp(col, fogCol, 1.0 - saturate(transmittance));
             }
             ENDHLSL
