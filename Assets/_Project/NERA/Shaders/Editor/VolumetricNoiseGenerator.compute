@@ -1,0 +1,305 @@
+#pragma kernel GenerateVolume
+#pragma kernel ExtractSlice
+#pragma target 5.0
+
+struct NoiseLayerData
+{
+    float4 offsetFrequency;
+    float4 fractal;
+    float4 shaping;
+    float4 flags;
+};
+
+StructuredBuffer<NoiseLayerData> _Layers;
+RWTexture3D<float> _Result;
+Texture3D<float> _Source;
+RWTexture2D<float4> _Preview;
+
+int _Size;
+int _LayerCount;
+int _Seed;
+float _OutputMin;
+float _OutputMax;
+int _InvertOutput;
+
+int _SourceSize;
+int _PreviewSize;
+int _PreviewAxis;
+int _PreviewSlice;
+
+uint Hash(uint value)
+{
+    value ^= value >> 16;
+    value *= 0x7feb352du;
+    value ^= value >> 15;
+    value *= 0x846ca68bu;
+    value ^= value >> 16;
+    return value;
+}
+
+int PositiveModulo(int value, int period)
+{
+    // Float floor keeps negative offsets correct and avoids the particularly
+    // expensive integer-modulus path in D3D compute shaders.
+    return value - (int)floor((float)value / period) * period;
+}
+
+int3 WrapCell(int3 cell, int period)
+{
+    return int3(
+        PositiveModulo(cell.x, period),
+        PositiveModulo(cell.y, period),
+        PositiveModulo(cell.z, period));
+}
+
+uint HashCell(int3 cell, uint seed)
+{
+    uint value = seed;
+    value ^= (uint)cell.x * 0x9e3779b9u;
+    value ^= (uint)cell.y * 0x85ebca6bu;
+    value ^= (uint)cell.z * 0xc2b2ae35u;
+    return Hash(value);
+}
+
+float Hash01(uint value)
+{
+    return (Hash(value) & 0x00ffffffu) / 16777215.0;
+}
+
+float3 Random3(uint value)
+{
+    return float3(
+        Hash01(value ^ 0x68bc21ebu),
+        Hash01(value ^ 0x02e5be93u),
+        Hash01(value ^ 0x967a889bu));
+}
+
+float3 Gradient(uint value)
+{
+    float3 gradient = Random3(value) * 2.0 - 1.0;
+    return normalize(gradient + float3(0.0001, 0.0002, 0.0003));
+}
+
+float3 Fade(float3 value)
+{
+    return value * value * value *
+        (value * (value * 6.0 - 15.0) + 10.0);
+}
+
+float PerlinPeriodic(
+    float3 uv,
+    int period,
+    float3 offset,
+    uint seed)
+{
+    float3 position = uv * period + offset;
+    int3 cell = (int3)floor(position);
+    float3 local = frac(position);
+
+    int3 c000 = WrapCell(cell + int3(0, 0, 0), period);
+    int3 c100 = WrapCell(cell + int3(1, 0, 0), period);
+    int3 c010 = WrapCell(cell + int3(0, 1, 0), period);
+    int3 c110 = WrapCell(cell + int3(1, 1, 0), period);
+    int3 c001 = WrapCell(cell + int3(0, 0, 1), period);
+    int3 c101 = WrapCell(cell + int3(1, 0, 1), period);
+    int3 c011 = WrapCell(cell + int3(0, 1, 1), period);
+    int3 c111 = WrapCell(cell + int3(1, 1, 1), period);
+
+    float n000 = dot(Gradient(HashCell(c000, seed)), local);
+    float n100 = dot(
+        Gradient(HashCell(c100, seed)),
+        local - float3(1, 0, 0));
+    float n010 = dot(
+        Gradient(HashCell(c010, seed)),
+        local - float3(0, 1, 0));
+    float n110 = dot(
+        Gradient(HashCell(c110, seed)),
+        local - float3(1, 1, 0));
+    float n001 = dot(
+        Gradient(HashCell(c001, seed)),
+        local - float3(0, 0, 1));
+    float n101 = dot(
+        Gradient(HashCell(c101, seed)),
+        local - float3(1, 0, 1));
+    float n011 = dot(
+        Gradient(HashCell(c011, seed)),
+        local - float3(0, 1, 1));
+    float n111 = dot(
+        Gradient(HashCell(c111, seed)),
+        local - float3(1, 1, 1));
+
+    float3 blend = Fade(local);
+    float nx00 = lerp(n000, n100, blend.x);
+    float nx10 = lerp(n010, n110, blend.x);
+    float nx01 = lerp(n001, n101, blend.x);
+    float nx11 = lerp(n011, n111, blend.x);
+    float nxy0 = lerp(nx00, nx10, blend.y);
+    float nxy1 = lerp(nx01, nx11, blend.y);
+    float noise = lerp(nxy0, nxy1, blend.z);
+    return saturate(noise * 0.8 + 0.5);
+}
+
+float WorleyPeriodic(
+    float3 uv,
+    int period,
+    float3 offset,
+    uint seed)
+{
+    float3 position = uv * period + offset;
+    int3 cell = (int3)floor(position);
+    float minimumDistance = 2.0;
+
+    [unroll]
+    for (int z = -1; z <= 1; z++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            [unroll]
+            for (int x = -1; x <= 1; x++)
+            {
+                int3 neighbour = cell + int3(x, y, z);
+                int3 wrapped = WrapCell(neighbour, period);
+                float3 featurePoint = (float3)neighbour +
+                    Random3(HashCell(wrapped, seed));
+                minimumDistance = min(
+                    minimumDistance,
+                    distance(featurePoint, position));
+            }
+        }
+    }
+
+    return 1.0 - saturate(minimumDistance);
+}
+
+float SampleLayer(NoiseLayerData layer, float3 uv, int layerIndex)
+{
+    float frequency = max(1.0, layer.offsetFrequency.w);
+    float persistence = saturate(layer.fractal.x);
+    float lacunarity = max(1.0, layer.fractal.y);
+    int octaves = clamp((int)round(layer.shaping.y), 1, 8);
+    int noiseType = (int)round(layer.shaping.z);
+    float amplitude = 1.0;
+    float amplitudeSum = 0.0;
+    float frequencyMultiplier = 1.0;
+    float value = 0.0;
+
+    [loop]
+    for (int octave = 0; octave < octaves; octave++)
+    {
+        int period = max(1, (int)round(frequency * frequencyMultiplier));
+        uint octaveSeed = (uint)(_Seed + layerIndex * 1013 + octave * 1619);
+        float3 offset = layer.offsetFrequency.xyz * frequencyMultiplier;
+        float sampleValue;
+
+        if (noiseType == 1)
+        {
+            sampleValue = WorleyPeriodic(uv, period, offset, octaveSeed);
+        }
+        else if (noiseType == 2)
+        {
+            float perlin = PerlinPeriodic(
+                uv,
+                period,
+                offset,
+                octaveSeed);
+            float worley = WorleyPeriodic(
+                uv,
+                max(1, period * 2),
+                offset * 2.0,
+                octaveSeed ^ 0xa511e9b3u);
+            sampleValue = saturate(perlin * lerp(0.45, 1.0, worley));
+        }
+        else
+        {
+            sampleValue = PerlinPeriodic(uv, period, offset, octaveSeed);
+        }
+
+        value += sampleValue * amplitude;
+        amplitudeSum += amplitude;
+        amplitude *= persistence;
+        frequencyMultiplier *= lacunarity;
+    }
+
+    value /= max(amplitudeSum, 0.0001);
+    float coverage = saturate(layer.fractal.w);
+    float smoothness = max(0.0001, layer.shaping.x);
+    value = smoothstep(
+        coverage - smoothness,
+        coverage + smoothness,
+        value);
+
+    if (layer.flags.x > 0.5)
+        value = 1.0 - value;
+
+    return value;
+}
+
+float BlendLayer(float current, float layerValue, float opacity, int mode)
+{
+    opacity = saturate(opacity);
+
+    if (mode == 0)
+        return lerp(current, layerValue, opacity);
+    if (mode == 1)
+        return saturate(current + layerValue * opacity);
+    if (mode == 2)
+        return saturate(current - layerValue * opacity);
+    if (mode == 3)
+        return lerp(current, current * layerValue, opacity);
+    if (mode == 4)
+        return lerp(current, max(current, layerValue), opacity);
+
+    return lerp(current, min(current, layerValue), opacity);
+}
+
+[numthreads(4, 4, 4)]
+void GenerateVolume(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= (uint)_Size))
+        return;
+
+    // Sampling at voxel centers avoids duplicating an edge slice while the
+    // periodic lattice still guarantees seamless trilinear wrapping.
+    float3 uv = (id + 0.5) / (float)_Size;
+    float value = 0.0;
+
+    [loop]
+    for (int layerIndex = 0; layerIndex < _LayerCount; layerIndex++)
+    {
+        NoiseLayerData layer = _Layers[layerIndex];
+        float layerValue = SampleLayer(layer, uv, layerIndex);
+        int blendMode = (int)round(layer.shaping.w);
+        value = BlendLayer(value, layerValue, layer.fractal.z, blendMode);
+    }
+
+    value = saturate(
+        (value - _OutputMin) /
+        max(_OutputMax - _OutputMin, 0.0001));
+    if (_InvertOutput != 0)
+        value = 1.0 - value;
+
+    _Result[id] = value;
+}
+
+[numthreads(8, 8, 1)]
+void ExtractSlice(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint)_PreviewSize))
+        return;
+
+    int2 sourcePixel = min(
+        (int2(id.xy) * _SourceSize) / _PreviewSize,
+        _SourceSize - 1);
+    int3 coordinate;
+
+    if (_PreviewAxis == 0)
+        coordinate = int3(_PreviewSlice, sourcePixel.y, sourcePixel.x);
+    else if (_PreviewAxis == 1)
+        coordinate = int3(sourcePixel.x, _PreviewSlice, sourcePixel.y);
+    else
+        coordinate = int3(sourcePixel.x, sourcePixel.y, _PreviewSlice);
+
+    float value = _Source.Load(int4(coordinate, 0));
+    _Preview[id.xy] = float4(value.xxx, 1.0);
+}
