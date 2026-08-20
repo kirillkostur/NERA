@@ -10,6 +10,7 @@ Shader "Tutorial/VolumetricFog"
 
         _FogNoise("Fog noise", 3D) = "white" {}
         _NoiseTiling("Noise tiling", float) = 1
+        _NoiseVelocity("Noise velocity (world units/sec)", Vector) = (1, 0, 0, 0)
         _DensityThreshold("Density threshold", Range(0, 1)) = 0.1
 
         [HDR]_LightContribution("Light contribution", Color) = (1, 1, 1, 1)
@@ -40,6 +41,7 @@ Shader "Tutorial/VolumetricFog"
             TEXTURE3D(_FogNoise);
             float _DensityThreshold;
             float _NoiseTiling;
+            float4 _NoiseVelocity;
             float4 _LightContribution;
             float _LightScattering;
 
@@ -94,7 +96,14 @@ Shader "Tutorial/VolumetricFog"
 
                 // The generator stores density in a compact single-channel R8
                 // Texture3D, so only the red channel is meaningful.
-                float noise = _FogNoise.SampleLevel(sampler_TrilinearRepeat, worldPos * 0.01 * _NoiseTiling, 0).r;
+                // Subtracting velocity makes positive XYZ values move the fog
+                // in the same positive world-space direction.
+                float3 noisePosition =
+                    worldPos - _NoiseVelocity.xyz * _Time.y;
+                float noise = _FogNoise.SampleLevel(
+                    sampler_TrilinearRepeat,
+                    noisePosition * 0.01 * _NoiseTiling,
+                    0).r;
                 float density = noise;
                 density = saturate(density - _DensityThreshold) * _DensityMultiplier;
                 return density * fogVisibility;
