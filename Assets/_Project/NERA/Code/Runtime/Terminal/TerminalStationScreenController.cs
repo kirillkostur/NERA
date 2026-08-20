@@ -436,20 +436,17 @@ namespace NERA.Terminal
                 type,
                 selectedObjectId);
             var builder = new StringBuilder();
-            bool requested = IsSelectedSystemRequestedActive(type, systems);
-            bool powered = type == StationSystemType.Battery ||
-                HasSelectedSystemRequiredCharge(type, systems);
-            builder.Append(Localize("station.status.label", "Status"));
-            builder.Append(" - ");
-            builder.AppendLine(requested && powered
-                ? Localize("station.status.active", "ACTIVE")
-                : Localize("station.status.stopped", "STOPPED"));
-            builder.Append(Localize("station.status.condition", "Condition"));
-            builder.Append(" - ");
-            builder.Append(
-                ((systems?.GetCondition(type, selectedObjectId) ?? 1f) * 100f)
-                    .ToString("F0"));
-            builder.AppendLine("%");
+            if (StationSystemsController.UsesCondition(type))
+            {
+                builder.Append(Localize(
+                    "station.status.condition",
+                    "Condition"));
+                builder.Append(" - ");
+                builder.Append(
+                    ((systems?.GetCondition(type, selectedObjectId) ?? 1f) *
+                     100f).ToString("F0"));
+                builder.AppendLine("%");
+            }
 
             if (definition != null)
             {

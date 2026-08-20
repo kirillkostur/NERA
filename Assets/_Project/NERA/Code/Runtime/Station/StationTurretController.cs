@@ -13,6 +13,8 @@ namespace NERA.Station
     [RequireComponent(typeof(MaintainableObject))]
     public sealed class StationTurretController : MonoBehaviour, IDamageable
     {
+        private const float AimToleranceDegrees = 5f;
+
         [SerializeField] private Transform yawPivot;
         [SerializeField] private Transform muzzle;
         [SerializeField] private LayerMask lineOfSightMask = ~0;
@@ -80,12 +82,7 @@ namespace NERA.Station
             GetConfiguredStat(
                 StationObjectStat.FireInterval,
                 0.45f));
-        public float EffectiveAimTolerance => Mathf.Clamp(
-            GetConfiguredStat(
-                StationObjectStat.AimTolerance,
-                5f),
-            0.1f,
-            45f);
+        public float EffectiveAimTolerance => AimToleranceDegrees;
         public float EffectiveEnergyPerShot => Mathf.Max(
             0f,
             GetConfiguredStat(

@@ -227,7 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   role: 2
-  exposedToWeather: 0
+  exposedToWeather: 1
   initialCondition: 1
   cleaningVfx: {fileID: 0}
   targetRenderer: {fileID: 0}

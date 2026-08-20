@@ -94,6 +94,60 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void TurretAimToleranceIsCodeOnlyAndStatIdsRemainStable()
+        {
+            foreach (StationSystemDefinition turret in
+                     systems.Config.StationObjects.Where(
+                         item => item.SystemType == StationSystemType.Turret))
+            {
+                Assert.That(
+                    turret.BaseStats.Select(stat => (int)stat.Stat),
+                    Is.All.Not.EqualTo(15),
+                    turret.ObjectId);
+            }
+
+            Assert.That(
+                System.Enum.IsDefined(typeof(StationObjectStat), 15),
+                Is.False);
+            Assert.That((int)StationObjectStat.BatteryCharge, Is.EqualTo(16));
+            Assert.That(
+                (int)StationObjectStat.FlightEnergyConsumption,
+                Is.EqualTo(17));
+            Assert.That((int)StationObjectStat.BackupReserve, Is.EqualTo(18));
+            Assert.That((int)StationObjectStat.PowerOutput, Is.EqualTo(19));
+        }
+
+        [TestCase(StationSystemType.SolarPanel, true)]
+        [TestCase(StationSystemType.Antenna, true)]
+        [TestCase(StationSystemType.Turret, true)]
+        [TestCase(StationSystemType.Drone, true)]
+        [TestCase(StationSystemType.Battery, false)]
+        [TestCase(StationSystemType.Computer, false)]
+        [TestCase(StationSystemType.Laboratory, false)]
+        public void ConditionIsShownOnlyForOutdoorSystems(
+            StationSystemType type,
+            bool expected)
+        {
+            Assert.That(
+                StationSystemsController.UsesCondition(type),
+                Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void OutdoorDroneHasItsOwnWeatherMaintenanceRole()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Station/Station_Drone.prefab");
+            MaintainableObject maintenance =
+                prefab?.GetComponent<MaintainableObject>();
+
+            Assert.That(prefab, Is.Not.Null);
+            Assert.That(maintenance, Is.Not.Null);
+            Assert.That(maintenance.Role, Is.EqualTo(MaintenanceRole.Drone));
+            Assert.That(maintenance.ExposedToWeather, Is.True);
+        }
+
+        [Test]
         public void BatteryUsesSevenSlotsAndOnlyItsThreeUsefulStats()
         {
             StationSystemDefinition battery = systems.Config.Find(

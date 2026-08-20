@@ -186,6 +186,8 @@ namespace NERA.Maintenance
                     return "Service Antenna";
                 case MaintenanceRole.Turret:
                     return "Service Turret";
+                case MaintenanceRole.Drone:
+                    return "Service Drone";
                 default:
                     return "Service Device";
             }

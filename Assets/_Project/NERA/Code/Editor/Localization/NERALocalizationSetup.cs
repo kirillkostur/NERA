@@ -432,9 +432,6 @@ namespace NERA.Editor.Localization
             AddT("station.power.active", "Active", "Активно");
             AddT("station.power.inactive", "Inactive", "Неактивно");
             AddT("station.no_object_selected", "NO OBJECT SELECTED", "ОБЪЕКТ НЕ ВЫБРАН");
-            AddT("station.status.label", "Status", "Состояние");
-            AddT("station.status.active", "ACTIVE", "АКТИВНО");
-            AddT("station.status.stopped", "STOPPED", "ОСТАНОВЛЕНО");
             AddT("station.status.condition", "Condition", "Состояние объекта");
             AddT("station.status.installed_parts", "Installed parts", "Установлено деталей");
             AddT("station.stat.damage", "Damage", "Урон");
@@ -452,7 +449,6 @@ namespace NERA.Editor.Localization
             AddT("station.stat.energyconsumption", "Energy consumption", "Энергопотребление");
             AddT("station.stat.calibrationenergyconsumption", "Calibration consumption", "Потребление при калибровке");
             AddT("station.stat.calibrationduration", "Calibration duration", "Длительность калибровки");
-            AddT("station.stat.aimtolerance", "Aim tolerance", "Допуск наведения");
             AddT("station.stat.batterycharge", "Battery capacity", "Ёмкость батареи");
             AddT("station.stat.flightenergyconsumption", "Flight consumption", "Потребление в полёте");
             AddT(

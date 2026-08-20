@@ -345,13 +345,7 @@ namespace NERA.Station
                 return turret == null || turret.IsAlive;
             }
 
-            MaintenanceRole role = type switch
-            {
-                StationSystemType.SolarPanel => MaintenanceRole.SolarPanel,
-                StationSystemType.Antenna => MaintenanceRole.Antenna,
-                StationSystemType.Turret => MaintenanceRole.Turret,
-                _ => MaintenanceRole.Generic
-            };
+            MaintenanceRole role = GetMaintenanceRole(type);
             if (role == MaintenanceRole.Generic)
                 return true;
             MaintainableObject maintenance = FindMaintenance(
@@ -359,6 +353,11 @@ namespace NERA.Station
                 objectId,
                 role);
             return maintenance == null || maintenance.IsOperational;
+        }
+
+        public static bool UsesCondition(StationSystemType type)
+        {
+            return GetMaintenanceRole(type) != MaintenanceRole.Generic;
         }
 
         public float GetCondition(
@@ -373,17 +372,24 @@ namespace NERA.Station
                 return turret != null ? turret.Condition : 1f;
             }
 
-            MaintenanceRole role = type switch
-            {
-                StationSystemType.SolarPanel => MaintenanceRole.SolarPanel,
-                StationSystemType.Antenna => MaintenanceRole.Antenna,
-                StationSystemType.Turret => MaintenanceRole.Turret,
-                _ => MaintenanceRole.Generic
-            };
+            MaintenanceRole role = GetMaintenanceRole(type);
             MaintainableObject maintenance = role != MaintenanceRole.Generic
                 ? FindMaintenance(type, objectId, role)
                 : null;
             return maintenance != null ? maintenance.Condition : 1f;
+        }
+
+        private static MaintenanceRole GetMaintenanceRole(
+            StationSystemType type)
+        {
+            return type switch
+            {
+                StationSystemType.SolarPanel => MaintenanceRole.SolarPanel,
+                StationSystemType.Antenna => MaintenanceRole.Antenna,
+                StationSystemType.Turret => MaintenanceRole.Turret,
+                StationSystemType.Drone => MaintenanceRole.Drone,
+                _ => MaintenanceRole.Generic
+            };
         }
 
         public bool CanStart(StationSystemType type, out string reason)

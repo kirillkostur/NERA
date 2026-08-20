@@ -655,8 +655,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f7f2c1bc2b34a7489202d82e3f9c18d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  role: 3
-  exposedToWeather: 0
+  role: 4
+  exposedToWeather: 1
   initialCondition: 1
   cleaningVfx: {fileID: 0}
   targetRenderer: {fileID: 0}

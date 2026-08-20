@@ -232,18 +232,6 @@ MonoBehaviour:
     m_Localized: "\u0421\u041E\u0421\u0422\u041E\u042F\u041D\u0418\u0415"
     m_Metadata:
       m_Items: []
-  - m_Id: 339100000000000
-    m_Localized: "Состояние"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000001
-    m_Localized: "АКТИВНО"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000002
-    m_Localized: "ОСТАНОВЛЕНО"
-    m_Metadata:
-      m_Items: []
   - m_Id: 339100000000003
     m_Localized: "Состояние объекта"
     m_Metadata:
@@ -310,10 +298,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 339100000000019
     m_Localized: "Длительность калибровки"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000020
-    m_Localized: "Допуск наведения"
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000021

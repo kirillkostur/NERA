@@ -783,6 +783,9 @@ namespace NERA.Tests
                 initialText,
                 Does.Contain(
                     $"Installed parts - 0/{turretDefinition.Slots.Count}"));
+            Assert.That(initialText, Does.Contain("Condition -"));
+            Assert.That(initialText, Does.Not.Contain("Status -"));
+            Assert.That(initialText, Does.Not.Contain("Aim tolerance"));
 
             energy.RestoreState(750f, true);
             stationScreen.SelectSystem(StationSystemType.Battery);
@@ -792,12 +795,19 @@ namespace NERA.Tests
                 batteryText,
                 Does.Contain(
                     $"Capacity - 750/{energy.TotalCapacity:F0} kWh"));
+            Assert.That(batteryText, Does.Not.Contain("Condition -"));
             Assert.That(
                 batteryText,
                 Does.Contain(
                     "Backup Reserve - " +
                     $"{energy.CurrentBackupReserve:F0}/" +
                     $"{energy.TotalBackupReserve:F0} kWh"));
+
+            stationScreen.SelectSystem(StationSystemType.Drone);
+            string droneText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(droneText, Does.Contain("Condition -"));
+
             Assert.That(
                 stationScreen.SelectPreviewObject(turretPreview),
                 Is.True);

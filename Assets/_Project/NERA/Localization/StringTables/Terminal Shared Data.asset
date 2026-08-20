@@ -211,18 +211,6 @@ MonoBehaviour:
     m_Key: station.tab.status
     m_Metadata:
       m_Items: []
-  - m_Id: 339100000000000
-    m_Key: station.status.label
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000001
-    m_Key: station.status.active
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000002
-    m_Key: station.status.stopped
-    m_Metadata:
-      m_Items: []
   - m_Id: 339100000000003
     m_Key: station.status.condition
     m_Metadata:
@@ -289,10 +277,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 339100000000019
     m_Key: station.stat.calibrationduration
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000020
-    m_Key: station.stat.aimtolerance
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000021

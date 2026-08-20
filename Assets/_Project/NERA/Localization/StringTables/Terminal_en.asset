@@ -228,18 +228,6 @@ MonoBehaviour:
     m_Localized: STATUS
     m_Metadata:
       m_Items: []
-  - m_Id: 339100000000000
-    m_Localized: Status
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000001
-    m_Localized: ACTIVE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000002
-    m_Localized: STOPPED
-    m_Metadata:
-      m_Items: []
   - m_Id: 339100000000003
     m_Localized: Condition
     m_Metadata:
@@ -306,10 +294,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 339100000000019
     m_Localized: Calibration duration
-    m_Metadata:
-      m_Items: []
-  - m_Id: 339100000000020
-    m_Localized: Aim tolerance
     m_Metadata:
       m_Items: []
   - m_Id: 339100000000021

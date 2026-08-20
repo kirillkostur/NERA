@@ -324,7 +324,19 @@ namespace NERA.Editor
             {
                 MaintainableObject maintainable =
                     GetOrAdd<MaintainableObject>(root);
-                SetMaintenanceRole(maintainable, MaintenanceRole.Antenna);
+                SetOutdoorMaintenanceRole(
+                    maintainable,
+                    MaintenanceRole.Antenna);
+                return;
+            }
+
+            if (type == StationSystemType.Drone)
+            {
+                MaintainableObject maintainable =
+                    GetOrAdd<MaintainableObject>(root);
+                SetOutdoorMaintenanceRole(
+                    maintainable,
+                    MaintenanceRole.Drone);
                 return;
             }
 
@@ -333,7 +345,9 @@ namespace NERA.Editor
 
             MaintainableObject turretMaintenance =
                 GetOrAdd<MaintainableObject>(root);
-            SetMaintenanceRole(turretMaintenance, MaintenanceRole.Turret);
+            SetOutdoorMaintenanceRole(
+                turretMaintenance,
+                MaintenanceRole.Turret);
             StationTurretController turret =
                 GetOrAdd<StationTurretController>(root);
             SerializedObject serialized = new SerializedObject(turret);
@@ -343,12 +357,13 @@ namespace NERA.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetMaintenanceRole(
+        private static void SetOutdoorMaintenanceRole(
             MaintainableObject target,
             MaintenanceRole role)
         {
             SerializedObject serialized = new SerializedObject(target);
             serialized.FindProperty("role").enumValueIndex = (int)role;
+            serialized.FindProperty("exposedToWeather").boolValue = true;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

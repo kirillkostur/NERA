@@ -7,26 +7,25 @@ namespace NERA.Station
 {
     public enum StationObjectStat
     {
-        Damage,
-        DetectionRange,
-        RotationSpeed,
-        FireInterval,
-        IdleEnergyConsumption,
-        DamageTaken,
-        Capacity,
-        Generation,
-        ScanRange,
-        TravelRange,
-        FiringEnergyPerShot,
-        InitialCharge,
-        EnergyConsumption,
-        CalibrationEnergyConsumption,
-        CalibrationDuration,
-        AimTolerance,
-        BatteryCharge,
-        FlightEnergyConsumption,
-        BackupReserve,
-        PowerOutput
+        Damage = 0,
+        DetectionRange = 1,
+        RotationSpeed = 2,
+        FireInterval = 3,
+        IdleEnergyConsumption = 4,
+        DamageTaken = 5,
+        Capacity = 6,
+        Generation = 7,
+        ScanRange = 8,
+        TravelRange = 9,
+        FiringEnergyPerShot = 10,
+        InitialCharge = 11,
+        EnergyConsumption = 12,
+        CalibrationEnergyConsumption = 13,
+        CalibrationDuration = 14,
+        BatteryCharge = 16,
+        FlightEnergyConsumption = 17,
+        BackupReserve = 18,
+        PowerOutput = 19
     }
 
     [Serializable]
