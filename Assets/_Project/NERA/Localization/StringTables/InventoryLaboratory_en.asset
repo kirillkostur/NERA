@@ -124,20 +124,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 1138171735028269374
-  - m_Id: 7980703744
-    m_Localized: Q
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8014258176
-    m_Localized: ESC
-    m_Metadata:
-      m_Items: []
   - m_Id: 8018452480
     m_Localized: EXIT
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8018452481
-    m_Localized: E
     m_Metadata:
       m_Items: []
   - m_Id: 8022646784

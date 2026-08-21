@@ -115,10 +115,6 @@ MonoBehaviour:
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
     m_Metadata:
       m_Items: []
-  - m_Id: 8463048704
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_label
-    m_Metadata:
-      m_Items: []
   - m_Id: 8463048705
     m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
     m_Metadata:
@@ -147,20 +143,12 @@ MonoBehaviour:
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_offbutton_text_off
     m_Metadata:
       m_Items: []
-  - m_Id: 8509186049
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
-    m_Metadata:
-      m_Items: []
   - m_Id: 8509186050
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_info_progresa
     m_Metadata:
       m_Items: []
   - m_Id: 8563712000
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_librarybutton_text_library
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712001
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_backbutton_text_storage
     m_Metadata:
       m_Items: []
   - m_Id: 8563712002
@@ -193,10 +181,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 8580489217
     m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489218
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_nextbutton_text_storage
     m_Metadata:
       m_Items: []
   - m_Id: 8584683520

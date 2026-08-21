@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NERA.Interaction;
 using NERA.Items;
 using NERA.Localization;
 using NERA.UI;
@@ -8,6 +10,8 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEditor.Localization;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 
 namespace NERA.Tests
@@ -24,6 +28,12 @@ namespace NERA.Tests
             NERALocalization.ContentTable,
             NERALocalization.QuestsTable
         };
+
+        private static readonly HashSet<string> RussianCodeOnlyEntries =
+            new HashSet<string>
+            {
+                "save.date_format"
+            };
 
         [Test]
         public void LocalizationSettingsAndRequiredCollectionsExist()
@@ -73,6 +83,123 @@ namespace NERA.Tests
                         $"{collectionName}/{sharedEntry.Key}: Russian value missing");
                 }
             }
+        }
+
+        [Test]
+        public void RussianTablesDoNotContainUntranslatedEnglishFallbacks()
+        {
+            foreach (string collectionName in RequiredCollections)
+            {
+                StringTableCollection collection =
+                    LocalizationEditorSettings.GetStringTableCollection(
+                        collectionName);
+                Assert.That(collection, Is.Not.Null, collectionName);
+                StringTable russian = collection.StringTables.First(
+                    table => table.LocaleIdentifier.Code ==
+                        NERALocalization.RussianCode);
+
+                foreach (SharedTableData.SharedTableEntry sharedEntry in
+                         collection.SharedData.Entries)
+                {
+                    if (RussianCodeOnlyEntries.Contains(sharedEntry.Key) ||
+                        Regex.IsMatch(
+                            sharedEntry.Key,
+                            @"^(?:location|target)\.unknownsignal\d+\.name$"))
+                        continue;
+
+                    string value = russian.GetEntry(sharedEntry.Id)?.Value;
+                    Assert.That(
+                        value,
+                        Does.Match("[А-Яа-яЁё]"),
+                        $"{collectionName}/{sharedEntry.Key}: Russian text " +
+                        "does not contain a Russian translation.");
+                }
+            }
+        }
+
+        [Test]
+        public void RuntimeInteractionPromptsHaveRussianTranslations()
+        {
+            string[] requiredKeys =
+            {
+                "interaction.action.clean_solar_panel",
+                "interaction.action.clean_antenna",
+                "interaction.action.clean_turret",
+                "interaction.action.clean_drone",
+                "interaction.action.service_device",
+                "interaction.action.start_object",
+                "interaction.action.configure_object",
+                "interaction.unavailable.station_power_is_unavailable.",
+                "interaction.unavailable.maintenance_is_unavailable",
+                "interaction.unavailable.cleaning_is_in_progress",
+                "interaction.unavailable.battery_charge_below"
+            };
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.HudTable);
+            Assert.That(collection, Is.Not.Null);
+            StringTable russian = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.RussianCode);
+
+            foreach (string key in requiredKeys)
+            {
+                Assert.That(
+                    russian.GetEntry(key)?.Value,
+                    Does.Match("[А-Яа-яЁё]"),
+                    $"Missing Russian interaction text: {key}");
+            }
+        }
+
+        [Test]
+        public void DynamicInteractionPromptsAreComposedInRussian()
+        {
+            Locale previous = LocalizationSettings.SelectedLocale;
+            Locale russian = LocalizationEditorSettings.GetLocale(
+                NERALocalization.RussianCode);
+            Assert.That(russian, Is.Not.Null);
+
+            try
+            {
+                LocalizationSettings.SelectedLocale = russian;
+                Assert.That(
+                    Prompt("Configure Батарея").ActionText,
+                    Is.EqualTo("Настроить: Батарея"));
+                Assert.That(
+                    Prompt("Start Турель 1").ActionText,
+                    Is.EqualTo("Запустить: Турель 1"));
+                Assert.That(
+                    Prompt(
+                        "Use Terminal",
+                        "Station power is unavailable.").UnavailableReason,
+                    Is.EqualTo("Питание станции недоступно."));
+                Assert.That(
+                    Prompt(
+                        "Use Terminal",
+                        "Maintenance is unavailable").UnavailableReason,
+                    Is.EqualTo("Обслуживание недоступно"));
+                Assert.That(
+                    Prompt(
+                        "Use Terminal",
+                        "Battery charge below 15%.").UnavailableReason,
+                    Is.EqualTo("Заряд батареи ниже 15%."));
+            }
+            finally
+            {
+                LocalizationSettings.SelectedLocale = previous;
+            }
+        }
+
+        private static InteractionPrompt Prompt(
+            string action,
+            string unavailableReason = "")
+        {
+            return new InteractionPrompt(
+                action,
+                NERA.Interaction.InteractionMode.Press,
+                0f,
+                string.IsNullOrEmpty(unavailableReason),
+                unavailableReason);
         }
 
         [Test]

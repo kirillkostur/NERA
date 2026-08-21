@@ -111,20 +111,8 @@ MonoBehaviour:
     m_Key: laboratory.status.loaded_ready
     m_Metadata:
       m_Items: []
-  - m_Id: 7980703744
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_backbutton_text_storage
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8014258176
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_exitbutton_label
-    m_Metadata:
-      m_Items: []
   - m_Id: 8018452480
     m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_exitbutton_exit
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8018452481
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_nextbutton_text_storage
     m_Metadata:
       m_Items: []
   - m_Id: 8022646784

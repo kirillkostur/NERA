@@ -132,10 +132,6 @@ MonoBehaviour:
     m_Localized: YES
     m_Metadata:
       m_Items: []
-  - m_Id: 8463048704
-    m_Localized: ESC
-    m_Metadata:
-      m_Items: []
   - m_Id: 8463048705
     m_Localized: LAUNCHE
     m_Metadata:
@@ -164,20 +160,12 @@ MonoBehaviour:
     m_Localized: OFF
     m_Metadata:
       m_Items: []
-  - m_Id: 8509186049
-    m_Localized: UPGRADE
-    m_Metadata:
-      m_Items: []
   - m_Id: 8509186050
     m_Localized: Progress 100%
     m_Metadata:
       m_Items: []
   - m_Id: 8563712000
     m_Localized: LIBRARY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712001
-    m_Localized: Q
     m_Metadata:
       m_Items: []
   - m_Id: 8563712002
@@ -210,10 +198,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 8580489217
     m_Localized: CALIBRATION
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489218
-    m_Localized: E
     m_Metadata:
       m_Items: []
   - m_Id: 8584683520

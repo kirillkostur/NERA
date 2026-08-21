@@ -26581,7 +26581,6 @@ GameObject:
   - component: {fileID: 1082290757}
   - component: {fileID: 1082290755}
   - component: {fileID: 1082290758}
-  - component: {fileID: 1082290759}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -26725,21 +26724,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1082290759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1082290753}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_label
-  fallback: ESC
 --- !u!1 &1090201563
 GameObject:
   m_ObjectHideFlags: 0
@@ -31563,7 +31547,6 @@ GameObject:
   - component: {fileID: 1262612566}
   - component: {fileID: 1262612568}
   - component: {fileID: 1262612567}
-  - component: {fileID: 1262612569}
   m_Layer: 0
   m_Name: Text_Storage
   m_TagString: Untagged
@@ -31690,21 +31673,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1262612565}
   m_CullTransparentMesh: 1
---- !u!114 &1262612569
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1262612565}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_backbutton_text_storage
-  fallback: Q
 --- !u!1 &1263025714
 GameObject:
   m_ObjectHideFlags: 0
@@ -34690,7 +34658,6 @@ GameObject:
   - component: {fileID: 1391344133}
   - component: {fileID: 1391344135}
   - component: {fileID: 1391344134}
-  - component: {fileID: 1391344136}
   m_Layer: 0
   m_Name: Text_Storage
   m_TagString: Untagged
@@ -34817,21 +34784,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1391344132}
   m_CullTransparentMesh: 1
---- !u!114 &1391344136
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1391344132}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_nextbutton_text_storage
-  fallback: E
 --- !u!1 &1392038199
 GameObject:
   m_ObjectHideFlags: 0
@@ -37547,7 +37499,6 @@ GameObject:
   - component: {fileID: 1505460812}
   - component: {fileID: 1505460811}
   - component: {fileID: 1505460810}
-  - component: {fileID: 1505460813}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -37691,21 +37642,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1505460808}
   m_CullTransparentMesh: 1
---- !u!114 &1505460813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1505460808}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_exitbutton_label
-  fallback: ESC
 --- !u!1 &1507769113
 GameObject:
   m_ObjectHideFlags: 0
@@ -38951,7 +38887,6 @@ GameObject:
   - component: {fileID: 1553867558}
   - component: {fileID: 1553867560}
   - component: {fileID: 1553867559}
-  - component: {fileID: 1553867561}
   m_Layer: 0
   m_Name: Text_Storage
   m_TagString: Untagged
@@ -39078,21 +39013,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1553867557}
   m_CullTransparentMesh: 1
---- !u!114 &1553867561
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1553867557}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_backbutton_text_storage
-  fallback: Q
 --- !u!1 &1559651582
 GameObject:
   m_ObjectHideFlags: 0
@@ -47163,7 +47083,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  table: Terminal
+  table: HUD
   key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
   fallback: UPGRADE
 --- !u!114 &1890281102
@@ -48905,7 +48825,6 @@ GameObject:
   - component: {fileID: 1951689640}
   - component: {fileID: 1951689642}
   - component: {fileID: 1951689641}
-  - component: {fileID: 1951689643}
   m_Layer: 0
   m_Name: Text_Storage
   m_TagString: Untagged
@@ -49032,21 +48951,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1951689639}
   m_CullTransparentMesh: 1
---- !u!114 &1951689643
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1951689639}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9762cb7e5590b0e418d65cbf4a0ddfbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_nextbutton_text_storage
-  fallback: E
 --- !u!1 &1954104419
 GameObject:
   m_ObjectHideFlags: 0

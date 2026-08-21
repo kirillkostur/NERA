@@ -109,6 +109,11 @@ MonoBehaviour:
     m_Localized: EMPTY
     m_Metadata:
       m_Items: []
+  - m_Id: 4300279775223808
+    m_Localized: '[F8] LANGUAGE: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269372
   references:
     version: 2
     RefIds:
@@ -119,3 +124,4 @@ MonoBehaviour:
         m_SharedEntries:
         - id: 4012892161
         - id: 4017086465
+        - id: 4300279775223808

@@ -79,20 +79,12 @@ MonoBehaviour:
     m_Key: location.expedition_01.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1135599618
-    m_Key: target.expedition_01.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1135599619
     m_Key: location.expedition02.name
     m_Metadata:
       m_Items: []
   - m_Id: 1135599620
     m_Key: location.expedition02.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1135599621
-    m_Key: target.expedition02.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793920
@@ -103,20 +95,12 @@ MonoBehaviour:
     m_Key: location.expedition03.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793922
-    m_Key: target.expedition03.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793923
     m_Key: location.expedition04.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793924
     m_Key: location.expedition04.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793925
-    m_Key: target.expedition04.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793926
@@ -127,20 +111,12 @@ MonoBehaviour:
     m_Key: location.expedition05.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793928
-    m_Key: target.expedition05.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793929
     m_Key: location.expedition06.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793930
     m_Key: location.expedition06.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793931
-    m_Key: target.expedition06.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793932
@@ -151,10 +127,6 @@ MonoBehaviour:
     m_Key: location.expedition07.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793934
-    m_Key: target.expedition07.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793935
     m_Key: location.expedition08.name
     m_Metadata:
@@ -163,20 +135,12 @@ MonoBehaviour:
     m_Key: location.expedition08.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793937
-    m_Key: target.expedition08.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793938
     m_Key: location.unknownsignal01.name
     m_Metadata:
       m_Items: []
   - m_Id: 1139793939
     m_Key: location.unknownsignal01.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793940
-    m_Key: target.unknownsignal01.name
     m_Metadata:
       m_Items: []
   - m_Id: 1148182528
@@ -335,36 +299,12 @@ MonoBehaviour:
     m_Key: station.laboratory.shared.description
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514179
-    m_Key: station.antenna.station_antenna.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514180
-    m_Key: station.antenna.station_antenna.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514181
     m_Key: target.station_antenna.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514188
-    m_Key: station.turret.station_turret_01.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514189
-    m_Key: station.turret.station_turret_01.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514190
     m_Key: target.station_turret_01.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514197
-    m_Key: station.turret.station_turret_02.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514198
-    m_Key: station.turret.station_turret_02.description
     m_Metadata:
       m_Items: []
   - m_Id: 1198514199
@@ -417,14 +357,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 333683935404032
     m_Key: item.sensor_array_01.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 336587186495488
-    m_Key: item.research_scanner_01.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 336587186495489
-    m_Key: item.research_scanner_01.description
     m_Metadata:
       m_Items: []
   - m_Id: 337224632623104
@@ -537,6 +469,306 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 339000000000021
     m_Key: item.voltage_regulator_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276935680000
+    m_Key: location.unknownsignal02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276981817344
+    m_Key: location.unknownsignal02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011648
+    m_Key: location.unknownsignal03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011649
+    m_Key: location.unknownsignal03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011651
+    m_Key: location.unknownsignal04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011652
+    m_Key: location.unknownsignal04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011654
+    m_Key: location.unknownsignal05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011655
+    m_Key: location.unknownsignal05.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011657
+    m_Key: location.unknownsignal06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011658
+    m_Key: location.unknownsignal06.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276990205952
+    m_Key: location.unknownsignal07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276990205953
+    m_Key: location.unknownsignal07.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400256
+    m_Key: location.unknownsignal08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400257
+    m_Key: location.unknownsignal08.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400259
+    m_Key: location.unknownsignal09.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400260
+    m_Key: location.unknownsignal09.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400262
+    m_Key: location.unknownsignal10.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400263
+    m_Key: location.unknownsignal10.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400265
+    m_Key: location.unknownsignal11.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400266
+    m_Key: location.unknownsignal11.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276998594560
+    m_Key: location.unknownsignal12.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276998594561
+    m_Key: location.unknownsignal12.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092032
+    m_Key: station.solarpanel.station_solar_01.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092033
+    m_Key: station.battery.station_battery.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092034
+    m_Key: station.battery.station_battery.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092035
+    m_Key: station.battery.station_battery.stat.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092036
+    m_Key: station.computer.shared.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092037
+    m_Key: station.drone.station_drone.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092038
+    m_Key: station.drone.station_drone.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092039
+    m_Key: station.drone.station_drone.stat.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092040
+    m_Key: station.drone.station_drone.stat.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092041
+    m_Key: station.laboratory.shared.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256431493120
+    m_Key: station.antenna.station_antenna.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687424
+    m_Key: station.antenna.station_antenna.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687425
+    m_Key: station.antenna.station_antenna.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687426
+    m_Key: station.antenna.station_antenna.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687427
+    m_Key: station.antenna.station_antenna.stat.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687428
+    m_Key: station.turret.station_turret_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687429
+    m_Key: station.turret.station_turret_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687430
+    m_Key: station.turret.station_turret_01.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687431
+    m_Key: station.turret.station_turret_01.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687432
+    m_Key: station.turret.station_turret_01.stat.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687433
+    m_Key: station.turret.station_turret_01.stat.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687434
+    m_Key: station.turret.station_turret_01.stat.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687435
+    m_Key: station.turret.station_turret_01.stat.5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687436
+    m_Key: station.turret.station_turret_01.stat.6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687437
+    m_Key: station.turret.station_turret_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687438
+    m_Key: station.turret.station_turret_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881728
+    m_Key: station.turret.station_turret_02.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881729
+    m_Key: station.turret.station_turret_02.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881730
+    m_Key: station.turret.station_turret_02.stat.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881731
+    m_Key: station.turret.station_turret_02.stat.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881732
+    m_Key: station.turret.station_turret_02.stat.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881733
+    m_Key: station.turret.station_turret_02.stat.5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881734
+    m_Key: station.turret.station_turret_02.stat.6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062580916224
+    m_Key: target.expedition_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062597693440
+    m_Key: target.expedition02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062597693441
+    m_Key: target.expedition03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062601887744
+    m_Key: target.expedition04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082048
+    m_Key: target.expedition05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082049
+    m_Key: target.expedition06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082050
+    m_Key: target.expedition07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062610276352
+    m_Key: target.expedition08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062610276353
+    m_Key: target.unknownsignal01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664960
+    m_Key: target.unknownsignal02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664961
+    m_Key: target.unknownsignal03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664962
+    m_Key: target.unknownsignal04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062622859264
+    m_Key: target.unknownsignal05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053568
+    m_Key: target.unknownsignal06.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053569
+    m_Key: target.unknownsignal07.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053570
+    m_Key: target.unknownsignal08.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247872
+    m_Key: target.unknownsignal09.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247873
+    m_Key: target.unknownsignal10.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247874
+    m_Key: target.unknownsignal11.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247875
+    m_Key: target.unknownsignal12.name
     m_Metadata:
       m_Items: []
   m_Metadata:

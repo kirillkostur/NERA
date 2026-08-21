@@ -89,10 +89,6 @@ MonoBehaviour:
       station.
     m_Metadata:
       m_Items: []
-  - m_Id: 1135599618
-    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
-    m_Metadata:
-      m_Items: []
   - m_Id: 1135599619
     m_Localized: "Expedition 02 \u2014 Signal Array"
     m_Metadata:
@@ -100,10 +96,6 @@ MonoBehaviour:
   - m_Id: 1135599620
     m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
       Recover the relay core and any surviving records.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1135599621
-    m_Localized: "Expedition 02 \u2014 Signal Array"
     m_Metadata:
       m_Items: []
   - m_Id: 1139793920
@@ -115,10 +107,6 @@ MonoBehaviour:
       Recover the relay core and any surviving records.
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793922
-    m_Localized: "Expedition 03 \u2014 Signal Array"
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793923
     m_Localized: "Expedition 04 \u2014 Signal Array"
     m_Metadata:
@@ -126,10 +114,6 @@ MonoBehaviour:
   - m_Id: 1139793924
     m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
       Recover the relay core and any surviving records.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793925
-    m_Localized: "Expedition 04 \u2014 Signal Array"
     m_Metadata:
       m_Items: []
   - m_Id: 1139793926
@@ -141,10 +125,6 @@ MonoBehaviour:
       Recover the relay core and any surviving records.
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793928
-    m_Localized: "Expedition 05 \u2014 Signal Array"
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793929
     m_Localized: "Expedition 06 \u2014 Signal Array"
     m_Metadata:
@@ -152,10 +132,6 @@ MonoBehaviour:
   - m_Id: 1139793930
     m_Localized: A dormant NERA signal array surrounded by concentrated Blue IO activity.
       Recover the relay core and any surviving records.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793931
-    m_Localized: "Expedition 06 \u2014 Signal Array"
     m_Metadata:
       m_Items: []
   - m_Id: 1139793932
@@ -167,10 +143,6 @@ MonoBehaviour:
       Recover the relay core and any surviving records.
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793934
-    m_Localized: "Expedition 07 \u2014 Signal Array"
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793935
     m_Localized: "Expedition 08 \u2014 Signal Array"
     m_Metadata:
@@ -180,20 +152,12 @@ MonoBehaviour:
       Recover the relay core and any surviving records.
     m_Metadata:
       m_Items: []
-  - m_Id: 1139793937
-    m_Localized: "Expedition 08 \u2014 Signal Array"
-    m_Metadata:
-      m_Items: []
   - m_Id: 1139793938
     m_Localized: '?'
     m_Metadata:
       m_Items: []
   - m_Id: 1139793939
     m_Localized: Unknown signal. Antenna analysis required.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1139793940
-    m_Localized: '?'
     m_Metadata:
       m_Items: []
   - m_Id: 1148182528
@@ -337,7 +301,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319876
-    m_Localized: Stores generated energy. Physical parts improve capacity, backup reserve, and power output.
+    m_Localized: Stores generated energy. Physical parts improve capacity, backup
+      reserve, and power output.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319877
@@ -357,7 +322,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319885
-    m_Localized: Surveys expedition sectors. Installed parts improve travel range and charging.
+    m_Localized: Surveys expedition sectors. Installed parts improve travel range
+      and charging.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319886
@@ -372,36 +338,12 @@ MonoBehaviour:
     m_Localized: Analyzes objects, charges equipment, and integrates anomalies.
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514179
-    m_Localized: ANTENNA
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514180
-    m_Localized: Finds unknown signals. Installed parts improve scan range and calibration.
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514181
     m_Localized: ANTENNA
     m_Metadata:
       m_Items: []
-  - m_Id: 1198514188
-    m_Localized: TURRET 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514189
-    m_Localized: Automatic defense platform. Uses the shared turret part layout.
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198514190
     m_Localized: TURRET 1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514197
-    m_Localized: TURRET 2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514198
-    m_Localized: Automatic defense platform. Uses the shared turret part layout.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514199
@@ -454,14 +396,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 333683935404032
     m_Localized: Improves drone navigation and long-range scanning.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 336587186495488
-    m_Localized: Research Scanner
-    m_Metadata:
-      m_Items: []
-  - m_Id: 336587186495489
-    m_Localized: Engineering part used to restore and upgrade station mechanisms.
     m_Metadata:
       m_Items: []
   - m_Id: 337224632623104
@@ -574,6 +508,306 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 339000000000021
     m_Localized: Stabilizes battery voltage during peak load.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276935680000
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276981817344
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011648
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011649
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011651
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011652
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011654
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011655
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011657
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276986011658
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276990205952
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276990205953
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400256
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400257
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400259
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400260
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400262
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400263
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400265
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276994400266
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276998594560
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300276998594561
+    m_Localized: Unknown signal. Antenna analysis required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092032
+    m_Localized: Generation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092033
+    m_Localized: Capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092034
+    m_Localized: Backup Reserve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092035
+    m_Localized: Power Output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092036
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092037
+    m_Localized: Travel range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092038
+    m_Localized: Battery charge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092039
+    m_Localized: Energy consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092040
+    m_Localized: Flight energy consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300277074092041
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256431493120
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687424
+    m_Localized: Finds unknown signals. Installed parts improve scan range and calibration.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687425
+    m_Localized: Scan range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687426
+    m_Localized: Calibration consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687427
+    m_Localized: Calibration duration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687428
+    m_Localized: TURRET 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687429
+    m_Localized: Automatic defense platform. Uses the shared turret part layout.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687430
+    m_Localized: Damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687431
+    m_Localized: Detection range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687432
+    m_Localized: Rotation speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687433
+    m_Localized: Fire interval
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687434
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687435
+    m_Localized: Energy per shot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687436
+    m_Localized: Damage taken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687437
+    m_Localized: TURRET 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256435687438
+    m_Localized: Automatic defense platform. Uses the shared turret part layout.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881728
+    m_Localized: Damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881729
+    m_Localized: Detection range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881730
+    m_Localized: Rotation speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881731
+    m_Localized: Fire interval
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881732
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881733
+    m_Localized: Energy per shot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4301256439881734
+    m_Localized: Damage taken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062580916224
+    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062597693440
+    m_Localized: "Expedition 02 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062597693441
+    m_Localized: "Expedition 03 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062601887744
+    m_Localized: "Expedition 04 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082048
+    m_Localized: "Expedition 05 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082049
+    m_Localized: "Expedition 06 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062606082050
+    m_Localized: "Expedition 07 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062610276352
+    m_Localized: "Expedition 08 \u2014 Signal Array"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062610276353
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664960
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664961
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062618664962
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062622859264
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053568
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053569
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062627053570
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247872
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247873
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247874
+    m_Localized: '?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4302062631247875
+    m_Localized: '?'
     m_Metadata:
       m_Items: []
   references:

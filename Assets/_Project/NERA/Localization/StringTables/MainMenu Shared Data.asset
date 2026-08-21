@@ -103,6 +103,10 @@ MonoBehaviour:
     m_Key: save.empty
     m_Metadata:
       m_Items: []
+  - m_Id: 4300279775223808
+    m_Key: options.language_shortcut
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -70,14 +70,6 @@ MonoBehaviour:
     m_Localized: Clean Solar Panel
     m_Metadata:
       m_Items: []
-  - m_Id: 3635404811
-    m_Localized: Service Antenna
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3635404812
-    m_Localized: Service Turret
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404813
     m_Localized: Service Device
     m_Metadata:
@@ -130,6 +122,69 @@ MonoBehaviour:
     m_Localized: Start Laboratory
     m_Metadata:
       m_Items: []
+  - m_Id: 4300279418707968
+    m_Localized: Clean Antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651008
+    m_Localized: Clean Turret
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651009
+    m_Localized: Clean Drone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651010
+    m_Localized: Start {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 4300279460651011
+    m_Localized: Configure {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 4300279460651012
+    m_Localized: This system cannot be controlled from the computer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651013
+    m_Localized: Cleaning or repair required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651014
+    m_Localized: Station power is unavailable.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651015
+    m_Localized: Battery charge below {0}%.
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 4300279460651016
+    m_Localized: Cleaning is in progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651017
+    m_Localized: Maintenance is unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651018
+    m_Localized: Station power controller is unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651019
+    m_Localized: Station systems are unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651020
+    m_Localized: Upgrade mode is already open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300290160320513
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:
@@ -141,3 +196,6 @@ MonoBehaviour:
         - id: 3635404801
         - id: 3635404802
         - id: 3635404803
+        - id: 4300279460651010
+        - id: 4300279460651011
+        - id: 4300279460651015

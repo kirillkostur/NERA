@@ -78,18 +78,25 @@ namespace NERA.Station
         {
             ResolveReferences();
             InteractionPrompt configured = base.GetPrompt();
+            if (maintenance != null && maintenance.IsCleaning)
+                return Hidden(configured);
+
             RequiredInteraction required = ResolveRequiredInteraction(
                 out bool actionAvailable,
                 out string unavailableReason);
 
             if (required == RequiredInteraction.Service)
             {
+                bool serviceAvailable =
+                    configured.IsAvailable && actionAvailable;
                 return new InteractionPrompt(
                     maintenance.ServiceActionText,
                     InteractionMode.Hold,
                     RequiredActionHoldDuration,
-                    configured.IsAvailable,
-                    configured.UnavailableReason);
+                    serviceAvailable,
+                    configured.IsAvailable
+                        ? unavailableReason
+                        : configured.UnavailableReason);
             }
 
             if (required == RequiredInteraction.RestorePower)
@@ -240,8 +247,12 @@ namespace NERA.Station
         {
             if (maintenance != null && maintenance.NeedsService)
             {
-                available = true;
-                unavailableReason = string.Empty;
+                available = maintenance.CanService;
+                unavailableReason = available
+                    ? string.Empty
+                    : maintenance.IsCleaning
+                        ? "Cleaning is in progress"
+                        : "Maintenance is unavailable";
                 return RequiredInteraction.Service;
             }
 
@@ -290,6 +301,17 @@ namespace NERA.Station
             available = true;
             unavailableReason = string.Empty;
             return RequiredInteraction.Upgrade;
+        }
+
+        private static InteractionPrompt Hidden(InteractionPrompt configured)
+        {
+            return new InteractionPrompt(
+                configured.ActionText,
+                configured.Mode,
+                configured.HoldDuration,
+                false,
+                string.Empty,
+                false);
         }
 
         private void OnValidate()

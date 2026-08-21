@@ -63,14 +63,6 @@ MonoBehaviour:
     m_Key: interaction.action.clean_solar_panel
     m_Metadata:
       m_Items: []
-  - m_Id: 3635404811
-    m_Key: interaction.action.service_antenna
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3635404812
-    m_Key: interaction.action.service_turret
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404813
     m_Key: interaction.action.service_device
     m_Metadata:
@@ -121,6 +113,66 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1826559614979
     m_Key: interaction.action.start_laboratory
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279418707968
+    m_Key: interaction.action.clean_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651008
+    m_Key: interaction.action.clean_turret
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651009
+    m_Key: interaction.action.clean_drone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651010
+    m_Key: interaction.action.start_object
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651011
+    m_Key: interaction.action.configure_object
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651012
+    m_Key: interaction.unavailable.this_system_cannot_be_controlled_from_the_computer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651013
+    m_Key: interaction.unavailable.cleaning_or_repair_required.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651014
+    m_Key: interaction.unavailable.station_power_is_unavailable.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651015
+    m_Key: interaction.unavailable.battery_charge_below
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651016
+    m_Key: interaction.unavailable.cleaning_is_in_progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651017
+    m_Key: interaction.unavailable.maintenance_is_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651018
+    m_Key: interaction.unavailable.station_power_controller_is_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651019
+    m_Key: interaction.unavailable.station_systems_are_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651020
+    m_Key: interaction.unavailable.upgrade_mode_is_already_open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300290160320513
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
     m_Metadata:
       m_Items: []
   m_Metadata:

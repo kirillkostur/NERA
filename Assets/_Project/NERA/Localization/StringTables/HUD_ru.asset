@@ -76,14 +76,6 @@ MonoBehaviour:
       \u043F\u0430\u043D\u0435\u043B\u044C"
     m_Metadata:
       m_Items: []
-  - m_Id: 3635404811
-    m_Localized: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0442\u044C \u0430\u043D\u0442\u0435\u043D\u043D\u0443"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3635404812
-    m_Localized: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0442\u044C \u0442\u0443\u0440\u0435\u043B\u044C"
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404813
     m_Localized: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0442\u044C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E"
     m_Metadata:
@@ -142,6 +134,78 @@ MonoBehaviour:
     m_Localized: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044E"
     m_Metadata:
       m_Items: []
+  - m_Id: 4300279418707968
+    m_Localized: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0430\u043D\u0442\u0435\u043D\u043D\u0443"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651008
+    m_Localized: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0442\u0443\u0440\u0435\u043B\u044C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651009
+    m_Localized: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0434\u0440\u043E\u043D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651010
+    m_Localized: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C: {0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269375
+  - m_Id: 4300279460651011
+    m_Localized: "\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C: {0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269375
+  - m_Id: 4300279460651012
+    m_Localized: "\u042D\u0442\u043E\u0439 \u0441\u0438\u0441\u0442\u0435\u043C\u043E\u0439
+      \u043D\u0435\u043B\u044C\u0437\u044F \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C
+      \u0441 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651013
+    m_Localized: "\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043E\u0447\u0438\u0441\u0442\u043A\u0430
+      \u0438\u043B\u0438 \u0440\u0435\u043C\u043E\u043D\u0442."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651014
+    m_Localized: "\u041F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438
+      \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651015
+    m_Localized: "\u0417\u0430\u0440\u044F\u0434 \u0431\u0430\u0442\u0430\u0440\u0435\u0438
+      \u043D\u0438\u0436\u0435 {0}%."
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269375
+  - m_Id: 4300279460651016
+    m_Localized: "\u0418\u0434\u0451\u0442 \u043E\u0447\u0438\u0441\u0442\u043A\u0430"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651017
+    m_Localized: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435
+      \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651018
+    m_Localized: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u043B\u0435\u0440 \u043F\u0438\u0442\u0430\u043D\u0438\u044F
+      \u0441\u0442\u0430\u043D\u0446\u0438\u0438 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651019
+    m_Localized: "\u0421\u0438\u0441\u0442\u0435\u043C\u044B \u0441\u0442\u0430\u043D\u0446\u0438\u0438
+      \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300279460651020
+    m_Localized: "\u0420\u0435\u0436\u0438\u043C \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F
+      \u0443\u0436\u0435 \u043E\u0442\u043A\u0440\u044B\u0442"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4300290160320513
+    m_Localized: "\u0423\u041B\u0423\u0427\u0428\u0418\u0422\u042C"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:
@@ -153,3 +217,6 @@ MonoBehaviour:
         - id: 3635404801
         - id: 3635404802
         - id: 3635404803
+        - id: 4300279460651010
+        - id: 4300279460651011
+        - id: 4300279460651015

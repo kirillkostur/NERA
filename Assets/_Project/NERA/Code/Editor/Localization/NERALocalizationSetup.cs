@@ -48,6 +48,8 @@ namespace NERA.Editor.Localization
             NERALocalization.QuestsTable
         };
 
+        private static Dictionary<string, HashSet<string>> expectedKeys;
+
         private static readonly Dictionary<string, string> StaticRussian =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -84,9 +86,34 @@ namespace NERA.Editor.Localization
                 ["STATION"] = "СТАНЦИЯ",
                 ["STATUS"] = "СОСТОЯНИЕ",
                 ["STORAGE"] = "ХРАНИЛИЩЕ",
+                ["TERMINAL"] = "ТЕРМИНАЛ",
                 ["UPGRADE"] = "УЛУЧШИТЬ",
                 ["UPGRADES"] = "УЛУЧШЕНИЯ",
                 ["YES"] = "ДА",
+                ["Unknown signal. Antenna analysis required."] = "Неизвестный сигнал. Требуется анализ с помощью антенны.",
+                ["Central terminal. It cannot be stopped or physically upgraded."] = "Центральный терминал. Его нельзя остановить или физически улучшить.",
+                ["Surveys expedition sectors. Installed parts improve travel range and charging."] = "Исследует секторы экспедиций. Установленные детали увеличивают дальность и улучшают зарядку.",
+                ["Analyzes objects, charges equipment, and integrates anomalies."] = "Анализирует объекты, заряжает оборудование и интегрирует аномалии.",
+                ["Finds unknown signals. Installed parts improve scan range and calibration."] = "Обнаруживает неизвестные сигналы. Установленные детали улучшают дальность сканирования и калибровку.",
+                ["Automatic defense platform. Uses the shared turret part layout."] = "Автоматическая защитная платформа. Использует общую схему деталей турелей.",
+                ["Generation"] = "Генерация",
+                ["Capacity"] = "Ёмкость",
+                ["Backup Reserve"] = "Резервное питание",
+                ["Power Output"] = "Выходная мощность",
+                ["Idle consumption"] = "Потребление в простое",
+                ["Travel range"] = "Дальность полёта",
+                ["Battery charge"] = "Ёмкость батареи",
+                ["Energy consumption"] = "Энергопотребление",
+                ["Flight energy consumption"] = "Потребление в полёте",
+                ["Scan range"] = "Дальность сканирования",
+                ["Calibration consumption"] = "Потребление при калибровке",
+                ["Calibration duration"] = "Длительность калибровки",
+                ["Damage"] = "Урон",
+                ["Detection range"] = "Дальность обнаружения",
+                ["Rotation speed"] = "Скорость поворота",
+                ["Fire interval"] = "Интервал выстрелов",
+                ["Energy per shot"] = "Энергия на выстрел",
+                ["Damage taken"] = "Получаемый урон",
                 ["Engineering part used to restore and upgrade station mechanisms."] = "Инженерная деталь для восстановления и улучшения механизмов станции.",
                 ["Battery, powers the station"] = "Батарея питает станцию",
                 ["Improved high-power battery."] = "Улучшенная батарея высокой мощности.",
@@ -252,14 +279,28 @@ namespace NERA.Editor.Localization
             EnsureFolders();
             (Locale english, Locale russian) = EnsureSettingsAndLocales();
             EnsureCollections(english, russian);
-            AddRuntimeEntries();
-            AddContentEntries();
-            AddQuestEntries();
-            MigratePrefabTexts();
-            MigrateScene("Assets/_Project/NERA/Scenes/Boot.unity", true);
-            MigrateScene("Assets/_Project/NERA/Scenes/MainScene.unity", false);
-            if (!string.IsNullOrEmpty(activeScenePath))
-                EditorSceneManager.OpenScene(activeScenePath, OpenSceneMode.Single);
+            BeginFullSync();
+            try
+            {
+                AddRuntimeEntries();
+                AddContentEntries();
+                AddQuestEntries();
+                MigratePrefabTexts();
+                MigrateScene("Assets/_Project/NERA/Scenes/Boot.unity", true);
+                MigrateScene("Assets/_Project/NERA/Scenes/MainScene.unity", false);
+                RemoveUnexpectedEntries();
+            }
+            finally
+            {
+                expectedKeys = null;
+                if (!string.IsNullOrEmpty(activeScenePath) &&
+                    SceneManager.GetActiveScene().path != activeScenePath)
+                {
+                    EditorSceneManager.OpenScene(
+                        activeScenePath,
+                        OpenSceneMode.Single);
+                }
+            }
             ExportCsv();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -343,17 +384,34 @@ namespace NERA.Editor.Localization
             Locale russian = EnsureLocale("ru", "Русский");
             LocalizationSettings.InitializeSynchronously = true;
             LocalizationSettings.ProjectLocale = english;
-            LocalizationSettings.StartupLocaleSelectors.Clear();
-            LocalizationSettings.StartupLocaleSelectors.Add(
+            EnsureStartupLocaleSelectors(english);
+            EditorUtility.SetDirty(settings);
+            return (english, russian);
+        }
+
+        private static void EnsureStartupLocaleSelectors(Locale english)
+        {
+            List<IStartupLocaleSelector> selectors =
+                LocalizationSettings.StartupLocaleSelectors;
+            bool alreadyConfigured = selectors.Count == 3 &&
+                selectors[0] is PlayerPrefLocaleSelector playerPreference &&
+                playerPreference.PlayerPreferenceKey ==
+                    NERALocalization.LocalePreferenceKey &&
+                selectors[1] is SystemLocaleSelector &&
+                selectors[2] is SpecificLocaleSelector fallback &&
+                fallback.LocaleId == english.Identifier;
+            if (alreadyConfigured)
+                return;
+
+            selectors.Clear();
+            selectors.Add(
                 new PlayerPrefLocaleSelector
                 {
                     PlayerPreferenceKey = NERALocalization.LocalePreferenceKey
                 });
-            LocalizationSettings.StartupLocaleSelectors.Add(new SystemLocaleSelector());
-            LocalizationSettings.StartupLocaleSelectors.Add(
+            selectors.Add(new SystemLocaleSelector());
+            selectors.Add(
                 new SpecificLocaleSelector { LocaleId = english.Identifier });
-            EditorUtility.SetDirty(settings);
-            return (english, russian);
         }
 
         private static Locale EnsureLocale(string code, string localeName)
@@ -394,6 +452,7 @@ namespace NERA.Editor.Localization
             Add(NERALocalization.MainMenuTable, "save.date_format", "MM.dd.yyyy - HH:mm", "dd.MM.yyyy - HH:mm");
             Add(NERALocalization.MainMenuTable, "save.empty", "EMPTY", "ПУСТО");
             Add(NERALocalization.MainMenuTable, "options.language", "LANGUAGE: {0}", "ЯЗЫК: {0}", true);
+            Add(NERALocalization.MainMenuTable, "options.language_shortcut", "[F8] LANGUAGE: {0}", "[F8] ЯЗЫК: {0}", true);
 
             Add(NERALocalization.HudTable, "quest.main_header", "MAIN QUEST", "ОСНОВНОЕ ЗАДАНИЕ");
             Add(NERALocalization.HudTable, "quest.side_header", "SIDE QUEST", "ПОБОЧНОЕ ЗАДАНИЕ");
@@ -410,14 +469,41 @@ namespace NERA.Editor.Localization
             AddPrompt("action", "Use Terminal", "Использовать терминал");
             AddPrompt("action", "Start Computer", "Запустить компьютер");
             AddPrompt("action", "Clean Solar Panel", "Очистить солнечную панель");
-            AddPrompt("action", "Service Antenna", "Обслужить антенну");
-            AddPrompt("action", "Service Turret", "Обслужить турель");
+            AddPrompt("action", "Clean Antenna", "Очистить антенну");
+            AddPrompt("action", "Clean Turret", "Очистить турель");
+            AddPrompt("action", "Clean Drone", "Очистить дрон");
             AddPrompt("action", "Service Device", "Обслужить устройство");
+            Add(
+                NERALocalization.HudTable,
+                "interaction.action.start_object",
+                "Start {0}",
+                "Запустить: {0}",
+                true);
+            Add(
+                NERALocalization.HudTable,
+                "interaction.action.configure_object",
+                "Configure {0}",
+                "Настроить: {0}",
+                true);
             AddPrompt("unavailable", "Unavailable", "Недоступно");
             AddPrompt("unavailable", "Item data missing", "Данные предмета отсутствуют");
             AddPrompt("unavailable", "Laboratory has no power", "Лаборатория обесточена");
             AddPrompt("unavailable", "Station Power Online", "Питание станции включено");
             AddPrompt("unavailable", "Terminal Offline — Restore Power First", "Терминал отключён — сначала восстановите питание");
+            AddPrompt("unavailable", "This system cannot be controlled from the computer.", "Этой системой нельзя управлять с терминала.");
+            AddPrompt("unavailable", "Cleaning or repair required.", "Требуется очистка или ремонт.");
+            AddPrompt("unavailable", "Station power is unavailable.", "Питание станции недоступно.");
+            Add(
+                NERALocalization.HudTable,
+                "interaction.unavailable.battery_charge_below",
+                "Battery charge below {0}%.",
+                "Заряд батареи ниже {0}%.",
+                true);
+            AddPrompt("unavailable", "Cleaning is in progress", "Идёт очистка");
+            AddPrompt("unavailable", "Maintenance is unavailable", "Обслуживание недоступно");
+            AddPrompt("unavailable", "Station power controller is unavailable", "Контроллер питания станции недоступен");
+            AddPrompt("unavailable", "Station systems are unavailable", "Системы станции недоступны");
+            AddPrompt("unavailable", "Upgrade mode is already open", "Режим улучшения уже открыт");
 
             AddTerminalEntries();
             AddLaboratoryEntries();
@@ -505,7 +591,12 @@ namespace NERA.Editor.Localization
         private static void AddContentEntries()
         {
             AddSimpleContent<ItemData>("item", "itemId", "displayName", "description");
-            AddSimpleContent<ExpeditionLocationData>("location", "locationId", "displayName", "description", true);
+            AddSimpleContent<ExpeditionLocationData>(
+                "location",
+                "locationId",
+                "displayName",
+                "description",
+                addTargetAlias: true);
             AddSimpleContent<LibraryEntryData>("library", "entryId", "title", "description");
             AddSimpleContent<ResearchDefinition>("research", "researchId", "displayName", null);
             AddSimpleContent<WeaponDefinition>("weapon", "weaponId", "displayName", null);
@@ -583,7 +674,7 @@ namespace NERA.Editor.Localization
                 {
                     SerializedProperty system = systems.GetArrayElementAtIndex(index);
                     SerializedProperty typeProperty = system.FindPropertyRelative("systemType");
-                    string type = ((StationSystemType)typeProperty.enumValueIndex).ToString();
+                    string type = ((StationSystemType)typeProperty.intValue).ToString();
                     string objectId = ReadString(system.FindPropertyRelative("objectId"));
                     string id = string.IsNullOrWhiteSpace(objectId) ? "shared" : KeyPart(objectId);
                     string baseKey = $"station.{KeyPart(type)}.{id}";
@@ -721,7 +812,21 @@ namespace NERA.Editor.Localization
         {
             string source = label.text?.Trim();
             if (!ShouldLocalize(label, source, path))
-                return false;
+            {
+                LocalizedTMPText obsolete =
+                    label.GetComponent<LocalizedTMPText>();
+                if (obsolete == null ||
+                    string.IsNullOrEmpty(obsolete.Key) ||
+                    !obsolete.Key.StartsWith(
+                        $"ui.{KeyPart(scope)}.",
+                        StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                Object.DestroyImmediate(obsolete, true);
+                return true;
+            }
             string table = PickTable(scope, path);
             string key = $"ui.{KeyPart(scope)}.{KeyPart(path)}";
             string russian = TranslateStatic(source);
@@ -738,6 +843,7 @@ namespace NERA.Editor.Localization
             if (string.IsNullOrWhiteSpace(source) ||
                 !source.Any(char.IsLetter) ||
                 string.Equals(source, "New Text", StringComparison.OrdinalIgnoreCase) ||
+                Regex.IsMatch(source, @"^(?:ESC|[A-Z0-9])$", RegexOptions.IgnoreCase) ||
                 path.IndexOf("LanguageButton", StringComparison.OrdinalIgnoreCase) >= 0)
                 return false;
 
@@ -872,6 +978,12 @@ namespace NERA.Editor.Localization
             bool smart = false,
             bool preserveRussian = false)
         {
+            if (expectedKeys != null &&
+                expectedKeys.TryGetValue(tableName, out HashSet<string> keys))
+            {
+                keys.Add(key);
+            }
+
             StringTableCollection collection =
                 LocalizationEditorSettings.GetStringTableCollection(tableName);
             if (collection == null)
@@ -907,6 +1019,52 @@ namespace NERA.Editor.Localization
             }
             EditorUtility.SetDirty(table);
             EditorUtility.SetDirty(table.SharedData);
+        }
+
+        private static void BeginFullSync()
+        {
+            expectedKeys = TableNames.ToDictionary(
+                tableName => tableName,
+                _ => new HashSet<string>(StringComparer.Ordinal));
+        }
+
+        private static void RemoveUnexpectedEntries()
+        {
+            int removedCount = 0;
+            foreach (string tableName in TableNames)
+            {
+                StringTableCollection collection =
+                    LocalizationEditorSettings.GetStringTableCollection(tableName);
+                if (collection == null ||
+                    !expectedKeys.TryGetValue(
+                        tableName,
+                        out HashSet<string> expected))
+                {
+                    continue;
+                }
+
+                List<string> staleKeys = collection.SharedData.Entries
+                    .Where(entry => !expected.Contains(entry.Key))
+                    .Select(entry => entry.Key)
+                    .ToList();
+                foreach (string staleKey in staleKeys)
+                {
+                    collection.RemoveEntry(staleKey);
+                    removedCount++;
+                }
+
+                if (staleKeys.Count == 0)
+                    continue;
+                EditorUtility.SetDirty(collection.SharedData);
+                foreach (StringTable table in collection.StringTables)
+                    EditorUtility.SetDirty(table);
+            }
+
+            if (removedCount > 0)
+            {
+                Debug.Log(
+                    $"NERA localization cleanup removed {removedCount} stale entries.");
+            }
         }
 
         private static IEnumerable<T> LoadAssets<T>() where T : Object

@@ -519,6 +519,17 @@ namespace NERA.Tests
             Assert.That(servicePrompt.HoldDuration, Is.GreaterThan(0f));
             upgradeable.CompleteInteraction(null);
             Assert.That(maintenance.IsCleaning, Is.True);
+
+            InteractionPrompt cleaningPrompt = upgradeable.GetPrompt();
+            Assert.That(cleaningPrompt.IsVisible, Is.False);
+            Assert.That(cleaningPrompt.IsAvailable, Is.False);
+            float conditionAtCleaningStart = maintenance.Condition;
+            upgradeable.CompleteInteraction(null);
+            Assert.That(maintenance.IsCleaning, Is.True);
+            Assert.That(
+                maintenance.Condition,
+                Is.EqualTo(conditionAtCleaningStart));
+
             maintenance.AdvanceCleaning(
                 maintenance.CleaningDurationSeconds);
             Assert.That(maintenance.Condition, Is.EqualTo(1f));
@@ -543,6 +554,42 @@ namespace NERA.Tests
             Assert.That(upgradePrompt.ActionText, Does.Contain("Configure"));
             Assert.That(upgradePrompt.Mode, Is.EqualTo(NeraInteractionMode.Press));
             Assert.That(upgradePrompt.HoldDuration, Is.Zero);
+        }
+
+        [Test]
+        public void DeviceInteractionIsHiddenUntilCleaningFinishes()
+        {
+            GameObject target = new GameObject("Test_MaintainableDevice");
+            target.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                target.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+            MaintainableObject maintenance =
+                target.AddComponent<MaintainableObject>();
+            StationDeviceInteractable interactable =
+                target.AddComponent<StationDeviceInteractable>();
+
+            maintenance.SetCondition(0.5f);
+            Assert.That(interactable.GetPrompt().IsVisible, Is.True);
+
+            interactable.CompleteInteraction(null);
+            Assert.That(maintenance.IsCleaning, Is.True);
+            Assert.That(interactable.GetPrompt().IsVisible, Is.False);
+            Assert.That(interactable.GetPrompt().IsAvailable, Is.False);
+
+            float conditionAtCleaningStart = maintenance.Condition;
+            interactable.CompleteInteraction(null);
+            Assert.That(maintenance.IsCleaning, Is.True);
+            Assert.That(
+                maintenance.Condition,
+                Is.EqualTo(conditionAtCleaningStart));
+
+            maintenance.AdvanceCleaning(
+                maintenance.CleaningDurationSeconds);
+            Assert.That(maintenance.IsCleaning, Is.False);
+            Assert.That(maintenance.Condition, Is.EqualTo(1f));
         }
 
         [Test]

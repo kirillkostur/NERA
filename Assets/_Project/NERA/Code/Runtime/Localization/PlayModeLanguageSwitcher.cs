@@ -16,12 +16,15 @@ namespace NERA.Localization
 
         private GUIStyle buttonStyle;
 
-        public string ButtonText =>
+        public string ButtonText => NERALocalization.Get(
+            NERALocalization.MainMenuTable,
+            "options.language_shortcut",
+            "[F8] LANGUAGE: {0}",
             NERALocalization.CurrentLocaleCode.StartsWith(
                 NERALocalization.RussianCode,
                 System.StringComparison.OrdinalIgnoreCase)
-                ? "[F8] LANGUAGE: RU"
-                : "[F8] LANGUAGE: EN";
+                ? "RU"
+                : "EN");
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureCreated()

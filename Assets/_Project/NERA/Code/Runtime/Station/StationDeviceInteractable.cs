@@ -32,6 +32,9 @@ namespace NERA.Station
             InteractionPrompt configured = base.GetPrompt();
             CacheMaintenance();
 
+            if (maintenance != null && maintenance.IsCleaning)
+                return Hidden(configured);
+
             if (maintenance != null && maintenance.NeedsService)
             {
                 return new InteractionPrompt(
@@ -73,6 +76,9 @@ namespace NERA.Station
         public override void CompleteInteraction(GameObject interactor)
         {
             CacheMaintenance();
+            if (maintenance != null && maintenance.IsCleaning)
+                return;
+
             if (maintenance != null && maintenance.NeedsService)
             {
                 if (maintenance.Service())
