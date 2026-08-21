@@ -117,7 +117,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 829415424
-    m_Localized: Clean {targetName}
+    m_Localized: Start cleaning
     m_Metadata:
       m_Items: []
   - m_Id: 829415425
@@ -133,7 +133,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 829415428
-    m_Localized: Restart {targetName}
+    m_Localized: Restart malfunctioning objects
     m_Metadata:
       m_Items: []
   - m_Id: 829415429

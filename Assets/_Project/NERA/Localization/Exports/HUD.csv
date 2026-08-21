@@ -1,6 +1,4 @@
 ﻿Key,Id,Shared Comments,English(en),English(en) Comments,Russian(ru),Russian(ru) Comments
-"quest.main_header",3601850368,"","MAIN QUEST","","ОСНОВНОЕ ЗАДАНИЕ",""
-"quest.side_header",3635404800,"","SIDE QUEST","","ПОБОЧНОЕ ЗАДАНИЕ",""
 "interaction.press",3635404801,"","[{0}] Press — {1}","","[{0}] Нажать — {1}",""
 "interaction.hold",3635404802,"","[{0}] Hold — {1}","","[{0}] Удерживать — {1}",""
 "interaction.hold_progress",3635404803,"","[{0}] Hold — {1}%","","[{0}] Удерживать — {1}%",""

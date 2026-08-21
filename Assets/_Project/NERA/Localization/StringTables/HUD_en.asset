@@ -19,14 +19,6 @@ MonoBehaviour:
     m_Items:
     - rid: 1138171735028269373
   m_TableData:
-  - m_Id: 3601850368
-    m_Localized: MAIN QUEST
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3635404800
-    m_Localized: SIDE QUEST
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404801
     m_Localized: "[{0}] Press \u2014 {1}"
     m_Metadata:

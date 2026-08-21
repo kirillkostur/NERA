@@ -15,14 +15,6 @@ MonoBehaviour:
   m_TableCollectionName: HUD
   m_TableCollectionNameGuidString: 725a1094a1671474d8d91df758d11f93
   m_Entries:
-  - m_Id: 3601850368
-    m_Key: quest.main_header
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3635404800
-    m_Key: quest.side_header
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404801
     m_Key: interaction.press
     m_Metadata:

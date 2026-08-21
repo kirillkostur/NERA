@@ -1130,6 +1130,8 @@ namespace NERA.Tests
             Assert.That(quests, Is.Not.Null);
             Assert.That(discovery, Is.Not.Null);
             Assert.That(questHud, Is.Not.Null);
+            Assert.That(questHud.MaxDisplayedMainQuests, Is.EqualTo(3));
+            Assert.That(questHud.MaxDisplayedSideQuests, Is.EqualTo(4));
 
             quests.ResetProgress();
             discovery.RestoreDiscovered(Array.Empty<string>());
@@ -1179,12 +1181,17 @@ namespace NERA.Tests
             Assert.That(
                 quests.FindActive("main.expedition_01")?.CurrentStageIndex,
                 Is.Zero);
+            yield return new WaitForSecondsRealtime(
+                questHud.CompletedDisplayDuration + 0.1f);
             Assert.That(
                 questHud.DisplayedMainText,
-                Does.Contain("MAIN QUEST"));
+                Does.Not.Contain("MAIN QUEST"));
             Assert.That(
                 questHud.DisplayedMainText,
                 Does.Contain("Travel to the Ancient Outpost"));
+            Assert.That(
+                questHud.DisplayedMainText,
+                Does.Contain("- Travel to the Ancient Outpost"));
             Assert.That(questHud.DisplayedSideText, Is.Empty);
 
             quests.ReportDeviceCondition(
@@ -1193,7 +1200,13 @@ namespace NERA.Tests
                 0.3f);
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Clean Test Solar Panel"));
+                Does.Contain("Start cleaning"));
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("- Clean Test Solar Panel"));
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Not.Contain("SIDE QUEST"));
 
             quests.ReportStationFault(
                 "test_turret",
@@ -1201,8 +1214,20 @@ namespace NERA.Tests
                 "EnemySabotage");
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Restart Test Turret"),
+                Does.Contain("Restart malfunctioning objects"),
                 "The higher-priority side quest must be displayed.");
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("Start cleaning"),
+                "Multiple side quests must be displayed at the same time.");
+            Assert.That(
+                questHud.DisplayedSideText.IndexOf(
+                    "Restart malfunctioning objects",
+                    StringComparison.Ordinal),
+                Is.LessThan(questHud.DisplayedSideText.IndexOf(
+                    "Start cleaning",
+                    StringComparison.Ordinal)),
+                "Higher-priority quests must be listed first.");
 
             quests.Report(
                 QuestSignalType.StationSystemActivated,
@@ -1210,8 +1235,12 @@ namespace NERA.Tests
                 "Test Turret");
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("Clean Test Solar Panel"),
+                Does.Contain("Start cleaning"),
                 "HUD must fall back to the next active side quest.");
+            Assert.That(
+                questHud.DisplayedSideText,
+                Does.Contain("<s>- Restart Test Turret</s>"),
+                "A completed visible quest must be struck through first.");
 
             quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
             quests.Report(QuestSignalType.EnemyEncountered, "io_blue_weak");
@@ -1222,7 +1251,7 @@ namespace NERA.Tests
                 "research_io_blue_shard_01");
 
             Assert.That(quests.IsCompleted("main.expedition_01"), Is.True);
-            Assert.That(questHud.DisplayedMainText, Is.Empty);
+            Assert.That(questHud.DisplayedMainText, Does.Contain("<s>"));
             Assert.That(questHud.IsVisible, Is.True);
 
             quests.ReportDeviceCondition(
@@ -1230,6 +1259,12 @@ namespace NERA.Tests
                 "Test Solar Panel",
                 1f);
             Assert.That(quests.ActiveQuests.Count, Is.Zero);
+            Assert.That(questHud.DisplayedSideText, Does.Contain("<s>"));
+            Assert.That(questHud.IsVisible, Is.True);
+
+            yield return new WaitForSecondsRealtime(
+                questHud.CompletedDisplayDuration + 0.1f);
+            Assert.That(questHud.DisplayedMainText, Is.Empty);
             Assert.That(questHud.DisplayedSideText, Is.Empty);
             Assert.That(questHud.IsVisible, Is.False);
         }

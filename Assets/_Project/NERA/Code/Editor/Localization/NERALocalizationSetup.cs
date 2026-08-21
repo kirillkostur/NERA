@@ -232,7 +232,9 @@ namespace NERA.Editor.Localization
                 ["quest.main.expedition_01.stage.01.title"] = "Отправляйтесь на Древний аванпост",
                 ["quest.main.expedition_01.stage.02.title"] = "Исследуйте Древний аванпост",
                 ["quest.main.expedition_01.stage.05.description"] = "Проведите анализ Осколка Blue IO в лаборатории.",
-                ["quest.main.launch_drone_expedition_01.stage.01.description"] = "Запустите разведывательный дрон и дождитесь завершения сканирования Экспедиции 01."
+                ["quest.main.launch_drone_expedition_01.stage.01.description"] = "Запустите разведывательный дрон и дождитесь завершения сканирования Экспедиции 01.",
+                ["quest.side.clean_solar_panel.title"] = "Запустите очистку",
+                ["quest.side.restore_turret.title"] = "Перезапустите неисправные объекты"
             };
 
         private static readonly Dictionary<string, string> QuestEnglish =
@@ -262,11 +264,11 @@ namespace NERA.Editor.Localization
                 ["quest.main.first_terminal.description"] = "Open the station terminal.",
                 ["quest.main.first_terminal.stage.01.title"] = "Open the Terminal",
                 ["quest.main.first_terminal.stage.01.description"] = "Open the station terminal.",
-                ["quest.side.clean_solar_panel.title"] = "Clean {targetName}",
+                ["quest.side.clean_solar_panel.title"] = "Start cleaning",
                 ["quest.side.clean_solar_panel.description"] = "Contamination has reduced the efficiency of {targetName}.",
                 ["quest.side.clean_solar_panel.stage.01.title"] = "Clean {targetName}",
                 ["quest.side.clean_solar_panel.stage.01.description"] = "Restore the object's condition to at least 95%.",
-                ["quest.side.restore_turret.title"] = "Restart {targetName}",
+                ["quest.side.restore_turret.title"] = "Restart malfunctioning objects",
                 ["quest.side.restore_turret.description"] = "The system was disabled by an external malfunction.",
                 ["quest.side.restore_turret.stage.01.title"] = "Restart {targetName}",
                 ["quest.side.restore_turret.stage.01.description"] = "Enable the object from the station terminal."
@@ -454,8 +456,6 @@ namespace NERA.Editor.Localization
             Add(NERALocalization.MainMenuTable, "options.language", "LANGUAGE: {0}", "ЯЗЫК: {0}", true);
             Add(NERALocalization.MainMenuTable, "options.language_shortcut", "[F8] LANGUAGE: {0}", "[F8] ЯЗЫК: {0}", true);
 
-            Add(NERALocalization.HudTable, "quest.main_header", "MAIN QUEST", "ОСНОВНОЕ ЗАДАНИЕ");
-            Add(NERALocalization.HudTable, "quest.side_header", "SIDE QUEST", "ПОБОЧНОЕ ЗАДАНИЕ");
             Add(NERALocalization.HudTable, "interaction.press", "[{0}] Press — {1}", "[{0}] Нажать — {1}", true);
             Add(NERALocalization.HudTable, "interaction.hold", "[{0}] Hold — {1}", "[{0}] Удерживать — {1}", true);
             Add(NERALocalization.HudTable, "interaction.hold_progress", "[{0}] Hold — {1}%", "[{0}] Удерживать — {1}%", true);
@@ -848,6 +848,14 @@ namespace NERA.Editor.Localization
                 return false;
 
             string name = label.gameObject.name;
+            if (name.StartsWith("Text - QuestMain", StringComparison.OrdinalIgnoreCase) ||
+                name.StartsWith("Text - QuestSide", StringComparison.OrdinalIgnoreCase) ||
+                name.IndexOf("QuestTitle_Text", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                name.IndexOf("Quest_Text", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return false;
+            }
+
             string[] dynamicNames =
             {
                 "description_update", "info_update", "info_required",

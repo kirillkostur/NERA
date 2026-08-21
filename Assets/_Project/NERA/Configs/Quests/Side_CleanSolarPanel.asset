@@ -16,24 +16,39 @@ MonoBehaviour:
   category: 1
   availability: 1
   targetScope: 1
-  title: "Очистите {targetName}"
-  description: "Загрязнение снизило эффективность объекта {targetName}."
+  title: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u0435 \u043E\u0447\u0438\u0441\u0442\u043A\u0443"
+  description: "\u0417\u0430\u0433\u0440\u044F\u0437\u043D\u0435\u043D\u0438\u0435
+    \u0441\u043D\u0438\u0437\u0438\u043B\u043E \u044D\u0444\u0444\u0435\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C
+    \u043E\u0431\u044A\u0435\u043A\u0442\u0430 {targetName}."
   priority: 30
   showInHud: 1
+  activationLogic: 0
   activationConditions:
   - signalType: 7
+    evaluation: 0
     target: 1
     targetId: 
     cause: 
     requiredCount: 1
+    comparison: 3
     threshold: 0.35
   stages:
-  - title: "Очистите {targetName}"
-    description: "Восстановите состояние объекта минимум до 95%."
+  - title: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u0435 {targetName}"
+    description: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0435
+      \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u0430
+      \u043C\u0438\u043D\u0438\u043C\u0443\u043C \u0434\u043E 95%."
+    completionLogic: 0
+    createCheckpointOnCompletion: 0
     completionConditions:
     - signalType: 8
+      evaluation: 0
       target: 2
       targetId: 
       cause: 
       requiredCount: 1
+      comparison: 3
       threshold: 0.95
+  weatherActionOnActivation: 0
+  weatherActionOnCompletion: 0
+  sandstormDurationMinSeconds: 0
+  sandstormDurationMaxSeconds: 0
