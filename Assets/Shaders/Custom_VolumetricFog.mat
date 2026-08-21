@@ -38,10 +38,12 @@ Material:
     - _Glossiness: 0.5
     - _LightScattering: 0.8
     - _MaxDistance: 25
+    - _MaxSteps: 64
     - _Metallic: 0
     - _NoiseOffset: 2
     - _NoiseTiling: 6
     - _StepSize: 2
+    - _TransmittanceCutoff: 0.01
     m_Colors:
     - _Color: {r: 1, g: 0.5925553, b: 0.3443396, a: 1}
     - _LightContribution: {r: 0.7075472, g: 0.043134283, b: 0, a: 1}

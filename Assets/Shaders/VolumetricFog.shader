@@ -5,6 +5,8 @@ Shader "Tutorial/VolumetricFog"
         _Color("Color", Color) = (1, 1, 1, 1)
         _MaxDistance("Max distance", float) = 100
         _StepSize("Step size", Range(0.1, 20)) = 1
+        _MaxSteps("Max raymarch steps", Range(8, 128)) = 64
+        _TransmittanceCutoff("Early exit threshold", Range(0.001, 0.1)) = 0.01
         _DensityMultiplier("Density multiplier", Range(0, 10)) = 1
         _NoiseOffset("Noise offset", float) = 0
 
@@ -23,6 +25,10 @@ Shader "Tutorial/VolumetricFog"
 
         Pass
         {
+            Cull Off
+            ZWrite Off
+            ZTest Always
+
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment frag
@@ -37,6 +43,8 @@ Shader "Tutorial/VolumetricFog"
             float _MaxDistance;
             float _DensityMultiplier;
             float _StepSize;
+            float _MaxSteps;
+            float _TransmittanceCutoff;
             float _NoiseOffset;
             TEXTURE3D(_FogNoise);
             float _DensityThreshold;
@@ -83,6 +91,9 @@ Shader "Tutorial/VolumetricFog"
                         edgeFade,
                         signedDistance);
                     visibility = min(visibility, volumeVisibility);
+
+                    if (visibility <= 0.0)
+                        break;
                 }
 
                 return visibility;
@@ -122,21 +133,44 @@ Shader "Tutorial/VolumetricFog"
 
                 float2 pixelCoords = IN.texcoord * _BlitTexture_TexelSize.zw;
                 float distLimit = min(viewLength, _MaxDistance);
-                float distTravelled = InterleavedGradientNoise(pixelCoords, (int)(_Time.y / max(HALF_EPS, unity_DeltaTime.x))) * _NoiseOffset;
+                float stepSize = max(_StepSize, 0.01);
+                float jitterDistance = min(max(_NoiseOffset, 0.0), stepSize);
+                float distTravelled = InterleavedGradientNoise(
+                    pixelCoords,
+                    (int)(_Time.y / max(HALF_EPS, unity_DeltaTime.x))) *
+                    jitterDistance;
                 float transmittance = 1;
                 float4 fogCol = _Color;
 
-                while(distTravelled < distLimit)
+                Light mainLight = GetMainLight();
+                float3 fogLighting =
+                    mainLight.color.rgb *
+                    _LightContribution.rgb *
+                    henyey_greenstein(
+                        dot(rayDir, mainLight.direction),
+                        _LightScattering);
+                int maxSteps = max((int)_MaxSteps, 1);
+
+                [loop]
+                for (int stepIndex = 0;
+                     stepIndex < maxSteps && distTravelled < distLimit;
+                     stepIndex++)
                 {
                     float3 rayPos = entryPoint + rayDir * distTravelled;
                     float density = get_density(rayPos);
                     if (density > 0)
                     {
-                        Light mainLight = GetMainLight(TransformWorldToShadowCoord(rayPos));
-                        fogCol.rgb += mainLight.color.rgb * _LightContribution.rgb * henyey_greenstein(dot(rayDir, mainLight.direction), _LightScattering) * density * mainLight.shadowAttenuation * _StepSize;
-                        transmittance *= exp(-density * _StepSize);
+                        half shadowAttenuation = MainLightRealtimeShadow(
+                            TransformWorldToShadowCoord(rayPos));
+                        fogCol.rgb +=
+                            fogLighting * density * shadowAttenuation * stepSize;
+                        transmittance *= exp(-density * stepSize);
+
+                        if (transmittance <= _TransmittanceCutoff)
+                            break;
                     }
-                    distTravelled += _StepSize;
+
+                    distTravelled += stepSize;
                 }
 
                 return lerp(col, fogCol, 1.0 - saturate(transmittance));
