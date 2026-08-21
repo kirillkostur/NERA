@@ -4,6 +4,7 @@ using NERA.Antenna;
 using NERA.Drone;
 using NERA.Energy;
 using NERA.Localization;
+using NERA.Maintenance;
 using NERA.Station;
 using TMPro;
 using UnityEngine;
@@ -286,7 +287,11 @@ namespace NERA.Terminal
             bool requestedActive = IsSelectedSystemRequestedActive(type, systems);
             bool hasRequiredCharge = critical ||
                 HasSelectedSystemRequiredCharge(type, systems);
-            bool active = requestedActive && hasRequiredCharge;
+            bool maintenanceReady = critical ||
+                systems?.IsMaintenanceReady(type, selectedObjectId) != false;
+            bool active = requestedActive &&
+                hasRequiredCharge &&
+                maintenanceReady;
             bool lowPower = !critical && requestedActive && !hasRequiredCharge;
             bool canChangeState = active || critical ||
                 systems?.CanStart(type, selectedObjectId, out _) == true;
@@ -520,6 +525,11 @@ namespace NERA.Terminal
 
         private void BindDataEvents()
         {
+            MaintainableObject.AnyConditionChanged -=
+                HandleMaintainableConditionChanged;
+            MaintainableObject.AnyConditionChanged +=
+                HandleMaintainableConditionChanged;
+
             StationSystemsController currentSystems =
                 StationSystemsController.Instance;
             if (subscribedSystems != currentSystems)
@@ -590,6 +600,11 @@ namespace NERA.Terminal
             RefreshIfVisible();
         }
 
+        private void HandleMaintainableConditionChanged(string _, float __)
+        {
+            RefreshIfVisible();
+        }
+
         private void RefreshIfVisible()
         {
             if (terminal?.IsOpen == true && gameObject.activeInHierarchy)
@@ -598,6 +613,9 @@ namespace NERA.Terminal
 
         private void UnbindDataEvents()
         {
+            MaintainableObject.AnyConditionChanged -=
+                HandleMaintainableConditionChanged;
+
             if (subscribedSystems != null)
             {
                 subscribedSystems.SystemsChanged -= HandleDataChanged;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.World;
 using UnityEngine;
 
 namespace NERA.Quests
@@ -941,6 +942,9 @@ namespace NERA.Quests
                 contextTargetName);
             activeQuests.Add(instanceId, state);
             QuestActivated?.Invoke(state);
+            ExecuteWeatherAction(
+                state,
+                definition.WeatherActionOnActivation);
             Debug.Log(
                 $"Quest activated: '{state.InstanceId}' — {state.Title}.",
                 this);
@@ -966,6 +970,9 @@ namespace NERA.Quests
 
             saved.completionCount++;
             QuestCompleted?.Invoke(state);
+            ExecuteWeatherAction(
+                state,
+                state.Definition.WeatherActionOnCompletion);
             Debug.Log(
                 $"Quest completed: '{state.InstanceId}' — {state.Title}.",
                 this);
@@ -973,6 +980,34 @@ namespace NERA.Quests
                 QuestSignalType.QuestCompleted,
                 state.QuestId,
                 state.Title);
+        }
+
+        private static void ExecuteWeatherAction(
+            QuestRuntimeState state,
+            QuestWeatherAction action)
+        {
+            if (state?.Definition == null ||
+                action == QuestWeatherAction.None)
+            {
+                return;
+            }
+
+            StationWeatherController weather =
+                StationWeatherController.Instance;
+            if (weather == null)
+                return;
+
+            if (action == QuestWeatherAction.StartSandstorm)
+            {
+                weather.StartSandstormFromQuest(
+                    state.QuestId,
+                    state.Definition.SandstormDurationMinSeconds,
+                    state.Definition.SandstormDurationMaxSeconds);
+            }
+            else if (action == QuestWeatherAction.StopSandstorm)
+            {
+                weather.StopSandstormFromQuest(state.QuestId);
+            }
         }
 
         private void ActivateAutomaticQuests()

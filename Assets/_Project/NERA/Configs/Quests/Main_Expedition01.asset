@@ -110,3 +110,7 @@ MonoBehaviour:
       requiredCount: 1
       comparison: 3
       threshold: 0.5
+  weatherActionOnActivation: 1
+  weatherActionOnCompletion: 0
+  sandstormDurationMinSeconds: 0
+  sandstormDurationMaxSeconds: 0

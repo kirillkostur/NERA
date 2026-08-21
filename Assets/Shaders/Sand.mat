@@ -43,7 +43,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTextrure:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 1cdc5b506b1a4a33a53c30669ced1f51, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EMTexture:
@@ -75,7 +75,7 @@ Material:
     - _Brightness: 1
     - _Contrast: 1
     - _ContrastEM: -0.51
-    - _DissolveStrength: 1
+    - _DissolveStrength: 0
     - _EMStrength: 0.1
     - _MetalStrenght: 0.18
     - _NoiseScale: 35

@@ -518,6 +518,9 @@ namespace NERA.Tests
             Assert.That(servicePrompt.Mode, Is.EqualTo(NeraInteractionMode.Hold));
             Assert.That(servicePrompt.HoldDuration, Is.GreaterThan(0f));
             upgradeable.CompleteInteraction(null);
+            Assert.That(maintenance.IsCleaning, Is.True);
+            maintenance.AdvanceCleaning(
+                maintenance.CleaningDurationSeconds);
             Assert.That(maintenance.Condition, Is.EqualTo(1f));
             Assert.That(
                 systems.IsRequestedActive(

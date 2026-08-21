@@ -221,6 +221,19 @@ namespace NERA.Quests
         [SerializeField] private List<QuestStageDefinition> stages =
             new List<QuestStageDefinition>();
 
+        [Header("Environment Actions")]
+        [Tooltip("Optional weather action executed when this quest starts.")]
+        [SerializeField] private QuestWeatherAction weatherActionOnActivation;
+        [Tooltip("Optional weather action executed when this quest completes.")]
+        [SerializeField] private QuestWeatherAction weatherActionOnCompletion;
+        [Tooltip(
+            "Optional sandstorm duration override. Leave both at zero to use " +
+            "the centralized environment config range.")]
+        [SerializeField, Min(0f)]
+        private float sandstormDurationMinSeconds;
+        [SerializeField, Min(0f)]
+        private float sandstormDurationMaxSeconds;
+
         public string QuestId => NormalizeQuestId(questId);
         public QuestCategory Category => category;
         public QuestAvailability Availability => availability;
@@ -241,6 +254,15 @@ namespace NERA.Quests
             stages ??
             (IReadOnlyList<QuestStageDefinition>)
             Array.Empty<QuestStageDefinition>();
+        public QuestWeatherAction WeatherActionOnActivation =>
+            weatherActionOnActivation;
+        public QuestWeatherAction WeatherActionOnCompletion =>
+            weatherActionOnCompletion;
+        public float SandstormDurationMinSeconds =>
+            Mathf.Max(0f, sandstormDurationMinSeconds);
+        public float SandstormDurationMaxSeconds => Mathf.Max(
+            SandstormDurationMinSeconds,
+            sandstormDurationMaxSeconds);
 
         public bool TryValidate(out string error)
         {
@@ -344,6 +366,12 @@ namespace NERA.Quests
         {
             questId = NormalizeQuestId(questId);
             title = title?.Trim();
+            sandstormDurationMinSeconds = Mathf.Max(
+                0f,
+                sandstormDurationMinSeconds);
+            sandstormDurationMaxSeconds = Mathf.Max(
+                sandstormDurationMinSeconds,
+                sandstormDurationMaxSeconds);
         }
     }
 }

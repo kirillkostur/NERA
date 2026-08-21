@@ -15,7 +15,6 @@ MonoBehaviour:
   clearDayGeneration: 40
   cloudyDayGeneration: 18
   sandstormGeneration: 5
-  outdoorDeviceConditionLossPerSecond: 0.005
   itemChargingConsumption: 4
   defaultConsumerMinimumChargePercent: 25
   backupReserveMinimumPriority: 80
@@ -44,6 +43,3 @@ MonoBehaviour:
   - systemType: 7
     objectId: station_turret_02
     minimumChargePercent: 25
-  fullDayDurationSeconds: 600
-  sunriseHour: 6
-  sunsetHour: 18

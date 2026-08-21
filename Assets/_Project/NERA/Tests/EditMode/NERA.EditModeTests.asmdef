@@ -3,6 +3,7 @@
   "rootNamespace": "NERA.Tests",
   "references": [
     "NERA.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
     "Unity.Cinemachine",
     "Unity.Localization",
     "Unity.Localization.Editor",

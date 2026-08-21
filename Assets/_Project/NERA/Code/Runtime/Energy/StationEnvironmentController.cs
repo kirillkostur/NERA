@@ -1,27 +1,49 @@
 using System;
-using NERA.Quests;
+using NERA.World;
 using UnityEngine;
 
 namespace NERA.Energy
 {
+    /// <summary>
+    /// Backward-compatible station clock facade. Weather scheduling and
+    /// rendering are owned by StationWeatherController and both systems use
+    /// the centralized StationEnvironmentConfig.
+    /// </summary>
+    [DefaultExecutionOrder(-190)]
+    [DisallowMultipleComponent]
     public sealed class StationEnvironmentController : MonoBehaviour
     {
-        [SerializeField] private EnergyBalanceConfig config;
         [SerializeField, Range(0f, 24f)] private float currentHour = 12f;
-        [SerializeField] private StationWeather weather = StationWeather.Clear;
         [SerializeField] private bool advanceTime = true;
+        [SerializeField] private StationWeatherController weatherController;
+
+        private StationWeatherController subscribedWeather;
 
         public static StationEnvironmentController Instance { get; private set; }
 
         public event Action EnvironmentChanged;
 
         public float CurrentHour => currentHour;
-        public StationWeather Weather => weather;
-        public bool IsDaytime =>
-            currentHour >= Config.SunriseHour &&
-            currentHour < Config.SunsetHour;
-        public EnergyBalanceConfig Config =>
-            config != null ? config : config = EnergyBalanceConfig.LoadDefault();
+        public StationWeather Weather => ResolveWeatherController(false) != null
+            ? weatherController.Weather
+            : StationWeather.Clear;
+        public bool IsDaytime
+        {
+            get
+            {
+                float sunrise = Config.SunriseHour;
+                float sunset = Config.SunsetHour;
+                return sunrise <= sunset
+                    ? currentHour >= sunrise && currentHour < sunset
+                    : currentHour >= sunrise || currentHour < sunset;
+            }
+        }
+        public StationEnvironmentConfig Config =>
+            ResolveWeatherController(false) != null
+                ? weatherController.Config
+                : StationEnvironmentConfig.LoadDefault();
+        public StationWeatherController WeatherController =>
+            ResolveWeatherController(false);
 
         private void Awake()
         {
@@ -32,6 +54,13 @@ namespace NERA.Energy
             }
 
             Instance = this;
+            ResolveWeatherController(true);
+            BindWeatherController();
+        }
+
+        private void OnEnable()
+        {
+            BindWeatherController();
         }
 
         private void Update()
@@ -40,12 +69,9 @@ namespace NERA.Energy
                 return;
 
             float hoursPerSecond = 24f / Config.FullDayDurationSeconds;
-            currentHour = Mathf.Repeat(currentHour + hoursPerSecond * Time.deltaTime, 24f);
-        }
-
-        private void Start()
-        {
-            SynchronizeQuestWeather();
+            currentHour = Mathf.Repeat(
+                currentHour + hoursPerSecond * Time.deltaTime,
+                24f);
         }
 
         public void SetTime(float hour)
@@ -56,28 +82,55 @@ namespace NERA.Energy
 
         public void SetWeather(StationWeather newWeather)
         {
-            if (weather == newWeather)
+            StationWeatherController controller =
+                ResolveWeatherController(true);
+            BindWeatherController();
+            controller?.SetWeather(newWeather);
+        }
+
+        private StationWeatherController ResolveWeatherController(
+            bool createIfMissing)
+        {
+            if (weatherController != null)
+                return weatherController;
+
+            weatherController = GetComponent<StationWeatherController>();
+            if (weatherController == null && createIfMissing)
+                weatherController = gameObject.AddComponent<StationWeatherController>();
+            return weatherController;
+        }
+
+        private void BindWeatherController()
+        {
+            StationWeatherController resolved =
+                ResolveWeatherController(false);
+            if (subscribedWeather == resolved)
                 return;
 
-            weather = newWeather;
+            if (subscribedWeather != null)
+                subscribedWeather.WeatherChanged -= HandleWeatherChanged;
+
+            subscribedWeather = resolved;
+            if (subscribedWeather != null)
+                subscribedWeather.WeatherChanged += HandleWeatherChanged;
+        }
+
+        private void HandleWeatherChanged(StationWeather _)
+        {
             EnvironmentChanged?.Invoke();
-            ReportQuestWeather();
         }
 
-        private void ReportQuestWeather()
+        private void OnValidate()
         {
-            QuestController.Instance?.Report(
-                QuestSignalType.WeatherChanged,
-                weather.ToString().ToLowerInvariant(),
-                weather.ToString());
+            currentHour = Mathf.Repeat(currentHour, 24f);
+            ResolveWeatherController(false);
         }
 
-        private void SynchronizeQuestWeather()
+        private void OnDisable()
         {
-            QuestController.Instance?.SynchronizeState(
-                QuestSignalType.WeatherChanged,
-                weather.ToString().ToLowerInvariant(),
-                weather.ToString());
+            if (subscribedWeather != null)
+                subscribedWeather.WeatherChanged -= HandleWeatherChanged;
+            subscribedWeather = null;
         }
 
         private void OnDestroy()

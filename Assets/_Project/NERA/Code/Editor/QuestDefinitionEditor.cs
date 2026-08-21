@@ -93,6 +93,10 @@ namespace NERA.Editor
         private SerializedProperty activationLogic;
         private SerializedProperty activationConditions;
         private SerializedProperty stages;
+        private SerializedProperty weatherActionOnActivation;
+        private SerializedProperty weatherActionOnCompletion;
+        private SerializedProperty sandstormDurationMinSeconds;
+        private SerializedProperty sandstormDurationMaxSeconds;
 
         private void OnEnable()
         {
@@ -109,6 +113,14 @@ namespace NERA.Editor
             activationConditions =
                 serializedObject.FindProperty("activationConditions");
             stages = serializedObject.FindProperty("stages");
+            weatherActionOnActivation = serializedObject.FindProperty(
+                "weatherActionOnActivation");
+            weatherActionOnCompletion = serializedObject.FindProperty(
+                "weatherActionOnCompletion");
+            sandstormDurationMinSeconds = serializedObject.FindProperty(
+                "sandstormDurationMinSeconds");
+            sandstormDurationMaxSeconds = serializedObject.FindProperty(
+                "sandstormDurationMaxSeconds");
         }
 
         public override void OnInspectorGUI()
@@ -120,6 +132,7 @@ namespace NERA.Editor
             DrawPresentation();
             DrawActivation();
             DrawStages();
+            DrawEnvironmentActions();
 
             bool changed = serializedObject.ApplyModifiedProperties();
             if (changed)
@@ -312,6 +325,52 @@ namespace NERA.Editor
 
             if (GUILayout.Button("+ Добавить этап", GUILayout.Height(26f)))
                 AddStage(stages, IsPerObject);
+        }
+
+        private void DrawEnvironmentActions()
+        {
+            DrawSection("5. Действия с погодой");
+            EditorGUILayout.HelpBox(
+                "Квест может запустить или остановить песчаную бурю при " +
+                "появлении либо завершении. Сами квесты также могут ждать " +
+                "события Weather Changed с ID sandstorm или clear.",
+                MessageType.None);
+
+            EditorGUILayout.PropertyField(
+                weatherActionOnActivation,
+                new GUIContent("При появлении квеста"));
+            EditorGUILayout.PropertyField(
+                weatherActionOnCompletion,
+                new GUIContent("После завершения квеста"));
+
+            bool startsSandstorm =
+                weatherActionOnActivation.enumValueIndex ==
+                    (int)QuestWeatherAction.StartSandstorm ||
+                weatherActionOnCompletion.enumValueIndex ==
+                    (int)QuestWeatherAction.StartSandstorm;
+            if (!startsSandstorm)
+                return;
+
+            EditorGUILayout.PropertyField(
+                sandstormDurationMinSeconds,
+                new GUIContent("Длительность от, сек"));
+            EditorGUILayout.PropertyField(
+                sandstormDurationMaxSeconds,
+                new GUIContent("Длительность до, сек"));
+            sandstormDurationMinSeconds.floatValue = Mathf.Max(
+                0f,
+                sandstormDurationMinSeconds.floatValue);
+            sandstormDurationMaxSeconds.floatValue = Mathf.Max(
+                sandstormDurationMinSeconds.floatValue,
+                sandstormDurationMaxSeconds.floatValue);
+
+            if (sandstormDurationMaxSeconds.floatValue <= 0f)
+            {
+                EditorGUILayout.HelpBox(
+                    "Будет использован диапазон из Station Environment " +
+                    "Config.",
+                    MessageType.Info);
+            }
         }
 
         private void DrawConditionList(
@@ -620,6 +679,7 @@ namespace NERA.Editor
                 signalType == QuestSignalType.ItemDelivered ||
                 signalType == QuestSignalType.StationAttackStarted ||
                 signalType == QuestSignalType.StationAttackRepelled ||
+                signalType == QuestSignalType.WeatherChanged ||
                 signalType == QuestSignalType.Custom;
         }
 

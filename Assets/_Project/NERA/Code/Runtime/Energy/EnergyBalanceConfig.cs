@@ -29,7 +29,6 @@ namespace NERA.Energy
         [SerializeField, Min(0f)] private float clearDayGeneration = 40f;
         [SerializeField, Min(0f)] private float cloudyDayGeneration = 18f;
         [SerializeField, Min(0f)] private float sandstormGeneration = 5f;
-        [SerializeField, Min(0f)] private float outdoorDeviceConditionLossPerSecond = 0.005f;
 
         [Header("Shared Activity Consumers (per second)")]
         [SerializeField, Min(0f)] private float itemChargingConsumption = 4f;
@@ -48,15 +47,9 @@ namespace NERA.Energy
         private List<StationObjectPowerCutoff> stationObjectCutoffs =
             new List<StationObjectPowerCutoff>();
 
-        [Header("Time")]
-        [SerializeField, Min(30f)] private float fullDayDurationSeconds = 600f;
-        [SerializeField, Range(0f, 24f)] private float sunriseHour = 6f;
-        [SerializeField, Range(0f, 24f)] private float sunsetHour = 18f;
-
         public float ClearDayGeneration => clearDayGeneration;
         public float CloudyDayGeneration => cloudyDayGeneration;
         public float SandstormGeneration => sandstormGeneration;
-        public float OutdoorDeviceConditionLossPerSecond => outdoorDeviceConditionLossPerSecond;
         public float ItemChargingConsumption => itemChargingConsumption;
         public float DefaultConsumerMinimumCharge01 =>
             Mathf.Clamp(defaultConsumerMinimumChargePercent, 0f, 100f) / 100f;
@@ -66,10 +59,6 @@ namespace NERA.Energy
             stationObjectCutoffs != null
                 ? stationObjectCutoffs
                 : Array.Empty<StationObjectPowerCutoff>();
-        public float FullDayDurationSeconds => fullDayDurationSeconds;
-        public float SunriseHour => sunriseHour;
-        public float SunsetHour => sunsetHour;
-
         public float GetMinimumChargePercent(
             StationSystemType systemType,
             string objectId = null)

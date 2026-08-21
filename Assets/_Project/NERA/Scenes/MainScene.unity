@@ -12178,6 +12178,7 @@ GameObject:
   - component: {fileID: 900000006}
   - component: {fileID: 900000005}
   - component: {fileID: 900000004}
+  - component: {fileID: 900000007}
   m_Layer: 0
   m_Name: RuntimeRoot
   m_TagString: Untagged
@@ -12325,10 +12326,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a227e2f90a393744af88369dcc66abb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: d1ad1fc49eab72242a941f751b8837af, type: 2}
   currentHour: 12
-  weather: 0
   advanceTime: 1
+  weatherController: {fileID: 900000007}
 --- !u!114 &550046526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22611,6 +22611,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e062993faedb584bac4fe54ac136f5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &900000007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 550046517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aebb25797fdcc84dbcfd49d0363220f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config: {fileID: 11400000, guid: 3d1ea4f1f6ecb444ab4e6e6fd1ea77da, type: 2}
+  initialWeather: 0
+  runAutomaticWeather: 1
+  controlSandstormRendering: 1
 --- !u!1 &903443175
 GameObject:
   m_ObjectHideFlags: 0

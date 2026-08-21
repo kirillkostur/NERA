@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b17b2c241f529924a90aced27cc162a1, type: 3}
+  m_Name: StationEnvironment_Default
+  m_EditorClassIdentifier: 
+  fullDayDurationSeconds: 600
+  sunriseHour: 6
+  sunsetHour: 18
+  automaticSandstormsEnabled: 1
+  sandstormChancePerRoll: 1
+  sandstormRollIntervalMinSeconds: 60
+  sandstormRollIntervalMaxSeconds: 120
+  sandstormDurationMinSeconds: 20
+  sandstormDurationMaxSeconds: 30
+  toggleRendererFeature: 1
+  sandstormRendererFeature: {fileID: 8936549895830300434, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
+  volumetricFogMaterial: {fileID: 2100000, guid: e9d9fdf7ee9383247a2e24594d72d295, type: 2}
+  fogDensityProperty: _DensityMultiplier
+  clearFogDensity: 0
+  sandstormFogDensity: 0.3
+  sandstormFogFadeDurationSeconds: 3

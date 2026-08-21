@@ -84,6 +84,13 @@ namespace NERA.Quests
         Custom
     }
 
+    public enum QuestWeatherAction
+    {
+        None,
+        StartSandstorm,
+        StopSandstorm
+    }
+
     public readonly struct QuestSignal
     {
         public QuestSignal(
