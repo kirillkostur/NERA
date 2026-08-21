@@ -1,6 +1,7 @@
 using System;
 using NERA.Expeditions;
 using NERA.Energy;
+using NERA.Maintenance;
 using NERA.Quests;
 using NERA.Station;
 using UnityEngine;
@@ -69,11 +70,46 @@ namespace NERA.Drone
             Mathf.Max(EnergyConsumption, 0.01f);
         public bool IsCharging => State != DroneState.Scanning &&
             MissingBatteryCharge > ChargeEpsilon;
+        public bool IsFlightReady
+        {
+            get
+            {
+                CacheDependencies();
+                if (stationPower == null || !stationPower.IsPowered)
+                    return false;
+
+                if (stationSystems != null)
+                {
+                    if (!stationSystems.IsRequestedActive(
+                            StationSystemType.Drone,
+                            DroneObjectId) ||
+                        !stationSystems.IsMaintenanceReady(
+                            StationSystemType.Drone,
+                            DroneObjectId) ||
+                        stationSystems.GetCondition(
+                            StationSystemType.Drone,
+                            DroneObjectId) < 0.999f)
+                    {
+                        return false;
+                    }
+                }
+
+                EnergySystemController energy =
+                    EnergySystemController.Instance;
+                return energy == null ||
+                    (energy.HasUsablePower &&
+                     (stationSystems == null ||
+                      stationSystems.HasRequiredCharge(
+                          StationSystemType.Drone,
+                          DroneObjectId)));
+            }
+        }
 
         private float elapsedScanTime;
         private float currentBatteryCharge;
         private bool batteryInitialized;
         private StationPowerController stationPower;
+        private StationSystemsController stationSystems;
         private ExpeditionDiscoveryController discovery;
 
         private float MissingBatteryCharge => Mathf.Max(
@@ -143,9 +179,7 @@ namespace NERA.Drone
             CacheDependencies();
 
             return State != DroneState.Scanning &&
-                IsSystemEnabled &&
-                stationPower != null &&
-                stationPower.IsPowered &&
+                IsFlightReady &&
                 discovery != null &&
                 location != null &&
                 (StationSystemsController.Instance == null ||
@@ -249,8 +283,7 @@ namespace NERA.Drone
                 return;
             }
 
-            bool isPowered = stationPower != null && stationPower.IsPowered;
-            SetState(isPowered ? DroneState.Ready : DroneState.Locked);
+            SetState(IsFlightReady ? DroneState.Ready : DroneState.Locked);
         }
 
         private void CompleteScan()
@@ -294,6 +327,8 @@ namespace NERA.Drone
 
             if (discovery == null)
                 discovery = ExpeditionDiscoveryController.Instance;
+
+            BindStationSystems(StationSystemsController.Instance);
         }
 
         private void EnsureEnergyRegistration()
@@ -321,9 +356,10 @@ namespace NERA.Drone
         }
 
         private bool IsSystemEnabled =>
-            StationSystemsController.Instance == null ||
-            StationSystemsController.Instance.IsRequestedActive(
-                StationSystemType.Drone);
+            stationSystems == null ||
+            stationSystems.IsRequestedActive(
+                StationSystemType.Drone,
+                DroneObjectId);
 
         private void EnsureBatteryInitialized()
         {
@@ -356,25 +392,71 @@ namespace NERA.Drone
             energy?.SetConsumerActive(DroneChargerConsumerId, false);
             scanLocation = null;
             elapsedScanTime = 0f;
-            bool isPowered = stationPower != null && stationPower.IsPowered;
-            SetState(isPowered ? DroneState.Ready : DroneState.Locked);
+            SetState(IsFlightReady ? DroneState.Ready : DroneState.Locked);
         }
 
         private void Subscribe()
         {
             if (stationPower != null)
                 stationPower.StateChanged += HandlePowerStateChanged;
+            StationSystemsController.InstanceChanged +=
+                HandleStationSystemsInstanceChanged;
+            MaintainableObject.AnyConditionChanged +=
+                HandleMaintenanceConditionChanged;
+            BindStationSystems(StationSystemsController.Instance);
         }
 
         private void Unsubscribe()
         {
             if (stationPower != null)
                 stationPower.StateChanged -= HandlePowerStateChanged;
+            StationSystemsController.InstanceChanged -=
+                HandleStationSystemsInstanceChanged;
+            MaintainableObject.AnyConditionChanged -=
+                HandleMaintenanceConditionChanged;
+            BindStationSystems(null);
+        }
+
+        private void BindStationSystems(StationSystemsController systems)
+        {
+            if (stationSystems == systems)
+                return;
+
+            if (stationSystems != null)
+                stationSystems.SystemsChanged -= HandleSystemsChanged;
+            stationSystems = systems;
+            if (stationSystems != null)
+                stationSystems.SystemsChanged += HandleSystemsChanged;
         }
 
         private void HandlePowerStateChanged(StationPowerState _)
         {
             RefreshAvailability();
+        }
+
+        private void HandleStationSystemsInstanceChanged(
+            StationSystemsController systems)
+        {
+            BindStationSystems(systems);
+            RefreshAvailability();
+        }
+
+        private void HandleSystemsChanged()
+        {
+            RefreshAvailability();
+        }
+
+        private void HandleMaintenanceConditionChanged(
+            string objectId,
+            float _)
+        {
+            if (string.Equals(
+                    objectId,
+                    DroneObjectId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                RefreshAvailability();
+            }
         }
 
         private void SetState(DroneState newState)

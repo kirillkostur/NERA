@@ -1439,6 +1439,7 @@ namespace NERA.Tests
         private StationPowerController power;
         private ExpeditionDiscoveryController discovery;
         private DroneScanController drone;
+        private MaintainableObject droneMaintenance;
         private ExpeditionLocationData location;
 
         [SetUp]
@@ -1458,6 +1459,12 @@ namespace NERA.Tests
             power = root.AddComponent<StationPowerController>();
             discovery = root.AddComponent<ExpeditionDiscoveryController>();
             drone = root.AddComponent<DroneScanController>();
+            StationObjectIdentity identity =
+                root.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Drone,
+                "station_drone");
+            droneMaintenance = root.AddComponent<MaintainableObject>();
             location = ScriptableObject.CreateInstance<ExpeditionLocationData>();
             SetPrivateField(drone, "stationPower", power);
             SetPrivateField(drone, "discovery", discovery);
@@ -1498,6 +1505,47 @@ namespace NERA.Tests
 
             Assert.That(drone.LaunchScan(), Is.False);
             Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+        }
+
+        [Test]
+        public void DroneCannotLaunchWhileStationIsUnpowered()
+        {
+            drone.RefreshAvailability();
+
+            Assert.That(drone.IsFlightReady, Is.False);
+            Assert.That(drone.CanLaunchScan(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+        }
+
+        [Test]
+        public void DroneCannotLaunchWhileItIsDisabled()
+        {
+            power.RestorePower();
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, false),
+                Is.True);
+            drone.RefreshAvailability();
+
+            Assert.That(drone.IsFlightReady, Is.False);
+            Assert.That(drone.CanLaunchScan(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+        }
+
+        [TestCase(0.5f, TestName = "DroneCannotLaunchWhileItIsDirty")]
+        [TestCase(0f, TestName = "DroneCannotLaunchWhileItIsBroken")]
+        public void DroneCannotLaunchWhileMaintenanceIsRequired(
+            float condition)
+        {
+            power.RestorePower();
+            droneMaintenance.SetCondition(condition);
+            drone.RefreshAvailability();
+
+            Assert.That(drone.IsFlightReady, Is.False);
+            Assert.That(drone.CanLaunchScan(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
         }
 
         [Test]

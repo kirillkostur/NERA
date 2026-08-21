@@ -1442,6 +1442,61 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator DirtyDroneCannotLaunchUntilItIsFullyCleaned()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            DroneScanController drone = DroneScanController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(discovery, Is.Not.Null);
+            Assert.That(drone, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_drone",
+                    out MaintainableObject maintenance),
+                Is.True);
+
+            systems.ResetSystems();
+            energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
+            discovery.RestoreDiscovered(Array.Empty<string>());
+            StationSystemDefinition definition =
+                systems.GetDefinition(StationSystemType.Drone);
+            float range = systems.GetStat(
+                StationSystemType.Drone,
+                definition.ObjectId,
+                StationObjectStat.TravelRange);
+            ExpeditionLocationData location = discovery.KnownLocations
+                .FirstOrDefault(candidate =>
+                    candidate != null &&
+                    candidate.DiscoverySource ==
+                        NERA.Locations.DiscoverySource.Drone &&
+                    candidate.RequiredDroneTravelRange <= range);
+            Assert.That(location, Is.Not.Null);
+
+            maintenance.SetCondition(0.5f);
+            Assert.That(drone.IsFlightReady, Is.False);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+            Assert.That(drone.CanLaunchScan(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+
+            maintenance.SetCondition(1f);
+            Assert.That(drone.IsFlightReady, Is.True);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+            Assert.That(drone.CanLaunchScan(location), Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator DroneCanSurveySecondLocationAfterRecharge()
         {
             SceneManager.LoadScene("MainScene");
