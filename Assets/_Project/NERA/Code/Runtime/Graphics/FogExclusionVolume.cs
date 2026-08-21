@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NERA.Graphics
 {
     /// <summary>
-    /// Removes volumetric fog inside an oriented BoxCollider. The collider is
-    /// used as an authoring shape; no trigger callbacks are required.
+    /// Removes volumetric fog inside one or more oriented BoxColliders. The
+    /// colliders are used as authoring shapes; no trigger callbacks are required.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
@@ -29,34 +30,44 @@ namespace NERA.Graphics
         private static readonly Vector4[] VolumeParameters =
             new Vector4[MaximumVolumeCount];
 
-        [Tooltip("Box that defines the fog-free area.")]
-        [SerializeField] private BoxCollider volumeCollider;
+        [Tooltip(
+            "Optional primary box kept for backwards compatibility. " +
+            "All BoxCollider components on this object are collected automatically " +
+            "and kept as triggers.")]
+        [FormerlySerializedAs("volumeCollider")]
+        [SerializeField] private BoxCollider primaryCollider;
+        [Tooltip(
+            "Also collect BoxCollider components from child objects. " +
+            "Inactive children are cached but do not affect the fog until activated.")]
+        [SerializeField] private bool includeChildColliders;
         [Tooltip(
             "Distance outside the box over which fog smoothly returns. " +
             "Set to 0 for a hard edge.")]
         [Min(0f)]
         [SerializeField] private float edgeFade = 0.5f;
 
+        private readonly List<BoxCollider> volumeColliders =
+            new List<BoxCollider>();
         private static int lastUploadedFrame = -1;
 
-        public BoxCollider VolumeCollider => volumeCollider;
+        public BoxCollider VolumeCollider => primaryCollider;
+        public IReadOnlyList<BoxCollider> VolumeColliders => volumeColliders;
+        public bool IncludeChildColliders => includeChildColliders;
         public float EdgeFade => edgeFade;
 
         private void Reset()
         {
-            CacheCollider();
-            if (volumeCollider != null)
-                volumeCollider.isTrigger = true;
+            CacheColliders();
         }
 
         private void Awake()
         {
-            CacheCollider();
+            CacheColliders();
         }
 
         private void OnEnable()
         {
-            CacheCollider();
+            CacheColliders();
             if (!RegisteredVolumes.Contains(this))
                 RegisteredVolumes.Add(this);
 
@@ -65,6 +76,10 @@ namespace NERA.Graphics
 
         private void LateUpdate()
         {
+            // Keep the editor preview in sync when colliders are added or removed.
+            if (!Application.isPlaying)
+                CacheColliders();
+
             if (Application.isPlaying && lastUploadedFrame == Time.frameCount)
                 return;
 
@@ -80,32 +95,62 @@ namespace NERA.Graphics
         private void OnValidate()
         {
             edgeFade = Mathf.Max(0f, edgeFade);
-            CacheCollider();
+            CacheColliders();
+            if (isActiveAndEnabled)
+                UploadVolumes();
+        }
+
+        private void OnTransformChildrenChanged()
+        {
+            if (!includeChildColliders)
+                return;
+
+            CacheColliders();
             if (isActiveAndEnabled)
                 UploadVolumes();
         }
 
         private void OnDrawGizmosSelected()
         {
-            CacheCollider();
-            if (volumeCollider == null)
-                return;
-
+            CacheColliders();
             Matrix4x4 previousMatrix = Gizmos.matrix;
             Color previousColor = Gizmos.color;
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.color = new Color(0.1f, 0.85f, 1f, 0.12f);
-            Gizmos.DrawCube(volumeCollider.center, volumeCollider.size);
-            Gizmos.color = new Color(0.1f, 0.85f, 1f, 0.9f);
-            Gizmos.DrawWireCube(volumeCollider.center, volumeCollider.size);
+
+            foreach (BoxCollider box in volumeColliders)
+            {
+                if (box == null)
+                    continue;
+
+                Gizmos.matrix = box.transform.localToWorldMatrix;
+                Gizmos.color = new Color(0.1f, 0.85f, 1f, 0.12f);
+                Gizmos.DrawCube(box.center, box.size);
+                Gizmos.color = new Color(0.1f, 0.85f, 1f, 0.9f);
+                Gizmos.DrawWireCube(box.center, box.size);
+            }
+
             Gizmos.matrix = previousMatrix;
             Gizmos.color = previousColor;
         }
 
-        private void CacheCollider()
+        private void CacheColliders()
         {
-            if (volumeCollider == null)
-                volumeCollider = GetComponent<BoxCollider>();
+            volumeColliders.Clear();
+            if (includeChildColliders)
+                GetComponentsInChildren(true, volumeColliders);
+            else
+                GetComponents(volumeColliders);
+
+            if (primaryCollider == null && volumeColliders.Count > 0)
+                primaryCollider = volumeColliders[0];
+            else if (primaryCollider != null &&
+                     !volumeColliders.Contains(primaryCollider))
+                volumeColliders.Insert(0, primaryCollider);
+
+            foreach (BoxCollider box in volumeColliders)
+            {
+                if (box != null && box.transform == transform)
+                    box.isTrigger = true;
+            }
         }
 
         private static void UploadVolumes()
@@ -118,43 +163,49 @@ namespace NERA.Graphics
                 if (uploadedCount >= MaximumVolumeCount)
                     break;
                 if (volume == null ||
-                    !volume.isActiveAndEnabled ||
-                    volume.volumeCollider == null)
+                    !volume.isActiveAndEnabled)
                 {
                     continue;
                 }
 
-                BoxCollider box = volume.volumeCollider;
-                Vector3 safeSize = new Vector3(
-                    Mathf.Max(Mathf.Abs(box.size.x), 0.0001f),
-                    Mathf.Max(Mathf.Abs(box.size.y), 0.0001f),
-                    Mathf.Max(Mathf.Abs(box.size.z), 0.0001f));
-                Matrix4x4 boxLocalToWorld =
-                    volume.transform.localToWorldMatrix *
-                    Matrix4x4.TRS(
-                        box.center,
-                        Quaternion.identity,
-                        safeSize);
-                Vector3 worldSize = new Vector3(
-                    boxLocalToWorld.GetColumn(0).magnitude,
-                    boxLocalToWorld.GetColumn(1).magnitude,
-                    boxLocalToWorld.GetColumn(2).magnitude);
-
-                if (worldSize.x <= Mathf.Epsilon ||
-                    worldSize.y <= Mathf.Epsilon ||
-                    worldSize.z <= Mathf.Epsilon)
+                foreach (BoxCollider box in volume.volumeColliders)
                 {
-                    continue;
-                }
+                    if (uploadedCount >= MaximumVolumeCount)
+                        break;
+                    if (box == null || !box.gameObject.activeInHierarchy)
+                        continue;
 
-                WorldToLocalMatrices[uploadedCount] =
-                    boxLocalToWorld.inverse;
-                VolumeParameters[uploadedCount] = new Vector4(
-                    worldSize.x,
-                    worldSize.y,
-                    worldSize.z,
-                    volume.edgeFade);
-                uploadedCount++;
+                    Vector3 safeSize = new Vector3(
+                        Mathf.Max(Mathf.Abs(box.size.x), 0.0001f),
+                        Mathf.Max(Mathf.Abs(box.size.y), 0.0001f),
+                        Mathf.Max(Mathf.Abs(box.size.z), 0.0001f));
+                    Matrix4x4 boxLocalToWorld =
+                        box.transform.localToWorldMatrix *
+                        Matrix4x4.TRS(
+                            box.center,
+                            Quaternion.identity,
+                            safeSize);
+                    Vector3 worldSize = new Vector3(
+                        boxLocalToWorld.GetColumn(0).magnitude,
+                        boxLocalToWorld.GetColumn(1).magnitude,
+                        boxLocalToWorld.GetColumn(2).magnitude);
+
+                    if (worldSize.x <= Mathf.Epsilon ||
+                        worldSize.y <= Mathf.Epsilon ||
+                        worldSize.z <= Mathf.Epsilon)
+                    {
+                        continue;
+                    }
+
+                    WorldToLocalMatrices[uploadedCount] =
+                        boxLocalToWorld.inverse;
+                    VolumeParameters[uploadedCount] = new Vector4(
+                        worldSize.x,
+                        worldSize.y,
+                        worldSize.z,
+                        volume.edgeFade);
+                    uploadedCount++;
+                }
             }
 
             Shader.SetGlobalInt(ExclusionCountId, uploadedCount);
