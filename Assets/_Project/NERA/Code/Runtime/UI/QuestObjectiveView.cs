@@ -7,6 +7,8 @@ namespace NERA.UI
     [RequireComponent(typeof(TextMeshProUGUI))]
     public sealed class QuestObjectiveView : MonoBehaviour
     {
+        public const string Marker = "• ";
+
         [SerializeField] private TMP_Text label;
 
         private FontStyles normalFontStyle;
@@ -37,7 +39,7 @@ namespace NERA.UI
             if (label == null)
                 return;
 
-            label.text = "- " + (objective ?? string.Empty);
+            label.text = Marker + (objective ?? string.Empty);
             label.fontStyle = completed
                 ? normalFontStyle | FontStyles.Strikethrough
                 : normalFontStyle;

@@ -60,7 +60,7 @@ namespace NERA.Tests
             Assert.That(hud.DisplayedSideText, Does.Not.Contain("side.10"));
             Assert.That(
                 hud.DisplayedMainText,
-                Does.Contain("- Objective main.40"));
+                Does.Contain("• Objective main.40"));
 
             Assert.That(
                 controller.Report(QuestSignalType.Custom, "complete.main.40"),
@@ -145,6 +145,54 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator CrossesOutStageBeforeShowingNextStage()
+        {
+            Assert.That(QuestController.Instance, Is.Null);
+
+            QuestDefinition definition = CreateMultiStageQuest();
+            QuestCatalog catalog = ScriptableObject.CreateInstance<QuestCatalog>();
+            createdObjects.Add(catalog);
+            SetPrivateField(
+                catalog,
+                "definitions",
+                new List<QuestDefinition> { definition });
+
+            GameObject controllerObject = CreateGameObject("Quest Controller");
+            QuestController controller =
+                controllerObject.AddComponent<QuestController>();
+            controller.Configure(catalog);
+
+            GameObject hudObject = CreateGameObject("Quest HUD");
+            QuestHUDController hud = CreateHud(hudObject);
+            yield return null;
+
+            Assert.That(hud.DisplayedMainText, Does.Contain("Multi-stage quest"));
+            Assert.That(hud.DisplayedMainText, Does.Contain("• First stage"));
+            Assert.That(hud.DisplayedMainText, Does.Not.Contain("Second stage"));
+
+            Assert.That(
+                controller.Report(QuestSignalType.Custom, "complete.first"),
+                Is.True);
+            Assert.That(
+                hud.DisplayedMainText,
+                Does.Contain("<s>• First stage</s>"));
+            Assert.That(
+                hud.DisplayedMainText,
+                Does.Not.Contain("<s>Multi-stage quest</s>"),
+                "Changing a stage must cross out only the completed objective.");
+            Assert.That(
+                hud.DisplayedMainText,
+                Does.Not.Contain("Second stage"),
+                "The next stage must wait until the completed stage disappears.");
+
+            yield return new WaitForSecondsRealtime(
+                hud.CompletedDisplayDuration + 0.1f);
+
+            Assert.That(hud.DisplayedMainText, Does.Not.Contain("First stage"));
+            Assert.That(hud.DisplayedMainText, Does.Contain("• Second stage"));
+        }
+
+        [UnityTest]
         public IEnumerator GroupsPerObjectQuestsUnderOneTitle()
         {
             Assert.That(QuestController.Instance, Is.Null);
@@ -183,9 +231,9 @@ namespace NERA.Tests
             Assert.That(
                 CountOccurrences(displayed, "Service objects"),
                 Is.EqualTo(1));
-            Assert.That(displayed, Does.Contain("- Service Antenna"));
-            Assert.That(displayed, Does.Contain("- Service Drone"));
-            Assert.That(displayed, Does.Contain("- Service Solar Panel"));
+            Assert.That(displayed, Does.Contain("• Service Antenna"));
+            Assert.That(displayed, Does.Contain("• Service Drone"));
+            Assert.That(displayed, Does.Contain("• Service Solar Panel"));
             QuestGroupView firstSideGroup = hudObject.transform
                 .Find("background_QuestSide/Content/QuestGroup_00")
                 .GetComponent<QuestGroupView>();
@@ -199,7 +247,7 @@ namespace NERA.Tests
                 Is.True);
             Assert.That(
                 hud.DisplayedSideText,
-                Does.Contain("<s>- Service Drone</s>"));
+                Does.Contain("<s>• Service Drone</s>"));
             Assert.That(
                 hud.DisplayedSideText,
                 Does.Not.Contain("<s>Service objects"));
@@ -208,8 +256,39 @@ namespace NERA.Tests
                 hud.CompletedDisplayDuration + 0.1f);
 
             Assert.That(hud.DisplayedSideText, Does.Not.Contain("Drone"));
-            Assert.That(hud.DisplayedSideText, Does.Contain("- Service Antenna"));
-            Assert.That(hud.DisplayedSideText, Does.Contain("- Service Solar Panel"));
+            Assert.That(hud.DisplayedSideText, Does.Contain("• Service Antenna"));
+            Assert.That(hud.DisplayedSideText, Does.Contain("• Service Solar Panel"));
+
+            Assert.That(
+                controller.Report(
+                    QuestSignalType.StationSystemActivated,
+                    "antenna",
+                    "Antenna"),
+                Is.True);
+            Assert.That(
+                hud.DisplayedSideText,
+                Does.Contain("<s>• Service Antenna</s>"));
+            Assert.That(
+                hud.DisplayedSideText,
+                Does.Not.Contain("<s>Service objects</s>"),
+                "The title must stay active while another objective remains.");
+
+            yield return new WaitForSecondsRealtime(
+                hud.CompletedDisplayDuration + 0.1f);
+
+            Assert.That(
+                controller.Report(
+                    QuestSignalType.StationSystemActivated,
+                    "solar_panel",
+                    "Solar Panel"),
+                Is.True);
+            Assert.That(
+                hud.DisplayedSideText,
+                Does.Contain("<s>Service objects</s>"),
+                "The title must be crossed out with the last objective.");
+            Assert.That(
+                hud.DisplayedSideText,
+                Does.Contain("<s>• Service Solar Panel</s>"));
         }
 
         [UnityTearDown]
@@ -260,6 +339,54 @@ namespace NERA.Tests
                 definition,
                 "stages",
                 new List<QuestStageDefinition> { stage });
+            return definition;
+        }
+
+        private QuestDefinition CreateMultiStageQuest()
+        {
+            QuestStageDefinition firstStage = new QuestStageDefinition();
+            SetPrivateField(firstStage, "title", "First stage");
+            SetPrivateField(
+                firstStage,
+                "completionConditions",
+                new List<QuestConditionDefinition>
+                {
+                    CreateSignalCondition(
+                        QuestSignalType.Custom,
+                        "complete.first")
+                });
+
+            QuestStageDefinition secondStage = new QuestStageDefinition();
+            SetPrivateField(secondStage, "title", "Second stage");
+            SetPrivateField(
+                secondStage,
+                "completionConditions",
+                new List<QuestConditionDefinition>
+                {
+                    CreateSignalCondition(
+                        QuestSignalType.Custom,
+                        "complete.second")
+                });
+
+            QuestDefinition definition =
+                ScriptableObject.CreateInstance<QuestDefinition>();
+            createdObjects.Add(definition);
+            SetPrivateField(definition, "questId", "main.multi_stage");
+            SetPrivateField(definition, "category", QuestCategory.Main);
+            SetPrivateField(definition, "availability", QuestAvailability.Once);
+            SetPrivateField(definition, "targetScope", QuestTargetScope.Single);
+            SetPrivateField(definition, "title", "Multi-stage quest");
+            SetPrivateField(definition, "description", "Multi-stage quest");
+            SetPrivateField(definition, "priority", 100);
+            SetPrivateField(definition, "showInHud", true);
+            SetPrivateField(
+                definition,
+                "activationConditions",
+                new List<QuestConditionDefinition>());
+            SetPrivateField(
+                definition,
+                "stages",
+                new List<QuestStageDefinition> { firstStage, secondStage });
             return definition;
         }
 

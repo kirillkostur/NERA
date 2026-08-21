@@ -202,6 +202,7 @@ namespace NERA.UI
             if (questController != null)
             {
                 questController.QuestsChanged -= Refresh;
+                questController.QuestStageChanged -= HandleQuestStageChanged;
                 questController.QuestCompleted -= HandleQuestCompleted;
             }
 
@@ -216,13 +217,26 @@ namespace NERA.UI
             if (questController != null)
             {
                 questController.QuestsChanged += Refresh;
+                questController.QuestStageChanged += HandleQuestStageChanged;
                 questController.QuestCompleted += HandleQuestCompleted;
             }
 
             Refresh();
         }
 
+        private void HandleQuestStageChanged(QuestRuntimeState state)
+        {
+            HandleDisplayedEntryCompleted(state, false);
+        }
+
         private void HandleQuestCompleted(QuestRuntimeState state)
+        {
+            HandleDisplayedEntryCompleted(state, true);
+        }
+
+        private void HandleDisplayedEntryCompleted(
+            QuestRuntimeState state,
+            bool questCompleted)
         {
             if (state == null ||
                 !visibleActiveEntries.TryGetValue(
@@ -234,7 +248,8 @@ namespace NERA.UI
 
             HoldVisibleGroupOrder(entry.Category);
             completedEntries[state.InstanceId] = entry.AsCompleted(
-                Time.unscaledTime + completedDisplayDuration);
+                Time.unscaledTime + completedDisplayDuration,
+                questCompleted);
             Refresh();
         }
 
@@ -423,12 +438,9 @@ namespace NERA.UI
                 view.gameObject.SetActive(true);
                 view.transform.SetSiblingIndex(index);
 
-                bool strikeTitle = !group.IsGrouped &&
-                    group.Entries.Count == 1 &&
-                    group.Entries[0].IsCompleted;
                 view.BeginUpdate(
                     group.Title,
-                    strikeTitle,
+                    group.ShouldStrikeTitle,
                     group.ObjectiveCount,
                     questObjectivePrefab);
 
@@ -571,10 +583,10 @@ namespace NERA.UI
                     builder.Append('\n');
 
                 QuestDisplayGroup group = groups[groupIndex];
-                bool strikeTitle = !group.IsGrouped &&
-                    group.Entries.Count == 1 &&
-                    group.Entries[0].IsCompleted;
-                AppendLine(builder, group.Title, strikeTitle);
+                AppendLine(
+                    builder,
+                    group.Title,
+                    group.ShouldStrikeTitle);
 
                 for (int entryIndex = 0;
                      entryIndex < group.Entries.Count;
@@ -587,7 +599,7 @@ namespace NERA.UI
                     builder.Append('\n');
                     AppendLine(
                         builder,
-                        "- " + entry.Objective,
+                        QuestObjectiveView.Marker + entry.Objective,
                         entry.IsCompleted);
                 }
             }
@@ -687,6 +699,8 @@ namespace NERA.UI
             public string Title { get; private set; }
             public bool IsGrouped { get; }
             public IReadOnlyList<QuestDisplayEntry> Entries => entries;
+            public bool ShouldStrikeTitle =>
+                entries.Count == 1 && entries[0].IsQuestCompleted;
             public int ObjectiveCount
             {
                 get
@@ -737,6 +751,7 @@ namespace NERA.UI
                 string objective,
                 bool isGrouped,
                 bool isCompleted,
+                bool isQuestCompleted,
                 float expiresAt)
             {
                 InstanceId = instanceId;
@@ -747,6 +762,7 @@ namespace NERA.UI
                 Objective = objective;
                 IsGrouped = isGrouped;
                 IsCompleted = isCompleted;
+                IsQuestCompleted = isQuestCompleted;
                 ExpiresAt = expiresAt;
             }
 
@@ -758,6 +774,7 @@ namespace NERA.UI
             public string Objective { get; }
             public bool IsGrouped { get; }
             public bool IsCompleted { get; }
+            public bool IsQuestCompleted { get; }
             public float ExpiresAt { get; }
 
             public static QuestDisplayEntry From(QuestRuntimeState state)
@@ -792,10 +809,13 @@ namespace NERA.UI
                     objective,
                     isGrouped,
                     false,
+                    false,
                     0f);
             }
 
-            public QuestDisplayEntry AsCompleted(float expiresAt)
+            public QuestDisplayEntry AsCompleted(
+                float expiresAt,
+                bool questCompleted)
             {
                 return new QuestDisplayEntry(
                     InstanceId,
@@ -806,6 +826,7 @@ namespace NERA.UI
                     Objective,
                     IsGrouped,
                     true,
+                    questCompleted,
                     expiresAt);
             }
         }
