@@ -28,6 +28,7 @@ Calibrate to reveal a hidden signal on an opened sector.","","АНТЕННА
 "map.state.ready",1886380065,"","READY","","ГОТОВО",""
 "map.state.calibrating",1886380066,"","CALIBRATING","","КАЛИБРОВКА",""
 "map.state.signalfound",1886380067,"","SIGNALFOUND","","СИГНАЛ НАЙДЕН",""
+"map.state.locked",1886380068,"","LOCKED","","ЗАБЛОКИРОВАН",""
 "ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_storagescreen_dropbutton_text_drop",8421105664,"","DROP","","ВЫБРОСИТЬ",""
 "ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button",8458854400,"","YES","","ДА",""
 "ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade",8463048705,"","LAUNCHE","","ЗАПУСК",""

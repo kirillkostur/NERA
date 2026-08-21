@@ -152,6 +152,22 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void LockedMapStateHasRussianTranslation()
+        {
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.TerminalTable);
+            Assert.That(collection, Is.Not.Null);
+            StringTable russian = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.RussianCode);
+
+            Assert.That(
+                russian.GetEntry("map.state.locked")?.Value,
+                Is.EqualTo("ЗАБЛОКИРОВАН"));
+        }
+
+        [Test]
         public void DynamicInteractionPromptsAreComposedInRussian()
         {
             Locale previous = LocalizationSettings.SelectedLocale;

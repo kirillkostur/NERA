@@ -556,7 +556,7 @@ namespace NERA.Editor.Localization
             AddT("map.antenna_hint", "ANTENNA\nCalibrate to reveal a hidden signal on an opened sector.", "АНТЕННА\nВыполните калибровку, чтобы обнаружить скрытый сигнал в открытом секторе.");
             AddT("map.antenna_unavailable", "ANTENNA UNAVAILABLE", "АНТЕННА НЕДОСТУПНА");
             AddT("map.calibrating", "CALIBRATING {0}%", "КАЛИБРОВКА {0}%", true);
-            foreach (string state in new[] { "Idle", "Scanning", "Returning", "Charging", "Ready", "Calibrating", "SignalFound" })
+            foreach (string state in new[] { "Locked", "Idle", "Scanning", "Returning", "Charging", "Ready", "Calibrating", "SignalFound" })
                 AddT("map.state." + KeyPart(state), state.ToUpperInvariant(), TranslateState(state));
         }
 
@@ -1132,6 +1132,7 @@ namespace NERA.Editor.Localization
         {
             switch (state)
             {
+                case "Locked": return "ЗАБЛОКИРОВАН";
                 case "Idle": return "ОЖИДАНИЕ";
                 case "Scanning": return "СКАНИРОВАНИЕ";
                 case "Returning": return "ВОЗВРАЩЕНИЕ";

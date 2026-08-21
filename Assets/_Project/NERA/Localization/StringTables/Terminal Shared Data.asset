@@ -107,6 +107,10 @@ MonoBehaviour:
     m_Key: map.state.signalfound
     m_Metadata:
       m_Items: []
+  - m_Id: 1886380068
+    m_Key: map.state.locked
+    m_Metadata:
+      m_Items: []
   - m_Id: 8421105664
     m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_storagescreen_dropbutton_text_drop
     m_Metadata:

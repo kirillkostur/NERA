@@ -454,17 +454,6 @@ namespace NERA.Terminal
             else
                 progress = LocalizeState(drone.State.ToString());
 
-            if (drone != null)
-            {
-                progress += $"\nBATTERY - {drone.CurrentBatteryCharge:0}";
-                if (hasSelection)
-                {
-                    progress +=
-                        $" | REQUIRED - " +
-                        $"{drone.GetBatteryConsumption(selectedLocation):0.#}";
-                }
-            }
-
             TerminalUIUtility.SetText(droneProgress, progress);
         }
 

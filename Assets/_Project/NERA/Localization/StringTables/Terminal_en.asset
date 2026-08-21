@@ -124,6 +124,10 @@ MonoBehaviour:
     m_Localized: SIGNALFOUND
     m_Metadata:
       m_Items: []
+  - m_Id: 1886380068
+    m_Localized: LOCKED
+    m_Metadata:
+      m_Items: []
   - m_Id: 8421105664
     m_Localized: DROP
     m_Metadata:
