@@ -417,6 +417,7 @@ namespace NERA.Core
                 return true;
 
             SceneSpawnPoint match = null;
+            AutoSaveCheckpoint checkpointMatch = null;
             foreach (GameObject root in targetScene.GetRootGameObjects())
             {
                 foreach (SceneSpawnPoint spawnPoint in
@@ -441,9 +442,32 @@ namespace NERA.Core
 
                     match = spawnPoint;
                 }
+
+                foreach (AutoSaveCheckpoint checkpoint in
+                         root.GetComponentsInChildren<AutoSaveCheckpoint>(true))
+                {
+                    if (!string.Equals(
+                            checkpoint.CheckpointId,
+                            spawnPointId,
+                            StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (match != null || checkpointMatch != null)
+                    {
+                        Debug.LogError(
+                            $"BootInitializer: Scene '{targetScene.name}' " +
+                            $"has duplicate spawn point '{spawnPointId}'.",
+                            this);
+                        return false;
+                    }
+
+                    checkpointMatch = checkpoint;
+                }
             }
 
-            if (match == null)
+            if (match == null && checkpointMatch == null)
             {
                 Debug.LogError(
                     $"BootInitializer: Scene '{targetScene.name}' has no " +
@@ -464,7 +488,9 @@ namespace NERA.Core
                 return false;
             }
 
-            return match.TryTeleport(player);
+            return match != null
+                ? match.TryTeleport(player)
+                : checkpointMatch.TryTeleport(player);
         }
 
         private void RestorePresentationAfterTransition()

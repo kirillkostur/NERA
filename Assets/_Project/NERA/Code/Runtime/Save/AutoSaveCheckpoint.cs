@@ -1,4 +1,3 @@
-using NERA.Core;
 using NERA.Player;
 using UnityEngine;
 
@@ -14,16 +13,6 @@ namespace NERA.Save
 
         public string CheckpointId => checkpointId;
         public bool HasTriggered => triggered;
-
-        private void Start()
-        {
-            if (!SceneTransitionState.TryConsumeSpawnPoint(checkpointId))
-                return;
-
-            ParkourPlayerBridge player =
-                FindFirstObjectByType<ParkourPlayerBridge>();
-            player?.Teleport(transform.position, transform.rotation);
-        }
 
         private void OnTriggerEnter(Collider other)
         {
@@ -51,6 +40,21 @@ namespace NERA.Save
         public void ResetCheckpoint()
         {
             triggered = false;
+        }
+
+        public bool TryTeleport(ParkourPlayerBridge player)
+        {
+            if (player == null)
+            {
+                Debug.LogError(
+                    $"AutoSaveCheckpoint '{CheckpointId}': parkour player " +
+                    "not found.",
+                    this);
+                return false;
+            }
+
+            player.Teleport(transform.position, transform.rotation);
+            return true;
         }
     }
 }

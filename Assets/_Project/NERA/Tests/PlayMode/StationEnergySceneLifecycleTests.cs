@@ -535,6 +535,66 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator ContinueLoadsAutoSaveCheckpointAsSpawnPoint()
+        {
+            SaveSlotStorage.DeleteAllSlots();
+            string savePath = SaveSlotStorage.GetSlotPath(
+                SaveSlotStorage.DefaultSlot);
+            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+            File.WriteAllText(
+                savePath,
+                JsonUtility.ToJson(new SaveGameData
+                {
+                    checkpointSceneName = "Expedition_01",
+                    checkpointSpawnPointId = "checkpoint",
+                    checkpointUsesWorldPose = false
+                }));
+            GameSessionLaunchState.Request(
+                GameLaunchMode.Continue,
+                SaveSlotStorage.DefaultSlot);
+
+            SceneManager.LoadScene("MainScene");
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while ((BootInitializer.Instance == null ||
+                    BootInitializer.Instance.IsLoading) &&
+                   Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
+
+            BootInitializer runtime = BootInitializer.Instance;
+            Assert.That(runtime, Is.Not.Null);
+            Assert.That(runtime.IsLoading, Is.False, "Continue timed out.");
+            Assert.That(
+                runtime.LastTransitionResult,
+                Is.EqualTo(SceneTransitionResult.Success));
+            Assert.That(
+                runtime.CurrentGameplaySceneName,
+                Is.EqualTo("Expedition_01"));
+            Assert.That(
+                SceneManager.GetSceneByName("Expedition_01").isLoaded,
+                Is.True);
+
+            AutoSaveCheckpoint checkpoint =
+                Object.FindObjectsByType<AutoSaveCheckpoint>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .FirstOrDefault(candidate =>
+                        candidate.gameObject.scene.name == "Expedition_01" &&
+                        candidate.CheckpointId == "checkpoint");
+            ParkourPlayerBridge player =
+                Object.FindFirstObjectByType<ParkourPlayerBridge>();
+            Assert.That(checkpoint, Is.Not.Null);
+            Assert.That(player, Is.Not.Null);
+            Assert.That(
+                Vector3.Distance(
+                    player.transform.position,
+                    checkpoint.transform.position),
+                Is.LessThan(0.1f));
+            Assert.That(SceneTransitionState.HasPendingSpawnPoint, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator ReturningToStationDoesNotDuplicateEnergySources()
         {
             SceneManager.LoadScene("MainScene");
