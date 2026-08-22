@@ -3,6 +3,7 @@ using NERA.Energy;
 using NERA.Quests;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 namespace NERA.World
 {
@@ -61,6 +62,11 @@ namespace NERA.World
             TryGetFogMaterial(out Material material, out string propertyName)
                 ? material.GetFloat(propertyName)
                 : Config.ClearFogDensity;
+        public bool IsRenderingAllowedForActiveScene =>
+            !Application.isPlaying ||
+            StationEnvironmentController.IsPlayerStationSceneActive;
+        public bool IsSandstormRendererFeatureActive =>
+            Config.SandstormRendererFeature?.isActive == true;
 
         private void Awake()
         {
@@ -80,6 +86,8 @@ namespace NERA.World
 
         private void OnEnable()
         {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             if (Instance == this)
                 ApplyRenderingState();
         }
@@ -287,6 +295,12 @@ namespace NERA.World
 
         private void ApplyRenderingState()
         {
+            if (!IsRenderingAllowedForActiveScene)
+            {
+                DisableRenderingOutsideStation();
+                return;
+            }
+
             bool renderSandstorm =
                 controlSandstormRendering && IsSandstormActive;
             ScriptableRendererFeature feature =
@@ -314,6 +328,21 @@ namespace NERA.World
                 Config.ClearFogDensity,
                 Config.SandstormFogFadeDurationSeconds,
                 Config.ToggleRendererFeature);
+        }
+
+        private void DisableRenderingOutsideStation()
+        {
+            SetFogDensityImmediately(Config.ClearFogDensity);
+            ScriptableRendererFeature feature =
+                Config.SandstormRendererFeature;
+            if (feature != null)
+                feature.SetActive(false);
+        }
+
+        private void HandleActiveSceneChanged(Scene _, Scene __)
+        {
+            if (Instance == this)
+                ApplyRenderingState();
         }
 
         private void SetFogDensityImmediately(float density)
@@ -439,6 +468,7 @@ namespace NERA.World
 
         private void OnDisable()
         {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             fogTransitionActive = false;
             disableRendererFeatureAfterFogTransition = false;
             if (Instance == this && config != null)

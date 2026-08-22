@@ -1079,6 +1079,20 @@ namespace NERA.Tests
             ClearSingleton(typeof(StationSystemsController));
         }
 
+        [TestCase("Player_Station", true)]
+        [TestCase("Expedition_01", false)]
+        [TestCase("UnknownSignal_01", false)]
+        [TestCase("MainScene", false)]
+        [TestCase("Boot", false)]
+        public void StationVisualScopeOnlyIncludesPlayerStation(
+            string sceneName,
+            bool expected)
+        {
+            Assert.That(
+                StationEnvironmentController.IsPlayerStationScene(sceneName),
+                Is.EqualTo(expected));
+        }
+
         [Test]
         public void MultipleBatteriesShareCapacityAndInitialCharge()
         {

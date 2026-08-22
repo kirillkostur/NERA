@@ -687,6 +687,71 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator TimeOfDayVisualsAndVolumetricFogOnlyRunAtPlayerStation()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            BootInitializer runtime = BootInitializer.Instance;
+            StationEnvironmentController environment =
+                StationEnvironmentController.Instance;
+            StationWeatherController weather = StationWeatherController.Instance;
+            Assert.That(runtime, Is.Not.Null);
+            Assert.That(environment, Is.Not.Null);
+            Assert.That(weather, Is.Not.Null);
+            Assert.That(
+                SceneManager.GetActiveScene().name,
+                Is.EqualTo(StationEnvironmentController.PlayerStationSceneName));
+
+            environment.SetTime(12f);
+            weather.StopSandstorm();
+            Assert.That(weather.StartSandstorm(120f), Is.True);
+            weather.AdvanceSimulation(
+                weather.Config.SandstormFogFadeDurationSeconds * 2f);
+            Assert.That(
+                weather.IsSandstormRendererFeatureActive,
+                Is.True);
+
+            Assert.That(
+                runtime.LoadGameplayScene("Expedition_01", string.Empty),
+                Is.True);
+            yield return WaitForScene("Expedition_01");
+            yield return null;
+
+            float expeditionHour = environment.CurrentHour;
+            yield return new WaitForSeconds(0.2f);
+            Assert.That(
+                environment.CurrentHour,
+                Is.GreaterThan(expeditionHour));
+            Assert.That(
+                weather.IsSandstormRendererFeatureActive,
+                Is.False);
+            Assert.That(
+                weather.CurrentFogDensity,
+                Is.EqualTo(weather.Config.ClearFogDensity).Within(0.001f));
+
+            Assert.That(
+                runtime.LoadGameplayScene(
+                    StationEnvironmentController.PlayerStationSceneName,
+                    "Station_Start"),
+                Is.True);
+            yield return WaitForScene(
+                StationEnvironmentController.PlayerStationSceneName);
+            yield return null;
+
+            Assert.That(weather.IsSandstormActive, Is.True);
+            Assert.That(
+                weather.IsSandstormRendererFeatureActive,
+                Is.True);
+
+            weather.StopSandstorm();
+            weather.AdvanceSimulation(
+                weather.Config.SandstormFogFadeDurationSeconds * 2f);
+        }
+
+        [UnityTest]
         public IEnumerator FailedSceneTransitionKeepsCurrentSceneAndCheckpoint()
         {
             SceneManager.LoadScene("MainScene");

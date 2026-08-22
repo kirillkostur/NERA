@@ -1,6 +1,7 @@
 using System;
 using NERA.World;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NERA.Energy
 {
@@ -13,6 +14,8 @@ namespace NERA.Energy
     [DisallowMultipleComponent]
     public sealed class StationEnvironmentController : MonoBehaviour
     {
+        public const string PlayerStationSceneName = "Player_Station";
+
         [SerializeField, Range(0f, 24f)] private float currentHour = 12f;
         [SerializeField] private bool advanceTime = true;
         [SerializeField] private StationWeatherController weatherController;
@@ -44,6 +47,8 @@ namespace NERA.Energy
                 : StationEnvironmentConfig.LoadDefault();
         public StationWeatherController WeatherController =>
             ResolveWeatherController(false);
+        public static bool IsPlayerStationSceneActive =>
+            IsPlayerStationScene(SceneManager.GetActiveScene().name);
 
         private void Awake()
         {
@@ -72,6 +77,14 @@ namespace NERA.Energy
             currentHour = Mathf.Repeat(
                 currentHour + hoursPerSecond * Time.deltaTime,
                 24f);
+        }
+
+        public static bool IsPlayerStationScene(string sceneName)
+        {
+            return string.Equals(
+                sceneName,
+                PlayerStationSceneName,
+                StringComparison.Ordinal);
         }
 
         public void SetTime(float hour)

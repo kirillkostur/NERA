@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace NERA.Energy
 {
@@ -94,13 +95,21 @@ namespace NERA.Energy
 
         private void OnEnable()
         {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             CacheSunLight();
-            ApplyNow();
+            RefreshForActiveScene();
         }
 
         private void LateUpdate()
         {
-            if (Application.isPlaying || previewInEditMode)
+            if (Application.isPlaying)
+            {
+                RefreshForActiveScene();
+                return;
+            }
+
+            if (previewInEditMode)
                 ApplyNow();
         }
 
@@ -126,6 +135,12 @@ namespace NERA.Energy
         public void ApplyNow()
         {
             CacheSunLight();
+            if (Application.isPlaying &&
+                !StationEnvironmentController.IsPlayerStationSceneActive)
+            {
+                DisableStationVisuals();
+                return;
+            }
 
             StationEnvironmentController environment = ResolveEnvironment();
             evaluatedHour = ResolveHour(environment);
@@ -141,6 +156,34 @@ namespace NERA.Energy
             ApplySun(sunOrbit01);
             ApplyAmbient(sunOrbit01);
             ApplyFog(sunOrbit01);
+        }
+
+        private void RefreshForActiveScene()
+        {
+            if (Application.isPlaying &&
+                !StationEnvironmentController.IsPlayerStationSceneActive)
+            {
+                DisableStationVisuals();
+                return;
+            }
+
+            ApplyNow();
+        }
+
+        private void HandleActiveSceneChanged(Scene _, Scene __)
+        {
+            RefreshForActiveScene();
+        }
+
+        private void DisableStationVisuals()
+        {
+            CacheSunLight();
+            if (sunLight == null)
+                return;
+
+            sunLight.enabled = false;
+            if (assignAsRenderSettingsSun && RenderSettings.sun == sunLight)
+                RenderSettings.sun = null;
         }
 
         [ContextMenu("Use Current Time As Preview")]
@@ -268,6 +311,13 @@ namespace NERA.Energy
         {
             if (sunLight == null)
                 sunLight = GetComponent<Light>();
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            if (Application.isPlaying)
+                DisableStationVisuals();
         }
 
         private static float CalculateSunOrbit01(
