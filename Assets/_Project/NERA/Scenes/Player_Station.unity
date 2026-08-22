@@ -5545,14 +5545,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2395260431430439678, guid: 094953f99425221408d4425848e23d53, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.36694255
-      objectReference: {fileID: 0}
-    - target: {fileID: 2395260431430439678, guid: 094953f99425221408d4425848e23d53, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.10862642
-      objectReference: {fileID: 0}
     - target: {fileID: 3918468302866283554, guid: 094953f99425221408d4425848e23d53, type: 3}
       propertyPath: m_Name
       value: Station_Drone

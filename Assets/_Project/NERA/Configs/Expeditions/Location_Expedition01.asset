@@ -21,7 +21,7 @@ MonoBehaviour:
     assetPath: Assets/_Project/NERA/Scenes/Expedition_01.unity
   spawnPointId: Expedition01_Start
   discoverySource: 0
-  droneScanDuration: 3
+  droneScanDuration: 50
   requiredDroneTravelRange: 1
   requiredAntennaScanRange: 0
   initialState: 0

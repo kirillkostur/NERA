@@ -444,7 +444,7 @@ namespace NERA.Station
             if (type == StationSystemType.Drone &&
                 !active &&
                 DroneScanController.Instance != null &&
-                DroneScanController.Instance.State == DroneState.Scanning)
+                DroneScanController.Instance.IsExpeditionInProgress)
             {
                 return false;
             }

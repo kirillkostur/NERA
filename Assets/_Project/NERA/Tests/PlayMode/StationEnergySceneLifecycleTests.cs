@@ -22,6 +22,7 @@ using NERA.Quests;
 using NERA.Save;
 using NERA.Station;
 using NERA.UI;
+using NERA.World;
 using NUnit.Framework;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -1497,6 +1498,312 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator DroneWeatherExposureTracksPhysicalStationPresence()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            DroneScanController drone = DroneScanController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            StationWeatherController weather = StationWeatherController.Instance;
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(discovery, Is.Not.Null);
+            Assert.That(drone, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(weather, Is.Not.Null);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_drone",
+                    out MaintainableObject maintenance),
+                Is.True);
+
+            weather.StopSandstorm();
+            systems.ResetSystems();
+            energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
+            maintenance.SetCondition(1f);
+            discovery.RestoreDiscovered(Array.Empty<string>());
+
+            StationSystemDefinition definition =
+                systems.GetDefinition(StationSystemType.Drone);
+            float range = systems.GetStat(
+                StationSystemType.Drone,
+                definition.ObjectId,
+                StationObjectStat.TravelRange);
+            ExpeditionLocationData location = discovery.KnownLocations
+                .FirstOrDefault(candidate =>
+                    candidate != null &&
+                    candidate.DiscoverySource ==
+                        NERA.Locations.DiscoverySource.Drone &&
+                    candidate.RequiredDroneTravelRange <= range);
+            Assert.That(location, Is.Not.Null);
+
+            drone.RefreshAvailability();
+            Assert.That(weather.StartSandstorm(10f), Is.True);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+            Assert.That(drone.CanLaunchScan(location), Is.False);
+            Assert.That(drone.LaunchScan(location), Is.False);
+
+            Assert.That(weather.StopSandstorm(), Is.True);
+            maintenance.SetCondition(1f);
+            drone.RefreshAvailability();
+            yield return null;
+            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+            Assert.That(drone.LaunchScan(location), Is.True);
+
+            DroneAnimationView mainAnimation =
+                Object.FindObjectsByType<DroneAnimationView>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Single(view =>
+                        view.GetComponent<Animator>()
+                            .runtimeAnimatorController.name ==
+                        DroneAnimationView.MainControllerName);
+            mainAnimation.Start_Scan();
+            Assert.That(drone.IsAtStation, Is.False);
+
+            Assert.That(weather.StartSandstorm(10f), Is.True);
+            maintenance.AdvanceSandExposure(6f, 10f);
+            weather.AdvanceSimulation(6f);
+            Assert.That(maintenance.Condition, Is.EqualTo(1f));
+
+            drone.AdvanceScan(drone.CurrentScanDuration);
+            mainAnimation.End_Scan();
+            Assert.That(drone.IsAtStation, Is.True);
+
+            maintenance.AdvanceSandExposure(4f, 10f);
+            weather.AdvanceSimulation(4f);
+            Assert.That(
+                maintenance.Condition,
+                Is.EqualTo(0.6f).Within(0.001f));
+            Assert.That(maintenance.IsSandClogged, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator DroneAnimationsMirrorLaunchAndReturnInEveryView()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            DroneScanController drone = DroneScanController.Instance;
+            ExpeditionDiscoveryController discovery =
+                ExpeditionDiscoveryController.Instance;
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Assert.That(drone, Is.Not.Null);
+            Assert.That(discovery, Is.Not.Null);
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+
+            DroneAnimationView[] views =
+                Object.FindObjectsByType<DroneAnimationView>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            Assert.That(views, Has.Length.EqualTo(3));
+            Assert.That(
+                views.Count(view =>
+                    view.GetComponent<Animator>()
+                        .runtimeAnimatorController.name ==
+                    DroneAnimationView.MainControllerName),
+                Is.EqualTo(1));
+            Assert.That(
+                views.Count(view =>
+                    view.GetComponent<Animator>()
+                        .runtimeAnimatorController.name ==
+                    DroneAnimationView.MiniControllerName),
+                Is.EqualTo(2));
+
+            systems.ResetSystems();
+            energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_drone",
+                    out MaintainableObject maintenance),
+                Is.True);
+            maintenance.SetCondition(1f);
+            discovery.RestoreDiscovered(Array.Empty<string>());
+
+            StationSystemDefinition definition =
+                systems.GetDefinition(StationSystemType.Drone);
+            float range = systems.GetStat(
+                StationSystemType.Drone,
+                definition.ObjectId,
+                StationObjectStat.TravelRange);
+            ExpeditionLocationData location = discovery.KnownLocations
+                .FirstOrDefault(candidate =>
+                    candidate != null &&
+                    candidate.DiscoverySource ==
+                        NERA.Locations.DiscoverySource.Drone &&
+                    candidate.RequiredDroneTravelRange <= range);
+            Assert.That(location, Is.Not.Null);
+
+            drone.RefreshAvailability();
+            float chargeBeforeLaunch = drone.CurrentBatteryCharge;
+            Assert.That(drone.LaunchScan(location), Is.True);
+            yield return null;
+            AssertActiveDroneAnimation(
+                views,
+                DroneAnimationView.MainLaunchStateName,
+                DroneAnimationView.MiniLaunchStateName);
+
+            drone.AdvanceScan(location.DroneFlightDuration);
+            Assert.That(drone.ScanProgress, Is.EqualTo(0f));
+            Assert.That(
+                drone.CurrentBatteryCharge,
+                Is.EqualTo(chargeBeforeLaunch));
+            Assert.That(discovery.IsDiscovered(location), Is.False);
+
+            yield return new WaitForSeconds(
+                GetDroneAnimationEventTime(
+                    views,
+                    DroneAnimationView.MainLaunchStateName,
+                    "Start_Scan") + 0.1f);
+            Assert.That(
+                drone.CurrentBatteryCharge,
+                Is.LessThan(chargeBeforeLaunch),
+                "Start_Scan must begin the expedition and consume its charge.");
+
+            DroneAnimationView mainAnimationView = views.Single(view =>
+                view.GetComponent<Animator>()
+                    .runtimeAnimatorController.name ==
+                DroneAnimationView.MainControllerName);
+            DroneAnimationView miniAnimationView = views.First(view =>
+                view.gameObject.activeInHierarchy &&
+                view.GetComponent<Animator>()
+                    .runtimeAnimatorController.name ==
+                DroneAnimationView.MiniControllerName);
+            yield return new WaitForSeconds(1f);
+            miniAnimationView.gameObject.SetActive(false);
+            yield return null;
+            miniAnimationView.gameObject.SetActive(true);
+            yield return null;
+            AssertDroneViewsSynchronized(
+                mainAnimationView,
+                miniAnimationView,
+                DroneAnimationView.MainLaunchStateName,
+                DroneAnimationView.MiniLaunchStateName);
+
+            drone.AdvanceScan(location.DroneFlightDuration);
+            yield return null;
+            AssertActiveDroneAnimation(
+                views,
+                DroneAnimationView.MainReturnStateName,
+                DroneAnimationView.MiniReturnStateName);
+            Assert.That(discovery.IsDiscovered(location), Is.False);
+
+            yield return new WaitForSeconds(1f);
+            miniAnimationView.gameObject.SetActive(false);
+            yield return null;
+            miniAnimationView.gameObject.SetActive(true);
+            yield return null;
+            AssertDroneViewsSynchronized(
+                mainAnimationView,
+                miniAnimationView,
+                DroneAnimationView.MainReturnStateName,
+                DroneAnimationView.MiniReturnStateName);
+
+            yield return new WaitForSeconds(
+                GetDroneAnimationEventTime(
+                    views,
+                    DroneAnimationView.MainReturnStateName,
+                    "End_Scan") + 0.1f);
+            Assert.That(
+                discovery.IsDiscovered(location),
+                Is.True,
+                "End_Scan must commit the expedition result.");
+        }
+
+        [UnityTest]
+        public IEnumerator DroneUpgradeDoesNotPlayFlightAnimations()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            DroneScanController drone = DroneScanController.Instance;
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            Assert.That(drone, Is.Not.Null);
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+
+            systems.ResetSystems();
+            energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_drone",
+                    out MaintainableObject maintenance),
+                Is.True);
+            maintenance.SetCondition(1f);
+            drone.ResetBatteryCharge();
+            drone.RefreshAvailability();
+            yield return null;
+
+            DroneAnimationView[] views =
+                Object.FindObjectsByType<DroneAnimationView>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            Assert.That(views, Has.Length.EqualTo(3));
+            AssertDroneViewsAtHome(views);
+
+            StationSystemDefinition definition =
+                systems.GetDefinition(StationSystemType.Drone);
+            ItemData powerCore = Resources.Load<ItemCatalogData>(
+                "ItemCatalog_Default").Find("power_core_01");
+            EngineeringPartCompatibility compatibility = powerCore?
+                .EngineeringPartDefinition?.CompatibleInstallations
+                .FirstOrDefault(candidate =>
+                    candidate != null &&
+                    candidate.Matches(
+                        StationSystemType.Drone,
+                        definition.ObjectId,
+                        candidate.SlotId) &&
+                    definition.FindSlot(candidate.SlotId) != null &&
+                    candidate.Modifiers.Any(modifier =>
+                        modifier != null &&
+                        modifier.Stat == StationObjectStat.BatteryCharge &&
+                        modifier.Value > 0f));
+            Assert.That(powerCore, Is.Not.Null);
+            Assert.That(compatibility, Is.Not.Null);
+
+            float capacityBefore = drone.BatteryCapacity;
+            Assert.That(
+                systems.TryInstallParts(
+                    StationSystemType.Drone,
+                    definition.ObjectId,
+                    new[]
+                    {
+                        new StationPartInstallRequest(
+                            compatibility.SlotId,
+                            powerCore)
+                    },
+                    out string reason),
+                Is.True,
+                reason);
+            yield return null;
+
+            Assert.That(drone.BatteryCapacity, Is.GreaterThan(capacityBefore));
+            Assert.That(drone.IsExpeditionInProgress, Is.False);
+            AssertDroneViewsAtHome(views);
+        }
+
+        [UnityTest]
         public IEnumerator DroneCanSurveySecondLocationAfterRecharge()
         {
             SceneManager.LoadScene("MainScene");
@@ -1551,8 +1858,19 @@ namespace NERA.Tests
             drone.RefreshAvailability();
             yield return null;
 
+            DroneAnimationView mainAnimation =
+                Object.FindObjectsByType<DroneAnimationView>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Single(view =>
+                        view.GetComponent<Animator>()
+                            .runtimeAnimatorController.name ==
+                        DroneAnimationView.MainControllerName);
+
             Assert.That(drone.LaunchScan(first), Is.True);
+            mainAnimation.Start_Scan();
             drone.AdvanceScan(first.DroneFlightDuration);
+            mainAnimation.End_Scan();
             Assert.That(discovery.IsDiscovered(first), Is.True);
             Assert.That(drone.IsCharging, Is.True);
             Assert.That(drone.CanLaunchScan(second), Is.False);
@@ -1667,7 +1985,17 @@ namespace NERA.Tests
                 Is.True);
             Assert.That(drone.State, Is.EqualTo(DroneState.Scanning));
 
+            DroneAnimationView mainAnimation =
+                Object.FindObjectsByType<DroneAnimationView>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Single(view =>
+                        view.GetComponent<Animator>()
+                            .runtimeAnimatorController.name ==
+                        DroneAnimationView.MainControllerName);
+            mainAnimation.Start_Scan();
             drone.AdvanceScan(drone.CurrentScanDuration);
+            mainAnimation.End_Scan();
             Assert.That(drone.IsCharging, Is.True);
             Assert.That(
                 energy.ConnectedConsumerCount,
@@ -3047,6 +3375,126 @@ namespace NERA.Tests
             }
 
             return path;
+        }
+
+        private static void AssertActiveDroneAnimation(
+            IEnumerable<DroneAnimationView> views,
+            string mainStateName,
+            string miniStateName)
+        {
+            int checkedViews = 0;
+            foreach (DroneAnimationView view in views)
+            {
+                if (view == null || !view.gameObject.activeInHierarchy)
+                    continue;
+
+                Animator animator = view.GetComponent<Animator>();
+                string expectedState =
+                    animator.runtimeAnimatorController.name ==
+                    DroneAnimationView.MiniControllerName
+                        ? miniStateName
+                        : mainStateName;
+                int expectedHash = Animator.StringToHash(
+                    "Base Layer." + expectedState);
+                Assert.That(
+                    animator.GetCurrentAnimatorStateInfo(0).fullPathHash,
+                    Is.EqualTo(expectedHash),
+                    GetHierarchyPath(view.transform));
+                Assert.That(
+                    animator.speed,
+                    Is.EqualTo(1f),
+                    GetHierarchyPath(view.transform));
+                checkedViews++;
+            }
+
+            Assert.That(
+                checkedViews,
+                Is.GreaterThan(0),
+                "At least one loaded drone view must be active.");
+        }
+
+        private static void AssertDroneViewsAtHome(
+            IEnumerable<DroneAnimationView> views)
+        {
+            int checkedViews = 0;
+            foreach (DroneAnimationView view in views)
+            {
+                if (view == null || !view.gameObject.activeInHierarchy)
+                    continue;
+
+                Animator animator = view.GetComponent<Animator>();
+                string returnStateName =
+                    animator.runtimeAnimatorController.name ==
+                    DroneAnimationView.MiniControllerName
+                        ? DroneAnimationView.MiniReturnStateName
+                        : DroneAnimationView.MainReturnStateName;
+                int expectedHash = Animator.StringToHash(
+                    "Base Layer." + returnStateName);
+                AnimatorStateInfo state =
+                    animator.GetCurrentAnimatorStateInfo(0);
+                Assert.That(
+                    state.fullPathHash,
+                    Is.EqualTo(expectedHash),
+                    GetHierarchyPath(view.transform));
+                Assert.That(
+                    state.normalizedTime,
+                    Is.GreaterThanOrEqualTo(1f),
+                    GetHierarchyPath(view.transform));
+                Assert.That(
+                    animator.speed,
+                    Is.EqualTo(0f),
+                    GetHierarchyPath(view.transform));
+                checkedViews++;
+            }
+
+            Assert.That(
+                checkedViews,
+                Is.GreaterThan(0),
+                "At least one loaded drone view must be active.");
+        }
+
+        private static void AssertDroneViewsSynchronized(
+            DroneAnimationView mainView,
+            DroneAnimationView miniView,
+            string mainStateName,
+            string miniStateName)
+        {
+            Animator mainAnimator = mainView.GetComponent<Animator>();
+            Animator miniAnimator = miniView.GetComponent<Animator>();
+            AnimatorStateInfo mainState =
+                mainAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo miniState =
+                miniAnimator.GetCurrentAnimatorStateInfo(0);
+
+            Assert.That(
+                mainState.fullPathHash,
+                Is.EqualTo(Animator.StringToHash(
+                    "Base Layer." + mainStateName)));
+            Assert.That(
+                miniState.fullPathHash,
+                Is.EqualTo(Animator.StringToHash(
+                    "Base Layer." + miniStateName)));
+            Assert.That(
+                miniState.normalizedTime,
+                Is.EqualTo(mainState.normalizedTime).Within(0.05f));
+        }
+
+        private static float GetDroneAnimationEventTime(
+            IEnumerable<DroneAnimationView> views,
+            string clipName,
+            string functionName)
+        {
+            Animator mainAnimator = views
+                .Where(view => view != null)
+                .Select(view => view.GetComponent<Animator>())
+                .Single(animator =>
+                    animator.runtimeAnimatorController.name ==
+                    DroneAnimationView.MainControllerName);
+            AnimationClip clip = mainAnimator.runtimeAnimatorController
+                .animationClips
+                .Single(candidate => candidate.name == clipName);
+            return clip.events.Single(animationEvent =>
+                animationEvent.functionName == functionName).time;
         }
 
         private static IEnumerator WaitForScene(string sceneName)

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using NERA.Expeditions;
 using NERA.Energy;
 using NERA.Maintenance;
 using NERA.Quests;
 using NERA.Station;
+using NERA.World;
 using UnityEngine;
 
 namespace NERA.Drone
@@ -20,6 +22,7 @@ namespace NERA.Drone
         private ExpeditionLocationData scanLocation;
 
         public static DroneScanController Instance { get; private set; }
+        public static event Action<DroneScanController> InstanceChanged;
 
         public event Action<DroneState> StateChanged;
         public event Action<float> ScanProgressChanged;
@@ -69,12 +72,20 @@ namespace NERA.Drone
         public float RechargeRemaining => MissingBatteryCharge /
             Mathf.Max(EnergyConsumption, 0.01f);
         public bool IsCharging => State != DroneState.Scanning &&
+            !waitingForReturnAnimationEvent &&
             MissingBatteryCharge > ChargeEpsilon;
+        public bool IsExpeditionInProgress =>
+            State == DroneState.Scanning || waitingForReturnAnimationEvent;
+        public bool IsAtStation =>
+            !scanTimerRunning && !waitingForReturnAnimationEvent;
         public bool IsFlightReady
         {
             get
             {
                 CacheDependencies();
+                if (StationWeatherController.Instance?.IsSandstormActive == true)
+                    return false;
+
                 if (stationPower == null || !stationPower.IsPowered)
                     return false;
 
@@ -108,6 +119,10 @@ namespace NERA.Drone
         private float elapsedScanTime;
         private float currentBatteryCharge;
         private bool batteryInitialized;
+        private bool scanTimerRunning;
+        private bool waitingForReturnAnimationEvent;
+        private readonly HashSet<DroneAnimationView> animationDrivers =
+            new HashSet<DroneAnimationView>();
         private StationPowerController stationPower;
         private StationSystemsController stationSystems;
         private ExpeditionDiscoveryController discovery;
@@ -115,6 +130,14 @@ namespace NERA.Drone
         private float MissingBatteryCharge => Mathf.Max(
             0f,
             BatteryCapacity - CurrentBatteryCharge);
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+            InstanceChanged = null;
+        }
 
         private void Awake()
         {
@@ -125,6 +148,7 @@ namespace NERA.Drone
             }
 
             Instance = this;
+            InstanceChanged?.Invoke(this);
 
             EnsureBatteryInitialized();
             EnsureEnergyRegistration();
@@ -162,15 +186,17 @@ namespace NERA.Drone
 
             scanLocation = location;
             elapsedScanTime = 0f;
+            scanTimerRunning = false;
+            waitingForReturnAnimationEvent = false;
             SetState(DroneState.Scanning);
-            SetCurrentBatteryCharge(
-                CurrentBatteryCharge - GetBatteryConsumption(location));
-            EnsureEnergyRegistration();
             ScanProgressChanged?.Invoke(0f);
             Debug.Log(
-                $"DroneScanController: Scan started for '{location.LocationId}'.",
+                $"DroneScanController: Launch started for '{location.LocationId}'.",
                 this
             );
+
+            if (animationDrivers.Count == 0)
+                NotifyLaunchAnimationEvent();
             return true;
         }
 
@@ -178,7 +204,7 @@ namespace NERA.Drone
         {
             CacheDependencies();
 
-            return State != DroneState.Scanning &&
+            return State == DroneState.Ready &&
                 IsFlightReady &&
                 discovery != null &&
                 location != null &&
@@ -224,7 +250,9 @@ namespace NERA.Drone
 
         public void AdvanceScan(float deltaTime)
         {
-            if (State != DroneState.Scanning || deltaTime <= 0f)
+            if (State != DroneState.Scanning ||
+                !scanTimerRunning ||
+                deltaTime <= 0f)
                 return;
 
             if (!IsSystemEnabled)
@@ -237,7 +265,7 @@ namespace NERA.Drone
             ScanProgressChanged?.Invoke(ScanProgress);
 
             if (elapsedScanTime >= CurrentScanDuration)
-                CompleteScan();
+                BeginReturn();
         }
 
         public void AdvanceRecharge(float deltaTime)
@@ -274,7 +302,8 @@ namespace NERA.Drone
         {
             CacheDependencies();
 
-            if (State == DroneState.Scanning)
+            if (State == DroneState.Scanning ||
+                waitingForReturnAnimationEvent)
                 return;
 
             if (IsCharging)
@@ -286,14 +315,75 @@ namespace NERA.Drone
             SetState(IsFlightReady ? DroneState.Ready : DroneState.Locked);
         }
 
+        internal void RegisterAnimationDriver(DroneAnimationView driver)
+        {
+            if (driver != null)
+                animationDrivers.Add(driver);
+        }
+
+        internal void UnregisterAnimationDriver(DroneAnimationView driver)
+        {
+            if (driver == null || !animationDrivers.Remove(driver) ||
+                animationDrivers.Count != 0)
+            {
+                return;
+            }
+
+            if (State == DroneState.Scanning && !scanTimerRunning)
+                NotifyLaunchAnimationEvent();
+            else if (waitingForReturnAnimationEvent)
+                NotifyReturnAnimationEvent();
+        }
+
+        internal void NotifyLaunchAnimationEvent()
+        {
+            if (State != DroneState.Scanning ||
+                scanTimerRunning ||
+                scanLocation == null)
+            {
+                return;
+            }
+
+            scanTimerRunning = true;
+            SetCurrentBatteryCharge(
+                CurrentBatteryCharge - GetBatteryConsumption(scanLocation));
+            EnsureEnergyRegistration();
+            ScanProgressChanged?.Invoke(0f);
+            Debug.Log(
+                $"DroneScanController: Scan started for " +
+                $"'{scanLocation.LocationId}'.",
+                this);
+        }
+
+        internal void NotifyReturnAnimationEvent()
+        {
+            if (State != DroneState.ScanComplete ||
+                !waitingForReturnAnimationEvent)
+            {
+                return;
+            }
+
+            waitingForReturnAnimationEvent = false;
+            CompleteScan();
+        }
+
+        private void BeginReturn()
+        {
+            scanTimerRunning = false;
+            waitingForReturnAnimationEvent = true;
+            SetState(DroneState.ScanComplete);
+            Debug.Log("DroneScanController: Return started.", this);
+
+            if (animationDrivers.Count == 0)
+                NotifyReturnAnimationEvent();
+        }
+
         private void CompleteScan()
         {
             bool newlyDiscovered =
                 discovery != null &&
                 scanLocation != null &&
                 discovery.Discover(scanLocation);
-
-            SetState(DroneState.ScanComplete);
 
             EnergySystemController energy = EnergySystemController.Instance;
             EnsureEnergyRegistration();
@@ -392,6 +482,8 @@ namespace NERA.Drone
             energy?.SetConsumerActive(DroneChargerConsumerId, false);
             scanLocation = null;
             elapsedScanTime = 0f;
+            scanTimerRunning = false;
+            waitingForReturnAnimationEvent = false;
             SetState(IsFlightReady ? DroneState.Ready : DroneState.Locked);
         }
 
@@ -403,6 +495,10 @@ namespace NERA.Drone
                 HandleStationSystemsInstanceChanged;
             MaintainableObject.AnyConditionChanged +=
                 HandleMaintenanceConditionChanged;
+            StationWeatherController.AnySandstormStarted +=
+                HandleSandstormStarted;
+            StationWeatherController.AnySandstormEnded +=
+                HandleSandstormEnded;
             BindStationSystems(StationSystemsController.Instance);
         }
 
@@ -414,6 +510,10 @@ namespace NERA.Drone
                 HandleStationSystemsInstanceChanged;
             MaintainableObject.AnyConditionChanged -=
                 HandleMaintenanceConditionChanged;
+            StationWeatherController.AnySandstormStarted -=
+                HandleSandstormStarted;
+            StationWeatherController.AnySandstormEnded -=
+                HandleSandstormEnded;
             BindStationSystems(null);
         }
 
@@ -459,6 +559,16 @@ namespace NERA.Drone
             }
         }
 
+        private void HandleSandstormStarted(float _)
+        {
+            RefreshAvailability();
+        }
+
+        private void HandleSandstormEnded(bool _)
+        {
+            RefreshAvailability();
+        }
+
         private void SetState(DroneState newState)
         {
             if (State == newState)
@@ -482,7 +592,10 @@ namespace NERA.Drone
             );
 
             if (Instance == this)
+            {
                 Instance = null;
+                InstanceChanged?.Invoke(null);
+            }
         }
     }
 }

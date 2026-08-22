@@ -297,7 +297,7 @@ namespace NERA.Terminal
                 systems?.CanStart(type, selectedObjectId, out _) == true;
             bool interactable = controllable && canChangeState &&
                 !(type == StationSystemType.Drone &&
-                  DroneScanController.Instance?.State == DroneState.Scanning);
+                  DroneScanController.Instance?.IsExpeditionInProgress == true);
 
             bool visualStateChanged = renderedPowerSystem != selectedSystem ||
                 !string.Equals(

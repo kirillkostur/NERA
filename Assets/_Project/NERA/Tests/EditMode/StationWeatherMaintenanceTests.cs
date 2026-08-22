@@ -1,4 +1,5 @@
 using System.Reflection;
+using NERA.Drone;
 using NERA.Energy;
 using NERA.Maintenance;
 using NERA.Quests;
@@ -22,6 +23,7 @@ namespace NERA.Tests
         public void SetUp()
         {
             SetWeatherSingleton(null);
+            SetDroneSingleton(null);
 
             config = ScriptableObject.CreateInstance<StationEnvironmentConfig>();
             weatherRoot = new GameObject("Test_Weather");
@@ -42,6 +44,7 @@ namespace NERA.Tests
         public void TearDown()
         {
             SetWeatherSingleton(null);
+            SetDroneSingleton(null);
             Object.DestroyImmediate(deviceRoot);
             Object.DestroyImmediate(weatherRoot);
             Object.DestroyImmediate(config);
@@ -62,6 +65,42 @@ namespace NERA.Tests
             Assert.That(maintainable.Condition, Is.Zero.Within(0.001f));
             Assert.That(maintainable.SandAmount, Is.EqualTo(1f).Within(0.001f));
             Assert.That(maintainable.IsOperational, Is.False);
+        }
+
+        [Test]
+        public void DroneAwayForEntireSandstormDoesNotNeedCleaning()
+        {
+            DroneScanController drone = ConfigureDeviceAsDrone();
+            SetDroneAway(drone, true);
+
+            Assert.That(drone.IsAtStation, Is.False);
+            Assert.That(weather.StartSandstorm(10f), Is.True);
+
+            maintainable.AdvanceSandExposure(10f, 10f);
+            weather.AdvanceSimulation(10f);
+
+            Assert.That(maintainable.Condition, Is.EqualTo(1f));
+            Assert.That(maintainable.NeedsService, Is.False);
+        }
+
+        [Test]
+        public void DroneReturningDuringSandstormOnlyGetsRemainingExposure()
+        {
+            DroneScanController drone = ConfigureDeviceAsDrone();
+            SetDroneAway(drone, true);
+            Assert.That(weather.StartSandstorm(10f), Is.True);
+
+            weather.AdvanceSimulation(6f);
+            SetDroneAway(drone, false);
+            Assert.That(drone.IsAtStation, Is.True);
+
+            maintainable.AdvanceSandExposure(4f, 10f);
+            weather.AdvanceSimulation(4f);
+
+            Assert.That(
+                maintainable.Condition,
+                Is.EqualTo(0.6f).Within(0.001f));
+            Assert.That(maintainable.IsSandClogged, Is.False);
         }
 
         [Test]
@@ -301,6 +340,52 @@ namespace NERA.Tests
             StationWeatherController controller)
         {
             typeof(StationWeatherController)
+                .GetProperty(
+                    "Instance",
+                    BindingFlags.Static | BindingFlags.Public)
+                ?.GetSetMethod(true)
+                ?.Invoke(null, new object[] { controller });
+        }
+
+        private DroneScanController ConfigureDeviceAsDrone()
+        {
+            StationObjectIdentity identity =
+                deviceRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Drone,
+                "station_drone");
+
+            SerializedObject serialized = new SerializedObject(maintainable);
+            serialized.FindProperty("role").enumValueIndex =
+                (int)MaintenanceRole.Drone;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            maintainable.SetCondition(1f);
+
+            DroneScanController drone =
+                deviceRoot.AddComponent<DroneScanController>();
+            SetDroneSingleton(drone);
+            return drone;
+        }
+
+        private static void SetDroneAway(
+            DroneScanController drone,
+            bool isAway)
+        {
+            typeof(DroneScanController)
+                .GetField(
+                    "scanTimerRunning",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.SetValue(drone, isAway);
+            typeof(DroneScanController)
+                .GetField(
+                    "waitingForReturnAnimationEvent",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.SetValue(drone, false);
+        }
+
+        private static void SetDroneSingleton(DroneScanController controller)
+        {
+            typeof(DroneScanController)
                 .GetProperty(
                     "Instance",
                     BindingFlags.Static | BindingFlags.Public)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Drone;
 using NERA.World;
 using NERA.Quests;
 using NERA.Station;
@@ -30,6 +31,7 @@ namespace NERA.Maintenance
         private float cleaningStartCondition;
         private bool isCleaning;
         private bool participatedInCurrentSandstorm;
+        private bool continuouslyExposedDuringCurrentSandstorm;
         private StationObjectIdentity identity;
 
         private static readonly Dictionary<string, MaintainableObject>
@@ -188,8 +190,14 @@ namespace NERA.Maintenance
             float deltaTime,
             float fullContaminationDuration)
         {
-            if (!exposedToWeather ||
-                deltaTime <= 0f ||
+            if (!CanReceiveSandExposure())
+            {
+                if (IsSandstormActive())
+                    continuouslyExposedDuringCurrentSandstorm = false;
+                return;
+            }
+
+            if (deltaTime <= 0f ||
                 IsSandClogged)
             {
                 return;
@@ -278,19 +286,32 @@ namespace NERA.Maintenance
         private void HandleSandstormStarted(float _)
         {
             CancelCleaning(true);
-            participatedInCurrentSandstorm = exposedToWeather;
+            participatedInCurrentSandstorm = false;
+            continuouslyExposedDuringCurrentSandstorm =
+                CanReceiveSandExposure();
         }
 
         private void HandleSandstormEnded(bool completed)
         {
             if (completed &&
                 participatedInCurrentSandstorm &&
+                continuouslyExposedDuringCurrentSandstorm &&
                 !IsSandClogged)
             {
                 SetCondition(0f);
             }
 
             participatedInCurrentSandstorm = false;
+            continuouslyExposedDuringCurrentSandstorm = false;
+        }
+
+        private bool CanReceiveSandExposure()
+        {
+            if (!exposedToWeather)
+                return false;
+
+            return role != MaintenanceRole.Drone ||
+                DroneScanController.Instance?.IsAtStation != false;
         }
 
         private static bool IsSandstormActive()
@@ -428,6 +449,7 @@ namespace NERA.Maintenance
             StationWeatherController.AnySandstormEnded -=
                 HandleSandstormEnded;
             participatedInCurrentSandstorm = false;
+            continuouslyExposedDuringCurrentSandstorm = false;
             Unregister();
         }
 

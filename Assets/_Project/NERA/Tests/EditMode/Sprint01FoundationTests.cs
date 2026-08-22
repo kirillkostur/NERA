@@ -25,6 +25,7 @@ using NERA.Core;
 using NERA.Graphics;
 using NERA.Quests;
 using NERA.Save;
+using NERA.World;
 
 namespace NERA.Tests
 {
@@ -1546,6 +1547,52 @@ namespace NERA.Tests
             Assert.That(drone.CanLaunchScan(location), Is.False);
             Assert.That(drone.LaunchScan(location), Is.False);
             Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+        }
+
+        [Test]
+        public void DroneCannotLaunchDuringSandstorm()
+        {
+            GameObject weatherRoot = new GameObject("Test_DroneWeather");
+            StationEnvironmentConfig environmentConfig =
+                ScriptableObject.CreateInstance<StationEnvironmentConfig>();
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(StationWeatherController),
+                null);
+
+            try
+            {
+                StationWeatherController weather =
+                    weatherRoot.AddComponent<StationWeatherController>();
+                TestStationSystemsConfigFactory.SetSingleton(
+                    typeof(StationWeatherController),
+                    weather);
+                weather.Configure(environmentConfig);
+                weather.SetAutomaticWeatherEnabled(false);
+
+                power.RestorePower();
+                drone.RefreshAvailability();
+                Assert.That(drone.CanLaunchScan(location), Is.True);
+
+                Assert.That(weather.StartSandstorm(10f), Is.True);
+                drone.RefreshAvailability();
+                Assert.That(drone.IsFlightReady, Is.False);
+                Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+                Assert.That(drone.CanLaunchScan(location), Is.False);
+                Assert.That(drone.LaunchScan(location), Is.False);
+
+                Assert.That(weather.StopSandstorm(), Is.True);
+                drone.RefreshAvailability();
+                Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+                Assert.That(drone.CanLaunchScan(location), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(weatherRoot);
+                Object.DestroyImmediate(environmentConfig);
+                TestStationSystemsConfigFactory.SetSingleton(
+                    typeof(StationWeatherController),
+                    null);
+            }
         }
 
         [Test]
