@@ -329,6 +329,62 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator StationBakedLightingFollowsRealPowerAndWeather()
+        {
+            SceneManager.LoadScene("Boot");
+            yield return null;
+
+            Transform menuPanel = GameObject.Find("Canvas")
+                .transform.Find("Panel");
+            menuPanel.Find("RootButton/NewGameButton")
+                .GetComponent<Button>().onClick.Invoke();
+            Transform slotScreen = menuPanel.Find(
+                "ContinueScreen/background_Screen_station");
+            slotScreen.Find("Panel_Save_1")
+                .GetComponent<Button>().onClick.Invoke();
+            slotScreen.Find("ContinueButton")
+                .GetComponent<Button>().onClick.Invoke();
+
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationEnvironmentController environment =
+                StationEnvironmentController.Instance;
+            SwitchBakedLights lighting =
+                Object.FindFirstObjectByType<SwitchBakedLights>();
+
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(environment, Is.Not.Null);
+            Assert.That(lighting, Is.Not.Null);
+
+            energy.RestoreState(
+                energy.TotalCapacity,
+                energy.TotalBackupReserve,
+                false);
+            yield return null;
+            AssertLightingPreset(
+                lighting,
+                SwitchBakedLights.StationLightingMode.BackupPowerEmergency,
+                "backupPowerEmergency");
+
+            energy.SetGridEnabled(true);
+            yield return null;
+            AssertLightingPreset(
+                lighting,
+                SwitchBakedLights.StationLightingMode.Normal,
+                "normalOperation");
+
+            environment.SetWeather(StationWeather.Sandstorm);
+            yield return null;
+            AssertLightingPreset(
+                lighting,
+                SwitchBakedLights.StationLightingMode.LowEnergyWarning,
+                "lowEnergyWarning");
+        }
+
+        [UnityTest]
         public IEnumerator TerminalWorldDecorationFollowsPowerAndLastTab()
         {
             SceneManager.LoadScene("MainScene");
@@ -3661,6 +3717,67 @@ namespace NERA.Tests
                 $"Missing field {target.GetType().Name}.{fieldName}");
             field.SetValue(target, value);
         }
+
+        private static void AssertLightingPreset(
+            SwitchBakedLights lighting,
+            SwitchBakedLights.StationLightingMode expectedMode,
+            string presetFieldName)
+        {
+            FieldInfo presetField = typeof(SwitchBakedLights).GetField(
+                presetFieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(presetField, Is.Not.Null);
+            object preset = presetField.GetValue(lighting);
+            Assert.That(preset, Is.Not.Null);
+
+            FieldInfo colorsField = preset.GetType().GetField(
+                "lightmapColors",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(colorsField, Is.Not.Null);
+            Texture2D[] expectedColors =
+                (Texture2D[])colorsField.GetValue(preset);
+
+            Assert.That(lighting.CurrentMode, Is.EqualTo(expectedMode));
+            Assert.That(
+                LightmapSettings.lightmaps,
+                Has.Length.GreaterThanOrEqualTo(expectedColors.Length));
+
+            Scene stationScene = SceneManager.GetSceneByName("Player_Station");
+            Assert.That(stationScene.IsValid() && stationScene.isLoaded, Is.True);
+
+            Renderer[] stationRenderers = stationScene.GetRootGameObjects()
+                .SelectMany(root =>
+                    root.GetComponentsInChildren<Renderer>(true))
+                .Where(renderer =>
+                    renderer.name == "TestStation" ||
+                    renderer.name == "Station_Terminal")
+                .ToArray();
+            Assert.That(stationRenderers, Has.Length.EqualTo(2));
+
+            int firstStationLightmapIndex = stationRenderers.Min(
+                renderer => renderer.lightmapIndex);
+
+            foreach (Renderer stationRenderer in stationRenderers)
+            {
+                int localLightmapIndex =
+                    stationRenderer.lightmapIndex - firstStationLightmapIndex;
+                Assert.That(
+                    stationRenderer.lightmapIndex,
+                    Is.GreaterThanOrEqualTo(0).And.LessThan(
+                        LightmapSettings.lightmaps.Length),
+                    $"{stationRenderer.name} is not bound to a station lightmap");
+                Assert.That(
+                    localLightmapIndex,
+                    Is.GreaterThanOrEqualTo(0).And.LessThan(expectedColors.Length),
+                    $"{stationRenderer.name} uses an unexpected station lightmap index");
+                Assert.That(
+                    LightmapSettings.lightmaps[stationRenderer.lightmapIndex]
+                        .lightmapColor,
+                    Is.SameAs(expectedColors[localLightmapIndex]),
+                    $"{stationRenderer.name} uses a lightmap from another preset");
+            }
+        }
+
     }
 
     public sealed class ProximityTestInteractable : MonoBehaviour, IInteractable
