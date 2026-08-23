@@ -2585,7 +2585,7 @@ GameObject:
   - component: {fileID: 867753566}
   - component: {fileID: 867753565}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: SwitchBakedLight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6516,7 +6516,7 @@ GameObject:
   - component: {fileID: 1870488053}
   - component: {fileID: 1870488052}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: FogExclusionVolume
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
