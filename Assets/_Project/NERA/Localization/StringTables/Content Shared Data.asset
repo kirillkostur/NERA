@@ -771,6 +771,38 @@ MonoBehaviour:
     m_Key: target.unknownsignal12.name
     m_Metadata:
       m_Items: []
+  - m_Id: 4893286090137600
+    m_Key: item.solar_cells_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635072
+    m_Key: item.solar_cells_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635073
+    m_Key: item.solar_dust_repeller_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635074
+    m_Key: item.solar_dust_repeller_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635075
+    m_Key: item.solar_mppt_controller_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635076
+    m_Key: item.solar_mppt_controller_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635077
+    m_Key: item.solar_tracker_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635078
+    m_Key: item.solar_tracker_01.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

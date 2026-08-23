@@ -60,7 +60,7 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void StationConfigDefinesFivePhysicalUpgradeObjects()
+        public void StationConfigDefinesSixPhysicalUpgradeObjects()
         {
             StationSystemsConfig config = systems.Config;
             Assert.That(
@@ -79,13 +79,18 @@ namespace NERA.Tests
                 config.StationObjects.Count(
                     item => item.SystemType == StationSystemType.Battery),
                 Is.EqualTo(1));
+            Assert.That(
+                config.StationObjects.Count(
+                    item => item.SystemType == StationSystemType.SolarPanel),
+                Is.EqualTo(1));
 
             foreach (StationSystemDefinition definition in
                      config.StationObjects.Where(item =>
                          item.SystemType == StationSystemType.Turret ||
                          item.SystemType == StationSystemType.Antenna ||
                          item.SystemType == StationSystemType.Drone ||
-                         item.SystemType == StationSystemType.Battery))
+                         item.SystemType == StationSystemType.Battery ||
+                         item.SystemType == StationSystemType.SolarPanel))
             {
                 Assert.That(definition.ObjectId, Is.Not.Empty);
                 Assert.That(definition.Slots, Is.Not.Empty, definition.ObjectId);
@@ -115,6 +120,74 @@ namespace NERA.Tests
                 Is.EqualTo(17));
             Assert.That((int)StationObjectStat.BackupReserve, Is.EqualTo(18));
             Assert.That((int)StationObjectStat.PowerOutput, Is.EqualTo(19));
+            Assert.That((int)StationObjectStat.DustTolerance, Is.EqualTo(20));
+        }
+
+        [Test]
+        public void SolarPanelPartsImproveGenerationAndDustTolerance()
+        {
+            StationSystemDefinition panel = systems.Config.Find(
+                StationSystemType.SolarPanel,
+                "station_solar_01");
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel.Slots, Has.Count.EqualTo(4));
+            Assert.That(
+                panel.BaseStats.Select(stat => stat.Stat),
+                Is.EquivalentTo(new[]
+                {
+                    StationObjectStat.Generation,
+                    StationObjectStat.DustTolerance
+                }));
+
+            ItemData cells = LoadPart("Item_cells_01.asset");
+            ItemData dustProtection = LoadPart("Item_dust_repeller_01.asset");
+            ItemData optimizer = LoadPart("Item_mppt_controller_01.asset");
+            ItemData tracker = LoadPart("Item_tracker_01.asset");
+            var requests = new[]
+            {
+                new StationPartInstallRequest("Slot_1", cells),
+                new StationPartInstallRequest("Slot_2", dustProtection),
+                new StationPartInstallRequest("Slot_3", optimizer),
+                new StationPartInstallRequest("Slot_4", tracker)
+            };
+
+            Assert.That(
+                systems.TryInstallParts(
+                    StationSystemType.SolarPanel,
+                    panel.ObjectId,
+                    requests,
+                    out string reason),
+                Is.True,
+                reason);
+            Assert.That(
+                systems.GetStat(
+                    StationSystemType.SolarPanel,
+                    panel.ObjectId,
+                    StationObjectStat.Generation),
+                Is.EqualTo(63.25f).Within(0.001f));
+            Assert.That(
+                systems.GetStat(
+                    StationSystemType.SolarPanel,
+                    panel.ObjectId,
+                    StationObjectStat.DustTolerance),
+                Is.EqualTo(35f));
+        }
+
+        [Test]
+        public void DustToleranceRetainsPartOfDirtyPanelOutput()
+        {
+            Assert.That(
+                SolarPowerSource.CalculateConditionOutputMultiplier(0f, 0f),
+                Is.Zero);
+            Assert.That(
+                SolarPowerSource.CalculateConditionOutputMultiplier(0.5f, 0f),
+                Is.EqualTo(0.5f));
+            Assert.That(
+                SolarPowerSource.CalculateConditionOutputMultiplier(0f, 35f),
+                Is.EqualTo(0.35f).Within(0.001f));
+            Assert.That(
+                SolarPowerSource.CalculateConditionOutputMultiplier(1f, 35f),
+                Is.EqualTo(1f));
         }
 
         [TestCase(StationSystemType.SolarPanel, true)]

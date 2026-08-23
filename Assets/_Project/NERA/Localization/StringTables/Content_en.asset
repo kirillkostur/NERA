@@ -810,6 +810,40 @@ MonoBehaviour:
     m_Localized: '?'
     m_Metadata:
       m_Items: []
+  - m_Id: 4893286090137600
+    m_Localized: Photovoltaic Cells
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635072
+    m_Localized: High-efficiency photovoltaic cells increase the panel's power output.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635073
+    m_Localized: Dust Protection
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635074
+    m_Localized: An electrostatic field keeps the panel productive when covered in
+      dust.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635075
+    m_Localized: Power Optimizer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635076
+    m_Localized: Keeps the panel near its maximum power point as conditions change.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635077
+    m_Localized: Tracking Drive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4893286165635078
+    m_Localized: Tracks the sun to improve the panel's power output throughout the
+      day.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -75,7 +75,7 @@ Material:
     - _Brightness: 1
     - _Contrast: 1
     - _ContrastEM: -0.51
-    - _DissolveStrength: 0
+    - _DissolveStrength: 1
     - _EMStrength: 0.1
     - _MetalStrenght: 0.18
     - _NoiseScale: 35

@@ -97,6 +97,7 @@ namespace NERA.Editor.Localization
                 ["Finds unknown signals. Installed parts improve scan range and calibration."] = "Обнаруживает неизвестные сигналы. Установленные детали улучшают дальность сканирования и калибровку.",
                 ["Automatic defense platform. Uses the shared turret part layout."] = "Автоматическая защитная платформа. Использует общую схему деталей турелей.",
                 ["Generation"] = "Генерация",
+                ["Dust Tolerance"] = "Пылеустойчивость",
                 ["Capacity"] = "Ёмкость",
                 ["Backup Reserve"] = "Резервное питание",
                 ["Power Output"] = "Выходная мощность",
@@ -186,6 +187,14 @@ namespace NERA.Editor.Localization
                 ["item.voltage_regulator_01.name"] = "Стабилизатор напряжения",
                 ["item.voltage_regulator_01.description"] = "Стабилизирует напряжение батареи при пиковой нагрузке.",
                 ["station.battery.station_battery.description"] = "Накапливает выработанную энергию. Физические детали улучшают ёмкость, резервное питание и выходную мощность.",
+                ["item.solar_cells_01.name"] = "Фотоэлектрические элементы",
+                ["item.solar_cells_01.description"] = "Высокоэффективные фотоэлектрические элементы увеличивают выходную мощность панели.",
+                ["item.solar_dust_repeller_01.name"] = "Пылезащита",
+                ["item.solar_dust_repeller_01.description"] = "Электростатическое поле сохраняет производительность панели даже под слоем пыли.",
+                ["item.solar_mppt_controller_01.name"] = "Оптимизатор мощности",
+                ["item.solar_mppt_controller_01.description"] = "Поддерживает панель в точке максимальной мощности при изменении условий.",
+                ["item.solar_tracker_01.name"] = "Привод слежения",
+                ["item.solar_tracker_01.description"] = "Отслеживает положение солнца и повышает выработку панели в течение дня.",
                 ["item.advanced_stabilizer_01.name"] = "Улучшенный стабилизатор",
                 ["item.advanced_stabilizer_01.description"] = "Стабилизирует дрон в полёте и увеличивает дальность перемещения.",
                 ["item.capacitor_01.name"] = "Конденсатор",
@@ -542,6 +551,10 @@ namespace NERA.Editor.Localization
                 "Backup Reserve",
                 "Резервное питание");
             AddT("station.stat.poweroutput", "Power Output", "Выходная мощность");
+            AddT(
+                "station.stat.dusttolerance",
+                "Dust Tolerance",
+                "Пылеустойчивость");
             AddT(
                 "station.stat.currentconsumption",
                 "Current Consumption",

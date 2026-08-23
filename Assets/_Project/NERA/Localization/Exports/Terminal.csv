@@ -73,3 +73,4 @@ Calibrate to reveal a hidden signal on an opened sector.","","АНТЕННА
 "station.stat.backupreserve",339100000000023,"","Backup Reserve","","Резервное питание",""
 "station.stat.poweroutput",339100000000024,"","Power Output","","Выходная мощность",""
 "station.stat.currentconsumption",339100000000025,"","Current Consumption","","Текущее потребление",""
+"station.stat.dusttolerance",1483606793904128,"","Dust Tolerance","","Пылеустойчивость",""

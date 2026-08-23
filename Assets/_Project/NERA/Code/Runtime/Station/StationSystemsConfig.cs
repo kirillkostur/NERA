@@ -25,7 +25,8 @@ namespace NERA.Station
         BatteryCharge = 16,
         FlightEnergyConsumption = 17,
         BackupReserve = 18,
-        PowerOutput = 19
+        PowerOutput = 19,
+        DustTolerance = 20
     }
 
     [Serializable]

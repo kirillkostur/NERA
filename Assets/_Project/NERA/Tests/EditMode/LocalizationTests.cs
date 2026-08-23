@@ -273,7 +273,7 @@ namespace NERA.Tests
                 "t:ItemData",
                 new[] { engineeringPartsRoot });
 
-            Assert.That(guids, Has.Length.EqualTo(21));
+            Assert.That(guids, Has.Length.EqualTo(25));
             foreach (string guid in guids)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);

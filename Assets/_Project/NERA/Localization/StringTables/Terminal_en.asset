@@ -304,6 +304,10 @@ MonoBehaviour:
     m_Localized: Current Consumption
     m_Metadata:
       m_Items: []
+  - m_Id: 1483606793904128
+    m_Localized: Dust Tolerance
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

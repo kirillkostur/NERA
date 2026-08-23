@@ -70,8 +70,13 @@ namespace NERA.Energy
         private float EffectiveOutputMultiplier =>
             IsRequestedActive()
                 ? outputMultiplier * ConfiguredGenerationMultiplier *
-                  (maintenance != null ? maintenance.Condition : 1f)
+                  ConditionOutputMultiplier
                 : 0f;
+
+        private float ConditionOutputMultiplier =>
+            CalculateConditionOutputMultiplier(
+                maintenance != null ? maintenance.Condition : 1f,
+                ConfiguredDustTolerance);
 
         private float ConfiguredGenerationMultiplier
         {
@@ -91,6 +96,23 @@ namespace NERA.Energy
                     clearDayGeneration);
                 return Mathf.Max(0f, configuredGeneration / clearDayGeneration);
             }
+        }
+
+        private float ConfiguredDustTolerance =>
+            StationSystemsConfig.GetEffectiveStat(
+                StationSystemType.SolarPanel,
+                ResolvePanelId(),
+                StationObjectStat.DustTolerance);
+
+        public static float CalculateConditionOutputMultiplier(
+            float condition,
+            float dustTolerancePercent)
+        {
+            float resistance = Mathf.Clamp01(dustTolerancePercent / 100f);
+            return Mathf.Lerp(
+                resistance,
+                1f,
+                Mathf.Clamp01(condition));
         }
 
         private bool IsRequestedActive()

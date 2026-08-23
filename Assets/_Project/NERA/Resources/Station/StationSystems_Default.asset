@@ -26,7 +26,20 @@ MonoBehaviour:
       baseValue: 40
       unit: ' kW'
       decimals: 0
-    slots: []
+    - stat: 20
+      displayName: Dust Tolerance
+      baseValue: 0
+      unit: '%'
+      decimals: 0
+    slots:
+    - slotId: Slot_1
+      displayName: Photovoltaic Cells
+    - slotId: Slot_2
+      displayName: Dust Protection
+    - slotId: Slot_3
+      displayName: Power Optimizer
+    - slotId: Slot_4
+      displayName: Tracking Drive
   - systemType: 1
     objectId: station_battery
     displayName: BATTERY

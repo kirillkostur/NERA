@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   locationId: Expedition_01
   locationType: 0
-  displayName: "Expedition 01 \u2014 Ancient Outpost"
+  displayName: Ancient Outpost
   description: A newly mapped ancient site. Recover artifacts and return to the station.
   scene:
     assetGuid: d753564efe059ee43a9d56ec0301c496

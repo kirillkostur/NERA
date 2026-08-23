@@ -287,6 +287,10 @@ MonoBehaviour:
     m_Key: station.stat.currentconsumption
     m_Metadata:
       m_Items: []
+  - m_Id: 1483606793904128
+    m_Key: station.stat.dusttolerance
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
