@@ -6,6 +6,7 @@ using NERA.Graphics;
 using NERA.Localization;
 using NERA.Save;
 using TMPro;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -20,6 +21,13 @@ namespace NERA.UI
     {
         [Header("Scene Flow")]
         [SerializeField] private string runtimeSceneName = "MainScene";
+
+        [Header("Menu Cameras")]
+        [SerializeField] private CinemachineVirtualCameraBase rootMenuCamera;
+        [SerializeField] private CinemachineVirtualCameraBase saveSlotCamera;
+
+        private const int ActiveMenuCameraPriority = 10;
+        private const int InactiveMenuCameraPriority = 0;
 
         [Header("Optional Authored Root Buttons")]
         [SerializeField] private Button newGameButton;
@@ -105,6 +113,7 @@ namespace NERA.UI
             if (isLoading)
                 return;
 
+            ShowRootMenuCamera();
             rootButtons.SetActive(false);
             continueScreen.SetActive(false);
             exitScreen.SetActive(false);
@@ -117,6 +126,7 @@ namespace NERA.UI
             if (isLoading)
                 return;
 
+            ShowRootMenuCamera();
             continueScreen.SetActive(false);
             optionsScreen.SetActive(false);
             overwriteDialog.SetActive(false);
@@ -127,6 +137,7 @@ namespace NERA.UI
         public void ShowRootMenu()
         {
             selectedSlot = 0;
+            ShowRootMenuCamera();
             rootButtons.SetActive(true);
             continueScreen.SetActive(false);
             optionsScreen.SetActive(false);
@@ -167,6 +178,7 @@ namespace NERA.UI
 
             slotScreenMode = mode;
             selectedSlot = 0;
+            ShowSaveSlotCamera();
             rootButtons.SetActive(false);
             continueScreen.SetActive(true);
             optionsScreen.SetActive(false);
@@ -352,10 +364,20 @@ namespace NERA.UI
             optionsScreen = options.gameObject;
             exitScreen = exit.gameObject;
 
-            newGameButton ??= FindButton(root, "NewGameButton");
-            continueButton ??= FindButton(root, "ContinueButton");
-            optionsButton ??= FindButton(root, "OptionsButton");
-            exitButton ??= FindButton(root, "ExitButton");
+            ResolveMenuCameras();
+
+            Transform rootButtonContainer =
+                root.Find("background_button") ?? root;
+            newGameButton ??= FindButton(
+                rootButtonContainer,
+                "NewGameButton");
+            continueButton ??= FindButton(
+                rootButtonContainer,
+                "ContinueButton");
+            optionsButton ??= FindButton(
+                rootButtonContainer,
+                "OptionsButton");
+            exitButton ??= FindButton(rootButtonContainer, "ExitButton");
 
             Transform slotBackground =
                 slotScreen.Find("background_Screen_station");
@@ -427,6 +449,50 @@ namespace NERA.UI
             }
 
             return resolved;
+        }
+
+        private void ResolveMenuCameras()
+        {
+            Transform camerasRoot = GameObject.Find("VirtualCam")?.transform;
+            rootMenuCamera ??= camerasRoot
+                ?.Find("VirtualCam_01")
+                ?.GetComponent<CinemachineVirtualCameraBase>();
+            saveSlotCamera ??= camerasRoot
+                ?.Find("VirtualCam_02")
+                ?.GetComponent<CinemachineVirtualCameraBase>();
+
+            if (rootMenuCamera == null || saveSlotCamera == null)
+            {
+                Debug.LogWarning(
+                    "Main menu: VirtualCam_01 or VirtualCam_02 was not " +
+                    "found under VirtualCam. Menu camera " +
+                    "switching is disabled.",
+                    this);
+            }
+        }
+
+        private void ShowRootMenuCamera()
+        {
+            SetActiveMenuCamera(rootMenuCamera);
+        }
+
+        private void ShowSaveSlotCamera()
+        {
+            SetActiveMenuCamera(saveSlotCamera);
+        }
+
+        private void SetActiveMenuCamera(
+            CinemachineVirtualCameraBase activeCamera)
+        {
+            if (rootMenuCamera == null || saveSlotCamera == null)
+                return;
+
+            rootMenuCamera.Priority = activeCamera == rootMenuCamera
+                ? ActiveMenuCameraPriority
+                : InactiveMenuCameraPriority;
+            saveSlotCamera.Priority = activeCamera == saveSlotCamera
+                ? ActiveMenuCameraPriority
+                : InactiveMenuCameraPriority;
         }
 
         private void BindButtons()

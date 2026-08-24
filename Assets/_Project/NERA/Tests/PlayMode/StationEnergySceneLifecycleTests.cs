@@ -139,13 +139,21 @@ namespace NERA.Tests
             Transform continueScreen = panel.Find("ContinueScreen");
             Transform optionsScreen = panel.Find("OptionsScreen");
             Transform exitScreen = panel.Find("ExitScreen");
+            Transform rootButtonContainer = root.Find("background_button");
             Transform slotBackground = continueScreen.Find(
                 "background_Screen_station");
+            CinemachineVirtualCameraBase rootMenuCamera = GameObject
+                .Find("VirtualCam_01")
+                .GetComponent<CinemachineVirtualCameraBase>();
+            CinemachineVirtualCameraBase saveSlotCamera = GameObject
+                .Find("VirtualCam_02")
+                .GetComponent<CinemachineVirtualCameraBase>();
 
             Assert.That(root.gameObject.activeSelf, Is.True);
             Assert.That(continueScreen.gameObject.activeSelf, Is.False);
             Assert.That(optionsScreen.gameObject.activeSelf, Is.False);
             Assert.That(exitScreen.gameObject.activeSelf, Is.False);
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
 
             for (int slot = 1; slot <= SaveSlotStorage.SlotCount; slot++)
             {
@@ -155,27 +163,32 @@ namespace NERA.Tests
                     Is.Not.Null);
             }
 
-            root.Find("ContinueButton").GetComponent<Button>()
+            rootButtonContainer.Find("ContinueButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.False);
             Assert.That(continueScreen.gameObject.activeSelf, Is.True);
+            AssertActiveMenuCamera(saveSlotCamera, rootMenuCamera);
 
             slotBackground.Find("CloseButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.True);
             Assert.That(continueScreen.gameObject.activeSelf, Is.False);
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
 
-            root.Find("NewGameButton").GetComponent<Button>()
+            rootButtonContainer.Find("NewGameButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.False);
             Assert.That(continueScreen.gameObject.activeSelf, Is.True);
+            AssertActiveMenuCamera(saveSlotCamera, rootMenuCamera);
             slotBackground.Find("CloseButton").GetComponent<Button>()
                 .onClick.Invoke();
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
 
-            root.Find("OptionsButton").GetComponent<Button>()
+            rootButtonContainer.Find("OptionsButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.False);
             Assert.That(optionsScreen.gameObject.activeSelf, Is.True);
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
             Transform languageButton = optionsScreen.Find(
                 "background_Screen_station/LanguageButton");
             Assert.That(languageButton, Is.Not.Null);
@@ -195,14 +208,27 @@ namespace NERA.Tests
             optionsScreen.Find("background_Screen_station/CloseButton")
                 .GetComponent<Button>().onClick.Invoke();
 
-            root.Find("ExitButton").GetComponent<Button>()
+            rootButtonContainer.Find("ExitButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.True);
             Assert.That(exitScreen.gameObject.activeSelf, Is.True);
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
             exitScreen.Find("background_exit/NOButton")
                 .GetComponent<Button>().onClick.Invoke();
             Assert.That(root.gameObject.activeSelf, Is.True);
             Assert.That(exitScreen.gameObject.activeSelf, Is.False);
+            AssertActiveMenuCamera(rootMenuCamera, saveSlotCamera);
+        }
+
+        private static void AssertActiveMenuCamera(
+            CinemachineVirtualCameraBase activeCamera,
+            CinemachineVirtualCameraBase inactiveCamera)
+        {
+            Assert.That(activeCamera, Is.Not.Null);
+            Assert.That(inactiveCamera, Is.Not.Null);
+            Assert.That(
+                activeCamera.Priority.Value,
+                Is.GreaterThan(inactiveCamera.Priority.Value));
         }
 
         [UnityTest]
