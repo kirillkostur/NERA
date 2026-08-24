@@ -49,8 +49,12 @@ namespace Climbing
         private float smoothSpeed;
         private readonly RigidbodyInterpolation movementInterpolation =
             RigidbodyInterpolation.Interpolate;
+        private bool locomotionInterpolationDisabled;
+        private bool animationDrivenClimb;
 
         private const float AirMovementSweepPadding = 0.03f;
+        private const float MovementInputSqrThreshold = 0.0001f;
+        private const float HorizontalMovementSqrThreshold = 0.01f;
 
         public delegate void OnLandedDelegate();
         public delegate void OnFallDelegate();
@@ -118,11 +122,14 @@ namespace Climbing
 
         private void FixedUpdate()
         {
+            RefreshLocomotionInterpolation();
+
             //Limits player movement to avoid falling
             if (controller.isGrounded &&
-                (controller.characterInput.movement.sqrMagnitude > 0.0001f ||
+                (controller.characterInput.movement.sqrMagnitude >
+                     MovementInputSqrThreshold ||
                  new Vector2(rb.linearVelocity.x, rb.linearVelocity.z)
-                     .sqrMagnitude > 0.01f))
+                     .sqrMagnitude > HorizontalMovementSqrThreshold))
             {
                 limitMovement = CheckBoundaries();
             }
@@ -389,9 +396,54 @@ namespace Climbing
             if (rb == null)
                 return;
 
-            rb.interpolation = active
-                ? RigidbodyInterpolation.None
-                : movementInterpolation;
+            animationDrivenClimb = active;
+            ApplyRigidbodyInterpolation();
+        }
+
+        public void SetLocomotionInterpolation(bool moving)
+        {
+            rb ??= GetComponent<Rigidbody>();
+            if (rb == null)
+                return;
+
+            locomotionInterpolationDisabled = moving;
+            ApplyRigidbodyInterpolation();
+        }
+
+        private void RefreshLocomotionInterpolation()
+        {
+            if (rb == null || controller == null)
+                return;
+
+            bool movementAllowed =
+                !controller.dummy &&
+                controller.allowMovement &&
+                !controller.isVaulting &&
+                !stopMotion &&
+                controller.isGrounded;
+            bool hasMovementInput =
+                controller.characterInput != null &&
+                controller.characterInput.movement.sqrMagnitude >
+                    MovementInputSqrThreshold;
+            float horizontalSpeedSqr =
+                rb.linearVelocity.x * rb.linearVelocity.x +
+                rb.linearVelocity.z * rb.linearVelocity.z;
+
+            SetLocomotionInterpolation(
+                movementAllowed &&
+                (hasMovementInput ||
+                 horizontalSpeedSqr > HorizontalMovementSqrThreshold));
+        }
+
+        private void ApplyRigidbodyInterpolation()
+        {
+            RigidbodyInterpolation targetInterpolation =
+                animationDrivenClimb || locomotionInterpolationDisabled
+                    ? RigidbodyInterpolation.None
+                    : movementInterpolation;
+
+            if (rb.interpolation != targetInterpolation)
+                rb.interpolation = targetInterpolation;
         }
 
         public void EnableFeetIK()
