@@ -1,5 +1,7 @@
 # Parkour Player: устройство и настройка
 
+Updated: 2026-08-25
+
 ## Что используется сейчас
 
 Игровой персонаж NERA построен на Dynamic Parkour System. Старые
@@ -75,6 +77,19 @@ parkour. Gameplay-код не должен напрямую зависеть о�
 - во время виса `S`, `S+A` и `S+D` переходят к нижнему связанному уступу без
   удержания `C`;
 - `Space` сохраняет переходы вверх, а `C` без направления отпускает уступ.
+
+### Rigidbody interpolation
+
+Единственный motor `Rigidbody` на `PlayerModel` использует динамический режим:
+
+- во время наземной ходьбы/бега и пока сохраняется горизонтальная скорость —
+  `RigidbodyInterpolation.None`;
+- после полной остановки — `RigidbodyInterpolation.Interpolate`;
+- во время animation-driven climb — всегда `None`, независимо от locomotion.
+
+Переключение выполняется в `MovementCharacterController.FixedUpdate` и не
+требует AnimationEvent. Не меняйте interpolation параллельно из другого
+компонента: climb и locomotion уже объединены одним контроллером.
 
 IK рук и ног уступа вычисляется в обычном игровом обновлении, но применяется к
 `Animator` только из `OnAnimatorIK`. Записи IK из `Update` недопустимы: Unity
@@ -166,6 +181,18 @@ Parkour motor и ragdoll разделены намеренно:
 6. `NERA -> Build -> Windows x64`.
 
 Production-сборка по-прежнему запускается на High и с лимитом 100 FPS.
+
+Runtime performance правила:
+
+- `Camera.main` кешируется и повторно ищется только при потере камеры;
+- ground/ledge/slope проверки имеют короткие интервалы, заданные в профильных
+  controller;
+- `HandlePoints`, `HandlePointConnection`, `DrawLine` и
+  `DrawLineIndividual` являются authoring helpers и отключаются в Play Mode;
+- debug drawing по умолчанию выключен;
+- interaction сохраняет покадровое обнаружение для корректного prompt, но
+  кеширует `Collider -> IInteractable` и не делает obstruction raycast для
+  кандидатов за пределами дистанции.
 
 ## Что нельзя менять без регресса
 

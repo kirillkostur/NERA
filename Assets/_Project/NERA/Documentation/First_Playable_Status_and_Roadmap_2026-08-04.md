@@ -4,17 +4,17 @@
 Unity: 6000.0.71f1  
 Целевая платформа: Standalone Windows x64
 
-> Обновление baseline от 2026-08-14: продуктовая граница и Definition of Done
+> Обновление baseline от 2026-08-25: продуктовая граница и Definition of Done
 > этого документа остаются актуальными. Фактические test results, build scope,
 > save version, cleanup и технические приоритеты заменены документом
-> `Current_Project_Audit_2026-08-14.md`.
+> `Current_Project_Audit_2026-08-25.md`.
 
 ## Краткий вывод
 
 Проект имеет сильную системную основу, но первый полноценный срез ещё не собран как цельный пользовательский опыт.
 
 - Техническая база: `PARTIAL`; автоматическая регрессия: `RED` до исправления
-  текущих 9 failures.
+  текущих 8 failures.
 - Основной игровой цикл: `PARTIAL`.
 - Production-контент Station + Expedition 01: `NOT READY`.
 - Сохранение, checkpoint resume и rollback мира: `IMPLEMENTED / NEEDS FULL-FLOW QA`.
@@ -29,9 +29,8 @@ Unity: 6000.0.71f1
 - Git working tree был чист перед началом аудита; текущие изменения относятся
   только к документации.
 - Unity Console после проверки не содержит ошибок и предупреждений.
-- Unity Test Framework: 133/139 EditMode и 21/24 PlayMode passed. Один
-  PlayMode failure зависит от порядка и отдельно проходит; остальные failures
-  перечислены в актуальном аудите.
+- Unity Test Framework: 206/209 EditMode и 36/41 PlayMode passed. Текущие
+  failures и их классификация перечислены в актуальном аудите.
 - В Build Settings включены 23 сцены: Boot, MainScene, Player Station,
   Expedition 01-08 и Unknown Signal 01-12. Для First Playable нужен отдельный
   build profile из четырёх утверждённых сцен.
@@ -72,19 +71,19 @@ Expedition 02-08, Unknown Signal, полный набор улучшений с�
 | Boot/menu | PARTIAL | New Game/Continue с 3 слотами, overwrite confirmation, Options/Exit dialogs, additive launch и legacy migration в slot 1 | нет актуального standalone build smoke полного menu flow |
 | Player/movement | PARTIAL | единый Player prefab, parkour, камера, взаимодействие, оружие, ragdoll | требуется ручной production-route regression после свежих изменений |
 | Station | PARTIAL | питание, терминал, карта, дрон, лаборатория, storage, upgrades | сцена содержит тестовые предметы, отключённых врагов, `TestStation` и parkour-примеры |
-| Quest flow | PARTIAL | data-driven quests, 4 main quests, side quests, HUD, save version 19 и opt-in checkpoint после выбранных этапов | нет журнала/уведомлений; после анализа Blue IO отсутствует authored coda/следующая цель |
+| Quest flow | PARTIAL | data-driven quests, 4 main quests, side quests, HUD, save version 20 и opt-in checkpoint после выбранных этапов | нет журнала/уведомлений; после анализа Blue IO отсутствует authored coda/следующая цель |
 | Expedition 01 | PARTIAL | spawn/return, 2 Blue IO, loot, parkour geometry | production-сцена смешана с `Map/TestRoom` и parkour playground; нет цельного маршрута и presentation pass |
 | Combat | PROTOTYPE | hitscan weapon, projectiles, health, damage, enemy drop, death ragdoll и автоматический checkpoint recovery | нет health/damage HUD, hit/death feedback и death screen; AI движется напрямую к игроку без authored navigation/obstacle policy |
 | Inventory/research | PARTIAL | instance inventory, energy, laboratory analysis, library unlock, простой background save, per-slot rolling backups и checkpoint snapshot | нет полного player-facing результата и проверенного standalone resume pass |
-| World state | PARTIAL | `WorldItem`, `IOEnemyController`, булевы флаги дверей/головоломок и полный rollback после смерти сохраняются в version 19 | production-объектам нужны authored IDs; многосоставные состояния требуют отдельной модели |
+| World state | PARTIAL | `WorldItem`, `IOEnemyController`, булевы флаги дверей/головоломок и полный rollback после смерти сохраняются в version 20 | production-объектам нужны authored IDs; многосоставные состояния требуют отдельной модели |
 | Audio/VFX | NOT READY | предусмотрены отдельные hooks, есть базовые runtime materials/particles | в project content нет authored audio assets; combat/ambience/VFX pass не выполнен |
-| QA/performance | PARTIAL | 133/139 EditMode, 21/24 PlayMode, validator, PC quality presets | исправить stale/non-isolated tests; нет актуальной standalone full-flow сборки и performance capture |
+| QA/performance | PARTIAL | 206/209 EditMode, 36/41 PlayMode, validator, PC presets и Editor performance baseline | исправить stale/non-isolated tests; нет актуальной standalone full-flow и player-build GPU capture |
 
 ## Подтверждённые риски
 
 ### Закрыто в коде, требуется full-flow QA: одноразовый контент
 
-`SaveGameData` version 19 хранит consumed IDs `WorldItem`, defeated IDs
+`SaveGameData` version 20 хранит consumed IDs `WorldItem`, defeated IDs
 `IOEnemyController`, булевы флаги сюжетных объектов и динамическую позицию
 чекпоинта. Текущее состояние пишется фоном, а отдельный checkpoint snapshot
 откатывает inventory и мир вместе. Важный квест или головоломка могут сразу

@@ -1,5 +1,7 @@
 # Физические апгрейды объектов станции
 
+Updated: 2026-08-25
+
 Этот документ описывает актуальную систему апгрейдов без уровней и стадий.
 Апгрейд — это реальная `Engineering Part`, установленная в физический слот
 объекта. Деталь динамически появляется на объекте, изменяет его характеристики,
@@ -75,10 +77,6 @@ Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset
 единицы. Это относится, например, к `Fire Interval`, `Damage Taken`, расходу
 энергии и длительности калибровки.
 
-У турели `Aim Tolerance` задаёт допустимое горизонтальное отклонение ствола от
-цели в градусах. Турель не стреляет, пока направление `Muzzle.forward` не
-войдёт в этот угол. Рекомендуемое базовое значение — `5 deg`.
-
 ### Слоты объекта
 
 Каждый элемент `Physical Upgrade Slots` содержит:
@@ -90,15 +88,16 @@ Assets/_Project/NERA/Resources/Station/StationSystems_Default.asset
 но каждый объявленный слот должен иметь соответствующий `StationUpgradeSlot`
 на физическом объекте и на его терминальном превью.
 
-Текущая раскладка в `StationSystems_Default` на 2026-08-14:
+Текущая раскладка в `StationSystems_Default` на 2026-08-25:
 
 | Объект | Слоты |
 |---|---|
+| Солнечная панель | `Slot_1` Photovoltaic Cells, `Slot_2` Dust Protection, `Slot_3` Power Optimizer, `Slot_4` Tracking Drive |
 | Turret 1 | `Slot_1` Chassis, `Slot_2` Cooling, `Slot_3` Emitter Damage, `Slot_4` Sensor, `Slot_5` Servo, `Slot_6` Servo Drive |
 | Turret 2 | те же `Slot_1..Slot_6` и дополнительный `Slot_7` Emitter Damage |
 | Антенна | `Slot_1` Antenna Array, `Slot_2` Calibration Module, `Slot_3` Signal Amplifier, `Slot_4` Signal Processor |
 | Дрон | `Slot_1` Advanced Stabilizer, `Slot_2` Capacitor, `Slot_3` Capacitor, `Slot_4` Power Core, `Slot_5` Power Core, `Slot_6` Propulsion, `Slot_7` Sensor Array |
-| Батарея | `Slot_1` Capacitor bank, `Slot_2` Reinforced housing, `Slot_3` Thermal pack |
+| Батарея | `Slot_1` Energy Cells, `Slot_2` Energy Cells, `Slot_3` Cooling System, `Slot_4` Power Bus, `Slot_5` Power Controller, `Slot_6` Power Converter, `Slot_7` Voltage Regulator |
 
 Это не программный лимит и не универсальная схема. Таблица является снимком
 текущего центрального конфига; при изменении слотов одновременно обновите
@@ -128,6 +127,12 @@ Station_Object
 - профильный компонент объекта, например `StationTurretController`;
 - `MaintainableObject`, если объект может ломаться;
 - коллайдер для обычного взаимодействия игрока.
+
+На upgradeable object должен находиться один `StationUpgradeableObject`.
+`StationDeviceInteractable` на тот же объект добавлять не нужно: upgradeable
+component уже объединяет обслуживание, запуск/восстановление питания и вход в
+режим апгрейда. Два interactable на одном collider создадут конкурирующие
+prompts и неоднозначный target.
 
 ### StationObjectIdentity
 
@@ -346,8 +351,9 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 
 | Объект | Характеристики |
 |---|---|
-| Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Aim Tolerance`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Consumption`, `Damage Taken` |
-| Батарея | `Capacity`, `Initial Charge` |
+| Солнечная панель | `Generation`, `Dust Tolerance` |
+| Турель | `Damage`, `Detection Range`, `Rotation Speed`, `Fire Interval`, `Idle Energy Consumption`, `Firing Energy Per Shot`, `Damage Taken` |
+| Батарея | `Capacity`, `Backup Reserve`, `Power Output` |
 | Дрон | `Travel Range`, `Battery Charge`, `Energy Consumption`, `Flight Energy Consumption` |
 | Антенна | `Scan Range`, `Calibration Energy Consumption`, `Calibration Duration` |
 
@@ -364,6 +370,46 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 Терминал автоматически отображает эффективные значения всех характеристик,
 которые перечислены в `Base Object Stats`.
 
+### Настройка солнечной панели
+
+Центральный объект — `station_solar_01`. Базовые характеристики:
+
+- `Generation = 40 kW`;
+- `Dust Tolerance = 0%`.
+
+Текущие детали:
+
+| Item Id | Slot | Modifier |
+|---|---|---|
+| `solar_cells_01` | `Slot_1` | Generation / Add / `10` |
+| `solar_dust_repeller_01` | `Slot_2` | Dust Tolerance / Add / `35` |
+| `solar_mppt_controller_01` | `Slot_3` | Generation / Add / `5` |
+| `solar_tracker_01` | `Slot_4` | Generation / Multiply / `1.15` |
+
+Полная Generation рассчитывается по общему правилу:
+
+```text
+(40 + 10 + 5) × 1.15 = 63.25 kW
+```
+
+`Dust Tolerance` не замедляет загрязнение и не добавляет condition. Она задаёт
+минимальную долю генерации, которую сохраняет грязная панель:
+
+```text
+resistance = Dust Tolerance / 100
+output multiplier = Lerp(resistance, 1, condition)
+```
+
+При `Dust Tolerance = 35%`:
+
+- condition `1.0` → `100%` потенциальной генерации;
+- condition `0.5` → `67.5%`;
+- condition `0.0` → `35%`.
+
+Потенциальная Generation сначала учитывает установленные детали, затем
+weather generation и condition multiplier. Состояние панели обновляется через
+`SolarPowerSource`, который подписан на station/energy lifecycle events.
+
 ### Настройка дрона и экспедиций
 
 Базовые параметры дрона находятся в `StationSystems_Default` у объекта
@@ -375,7 +421,7 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
   и сколько заряда в секунду получает дрон;
 - `Flight Energy Consumption` — сколько заряда дрон тратит за секунду полёта.
 
-Текущий tuning snapshot на 2026-08-14: `Battery Charge = 200`,
+Текущий tuning snapshot на 2026-08-25: `Battery Charge = 200`,
 `Energy Consumption = 3`, `Flight Energy Consumption = 3`. Эти числа не
 зашиты в коде и могут меняться; источником истины всегда является
 `StationSystems_Default`.

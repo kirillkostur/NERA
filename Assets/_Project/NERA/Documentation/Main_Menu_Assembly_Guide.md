@@ -1,6 +1,6 @@
 # NERA Main Menu Assembly
 
-Updated: 2026-08-04
+Updated: 2026-08-25
 
 ## Scene ownership
 
@@ -13,6 +13,8 @@ Build index 0. Contains only the main-menu presentation and its local input:
 - `Directional Light`;
 - `EventSystem`;
 - the authored menu Canvas, background and animation.
+- `TestStation` and `Plane` for the 3D menu presentation;
+- `VirtualCam/VirtualCam_01` and `VirtualCam_02`.
 
 Do not put Player, GameplayHUD, save/progression services or station systems in
 Boot.
@@ -38,10 +40,10 @@ never moved to `DontDestroyOnLoad`.
 automatically. Its serialized root-button references remain optional. Keep these
 stable object names:
 
-- `RootButton/NewGameButton`;
-- `RootButton/ContinueButton`;
-- `RootButton/OptionsButton`;
-- `RootButton/ExitButton`;
+- `RootButton/background_button/NewGameButton`;
+- `RootButton/background_button/ContinueButton`;
+- `RootButton/background_button/OptionsButton`;
+- `RootButton/background_button/ExitButton`;
 - `ContinueScreen/background_Screen_station`;
 - `OptionsScreen/background_Screen_station`;
 - `ExitScreen/background_exit`.
@@ -68,6 +70,29 @@ Menu behavior:
 - root `OptionsButton` opens the placeholder `OptionsScreen`; its
   `ContinueButton` is reserved for future settings confirmation;
 - root `ExitButton` opens `ExitScreen`; `YES` exits and `NO` closes the warning.
+
+## Boot camera switching
+
+`MainMenuController` switches only Cinemachine priority:
+
+- `VirtualCam_01`: priority `10` on RootButton, Options and Exit;
+- `VirtualCam_02`: priority `10` on the New Game/Continue slot screen;
+- inactive camera: priority `0`;
+- Close/Back returns priority to `VirtualCam_01`.
+
+The cameras may be assigned to `Root Menu Camera` and `Save Slot Camera` on
+`MainMenuFlow`. If references are empty, the controller resolves them by the
+stable paths under `VirtualCam`.
+
+Camera interpolation does not belong to `MainMenuController`. It is configured
+on `MainMenuCamera/CinemachineBrain` through
+`Resources/MainMenuCamera Custom Blends.asset`. The current custom blend uses
+2 seconds. Change the transition duration in that asset; do not add another
+lerp or coroutine to the menu code.
+
+Automated tests should open the menu through `MainMenuController` or use a
+recursive button helper. The pre-3D-menu path `RootButton/NewGameButton` is no
+longer valid.
 
 ## Save location and migration policy
 

@@ -1,6 +1,6 @@
 # NERA PC Quality Presets
 
-Updated: 2026-07-28  
+Updated: 2026-08-25
 Target: Standalone PC, URP 17 / Unity 6000.0
 
 ## Preset baseline
@@ -76,6 +76,11 @@ coverage and profiling justify them. Verify transitions in motion and keep
 cross-fade enabled.
 
 ## Profiling gate
+
+Текущий Editor baseline после runtime-оптимизации находится в
+`Runtime_Performance_Baseline_2026-08-24.md`. Он подтверждает снижение
+`BehaviourUpdate` и GC, но не заменяет player-build GPU baseline. В частности,
+Editor Render Thread показал высокую вариативность при неизменных draw calls.
 
 Before changing these values globally:
 
