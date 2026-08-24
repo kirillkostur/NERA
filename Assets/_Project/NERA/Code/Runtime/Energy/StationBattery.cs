@@ -13,6 +13,7 @@ namespace NERA.Energy
         private void OnEnable()
         {
             identity = GetComponent<StationObjectIdentity>();
+            EnergySystemController.InstanceChanged += HandleEnergyChanged;
             StationSystemsController.InstanceChanged += HandleSystemsChanged;
             BindSystems(StationSystemsController.Instance);
             Register();
@@ -23,9 +24,10 @@ namespace NERA.Energy
             Register();
         }
 
-        private void Update()
+        private void HandleEnergyChanged(EnergySystemController energy)
         {
-            if (registeredEnergy != EnergySystemController.Instance)
+            registeredEnergy = null;
+            if (energy != null)
                 Register();
         }
 
@@ -79,6 +81,7 @@ namespace NERA.Energy
 
         private void OnDisable()
         {
+            EnergySystemController.InstanceChanged -= HandleEnergyChanged;
             StationSystemsController.InstanceChanged -= HandleSystemsChanged;
             if (subscribedSystems != null)
                 subscribedSystems.SystemsChanged -= Register;

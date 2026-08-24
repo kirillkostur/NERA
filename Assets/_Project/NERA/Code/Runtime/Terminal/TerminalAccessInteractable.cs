@@ -25,6 +25,8 @@ namespace NERA.Terminal
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
         private int decorScreenIndex = StationScreenIndex;
+        private Camera cachedBrainCamera;
+        private CinemachineBrain cachedBrain;
         public float CameraBlendTimeout => cameraBlendTimeout;
 
         private void Awake()
@@ -35,14 +37,10 @@ namespace NERA.Terminal
 
         private void OnEnable()
         {
+            StationPowerController.InstanceChanged +=
+                HandlePowerControllerInstanceChanged;
             BindPowerController(StationPowerController.Instance);
             RefreshPoweredDecoration();
-        }
-
-        private void Update()
-        {
-            if (subscribedPower != StationPowerController.Instance)
-                BindPowerController(StationPowerController.Instance);
         }
 
         public override InteractionPrompt GetPrompt()
@@ -141,11 +139,15 @@ namespace NERA.Terminal
             if (terminalCamera == null || player?.GameplayCamera == null)
                 return true;
 
-            CinemachineBrain brain =
-                player.GameplayCamera.GetComponent<CinemachineBrain>();
-            return brain == null ||
-                !brain.IsBlending && ReferenceEquals(
-                    brain.ActiveVirtualCamera,
+            if (cachedBrainCamera != player.GameplayCamera)
+            {
+                cachedBrainCamera = player.GameplayCamera;
+                cachedBrain = cachedBrainCamera.GetComponent<CinemachineBrain>();
+            }
+
+            return cachedBrain == null ||
+                !cachedBrain.IsBlending && ReferenceEquals(
+                    cachedBrain.ActiveVirtualCamera,
                     terminalCamera);
         }
 
@@ -180,6 +182,12 @@ namespace NERA.Terminal
             if (!powered)
                 decorScreenIndex = StationScreenIndex;
             ApplyPowerState(powered);
+        }
+
+        private void HandlePowerControllerInstanceChanged(
+            StationPowerController power)
+        {
+            BindPowerController(power);
         }
 
         private void RefreshPoweredDecoration()
@@ -226,6 +234,8 @@ namespace NERA.Terminal
 
         private void OnDisable()
         {
+            StationPowerController.InstanceChanged -=
+                HandlePowerControllerInstanceChanged;
             TerminalUIScreen.Instance?.HandleTerminalUnavailable(this);
             EndTerminalView();
 

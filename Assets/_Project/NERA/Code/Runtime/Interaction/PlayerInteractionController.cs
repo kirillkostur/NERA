@@ -7,6 +7,20 @@ namespace NERA.Interaction
     [DisallowMultipleComponent]
     public sealed class PlayerInteractionController : MonoBehaviour
     {
+        private readonly struct CachedInteractable
+        {
+            public readonly MonoBehaviour Behaviour;
+            public readonly IInteractable Interactable;
+
+            public CachedInteractable(
+                MonoBehaviour behaviour,
+                IInteractable interactable)
+            {
+                Behaviour = behaviour;
+                Interactable = interactable;
+            }
+        }
+
         [Header("Proximity Detection")]
         [SerializeField] private Vector3 detectionOffset =
             new Vector3(0f, 0.9f, 0f);
@@ -30,6 +44,8 @@ namespace NERA.Interaction
         private readonly RaycastHit[] obstructionBuffer = new RaycastHit[16];
         private readonly List<MonoBehaviour> componentBuffer =
             new List<MonoBehaviour>(16);
+        private readonly Dictionary<Collider, CachedInteractable>
+            interactableCache = new Dictionary<Collider, CachedInteractable>();
         private IInteractable currentInteractable;
         private IInteractable activeInteractable;
         private float holdElapsed;
@@ -59,6 +75,7 @@ namespace NERA.Interaction
         {
             CancelActiveInteraction();
             SetCurrentInteractable(null);
+            interactableCache.Clear();
         }
 
         private void DetectInteractable()
@@ -90,6 +107,15 @@ namespace NERA.Interaction
                 if (interactable == null)
                     continue;
 
+                float allowedDistance =
+                    ReferenceEquals(interactable, currentInteractable)
+                        ? releaseDistance
+                        : interactionDistance;
+                Vector3 targetPoint = candidateCollider.ClosestPoint(origin);
+                float sqrDistance = (targetPoint - origin).sqrMagnitude;
+                if (sqrDistance > allowedDistance * allowedDistance)
+                    continue;
+
                 InteractionPrompt prompt = interactable.GetPrompt();
                 if (!prompt.IsVisible)
                     continue;
@@ -97,18 +123,11 @@ namespace NERA.Interaction
                 if (!HasClearPath(
                         origin,
                         candidateCollider,
-                        interactable))
+                        interactable,
+                        targetPoint))
                     continue;
 
-                float allowedDistance =
-                    ReferenceEquals(interactable, currentInteractable)
-                        ? releaseDistance
-                        : interactionDistance;
-                float distance = Vector3.Distance(
-                    origin,
-                    candidateCollider.ClosestPoint(origin));
-                if (distance > allowedDistance)
-                    continue;
+                float distance = Mathf.Sqrt(sqrDistance);
 
                 if (prompt.IsAvailable)
                 {
@@ -144,12 +163,12 @@ namespace NERA.Interaction
         private bool HasClearPath(
             Vector3 origin,
             Collider targetCollider,
-            IInteractable target)
+            IInteractable target,
+            Vector3 targetPoint)
         {
             if (obstructionMask.value == 0)
                 return true;
 
-            Vector3 targetPoint = targetCollider.ClosestPoint(origin);
             Vector3 offset = targetPoint - origin;
             float distance = offset.magnitude;
             if (distance <= 0.01f)
@@ -180,6 +199,22 @@ namespace NERA.Interaction
 
         private IInteractable FindInteractable(Collider hitCollider)
         {
+            if (hitCollider == null)
+                return null;
+
+            if (interactableCache.TryGetValue(
+                    hitCollider,
+                    out CachedInteractable cached))
+            {
+                if (cached.Behaviour != null &&
+                    cached.Behaviour.isActiveAndEnabled)
+                {
+                    return cached.Interactable;
+                }
+
+                interactableCache.Remove(hitCollider);
+            }
+
             componentBuffer.Clear();
             hitCollider.GetComponentsInParent(true, componentBuffer);
 
@@ -188,6 +223,8 @@ namespace NERA.Interaction
                 if (behaviour is IInteractable interactable &&
                     behaviour.isActiveAndEnabled)
                 {
+                    interactableCache[hitCollider] =
+                        new CachedInteractable(behaviour, interactable);
                     return interactable;
                 }
             }

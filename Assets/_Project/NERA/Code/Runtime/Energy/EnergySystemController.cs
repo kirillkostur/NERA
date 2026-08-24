@@ -37,6 +37,7 @@ namespace NERA.Energy
         [SerializeField] private bool gridEnabled;
         [SerializeField] private float currentEnergy;
         [SerializeField] private float currentBackupReserve;
+        [SerializeField, Min(0.02f)] private float simulationInterval = 0.1f;
 
         private readonly Dictionary<string, BatteryRecord> batteries =
             new Dictionary<string, BatteryRecord>(StringComparer.Ordinal);
@@ -44,6 +45,14 @@ namespace NERA.Energy
             new Dictionary<string, SolarRecord>(StringComparer.Ordinal);
         private readonly Dictionary<string, ConsumerRecord> consumers =
             new Dictionary<string, ConsumerRecord>(StringComparer.Ordinal);
+        private readonly List<KeyValuePair<string, ConsumerRecord>>
+            eligibleConsumers = new List<KeyValuePair<string, ConsumerRecord>>();
+        private readonly List<KeyValuePair<string, ConsumerRecord>>
+            rejectedConsumers = new List<KeyValuePair<string, ConsumerRecord>>();
+        private readonly HashSet<string> disabledObjectIds =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> connectionIds =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private bool restoredFromSave;
         private bool hasPendingRestoredEnergy;
@@ -56,8 +65,10 @@ namespace NERA.Energy
         private StationSystemsController stationSystems;
         private long nextActivationSequence;
         private bool resolvingPowerOutput;
+        private float simulationAccumulator;
 
         public static EnergySystemController Instance { get; private set; }
+        public static event Action<EnergySystemController> InstanceChanged;
 
         public event Action EnergyChanged;
         public event Action<EnergyState> StateChanged;
@@ -85,8 +96,7 @@ namespace NERA.Energy
         {
             get
             {
-                HashSet<string> connections = new HashSet<string>(
-                    StringComparer.OrdinalIgnoreCase);
+                connectionIds.Clear();
                 foreach (KeyValuePair<string, ConsumerRecord> pair in
                          consumers)
                 {
@@ -98,9 +108,9 @@ namespace NERA.Energy
                         ? $"system:{(int)consumer.StationSystem.Value}:" +
                           consumer.StationObjectId
                         : $"consumer:{pair.Key}";
-                    connections.Add(connectionId);
+                    connectionIds.Add(connectionId);
                 }
-                return connections.Count;
+                return connectionIds.Count;
             }
         }
         public int RegisteredConsumerCount => consumers.Count;
@@ -127,6 +137,7 @@ namespace NERA.Energy
             }
 
             Instance = this;
+            InstanceChanged?.Invoke(this);
             StationSystemsController.InstanceChanged +=
                 HandleStationSystemsInstanceChanged;
             BindStationSystems(StationSystemsController.Instance);
@@ -135,7 +146,13 @@ namespace NERA.Energy
 
         private void Update()
         {
-            AdvanceSimulation(Time.deltaTime);
+            simulationAccumulator += Time.deltaTime;
+            if (simulationAccumulator < simulationInterval)
+                return;
+
+            float elapsed = simulationAccumulator;
+            simulationAccumulator = 0f;
+            AdvanceSimulation(elapsed);
         }
 
         public void AdvanceSimulation(float deltaTime)
@@ -890,12 +907,14 @@ namespace NERA.Energy
 
         private void RefreshConsumers()
         {
+            if (resolvingPowerOutput)
+                return;
+
             List<KeyValuePair<string, ConsumerRecord>> rejected =
                 AllocateConsumerPower();
             StationSystemsController systems =
                 stationSystems ?? StationSystemsController.Instance;
-            if (resolvingPowerOutput || systems == null ||
-                rejected.Count == 0)
+            if (systems == null || rejected.Count == 0)
             {
                 return;
             }
@@ -903,8 +922,7 @@ namespace NERA.Energy
             resolvingPowerOutput = true;
             try
             {
-                var disabledObjects = new HashSet<string>(
-                    StringComparer.OrdinalIgnoreCase);
+                disabledObjectIds.Clear();
                 foreach (KeyValuePair<string, ConsumerRecord> pair in rejected)
                 {
                     ConsumerRecord consumer = pair.Value;
@@ -914,7 +932,7 @@ namespace NERA.Energy
                     string objectKey =
                         $"{(int)consumer.StationSystem.Value}:" +
                         consumer.StationObjectId;
-                    if (!disabledObjects.Add(objectKey))
+                    if (!disabledObjectIds.Add(objectKey))
                         continue;
 
                     systems.DisableFromPowerLimit(
@@ -933,8 +951,8 @@ namespace NERA.Energy
         private List<KeyValuePair<string, ConsumerRecord>>
             AllocateConsumerPower()
         {
-            var eligible =
-                new List<KeyValuePair<string, ConsumerRecord>>();
+            eligibleConsumers.Clear();
+            rejectedConsumers.Clear();
             foreach (KeyValuePair<string, ConsumerRecord> pair in consumers)
             {
                 ConsumerRecord consumer = pair.Value;
@@ -942,11 +960,11 @@ namespace NERA.Energy
                 if (consumer.RequestedActive &&
                     IsConsumerConnected(consumer))
                 {
-                    eligible.Add(pair);
+                    eligibleConsumers.Add(pair);
                 }
             }
 
-            eligible.Sort((left, right) =>
+            eligibleConsumers.Sort((left, right) =>
             {
                 int priority = right.Value.PowerPriority.CompareTo(
                     left.Value.PowerPriority);
@@ -963,9 +981,8 @@ namespace NERA.Energy
             });
 
             float remainingOutput = Mathf.Max(0f, TotalPowerOutput);
-            var rejected =
-                new List<KeyValuePair<string, ConsumerRecord>>();
-            foreach (KeyValuePair<string, ConsumerRecord> pair in eligible)
+            foreach (KeyValuePair<string, ConsumerRecord> pair in
+                     eligibleConsumers)
             {
                 ConsumerRecord consumer = pair.Value;
                 if (consumer.Rate <= remainingOutput + 0.0001f)
@@ -977,12 +994,12 @@ namespace NERA.Energy
                 }
                 else
                 {
-                    rejected.Add(pair);
+                    rejectedConsumers.Add(pair);
                 }
             }
 
             CurrentConsumption = CalculateConsumption();
-            return rejected;
+            return rejectedConsumers;
         }
 
         private int ResolvePowerPriority(
@@ -1096,7 +1113,10 @@ namespace NERA.Energy
             if (stationSystems != null)
                 stationSystems.SystemsChanged -= HandleStationSystemsChanged;
             if (Instance == this)
+            {
                 Instance = null;
+                InstanceChanged?.Invoke(null);
+            }
         }
     }
 

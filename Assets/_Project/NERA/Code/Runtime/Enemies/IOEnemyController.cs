@@ -24,6 +24,11 @@ namespace NERA.Enemies
 
         private static readonly HashSet<IOEnemyController> ActiveEnemySet =
             new HashSet<IOEnemyController>();
+        private const float TargetScanInterval = 0.15f;
+        private const float SharedPlayerRetryInterval = 0.5f;
+        private static Transform sharedPlayerTransform;
+        private static PlayerHealth sharedPlayerHealth;
+        private static float nextSharedPlayerSearchAt;
 
         private Transform target;
         private PlayerHealth targetHealth;
@@ -34,6 +39,7 @@ namespace NERA.Enemies
         private Material runtimeMaterial;
         private bool encounterReported;
         private string persistentKey;
+        private float nextTargetScanAt;
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
@@ -86,6 +92,10 @@ namespace NERA.Enemies
         {
             if (IsAlive)
                 ActiveEnemySet.Add(this);
+
+            nextTargetScanAt = Time.time +
+                Mathf.Abs(GetInstanceID() % 10) *
+                (TargetScanInterval / 10f);
         }
 
         private void Update()
@@ -103,8 +113,9 @@ namespace NERA.Enemies
                 return;
             }
 
-            float distance = Vector3.Distance(transform.position, target.position);
-            if (distance > DetectionRadius)
+            float sqrDistance =
+                (transform.position - target.position).sqrMagnitude;
+            if (sqrDistance > DetectionRadius * DetectionRadius)
             {
                 ClearTarget();
                 state = State.Idle;
@@ -114,7 +125,7 @@ namespace NERA.Enemies
             MarkEncountered();
             FaceTarget();
 
-            if (distance > AttackRange)
+            if (sqrDistance > AttackRange * AttackRange)
             {
                 state = State.Pursuing;
                 PursueTarget();
@@ -150,25 +161,53 @@ namespace NERA.Enemies
             if (HasLivingTarget())
                 return;
 
+            if (Time.time < nextTargetScanAt)
+                return;
+
+            nextTargetScanAt = Time.time + TargetScanInterval;
+
             ClearTarget();
 
+            if (!TryResolveSharedPlayer())
+                return;
+
+            if ((transform.position - sharedPlayerTransform.position)
+                    .sqrMagnitude > DetectionRadius * DetectionRadius)
+                return;
+
+            target = sharedPlayerTransform;
+            targetHealth = sharedPlayerHealth;
+            targetHealth.Died += HandleTargetDied;
+        }
+
+        private static bool TryResolveSharedPlayer()
+        {
+            if (sharedPlayerTransform != null &&
+                sharedPlayerHealth != null &&
+                sharedPlayerHealth.IsAlive)
+            {
+                return true;
+            }
+
+            sharedPlayerTransform = null;
+            sharedPlayerHealth = null;
+            if (Time.time < nextSharedPlayerSearchAt)
+                return false;
+
+            nextSharedPlayerSearchAt = Time.time + SharedPlayerRetryInterval;
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player == null)
-                return;
+                return false;
 
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
             if (playerHealth == null)
                 playerHealth = player.GetComponentInParent<PlayerHealth>();
-
             if (playerHealth == null || !playerHealth.IsAlive)
-                return;
+                return false;
 
-            if (Vector3.Distance(transform.position, player.transform.position) > DetectionRadius)
-                return;
-
-            target = player.transform;
-            targetHealth = playerHealth;
-            targetHealth.Died += HandleTargetDied;
+            sharedPlayerTransform = player.transform;
+            sharedPlayerHealth = playerHealth;
+            return true;
         }
 
         private bool HasLivingTarget()

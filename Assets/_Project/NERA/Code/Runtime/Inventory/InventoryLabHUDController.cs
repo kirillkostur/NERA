@@ -68,6 +68,7 @@ namespace NERA.Inventory
         private bool externalUiLocked;
         private bool authoredHud;
         private LaboratoryScreenController laboratoryScreenController;
+        private float nextInventoryLookupAt;
 
         private void Awake()
         {
@@ -106,8 +107,11 @@ namespace NERA.Inventory
 
         private void Update()
         {
-            if (inventory == null)
+            if (inventory == null && Time.unscaledTime >= nextInventoryLookupAt)
+            {
+                nextInventoryLookupAt = Time.unscaledTime + 0.25f;
                 BindInventory(FindFirstObjectByType<PlayerInventory>());
+            }
 
             if (stationStorageOpen || externalUiLocked)
                 return;

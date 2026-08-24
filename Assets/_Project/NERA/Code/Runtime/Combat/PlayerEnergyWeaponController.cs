@@ -17,6 +17,7 @@ namespace NERA.Combat
 
         private PlayerEquipmentController equipment;
         private float nextFireTime;
+        private Camera cachedMainCamera;
 
         private void Awake()
         {
@@ -212,8 +213,13 @@ namespace NERA.Combat
 
         private Transform ResolveFireOrigin()
         {
-            if (useMainCameraWhenAvailable && Camera.main != null)
-                return Camera.main.transform;
+            if (useMainCameraWhenAvailable)
+            {
+                if (cachedMainCamera == null)
+                    cachedMainCamera = Camera.main;
+                if (cachedMainCamera != null)
+                    return cachedMainCamera.transform;
+            }
 
             if (fireOrigin != null)
                 return fireOrigin;

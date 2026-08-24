@@ -23,6 +23,8 @@ namespace NERA.Energy
         private StationWeatherController subscribedWeather;
 
         public static StationEnvironmentController Instance { get; private set; }
+        public static event Action<StationEnvironmentController>
+            InstanceChanged;
 
         public event Action EnvironmentChanged;
 
@@ -59,6 +61,7 @@ namespace NERA.Energy
             }
 
             Instance = this;
+            InstanceChanged?.Invoke(this);
             ResolveWeatherController(true);
             BindWeatherController();
         }
@@ -149,7 +152,10 @@ namespace NERA.Energy
         private void OnDestroy()
         {
             if (Instance == this)
+            {
                 Instance = null;
+                InstanceChanged?.Invoke(null);
+            }
         }
     }
 }

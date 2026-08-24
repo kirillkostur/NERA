@@ -14,6 +14,38 @@ namespace NERA.Graphics
     [AddComponentMenu("NERA/Graphics/Fog Exclusion Volume")]
     public sealed class FogExclusionVolume : MonoBehaviour
     {
+        private readonly struct ColliderSnapshot
+        {
+            public readonly BoxCollider Collider;
+            public readonly Matrix4x4 LocalToWorld;
+            public readonly Vector3 Center;
+            public readonly Vector3 Size;
+            public readonly bool Active;
+
+            public ColliderSnapshot(BoxCollider collider)
+            {
+                Collider = collider;
+                LocalToWorld = collider != null
+                    ? collider.transform.localToWorldMatrix
+                    : Matrix4x4.zero;
+                Center = collider != null ? collider.center : Vector3.zero;
+                Size = collider != null ? collider.size : Vector3.zero;
+                Active = collider != null && collider.gameObject.activeInHierarchy;
+            }
+
+            public bool Matches(BoxCollider collider)
+            {
+                if (Collider != collider)
+                    return false;
+
+                ColliderSnapshot current = new ColliderSnapshot(collider);
+                return LocalToWorld == current.LocalToWorld &&
+                    Center == current.Center &&
+                    Size == current.Size &&
+                    Active == current.Active;
+            }
+        }
+
         public const int MaximumVolumeCount = 16;
 
         private static readonly int ExclusionCountId =
@@ -48,7 +80,11 @@ namespace NERA.Graphics
 
         private readonly List<BoxCollider> volumeColliders =
             new List<BoxCollider>();
+        private readonly List<ColliderSnapshot> colliderSnapshots =
+            new List<ColliderSnapshot>();
+        private float capturedEdgeFade = float.NaN;
         private static int lastUploadedFrame = -1;
+        private static int lastCheckedFrame = -1;
 
         public BoxCollider VolumeCollider => primaryCollider;
         public IReadOnlyList<BoxCollider> VolumeColliders => volumeColliders;
@@ -80,8 +116,15 @@ namespace NERA.Graphics
             if (!Application.isPlaying)
                 CacheColliders();
 
-            if (Application.isPlaying && lastUploadedFrame == Time.frameCount)
-                return;
+            if (Application.isPlaying)
+            {
+                if (lastCheckedFrame == Time.frameCount)
+                    return;
+
+                lastCheckedFrame = Time.frameCount;
+                if (!HaveRegisteredVolumesChanged())
+                    return;
+            }
 
             UploadVolumes();
         }
@@ -220,6 +263,45 @@ namespace NERA.Graphics
             }
 
             lastUploadedFrame = Time.frameCount;
+            foreach (FogExclusionVolume volume in RegisteredVolumes)
+                volume?.CaptureColliderSnapshots();
+        }
+
+        private static bool HaveRegisteredVolumesChanged()
+        {
+            RemoveDestroyedVolumes();
+            foreach (FogExclusionVolume volume in RegisteredVolumes)
+            {
+                if (volume != null && volume.HasColliderChanges())
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HasColliderChanges()
+        {
+            if (!Mathf.Approximately(capturedEdgeFade, edgeFade) ||
+                colliderSnapshots.Count != volumeColliders.Count)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < volumeColliders.Count; i++)
+            {
+                if (!colliderSnapshots[i].Matches(volumeColliders[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void CaptureColliderSnapshots()
+        {
+            colliderSnapshots.Clear();
+            foreach (BoxCollider box in volumeColliders)
+                colliderSnapshots.Add(new ColliderSnapshot(box));
+            capturedEdgeFade = edgeFade;
         }
 
         private static void RemoveDestroyedVolumes()
@@ -239,6 +321,7 @@ namespace NERA.Graphics
         {
             RegisteredVolumes.Clear();
             lastUploadedFrame = -1;
+            lastCheckedFrame = -1;
             Shader.SetGlobalInt(ExclusionCountId, 0);
         }
     }

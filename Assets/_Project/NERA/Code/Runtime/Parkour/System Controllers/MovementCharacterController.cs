@@ -34,7 +34,7 @@ namespace Climbing
     [RequireComponent(typeof(ThirdPersonController))]
     public class MovementCharacterController : MonoBehaviour
     {
-        public bool showDebug = true;
+        public bool showDebug;
 
         [HideInInspector] public Rigidbody rb;
         [HideInInspector] public bool limitMovement = false;
@@ -79,6 +79,8 @@ namespace Climbing
         private Vector3 leftFootPosition, leftFootIKPosition, rightFootPosition, rightFootIKPosition;
         private Quaternion leftFootIKRotation, rightFootIKRotation;
         private float lastPelvisPositionY, lastLeftFootPosition, lastRightFootPosition;
+        private Transform leftFootTransform;
+        private Transform rightFootTransform;
 
         void Start()
         {
@@ -86,6 +88,13 @@ namespace Climbing
             rb = GetComponent<Rigidbody>();
             rb.interpolation = movementInterpolation;
             anim = controller.characterAnimation.animator;
+            if (anim != null)
+            {
+                leftFootTransform = anim.GetBoneTransform(
+                    HumanBodyBones.LeftFoot);
+                rightFootTransform = anim.GetBoneTransform(
+                    HumanBodyBones.RightFoot);
+            }
             SetCurrentState(MovementState.Walking);
         }
 
@@ -110,7 +119,10 @@ namespace Climbing
         private void FixedUpdate()
         {
             //Limits player movement to avoid falling
-            if (controller.isGrounded)
+            if (controller.isGrounded &&
+                (controller.characterInput.movement.sqrMagnitude > 0.0001f ||
+                 new Vector2(rb.linearVelocity.x, rb.linearVelocity.z)
+                     .sqrMagnitude > 0.01f))
             {
                 limitMovement = CheckBoundaries();
             }
@@ -137,8 +149,8 @@ namespace Climbing
                 return;
 
             //Get IK Positions
-            AdjustFeetTarget(ref rightFootPosition, HumanBodyBones.RightFoot);
-            AdjustFeetTarget(ref leftFootPosition, HumanBodyBones.LeftFoot);
+            AdjustFeetTarget(ref rightFootPosition, rightFootTransform);
+            AdjustFeetTarget(ref leftFootPosition, leftFootTransform);
 
             //Raycast to Ground
             FeetPositionSolver(rightFootPosition, ref rightFootIKPosition, ref rightFootIKRotation);
@@ -494,9 +506,10 @@ namespace Climbing
             feetIKPositions = Vector3.zero;
         }
 
-        private void AdjustFeetTarget(ref Vector3 feetPositions, HumanBodyBones foot)
+        private void AdjustFeetTarget(
+            ref Vector3 feetPositions,
+            Transform footTransform)
         {
-            Transform footTransform = anim.GetBoneTransform(foot);
             if (footTransform == null)
             {
                 feetPositions = Vector3.zero;

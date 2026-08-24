@@ -12,6 +12,7 @@ namespace NERA.Energy
 
         private StationObjectIdentity identity;
         private StationSystemsController stationSystems;
+        private EnergySystemController registeredEnergy;
         private bool registered;
         private string registeredPanelId;
 
@@ -26,6 +27,8 @@ namespace NERA.Energy
 
             StationSystemsController.InstanceChanged +=
                 HandleStationSystemsInstanceChanged;
+            EnergySystemController.InstanceChanged +=
+                HandleEnergySystemInstanceChanged;
             BindStationSystems(StationSystemsController.Instance);
         }
 
@@ -34,19 +37,15 @@ namespace NERA.Energy
             Register();
         }
 
-        private void Update()
-        {
-            if (stationSystems == null)
-                BindStationSystems(StationSystemsController.Instance);
-            if (!registered)
-                Register();
-        }
-
         private void Register()
         {
             EnergySystemController energy = EnergySystemController.Instance;
             if (energy == null)
+            {
+                registered = false;
+                registeredEnergy = null;
                 return;
+            }
 
             string stableId = ResolvePanelId();
             if (!energy.RegisterSolarPanel(
@@ -57,12 +56,13 @@ namespace NERA.Energy
             }
 
             registeredPanelId = stableId;
+            registeredEnergy = energy;
             registered = true;
         }
 
         private void UpdateRegisteredOutput()
         {
-            EnergySystemController.Instance?.RegisterSolarPanel(
+            registeredEnergy?.RegisterSolarPanel(
                 ActivePanelId,
                 EffectiveOutputMultiplier);
         }
@@ -160,6 +160,15 @@ namespace NERA.Energy
             BindStationSystems(controller);
         }
 
+        private void HandleEnergySystemInstanceChanged(
+            EnergySystemController controller)
+        {
+            registered = false;
+            registeredEnergy = null;
+            if (controller != null)
+                Register();
+        }
+
         private void BindStationSystems(StationSystemsController controller)
         {
             if (stationSystems == controller)
@@ -185,6 +194,8 @@ namespace NERA.Energy
         {
             StationSystemsController.InstanceChanged -=
                 HandleStationSystemsInstanceChanged;
+            EnergySystemController.InstanceChanged -=
+                HandleEnergySystemInstanceChanged;
             if (stationSystems != null)
                 stationSystems.SystemsChanged -= HandleSystemsChanged;
             if (maintenance != null)

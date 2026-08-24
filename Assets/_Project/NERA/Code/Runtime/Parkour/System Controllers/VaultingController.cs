@@ -55,6 +55,8 @@ namespace Climbing
         private VaultAction curAction;
         private VaultClimbLedge climbLedgeAction;
         private VaultJumpPrediction jumpPredictionAction;
+        private const float AirborneGrabScanInterval = 0.04f;
+        private float nextAirborneGrabScanAt;
 
         public void Start()
         {
@@ -104,7 +106,13 @@ namespace Climbing
 
         void Update()
         {
-            TryInterruptJumpWithLedgeGrab();
+            if (controller.isJumping && !controller.isGrounded &&
+                Time.time >= nextAirborneGrabScanAt)
+            {
+                nextAirborneGrabScanAt =
+                    Time.time + AirborneGrabScanInterval;
+                TryInterruptJumpWithLedgeGrab();
+            }
 
             if (!controller.isVaulting)
             {

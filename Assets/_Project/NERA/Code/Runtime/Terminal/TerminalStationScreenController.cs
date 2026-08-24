@@ -18,6 +18,7 @@ namespace NERA.Terminal
     /// </summary>
     public sealed class TerminalStationScreenController : MonoBehaviour
     {
+        private const float DataRefreshInterval = 0.1f;
         private TerminalUIScreen terminal;
         [SerializeField] private RawImage stationImage;
         [SerializeField] private Camera stationCamera;
@@ -48,9 +49,24 @@ namespace NERA.Terminal
         private EnergySystemController subscribedEnergy;
         private DroneScanController subscribedDrone;
         private AntennaController subscribedAntenna;
+        private bool dataRefreshPending;
+        private float nextDataRefreshAt;
 
         public StationSystemType? SelectedSystem => selectedSystem;
         public string SelectedObjectId => selectedObjectId;
+
+        private void Update()
+        {
+            if (!dataRefreshPending ||
+                Time.unscaledTime < nextDataRefreshAt ||
+                terminal?.IsOpen != true ||
+                !gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            RefreshAll();
+        }
 
         public void SelectSystem(StationSystemType type)
         {
@@ -236,6 +252,8 @@ namespace NERA.Terminal
 
         private void RefreshAll()
         {
+            dataRefreshPending = false;
+            nextDataRefreshAt = Time.unscaledTime + DataRefreshInterval;
             TerminalUIUtility.SetText(
                 statusTabLabel,
                 Localize("station.tab.status", "STATUS"));
@@ -608,7 +626,7 @@ namespace NERA.Terminal
         private void RefreshIfVisible()
         {
             if (terminal?.IsOpen == true && gameObject.activeInHierarchy)
-                RefreshAll();
+                dataRefreshPending = true;
         }
 
         private void UnbindDataEvents()

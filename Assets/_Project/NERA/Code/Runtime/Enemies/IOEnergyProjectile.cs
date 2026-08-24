@@ -7,6 +7,10 @@ namespace NERA.Enemies
     [DisallowMultipleComponent]
     public sealed class IOEnergyProjectile : MonoBehaviour
     {
+        [SerializeField] private LayerMask hitMask =
+            (1 << 0) | (1 << 3) | (1 << 6) | (1 << 7) |
+            (1 << 9) | (1 << 10) | (1 << 11) | (1 << 14) | (1 << 15);
+
         private Vector3 direction;
         private float speed;
         private float damage;
@@ -14,6 +18,12 @@ namespace NERA.Enemies
         private GameObject source;
         private Action<IOEnergyProjectile> releaseAction;
         private Material runtimeMaterial;
+        private Renderer projectileRenderer;
+
+        private void Awake()
+        {
+            projectileRenderer = GetComponent<Renderer>();
+        }
 
         public void SetReleaseAction(Action<IOEnergyProjectile> release)
         {
@@ -22,7 +32,7 @@ namespace NERA.Enemies
 
         public void ConfigureVisual(Color color, float emissionIntensity)
         {
-            Renderer projectileRenderer = GetComponent<Renderer>();
+            projectileRenderer ??= GetComponent<Renderer>();
             if (projectileRenderer == null)
                 return;
 
@@ -60,7 +70,7 @@ namespace NERA.Enemies
                     direction,
                     out RaycastHit hit,
                     distance,
-                    ~0,
+                    hitMask,
                     QueryTriggerInteraction.Ignore))
             {
                 TryDamage(hit.collider);

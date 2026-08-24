@@ -188,6 +188,9 @@ public sealed class SwitchBakedLights : MonoBehaviour
     private bool activePresetLightsEnabled;
     private bool debugOverrideActive;
     private bool missingControllerWarningLogged;
+    private float nextControllerRetryAt;
+    private int cachedLightmapSceneHandle = int.MinValue;
+    private int cachedSceneLightmapStartIndex;
 
     public StationLightingMode CurrentMode { get; private set; }
 
@@ -205,8 +208,15 @@ public sealed class SwitchBakedLights : MonoBehaviour
         BuildPresets();
         hasAppliedMode = false;
         missingControllerWarningLogged = false;
+        InvalidateSceneLightmapIndex();
         SceneManager.sceneLoaded -= HandleSceneLoaded;
         SceneManager.sceneLoaded += HandleSceneLoaded;
+        EnergySystemController.InstanceChanged -= HandleEnergyInstanceChanged;
+        EnergySystemController.InstanceChanged += HandleEnergyInstanceChanged;
+        StationEnvironmentController.InstanceChanged -=
+            HandleEnvironmentInstanceChanged;
+        StationEnvironmentController.InstanceChanged +=
+            HandleEnvironmentInstanceChanged;
 
         if (followStationEnergy)
         {
@@ -227,20 +237,17 @@ public sealed class SwitchBakedLights : MonoBehaviour
 
     private void Update()
     {
-        if (followStationEnergy &&
-            subscribedEnergy != EnergySystemController.Instance)
+        if (followStationEnergy && Time.unscaledTime >= nextControllerRetryAt)
         {
-            BindEnergy(EnergySystemController.Instance, false);
+            nextControllerRetryAt = Time.unscaledTime + 0.5f;
+            if (subscribedEnergy != EnergySystemController.Instance)
+                BindEnergy(EnergySystemController.Instance);
+            if (subscribedEnvironment !=
+                StationEnvironmentController.Instance)
+            {
+                BindEnvironment(StationEnvironmentController.Instance);
+            }
         }
-
-        if (followStationEnergy &&
-            subscribedEnvironment != StationEnvironmentController.Instance)
-        {
-            BindEnvironment(StationEnvironmentController.Instance, false);
-        }
-
-        if (followStationEnergy && !debugOverrideActive)
-            RefreshFromStationEnergy();
 
         HandleKeyboardShortcuts();
     }
@@ -248,6 +255,9 @@ public sealed class SwitchBakedLights : MonoBehaviour
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+        EnergySystemController.InstanceChanged -= HandleEnergyInstanceChanged;
+        StationEnvironmentController.InstanceChanged -=
+            HandleEnvironmentInstanceChanged;
         BindEnergy(null, false);
         BindEnvironment(null, false);
     }
@@ -367,6 +377,7 @@ public sealed class SwitchBakedLights : MonoBehaviour
 
     private void HandleSceneLoaded(Scene _, LoadSceneMode __)
     {
+        InvalidateSceneLightmapIndex();
         if (isActiveAndEnabled)
             StartCoroutine(ReapplyAfterSceneLoad());
     }
@@ -430,6 +441,12 @@ public sealed class SwitchBakedLights : MonoBehaviour
             RefreshFromStationEnergy();
     }
 
+    private void HandleEnergyInstanceChanged(EnergySystemController energy)
+    {
+        if (followStationEnergy)
+            BindEnergy(energy);
+    }
+
     private void BindEnvironment(
         StationEnvironmentController environment,
         bool refreshLighting = true)
@@ -463,6 +480,13 @@ public sealed class SwitchBakedLights : MonoBehaviour
     {
         if (!debugOverrideActive)
             RefreshFromStationEnergy();
+    }
+
+    private void HandleEnvironmentInstanceChanged(
+        StationEnvironmentController environment)
+    {
+        if (followStationEnergy)
+            BindEnvironment(environment);
     }
 
     private void HandleKeyboardShortcuts()
@@ -523,6 +547,9 @@ public sealed class SwitchBakedLights : MonoBehaviour
         if (!scene.IsValid() || !scene.isLoaded)
             return 0;
 
+        if (cachedLightmapSceneHandle == scene.handle)
+            return cachedSceneLightmapStartIndex;
+
         int firstLightmapIndex = int.MaxValue;
         foreach (GameObject root in scene.GetRootGameObjects())
         {
@@ -535,9 +562,17 @@ public sealed class SwitchBakedLights : MonoBehaviour
             }
         }
 
-        return firstLightmapIndex == int.MaxValue
+        cachedLightmapSceneHandle = scene.handle;
+        cachedSceneLightmapStartIndex = firstLightmapIndex == int.MaxValue
             ? 0
             : firstLightmapIndex;
+        return cachedSceneLightmapStartIndex;
+    }
+
+    private void InvalidateSceneLightmapIndex()
+    {
+        cachedLightmapSceneHandle = int.MinValue;
+        cachedSceneLightmapStartIndex = 0;
     }
 
     private LightingPreset GetPreset(StationLightingMode mode)

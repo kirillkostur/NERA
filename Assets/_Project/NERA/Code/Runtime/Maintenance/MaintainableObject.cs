@@ -12,6 +12,7 @@ namespace NERA.Maintenance
     public sealed class MaintainableObject : MonoBehaviour
     {
         private const string DefaultSandProperty = "_DissolveStrength";
+        private const float RuntimeTickInterval = 0.1f;
 
         [SerializeField] private MaintenanceRole role = MaintenanceRole.Generic;
         [SerializeField] private bool exposedToWeather;
@@ -33,10 +34,14 @@ namespace NERA.Maintenance
         private bool participatedInCurrentSandstorm;
         private bool continuouslyExposedDuringCurrentSandstorm;
         private StationObjectIdentity identity;
+        private float runtimeTickAccumulator;
+        private string registeredObjectId;
 
         private static readonly Dictionary<string, MaintainableObject>
             ObjectsById = new Dictionary<string, MaintainableObject>(
                 StringComparer.Ordinal);
+        private static readonly List<string> StaleObjectIds =
+            new List<string>();
 
         public event Action<float> ConditionChanged;
         public static event Action<MaintainableObject> Registered;
@@ -104,8 +109,22 @@ namespace NERA.Maintenance
 
         private void Update()
         {
-            AdvanceCleaning(Time.deltaTime);
-            ApplyWeatherWear(Time.deltaTime);
+            bool appliesWeatherWear = exposedToWeather &&
+                IsSandstormActive();
+            if (!isCleaning && !appliesWeatherWear)
+            {
+                runtimeTickAccumulator = 0f;
+                return;
+            }
+
+            runtimeTickAccumulator += Time.deltaTime;
+            if (runtimeTickAccumulator < RuntimeTickInterval)
+                return;
+
+            float elapsed = runtimeTickAccumulator;
+            runtimeTickAccumulator = 0f;
+            AdvanceCleaning(elapsed);
+            ApplyWeatherWear(elapsed);
         }
 
         public bool Service()
@@ -114,6 +133,7 @@ namespace NERA.Maintenance
                 return false;
 
             isCleaning = true;
+            runtimeTickAccumulator = 0f;
             cleaningElapsedSeconds = 0f;
             cleaningStartCondition = condition;
 
@@ -226,8 +246,14 @@ namespace NERA.Maintenance
             return false;
         }
 
-        public static IEnumerable<MaintainableObject> ActiveObjects =>
-            ObjectsById.Values;
+        public static IEnumerable<MaintainableObject> ActiveObjects
+        {
+            get
+            {
+                RemoveDestroyedRegistrations();
+                return ObjectsById.Values;
+            }
+        }
 
         public bool RestoreCondition()
         {
@@ -285,6 +311,7 @@ namespace NERA.Maintenance
 
         private void HandleSandstormStarted(float _)
         {
+            runtimeTickAccumulator = 0f;
             CancelCleaning(true);
             participatedInCurrentSandstorm = false;
             continuouslyExposedDuringCurrentSandstorm =
@@ -379,6 +406,7 @@ namespace NERA.Maintenance
             }
 
             ObjectsById[id] = this;
+            registeredObjectId = id;
             Registered?.Invoke(this);
             QuestController.Instance?.ReportDeviceCondition(
                 id,
@@ -388,7 +416,7 @@ namespace NERA.Maintenance
 
         private void Unregister()
         {
-            string id = ObjectId;
+            string id = registeredObjectId;
             if (!string.IsNullOrEmpty(id) &&
                 ObjectsById.TryGetValue(
                     id,
@@ -397,6 +425,30 @@ namespace NERA.Maintenance
             {
                 ObjectsById.Remove(id);
             }
+            registeredObjectId = string.Empty;
+        }
+
+        private static void RemoveDestroyedRegistrations()
+        {
+            StaleObjectIds.Clear();
+            foreach (KeyValuePair<string, MaintainableObject> pair in
+                     ObjectsById)
+            {
+                if (pair.Value == null)
+                    StaleObjectIds.Add(pair.Key);
+            }
+
+            foreach (string id in StaleObjectIds)
+                ObjectsById.Remove(id);
+            StaleObjectIds.Clear();
+        }
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            ObjectsById.Clear();
+            StaleObjectIds.Clear();
         }
 
         private static string NormalizeId(string value)
@@ -443,6 +495,7 @@ namespace NERA.Maintenance
 
         private void OnDisable()
         {
+            runtimeTickAccumulator = 0f;
             CancelCleaning(true);
             StationWeatherController.AnySandstormStarted -=
                 HandleSandstormStarted;

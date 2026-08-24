@@ -22,6 +22,7 @@ namespace NERA.Drone
         private const string BaseLayerPrefix = "Base Layer.";
 
         private static DroneAnimationView mainView;
+        private static float nextMainViewLookupAt;
 
         private Animator animator;
         private DroneScanController controller;
@@ -39,6 +40,7 @@ namespace NERA.Drone
         {
             SceneManager.sceneLoaded -= HandleSceneLoaded;
             mainView = null;
+            nextMainViewLookupAt = 0f;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -311,6 +313,11 @@ namespace NERA.Drone
         {
             if (mainView != null && mainView.animator != null)
                 return mainView;
+
+            if (Time.unscaledTime < nextMainViewLookupAt)
+                return null;
+
+            nextMainViewLookupAt = Time.unscaledTime + 0.5f;
 
             DroneAnimationView[] views = FindObjectsByType<DroneAnimationView>(
                 FindObjectsInactive.Include,

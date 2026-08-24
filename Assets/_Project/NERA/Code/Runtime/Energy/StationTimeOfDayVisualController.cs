@@ -24,6 +24,8 @@ namespace NERA.Energy
         [SerializeField] private bool previewInEditMode = true;
         [Tooltip("Hour used for the Edit Mode preview when no source is assigned.")]
         [SerializeField, Range(0f, 24f)] private float previewHour = 12f;
+        [Tooltip("Runtime refresh rate for visual lighting in seconds.")]
+        [SerializeField, Range(0.02f, 1f)] private float updateInterval = 0.05f;
 
         [Header("Sun Orbit")]
         [SerializeField] private Light sunLight;
@@ -83,6 +85,7 @@ namespace NERA.Energy
 
         private float evaluatedHour;
         private float sunOrbit01;
+        private float nextVisualUpdateAt;
 
         public float EvaluatedHour => evaluatedHour;
         public float SunOrbit01 => sunOrbit01;
@@ -105,6 +108,10 @@ namespace NERA.Energy
         {
             if (Application.isPlaying)
             {
+                if (Time.unscaledTime < nextVisualUpdateAt)
+                    return;
+
+                nextVisualUpdateAt = Time.unscaledTime + updateInterval;
                 RefreshForActiveScene();
                 return;
             }
@@ -121,6 +128,7 @@ namespace NERA.Energy
             maximumSunIntensity = Mathf.Max(0f, maximumSunIntensity);
             maximumAmbientIntensity = Mathf.Max(0f, maximumAmbientIntensity);
             maximumFogDensity = Mathf.Max(0f, maximumFogDensity);
+            updateInterval = Mathf.Clamp(updateInterval, 0.02f, 1f);
             CacheSunLight();
 
             if (!Application.isPlaying &&

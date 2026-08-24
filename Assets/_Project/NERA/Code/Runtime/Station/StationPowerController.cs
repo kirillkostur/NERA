@@ -10,8 +10,10 @@ namespace NERA.Station
         [SerializeField] private StationPowerState initialState = StationPowerState.Offline;
 
         private StationPowerState? lastReportedQuestState;
+        private EnergySystemController subscribedEnergy;
 
         public static StationPowerController Instance { get; private set; }
+        public static event Action<StationPowerController> InstanceChanged;
 
         public event Action<StationPowerState> StateChanged;
 
@@ -28,19 +30,13 @@ namespace NERA.Station
 
             Instance = this;
             State = initialState;
+            EnergySystemController.InstanceChanged += HandleEnergyInstanceChanged;
+            InstanceChanged?.Invoke(this);
         }
 
         private void Start()
         {
-            EnergySystemController energy = EnergySystemController.Instance;
-            if (energy == null)
-            {
-                ReportQuestState(State, true);
-                return;
-            }
-
-            energy.StateChanged += HandleEnergyStateChanged;
-            SyncFromEnergy(energy, true);
+            BindEnergy(EnergySystemController.Instance, true);
         }
 
         public bool RestorePower()
@@ -89,6 +85,36 @@ namespace NERA.Station
             SyncFromEnergy(
                 energy,
                 energy != null && energy.IsRestoringState);
+        }
+
+        private void HandleEnergyInstanceChanged(EnergySystemController energy)
+        {
+            BindEnergy(energy, true);
+        }
+
+        private void BindEnergy(
+            EnergySystemController energy,
+            bool synchronizeOnly)
+        {
+            if (subscribedEnergy == energy)
+            {
+                if (energy != null)
+                    SyncFromEnergy(energy, synchronizeOnly);
+                return;
+            }
+
+            if (subscribedEnergy != null)
+                subscribedEnergy.StateChanged -= HandleEnergyStateChanged;
+            subscribedEnergy = energy;
+            if (subscribedEnergy != null)
+            {
+                subscribedEnergy.StateChanged += HandleEnergyStateChanged;
+                SyncFromEnergy(subscribedEnergy, synchronizeOnly);
+            }
+            else
+            {
+                ReportQuestState(State, true);
+            }
         }
 
         private void SyncFromEnergy(
@@ -146,11 +172,15 @@ namespace NERA.Station
 
         private void OnDestroy()
         {
-            if (EnergySystemController.Instance != null)
-                EnergySystemController.Instance.StateChanged -= HandleEnergyStateChanged;
+            EnergySystemController.InstanceChanged -= HandleEnergyInstanceChanged;
+            if (subscribedEnergy != null)
+                subscribedEnergy.StateChanged -= HandleEnergyStateChanged;
 
             if (Instance == this)
+            {
                 Instance = null;
+                InstanceChanged?.Invoke(null);
+            }
         }
     }
 }

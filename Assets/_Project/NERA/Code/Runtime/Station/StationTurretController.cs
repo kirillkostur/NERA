@@ -17,7 +17,7 @@ namespace NERA.Station
 
         [SerializeField] private Transform yawPivot;
         [SerializeField] private Transform muzzle;
-        [SerializeField] private LayerMask lineOfSightMask = ~0;
+        [SerializeField] private LayerMask lineOfSightMask = 52993;
 
         private MaintainableObject maintenance;
         private StationObjectIdentity identity;
@@ -25,6 +25,7 @@ namespace NERA.Station
         private string consumerId;
         private float nextTargetSearchAt;
         private float nextShotAt;
+        private float nextEnergyRefreshAt;
 
         private static readonly Dictionary<string, StationTurretController>
             TurretsById = new Dictionary<string, StationTurretController>(
@@ -107,10 +108,17 @@ namespace NERA.Station
         private void Start()
         {
             RefreshEnergy();
+            nextEnergyRefreshAt = Time.time + 0.25f;
         }
 
         private void Update()
         {
+            if (Time.time >= nextEnergyRefreshAt)
+            {
+                nextEnergyRefreshAt = Time.time + 0.25f;
+                RefreshEnergy();
+            }
+
             bool available = IsInstalled && IsAlive &&
                 (StationSystemsController.Instance == null ||
                  StationSystemsController.Instance.IsRequestedActive(
@@ -120,7 +128,6 @@ namespace NERA.Station
             if (!available)
             {
                 target = null;
-                RefreshEnergy();
                 return;
             }
 
@@ -130,7 +137,6 @@ namespace NERA.Station
                 target = FindNearestTarget();
             }
 
-            RefreshEnergy();
             if (!IsOperational || target == null || !target.IsAlive)
                 return;
 

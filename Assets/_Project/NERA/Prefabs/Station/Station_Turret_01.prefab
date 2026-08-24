@@ -593,7 +593,7 @@ MonoBehaviour:
   muzzle: {fileID: 4974321979326522012}
   lineOfSightMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 52993
 --- !u!1 &3313713527973000389
 GameObject:
   m_ObjectHideFlags: 0
