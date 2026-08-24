@@ -241,12 +241,16 @@ namespace NERA.Station
             BeginClose(false, !Application.isPlaying);
         }
 
-        public void PrepareForSessionEnd()
+        public bool PrepareForSessionEnd()
         {
             if (IsOpen)
+            {
                 BeginClose(true, true);
+                return !IsOpen;
+            }
             else
                 EndAutoSaveGuard(true);
+            return true;
         }
 
         private void BeginClose(bool flushReturnedParts, bool immediate)
@@ -264,7 +268,18 @@ namespace NERA.Station
 
             isClosing = true;
             UnbindPartSources();
-            RollbackAll();
+            if (!RollbackAll())
+            {
+                isClosing = false;
+                BindPartSources();
+                RefreshAvailableSlotVisuals();
+                SetApplyButtonVisible(staged.Count > 0);
+                Debug.LogError(
+                    "Station upgrade mode cannot close because a staged " +
+                    "part has no free inventory or storage slot.",
+                    this);
+                return;
+            }
             activeObject.SetUpgradeVisualsVisible(false);
             SetUpgradeScreenVisible(false);
             Cursor.lockState = CursorLockMode.Locked;
@@ -423,7 +438,9 @@ namespace NERA.Station
 
             if (staged.TryGetValue(slot, out StagedPart existing))
             {
-                ReturnToSource(existing);
+                if (!ReturnToSource(existing))
+                    return false;
+
                 staged.Remove(slot);
                 activeObject.RestoreSlot(slot);
                 RefreshAvailableSlotVisuals();
@@ -639,11 +656,22 @@ namespace NERA.Station
             };
         }
 
-        private void RollbackAll()
+        private bool RollbackAll()
         {
-            foreach (StagedPart part in staged.Values)
-                ReturnToSource(part);
-            staged.Clear();
+            var returnedSlots = new List<StationUpgradeSlot>();
+            foreach (KeyValuePair<StationUpgradeSlot, StagedPart> pair in
+                     staged)
+            {
+                if (!ReturnToSource(pair.Value))
+                    continue;
+
+                returnedSlots.Add(pair.Key);
+                activeObject?.RestoreSlot(pair.Key);
+            }
+
+            foreach (StationUpgradeSlot slot in returnedSlots)
+                staged.Remove(slot);
+            return staged.Count == 0;
         }
 
         private void BindPartSources()
@@ -662,10 +690,10 @@ namespace NERA.Station
                 storage.StorageChanged -= RefreshAvailableSlotVisuals;
         }
 
-        private void ReturnToSource(StagedPart part)
+        private bool ReturnToSource(StagedPart part)
         {
             if (part?.Item?.ItemData == null)
-                return;
+                return true;
 
             bool returned = part.Source == ItemSource.Storage
                 ? storage != null && storage.Deposit(part.Item)
@@ -684,6 +712,8 @@ namespace NERA.Station
                     $"'{part.Item.ItemData.ItemId}'.",
                     this);
             }
+
+            return returned;
         }
 
         private void BeginAutoSaveGuard()

@@ -98,7 +98,7 @@ namespace NERA.Editor
             GameObject temporary = Object.Instantiate(source);
             temporary.name = "QuestTitle_Text";
             temporary.transform.SetParent(null, false);
-            ConfigureTextRect(temporary, 24f);
+            ConfigureTextRect(temporary);
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(
                 temporary,
                 TitlePrefabPath);
@@ -111,7 +111,7 @@ namespace NERA.Editor
             GameObject temporary = Object.Instantiate(source);
             temporary.name = "Quest_Text";
             temporary.transform.SetParent(null, false);
-            TMP_Text label = ConfigureTextRect(temporary, 20f);
+            TMP_Text label = ConfigureTextRect(temporary);
             QuestObjectiveView view =
                 temporary.GetComponent<QuestObjectiveView>() ??
                 temporary.AddComponent<QuestObjectiveView>();
@@ -200,9 +200,7 @@ namespace NERA.Editor
             return contentRect;
         }
 
-        private static TMP_Text ConfigureTextRect(
-            GameObject target,
-            float fontSize)
+        private static TMP_Text ConfigureTextRect(GameObject target)
         {
             RectTransform rect = (RectTransform)target.transform;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -212,7 +210,6 @@ namespace NERA.Editor
             rect.sizeDelta = new Vector2(400f, 30f);
 
             TMP_Text label = target.GetComponent<TMP_Text>();
-            label.fontSize = fontSize;
             label.raycastTarget = false;
             LayoutElement layout = target.GetComponent<LayoutElement>() ??
                 target.AddComponent<LayoutElement>();

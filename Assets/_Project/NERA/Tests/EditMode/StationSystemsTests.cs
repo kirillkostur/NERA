@@ -11,6 +11,7 @@ using NERA.Station;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 using NeraInteractionMode = NERA.Interaction.InteractionMode;
 
 namespace NERA.Tests
@@ -543,6 +544,35 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void RestoreRejectsMissingAndIncompatiblePhysicalParts()
+        {
+            systems.Restore(
+                new Dictionary<StationSystemType, bool>(),
+                new[]
+                {
+                    new StationObjectSystemState(
+                        StationSystemType.Turret,
+                        "station_turret_01",
+                        true,
+                        new[]
+                        {
+                            new StationInstalledPartState(
+                                "Slot_3",
+                                "missing_part"),
+                            new StationInstalledPartState(
+                                "Slot_2",
+                                "emitter_damage_01")
+                        })
+                });
+
+            Assert.That(
+                systems.GetInstalledPartCount(
+                    StationSystemType.Turret,
+                    "station_turret_01"),
+                Is.Zero);
+        }
+
+        [Test]
         public void RestoreKeepsCriticalBatteryRequestedState()
         {
             systems.Restore(
@@ -813,8 +843,27 @@ namespace NERA.Tests
             StationSystemDefinition definition = systems.GetDefinition(
                 StationSystemType.Turret,
                 "station_turret_01");
-            var installed = definition.Slots.Select(slot =>
-                new StationInstalledPartState(slot.SlotId, "installed_part"));
+            ItemCatalogData catalog = Resources.Load<ItemCatalogData>(
+                "ItemCatalog_Default");
+            Assert.That(catalog, Is.Not.Null);
+            var installed = new List<StationInstalledPartState>();
+            foreach (StationObjectSlotDefinition slot in definition.Slots)
+            {
+                ItemData compatiblePart = catalog.Items.FirstOrDefault(item =>
+                    item != null &&
+                    item.FindEngineeringCompatibility(
+                        StationSystemType.Turret,
+                        definition.ObjectId,
+                        slot.SlotId) != null);
+                Assert.That(
+                    compatiblePart,
+                    Is.Not.Null,
+                    $"No catalog part fits {definition.ObjectId}/" +
+                    slot.SlotId);
+                installed.Add(new StationInstalledPartState(
+                    slot.SlotId,
+                    compatiblePart.ItemId));
+            }
             systems.Restore(
                 new Dictionary<StationSystemType, bool>(),
                 new[]
@@ -1070,6 +1119,73 @@ namespace NERA.Tests
             Assert.That(inventory.Count, Is.EqualTo(1));
             Assert.That(inventory.BackpackItemInstances, Does.Contain(original));
             Assert.That(controller.IsOpen, Is.False);
+        }
+
+        [Test]
+        public void UpgradeModeKeepsStagedPartWhenAllReturnSlotsAreFull()
+        {
+            ItemData emitter = LoadPart("Item_EmitterDamage_01.asset");
+            Assert.That(inventory.AddItem(emitter), Is.True);
+            ItemInstance original = inventory.BackpackItemInstances[0];
+
+            GameObject targetRoot = new GameObject("Test_LosslessRollback");
+            targetRoot.transform.SetParent(stationRoot.transform);
+            StationObjectIdentity identity =
+                targetRoot.AddComponent<StationObjectIdentity>();
+            identity.Configure(
+                StationSystemType.Turret,
+                "station_turret_01");
+            GameObject slotObject = new GameObject("Slot_3");
+            slotObject.transform.SetParent(targetRoot.transform);
+            StationUpgradeSlot slot =
+                slotObject.AddComponent<StationUpgradeSlot>();
+            slot.Configure("Slot_3", null);
+            targetRoot.AddComponent<StationObjectVisual>().Configure(true);
+            StationUpgradeableObject upgradeable =
+                targetRoot.AddComponent<StationUpgradeableObject>();
+            StationUpgradeModeController controller =
+                stationRoot.AddComponent<StationUpgradeModeController>();
+            SetInstanceField(controller, "activeObject", upgradeable);
+            SetInstanceField(controller, "inventory", inventory);
+            SetInstanceField(controller, "storage", storage);
+
+            Assert.That(controller.ToggleSlot(slot), Is.True);
+            while (inventory.AddItem(emitter))
+            {
+            }
+            storage.ConfigureCapacities(1, 1, 1);
+            Assert.That(
+                storage.Deposit(ItemInstance.Create(emitter)),
+                Is.True);
+
+            LogAssert.Expect(
+                LogType.Error,
+                "Could not return staged part 'emitter_damage_01'.");
+            LogAssert.Expect(
+                LogType.Error,
+                "Station upgrade mode cannot close because a staged part " +
+                "has no free inventory or storage slot.");
+            controller.Close();
+
+            Assert.That(controller.IsOpen, Is.True);
+            Assert.That(
+                inventory.BackpackItemInstances.Any(item =>
+                    ReferenceEquals(item, original)),
+                Is.False);
+
+            Assert.That(
+                inventory.RemoveInstanceAt(
+                    InventorySlotGroup.Backpack,
+                    0,
+                    out _),
+                Is.True);
+            controller.Close();
+
+            Assert.That(controller.IsOpen, Is.False);
+            Assert.That(
+                inventory.BackpackItemInstances.Any(item =>
+                    ReferenceEquals(item, original)),
+                Is.True);
         }
 
         [Test]

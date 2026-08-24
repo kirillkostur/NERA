@@ -252,7 +252,9 @@ namespace NERA.Tests
             SaveGameData restored = JsonUtility.FromJson<SaveGameData>(
                 JsonUtility.ToJson(source));
 
-            Assert.That(restored.version, Is.EqualTo(19));
+            Assert.That(
+                restored.version,
+                Is.EqualTo(SaveGameData.CurrentVersion));
             Assert.That(restored.hasDroneBatteryCharge, Is.True);
             Assert.That(restored.droneBatteryCharge, Is.EqualTo(42.5f));
             Assert.That(

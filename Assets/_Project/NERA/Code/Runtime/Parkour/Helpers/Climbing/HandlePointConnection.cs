@@ -59,12 +59,6 @@ namespace Climbing
 
         void Update()
         {
-            if (Application.isPlaying)
-            {
-                enabled = false;
-                return;
-            }
-
             if (updateConnections)
             {
                 GetPoints();

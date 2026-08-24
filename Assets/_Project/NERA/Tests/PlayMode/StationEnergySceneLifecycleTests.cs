@@ -360,10 +360,13 @@ namespace NERA.Tests
             SceneManager.LoadScene("Boot");
             yield return null;
 
+            MainMenuController mainMenu =
+                Object.FindFirstObjectByType<MainMenuController>();
+            Assert.That(mainMenu, Is.Not.Null);
             Transform menuPanel = GameObject.Find("Canvas")
                 .transform.Find("Panel");
-            menuPanel.Find("RootButton/NewGameButton")
-                .GetComponent<Button>().onClick.Invoke();
+            mainMenu.StartNewGame();
+            yield return null;
             Transform slotScreen = menuPanel.Find(
                 "ContinueScreen/background_Screen_station");
             slotScreen.Find("Panel_Save_1")
@@ -1044,7 +1047,7 @@ namespace NERA.Tests
                     out string reason),
                 Is.True,
                 reason);
-            yield return null;
+            yield return new WaitForSecondsRealtime(0.15f);
 
             string upgradedText = statusText.GetType().GetProperty("text")
                 ?.GetValue(statusText)?.ToString();
@@ -1399,7 +1402,7 @@ namespace NERA.Tests
                 Does.Contain("Travel to the Ancient Outpost"));
             Assert.That(
                 questHud.DisplayedMainText,
-                Does.Contain("- Travel to the Ancient Outpost"));
+                Does.Contain("• Travel to the Ancient Outpost"));
             Assert.That(questHud.DisplayedSideText, Is.Empty);
 
             quests.ReportDeviceCondition(
@@ -1411,7 +1414,7 @@ namespace NERA.Tests
                 Does.Contain("Start cleaning"));
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("- Clean Test Solar Panel"));
+                Does.Contain("• Clean Test Solar Panel"));
             Assert.That(
                 questHud.DisplayedSideText,
                 Does.Not.Contain("SIDE QUEST"));
@@ -1447,7 +1450,7 @@ namespace NERA.Tests
                 "HUD must fall back to the next active side quest.");
             Assert.That(
                 questHud.DisplayedSideText,
-                Does.Contain("<s>- Restart Test Turret</s>"),
+                Does.Contain("<s>• Restart Test Turret</s>"),
                 "A completed visible quest must be struck through first.");
 
             quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
@@ -1963,14 +1966,24 @@ namespace NERA.Tests
                 ExpeditionDiscoveryController.Instance;
             DroneScanController drone = DroneScanController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
+            StationEnvironmentController environment =
+                StationEnvironmentController.Instance;
 
             Assert.That(energy, Is.Not.Null);
             Assert.That(discovery, Is.Not.Null);
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
+            Assert.That(environment, Is.Not.Null);
             systems.ResetSystems();
             StationSystemDefinition droneDefinition =
                 systems.GetDefinition(StationSystemType.Drone);
+            Assert.That(droneDefinition, Is.Not.Null);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    droneDefinition.ObjectId,
+                    out MaintainableObject droneMaintenance),
+                Is.True);
+            droneMaintenance.SetCondition(1f);
             float droneRange = systems.GetStat(
                 StationSystemType.Drone,
                 droneDefinition.ObjectId,
@@ -2021,6 +2034,11 @@ namespace NERA.Tests
             Assert.That(discovery.IsDiscovered(first), Is.True);
             Assert.That(drone.IsCharging, Is.True);
             Assert.That(drone.CanLaunchScan(second), Is.False);
+
+            // The first story discovery intentionally starts a sandstorm.
+            // This test isolates recharge and upgrade range from that quest
+            // weather gate; storm locking is covered by dedicated tests.
+            environment.SetWeather(StationWeather.Clear);
 
             drone.AdvanceRecharge(drone.RechargeRemaining + 0.01f);
 

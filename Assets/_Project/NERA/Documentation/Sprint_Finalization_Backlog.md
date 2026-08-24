@@ -76,8 +76,9 @@ Status: `PARTIAL`
   drops across Continue; full checkpoint snapshot restores them after death.
 - PARTIAL: technical respawn/checkpoint flow and HUD message are implemented;
   health HUD, damage feedback and authored death screen remain.
-- TODO: assign authored `Persistent Id` values to every production item and
-  enemy on the final Expedition 01 route.
+- DONE: ProjectValidator checks missing/duplicate persistent IDs and the
+  current enabled scenes contain no tracked scene instance with an empty ID.
+- TODO: rerun the validator after the final Expedition 01 route is authored.
 - TODO: replace the Blue IO placeholder mesh with the authored mesh + VFX prefab.
 - TODO: final combat feedback, audio, balancing and player-facing health/objective HUD.
 
@@ -152,27 +153,26 @@ Status: `PARTIAL`
 
 Status: `PARTIAL`
 
-- PARTIAL: current Unity 6000.0.71f1 baseline — 206/209 EditMode and 36/41
-  PlayMode. Failures are documented in the 2026-08-25 audit; most are stale
-  fixture/UI expectations, but all eight must be closed before RC.
+- DONE: current Unity 6000.0.71f1 automated baseline — 211/211 EditMode and
+  41/41 PlayMode.
 - DONE: permanent editor validation command for required scenes and station
   foundations, including production Company/Product identity.
 - TODO: inject synthetic StationSystemsConfig into controller tests instead of
   reading mutable production Resources assets.
 - TODO: isolate every PlayMode fixture with an explicit clean scene and teardown.
-- TODO: replace hardcoded Boot UI child paths in PlayMode tests with a shared
-  MainMenuController/test helper. The current baked-light test fails before it
-  reaches Player_Station.
-- TODO: add station upgrade graph, installed-visual purity, localization and
-  persistent-ID checks to ProjectValidator.
+- DONE: baked-lighting flow enters New Game through `MainMenuController` and
+  verifies backup, normal and sandstorm/low-energy modes in Player_Station.
+- PARTIAL: validator covers persistent IDs and core project structure; station
+  upgrade graph and installed-visual purity remain candidates for expansion.
 - DONE: authored maintainable initial condition is restored on New Game.
 - DONE: installed upgrade visuals are collider-free at runtime.
 - DONE: failed/same-scene transitions return explicit results and do not create
   false checkpoints.
 - DONE: turret firing uses atomic `FiringEnergyPerShot` instead of a one-frame
   consumer state.
-- TODO: add regression tests and hardening for staged-part teardown recovery
-  and invalid/incompatible installed-part restore.
+- DONE: invalid/incompatible restored parts are rejected and staged rollback
+  cannot clear a part until inventory/storage accepts it; Return To Main Menu
+  aborts instead of saving item loss.
 - DONE: exact-energy session-end snapshot and regression coverage; pause,
   application quit and Return To Main Menu force a current-state save without
   turning continuous energy changes into periodic disk writes.
@@ -183,15 +183,18 @@ Status: `PARTIAL`
   optimized result is the median of three runs. Station BehaviourUpdate is
   down 35.3% and GC 27.9%; Expedition BehaviourUpdate is down 15.1%.
 - DONE: high-return runtime optimization pass over energy, lighting, fog,
-  maintenance, enemies, interaction, parkour, terminal and cached cameras.
+  maintenance, enemies, interaction, terminal and cached cameras.
+- ROLLED BACK: parkour-specific optimization from `3ac2afe`; original
+  detection/query/update behaviour is restored. Dynamic Rigidbody
+  interpolation from `7385c61` remains enabled and tested.
 - DONE: last known Windows Development Build — 164.56 MB, 0 errors and
   0 warnings (2026-07-30).
-- TODO: new Windows Development Build after the 2026-08-24 lighting, Boot,
-  solar upgrade and performance changes.
+- DONE: First Playable Windows Development Build — 223.14 MB, 0 errors,
+  22 known warnings; Boot smoke completed.
 - TODO: standalone full-flow QA.
 - DONE: current bug list and priorities are recorded in the 2026-08-25 audit.
-- PARTIAL: Editor CPU/GC/frame-time baseline is recorded; player-build GPU,
-  RAM, loading, 1% low and build-size baseline remain.
+- PARTIAL: repeated Editor CPU/frame-time baseline and current build size are
+  recorded; connected player GPU, reliable GC/RAM, loading and 1% low remain.
 - TODO: hardware profiling and visual review of all three PC presets.
 - TODO: First Playable technical report.
 
@@ -227,25 +230,15 @@ Status: `PARTIAL`
 
 ## Current Order
 
-1. Restore a fully green baseline: close the current 3 EditMode and 5 PlayMode
-   failures without changing approved gameplay to satisfy stale tests.
-2. Fix the shared Boot test flow and complete baked-lighting end-to-end through
-   New Game: battery off/on, low threshold, sandstorm and backup reserve.
-3. Add stable persistent-ID validation and assign IDs to all tracked objects in
-   Boot/MainScene/Player_Station/Expedition_01.
-4. Reject incompatible installed parts during restore and make staged-part
-   rollback lossless if inventory/storage return fails.
-5. Freeze First Playable scope to Boot, MainScene, Player_Station and
-   Expedition_01; create a dedicated build profile and deterministic
-   Addressables build.
-6. Build Windows Development Player and capture CPU/GPU/GC/RAM/loading/1% low
-   on High, with Medium/Low smoke passes.
-7. Pass the complete Boot -> Station -> Expedition -> checkpoint/death ->
+1. Connect Unity Profiler to the current WindowsPlayer and capture
+   CPU/GPU/GC/RAM/loading/1% low on High, with Medium/Low smoke passes.
+2. Pass the complete Boot -> Station -> Expedition -> checkpoint/death ->
    Continue -> Return to Menu flow in that build.
-8. Add health HUD, damage/death feedback and respawn/reload presentation.
-9. Remove test content from Player Station and turn Expedition_01 from a
+3. Add health HUD, damage/death feedback and respawn/reload presentation.
+4. Remove test content from Player Station and turn Expedition_01 from a
    parkour playground into a focused production blockout.
-10. Complete combat, objective, audio, VFX and route-readability feedback.
-11. Close blocker/critical issues and create the First Playable lock.
-12. After lock, migrate deprecated Cinemachine, remove confirmed dead/demo
+5. Complete combat, objective, audio, VFX and route-readability feedback.
+6. Fix Shader Graph `Power` warnings with visual regression coverage.
+7. Close blocker/critical issues and create the First Playable lock.
+8. After lock, migrate deprecated Cinemachine, remove confirmed dead/demo
    dependencies and only then expand Expedition_02-08/Unknown Signal content.

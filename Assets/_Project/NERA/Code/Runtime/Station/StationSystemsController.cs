@@ -695,18 +695,39 @@ namespace NERA.Station
             if (definition == null)
                 return;
 
+            itemCatalog ??= Resources.Load<ItemCatalogData>(
+                "ItemCatalog_Default");
             var parts = new Dictionary<string, string>(
                 StringComparer.OrdinalIgnoreCase);
             foreach (StationInstalledPartState part in restored)
             {
                 string slotId = NormalizeSlotId(part.SlotId);
                 string itemId = part.ItemId?.Trim() ?? string.Empty;
-                if (!string.IsNullOrEmpty(slotId) &&
-                    !string.IsNullOrEmpty(itemId) &&
-                    definition.FindSlot(slotId) != null)
+                if (string.IsNullOrEmpty(slotId) ||
+                    string.IsNullOrEmpty(itemId) ||
+                    definition.FindSlot(slotId) == null ||
+                    parts.ContainsKey(slotId))
                 {
-                    parts[slotId] = itemId;
+                    continue;
                 }
+
+                ItemData item = itemCatalog?.Find(itemId);
+                if (item == null ||
+                    item.ItemType != ItemType.EngineeringPart ||
+                    item.FindEngineeringCompatibility(
+                        type,
+                        objectId,
+                        slotId) == null)
+                {
+                    Debug.LogWarning(
+                        $"Ignoring incompatible restored station part " +
+                        $"'{itemId}' for {definition.DisplayName}/" +
+                        $"{slotId}.",
+                        this);
+                    continue;
+                }
+
+                parts[slotId] = itemId;
             }
             if (parts.Count > 0)
                 installedParts[GetPartStateKey(type, objectId)] = parts;

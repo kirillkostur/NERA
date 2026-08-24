@@ -33,7 +33,7 @@ namespace Climbing
     [RequireComponent(typeof(ThirdPersonController))]
     public class DetectionCharacterController : MonoBehaviour
     {
-        public bool showDebug;
+        public bool showDebug = true;
 
         [Header("Layers")]
         public LayerMask ledgeLayer;
@@ -60,10 +60,6 @@ namespace Climbing
         [SerializeField] private float airborneLedgeVerticalOffset = -1.8f;
         [Tooltip("Number of upward-spaced rays used while airborne.")]
         [SerializeField] private float airborneLedgeNumRays = 20f;
-
-        private readonly Dictionary<Transform, HandlePoints> handlePointCache =
-            new Dictionary<Transform, HandlePoints>();
-        private readonly Collider[] aheadPointBuffer = new Collider[64];
 
         public bool FindLedgeCollision(out RaycastHit hit)
         {
@@ -238,17 +234,12 @@ namespace Climbing
                    HasUsableHandlePoints(collider.transform);
         }
 
-        private bool HasUsableHandlePoints(Transform surfaceRoot)
+        private static bool HasUsableHandlePoints(Transform surfaceRoot)
         {
-            if (!handlePointCache.TryGetValue(surfaceRoot, out HandlePoints handle) ||
-                handle == null)
-            {
-                handle = surfaceRoot.GetComponentInChildren<HandlePoints>();
-                if (handle == null)
-                    handle = surfaceRoot.GetComponentInParent<HandlePoints>();
-                if (handle != null)
-                    handlePointCache[surfaceRoot] = handle;
-            }
+            HandlePoints handle =
+                surfaceRoot.GetComponentInChildren<HandlePoints>();
+            if (handle == null)
+                handle = surfaceRoot.GetComponentInParent<HandlePoints>();
             if (handle == null || handle.pointsInOrder == null)
                 return false;
 
@@ -403,19 +394,14 @@ namespace Climbing
 
         public void FindAheadPoints(ref List<HandlePoints> list)
         {
-            int count = Physics.OverlapSphereNonAlloc(
+            Collider[] cols = Physics.OverlapSphere(
                 transform.position,
                 5f,
-                aheadPointBuffer,
                 parkourPointLayer,
                 QueryTriggerInteraction.Ignore);
 
-            for (int i = 0; i < count; i++)
+            foreach (var item in cols)
             {
-                Collider item = aheadPointBuffer[i];
-                if (item == null)
-                    continue;
-
                 Vector3 toCandidate =
                     item.transform.position - transform.position;
                 if (Vector3.Dot(transform.forward, toCandidate) > 0f)

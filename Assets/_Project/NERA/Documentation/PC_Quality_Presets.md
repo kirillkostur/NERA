@@ -25,11 +25,12 @@ requirements.
 Standalone defaults to High. Mobile remains a separate quality level excluded
 from Standalone.
 
-The `NERA -> Build -> Windows x64` command additionally embeds the
+Both `NERA -> Build -> Windows x64` and
+`NERA -> Build -> First Playable Development x64` embed the
 `NERA_WINDOWS_HIGH_100_FPS` build define. On player startup it explicitly
 selects High, disables VSync and sets `Application.targetFrameRate = 100`.
-This keeps the menu build on the intended preset even if the active Editor
-quality level was Low or Medium before building.
+The First Playable command builds only Boot, MainScene, Player_Station and
+Expedition_01 and enables Development/Debugging/Connect With Profiler.
 
 The split follows Unity's URP quality guidance: shadow support and distance,
 additional lights, MSAA, LOD bias, particle budget and LUT size are the primary
@@ -79,8 +80,9 @@ cross-fade enabled.
 
 Текущий Editor baseline после runtime-оптимизации находится в
 `Runtime_Performance_Baseline_2026-08-24.md`. Он подтверждает снижение
-`BehaviourUpdate` и GC, но не заменяет player-build GPU baseline. В частности,
-Editor Render Thread показал высокую вариативность при неизменных draw calls.
+`BehaviourUpdate` и CPU frame time, но не заменяет player-build GPU/GC/RAM
+baseline. Editor GC включает Test Runner/Editor process allocations и в
+verification 2026-08-25 вырос при улучшившемся CPU.
 
 Before changing these values globally:
 
@@ -90,3 +92,6 @@ Before changing these values globally:
    1% low frame time at each preset.
 4. Adjust one costly family at a time. Prefer shadows/render scale before
    reducing gameplay-readable effects.
+5. Подключить Profiler к WindowsPlayer сразу после запуска. Без подключения
+   Development Player заполняет стандартный 128 MB profiler buffer; для
+   длинной записи можно добавить `-profiler-maxusedmemory 268435456`.

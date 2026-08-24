@@ -58,9 +58,15 @@ Shader "Tutorial/VolumetricFog"
             float4x4 _FogExclusionWorldToLocal[NERA_MAX_FOG_EXCLUSION_VOLUMES];
             float4 _FogExclusionParameters[NERA_MAX_FOG_EXCLUSION_VOLUMES];
 
-            float henyey_greenstein(float angle, float scattering)
+            float henyey_greenstein(float cosineAngle, float scattering)
             {
-                return (1.0 - angle * angle) / (4.0 * PI * pow(1.0 + scattering * scattering - (2.0 * scattering) * angle, 1.5f));
+                float scatteringSquared = scattering * scattering;
+                float denominatorBase = max(
+                    1.0 + scatteringSquared -
+                    2.0 * scattering * cosineAngle,
+                    0.0001);
+                return (1.0 - scatteringSquared) /
+                    (4.0 * PI * pow(denominatorBase, 1.5f));
             }
 
             float get_fog_visibility(float3 worldPos)

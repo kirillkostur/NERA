@@ -60,12 +60,6 @@ namespace Climbing
 
         void Update()
         {
-            if (Application.isPlaying)
-            {
-                enabled = false;
-                return;
-            }
-
             if (createIndicators)
             {
                 createIndicators = false;

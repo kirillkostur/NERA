@@ -13,29 +13,26 @@ Unity: 6000.0.71f1
 
 Проект имеет сильную системную основу, но первый полноценный срез ещё не собран как цельный пользовательский опыт.
 
-- Техническая база: `PARTIAL`; автоматическая регрессия: `RED` до исправления
-  текущих 8 failures.
+- Техническая база: `PARTIAL`; автоматическая регрессия: `GREEN` (`252/252`).
 - Основной игровой цикл: `PARTIAL`.
 - Production-контент Station + Expedition 01: `NOT READY`.
 - Сохранение, checkpoint resume и rollback мира: `IMPLEMENTED / NEEDS FULL-FLOW QA`.
 - Player-facing UX, смерть/восстановление и аудио: `NOT READY`.
-- Актуальная standalone-сборка после интеграции parkour: `NOT VERIFIED`.
+- Актуальная standalone-сборка: `BUILT / BOOT SMOKE PASSED / FULL FLOW TODO`.
 - First Playable lock: `NOT READY`.
 
 Главный дефицит проекта сейчас — не отсутствие новых подсистем. Уже существуют питание станции, терминал, дрон, карта, экспедиции, бой, предметы, инвентарь, исследование, библиотека, квесты и сохранение. Не хватает одного короткого, устойчивого и отполированного пути, в котором эти системы последовательно работают для игрока.
 
 ## Проверенный baseline
 
-- Git working tree был чист перед началом аудита; текущие изменения относятся
-  только к документации.
-- Unity Console после проверки не содержит ошибок и предупреждений.
-- Unity Test Framework: 206/209 EditMode и 36/41 PlayMode passed. Текущие
-  failures и их классификация перечислены в актуальном аудите.
+- Unity Test Framework: 211/211 EditMode и 41/41 PlayMode passed.
 - В Build Settings включены 23 сцены: Boot, MainScene, Player Station,
   Expedition 01-08 и Unknown Signal 01-12. Для First Playable нужен отдельный
   build profile из четырёх утверждённых сцен.
 - Boot открыт без dirty state; MainScene, Player Station и Expedition 01 были проверены через Unity hierarchy.
-- Последняя документированная Windows Development Build собрана 2026-07-30: 164.56 MB, 0 errors, 0 warnings. Она предшествует крупной интеграции parkour от 2026-08-01 — 2026-08-04 и больше не является актуальным release-кандидатом.
+- First Playable Windows Development Build собрана 2026-08-25: 223.14 MB,
+  0 errors и 22 известных camera/shader warnings. Boot smoke passed; полный
+  пользовательский путь ещё не пройден.
 - Production identity зафиксирован: Company Name `Measured Field`, Product Name
   `Nera`, version `0.1.0`.
 - Production save path зафиксирован на стандартном Unity
@@ -68,16 +65,16 @@ Expedition 02-08, Unknown Signal, полный набор улучшений с�
 
 | Участок | Состояние | Что уже работает | Главный пробел |
 |---|---|---|---|
-| Boot/menu | PARTIAL | New Game/Continue с 3 слотами, overwrite confirmation, Options/Exit dialogs, additive launch и legacy migration в slot 1 | нет актуального standalone build smoke полного menu flow |
+| Boot/menu | PARTIAL | New Game/Continue с 3 слотами, 3D cameras, overwrite confirmation, Options/Exit dialogs, additive launch и legacy migration в slot 1 | Boot standalone smoke есть; полный New Game/Continue flow остаётся ручным |
 | Player/movement | PARTIAL | единый Player prefab, parkour, камера, взаимодействие, оружие, ragdoll | требуется ручной production-route regression после свежих изменений |
 | Station | PARTIAL | питание, терминал, карта, дрон, лаборатория, storage, upgrades | сцена содержит тестовые предметы, отключённых врагов, `TestStation` и parkour-примеры |
 | Quest flow | PARTIAL | data-driven quests, 4 main quests, side quests, HUD, save version 20 и opt-in checkpoint после выбранных этапов | нет журнала/уведомлений; после анализа Blue IO отсутствует authored coda/следующая цель |
 | Expedition 01 | PARTIAL | spawn/return, 2 Blue IO, loot, parkour geometry | production-сцена смешана с `Map/TestRoom` и parkour playground; нет цельного маршрута и presentation pass |
 | Combat | PROTOTYPE | hitscan weapon, projectiles, health, damage, enemy drop, death ragdoll и автоматический checkpoint recovery | нет health/damage HUD, hit/death feedback и death screen; AI движется напрямую к игроку без authored navigation/obstacle policy |
 | Inventory/research | PARTIAL | instance inventory, energy, laboratory analysis, library unlock, простой background save, per-slot rolling backups и checkpoint snapshot | нет полного player-facing результата и проверенного standalone resume pass |
-| World state | PARTIAL | `WorldItem`, `IOEnemyController`, булевы флаги дверей/головоломок и полный rollback после смерти сохраняются в version 20 | production-объектам нужны authored IDs; многосоставные состояния требуют отдельной модели |
+| World state | PARTIAL | `WorldItem`, `IOEnemyController`, булевы флаги дверей/головоломок и полный rollback после смерти сохраняются в version 20; validator проверяет ID | новые объекты финального маршрута надо повторно валидировать; многосоставные состояния требуют отдельной модели |
 | Audio/VFX | NOT READY | предусмотрены отдельные hooks, есть базовые runtime materials/particles | в project content нет authored audio assets; combat/ambience/VFX pass не выполнен |
-| QA/performance | PARTIAL | 206/209 EditMode, 36/41 PlayMode, validator, PC presets и Editor performance baseline | исправить stale/non-isolated tests; нет актуальной standalone full-flow и player-build GPU capture |
+| QA/performance | PARTIAL | 252/252 tests, validator, First Playable Development Build, Boot smoke и повторный Editor baseline | нет standalone full-flow и подключённого player-build GPU/GC/RAM/1% low capture |
 
 ## Подтверждённые риски
 
@@ -89,8 +86,9 @@ Expedition 02-08, Unknown Signal, полный набор улучшений с�
 откатывает inventory и мир вместе. Важный квест или головоломка могут сразу
 заменить точку отката после выдачи награды.
 
-Для production refactor уровня нужно заменить fallback hierarchy keys на
-стабильные authored `Persistent Id` и пройти сценарии Continue/Death в build.
+Текущие tracked scene instances имеют authored `Persistent Id`; validator
+проверяет пропуски и дубли. После production refactor уровня проверку нужно
+запустить повторно и пройти сценарии Continue/Death в build.
 
 ### P0. Нет завершённого failure/recovery loop
 
@@ -182,9 +180,11 @@ audio, authored route, current build и full-flow completion.
 
 ### Этап 4 — standalone QA и lock
 
-1. Собрать новый Windows Development Build после всех parkour/gameplay изменений.
+1. `DONE 2026-08-25`: собрать First Playable Windows Development Build из
+   четырёх утверждённых сцен.
 2. Пройти New Game, Continue, save/reload, death/recovery и возврат в меню.
-3. Проверить Low/Medium/High, зафиксировать performance baseline и loading times.
+3. Подключить Profiler к WindowsPlayer, проверить Low/Medium/High и
+   зафиксировать GPU/GC/RAM/1% low/loading.
 4. Исправить blocker/critical bugs, составить known issues.
 5. Выпустить `NERA_FP_LOCK_v0.1.0` с build, checklist и release notes.
 
@@ -203,8 +203,10 @@ Background save, checkpoint snapshot и технический death recovery р
 2026-08-04. Следующий приоритет — не новая система сохранений и не production-
 контент Expedition 02:
 
-1. end-to-end проверка `pickup/kill -> Continue` и `pickup/kill -> death -> rollback`;
-2. authored `Persistent Id` для объектов финального маршрута Expedition 01;
+1. end-to-end проверка `pickup/kill -> Continue` и
+   `pickup/kill -> death -> rollback` в текущем Development Build;
+2. подключённый WindowsPlayer profiling и High/Medium/Low pass;
 3. health/death UX и damage feedback;
 4. очистка и пересборка Station + Expedition 01 в один production blockout;
-5. явная demo-coda после анализа Blue IO shard.
+5. явная demo-coda после анализа Blue IO shard;
+6. повторный persistent-ID validator после финального authoring route.

@@ -369,7 +369,10 @@ namespace NERA.Tests
                 "side.clean_solar_panel:station_solar_01";
             QuestRuntimeState state = quests.FindActive(instanceId);
             Assert.That(state, Is.Not.Null);
-            Assert.That(state.Title, Is.EqualTo("Очистите Solar Panel 01"));
+            Assert.That(state.Title, Is.EqualTo("Запустите очистку"));
+            Assert.That(
+                state.ObjectiveTitle,
+                Is.EqualTo("Очистите Solar Panel 01"));
 
             quests.ReportDeviceCondition(
                 "station_solar_01",

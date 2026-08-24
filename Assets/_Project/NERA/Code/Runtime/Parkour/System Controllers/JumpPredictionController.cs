@@ -52,8 +52,6 @@ namespace Climbing
 
         private const float CollisionSkin = 0.02f;
         private const float MinimumSweepDistance = 0.0001f;
-        private List<HandlePoints> aheadPoints =
-            new List<HandlePoints>();
 
         [HideInInspector] public Point curPoint = null;
 
@@ -116,9 +114,8 @@ namespace Climbing
             {
                 if (controller.characterInput.jump && controller.characterInput.movement != Vector2.zero)
                 {
-                    aheadPoints.Clear();
-                    controller.characterDetection.FindAheadPoints(
-                        ref aheadPoints);
+                    List<HandlePoints> points = new List<HandlePoints>();
+                    controller.characterDetection.FindAheadPoints(ref points);
 
                     float minRange = float.NegativeInfinity;
                     float minDist = float.PositiveInfinity;
@@ -155,7 +152,7 @@ namespace Climbing
                     }
 
                     //Find Possible Landing Points relative to player direction Input
-                    foreach (var item in aheadPoints)
+                    foreach (var item in points)
                     {
                         if (item.pointType != PointType.Ledge)
                         {
@@ -252,7 +249,7 @@ namespace Climbing
                         }
                     }
 
-                    aheadPoints.Clear();
+                    points.Clear();
                 }
             }
         }

@@ -182,17 +182,12 @@ Parkour motor и ragdoll разделены намеренно:
 
 Production-сборка по-прежнему запускается на High и с лимитом 100 FPS.
 
-Runtime performance правила:
-
-- `Camera.main` кешируется и повторно ищется только при потере камеры;
-- ground/ledge/slope проверки имеют короткие интервалы, заданные в профильных
-  controller;
-- `HandlePoints`, `HandlePointConnection`, `DrawLine` и
-  `DrawLineIndividual` являются authoring helpers и отключаются в Play Mode;
-- debug drawing по умолчанию выключен;
-- interaction сохраняет покадровое обнаружение для корректного prompt, но
-  кеширует `Collider -> IInteractable` и не делает obstruction raycast для
-  кандидатов за пределами дистанции.
+Parkour-specific throttling/caching из optimization pass `3ac2afe` отменён:
+ground, ledge, slope и airborne grab снова проверяются с исходной частотой,
+authoring helpers работают как до оптимизации, а поиск parkour points снова
+использует исходный allocating query. Динамическое переключение
+`Rigidbody.interpolation` сохранено отдельно, потому что оно не меняет
+частоту parkour detection и улучшает движение персонажа.
 
 ## Что нельзя менять без регресса
 

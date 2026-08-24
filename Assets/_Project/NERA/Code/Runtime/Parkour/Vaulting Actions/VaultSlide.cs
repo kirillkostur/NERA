@@ -31,8 +31,6 @@ namespace Climbing
 {
     public class VaultSlide : VaultAction
     {
-        private const float SlopeCheckInterval = 0.1f;
-        private float nextSlopeCheckAt;
         public const float MaximumUpwardHeight = 0.05f;
         public const float MinimumSlopeAngle = 31f;
         public const float SlopeSlideSpeed = 6f;
@@ -117,10 +115,6 @@ namespace Climbing
 
         private bool TryStartSlopeSlide()
         {
-            if (Time.time < nextSlopeCheckAt)
-                return false;
-
-            nextSlopeCheckAt = Time.time + SlopeCheckInterval;
             if (!controller.isGrounded ||
                 !TryGetGroundHit(out RaycastHit groundHit) ||
                 !IsSlideSlope(groundHit.normal) ||

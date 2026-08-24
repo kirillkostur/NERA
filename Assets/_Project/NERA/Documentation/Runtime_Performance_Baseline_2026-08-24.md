@@ -63,9 +63,7 @@ save-файлы перенаправляются во временную дир�
 - fog shader globals отправляются только при изменении transform/collider;
 - time-of-day visual refresh ограничен 20 Hz;
 - maintenance update выполняется 10 Hz только для активного состояния;
-- parkour authoring helpers отключаются в Play Mode, debug drawing выключен;
-- ledge/slope/ground проверки parkour распределены по коротким интервалам;
-- `Camera.main`, CinemachineBrain, renderers и часто используемые компоненты
+- CinemachineBrain, renderers и часто используемые компоненты вне parkour
   кешируются;
 - physics queries турелей и projectile используют явные layer masks;
 - terminal UI объединяет event bursts в одно обновление за 0.1 s.
@@ -74,6 +72,12 @@ save-файлы перенаправляются во временную дир�
 `RigidbodyInterpolation.None` во время ходьбы/бега с возвратом `Interpolate`
 после остановки. Это изменение покрыто parkour tests, но не включено в цифры
 таблицы и должно войти в следующий player-build baseline.
+
+Update 2026-08-25: parkour-часть optimization pass `3ac2afe` отменена по
+запросу. Исходная частота parkour raycast/ground/slope проверок, allocating
+поиск точек и authoring-helper поведение восстановлены; динамическая Rigidbody
+interpolation сохранена. Таблицы ниже получены до этого отката и больше не
+являются текущим baseline для сцен с активным parkour.
 
 ## Интерпретация
 
@@ -86,9 +90,41 @@ Render Thread в Editor изменялся нестабильно: пример�
 выбросом. Это влияние нельзя автоматически считать player regression:
 Profiler recording, Scene/Game windows и EditorLoop сами добавляют нагрузку.
 
+## Verification 2026-08-25
+
+После функциональных исправлений benchmark повторён три раза с той же схемой
+180/600 кадров. Медиана трёх прогонов:
+
+| Сценарий | Frame | Main Thread | CPU Total | BehaviourUpdate | GC |
+|---|---:|---:|---:|---:|---:|
+| Player_Station | 5.529 ms | 2.594 ms | 5.563 ms | 0.307 ms | 51,989 B/frame |
+| Expedition_01 | 6.530 ms | 3.072 ms | 6.581 ms | 0.211 ms | 38,867 B/frame |
+
+Относительно предыдущего optimized Editor baseline CPU Main улучшился на
+20.6% на станции и 13.3% в Expedition_01; BehaviourUpdate — на 14.3% и 15.9%
+соответственно. Draw calls/triangles остались практически неизменными:
+`51/64,799` на станции и `356/130,175` в Expedition_01.
+
+GC recorder вырос на 38.1%/59.0%. Все три повторения дали близкие значения,
+однако этот counter снимается внутри Editor/Test Runner и включает allocations
+того же процесса. До WindowsPlayer capture это следует считать profiling
+риском, а не доказанной gameplay-регрессией.
+
+Windows First Playable Development Build успешно создан:
+
+- 4 сцены: Boot, MainScene, Player_Station, Expedition_01;
+- BuildReport: 223.14 MB, 0 errors, 22 warnings;
+- output: `Builds/WindowsDevelopment/NERA_FirstPlayable.exe`;
+- Development Player/debugger/profiler transport подтверждён smoke-запуском.
+
+Финальный 15-секундный snapshot показал около 293.5 MiB Working Set, но
+assemblies только что закончили загрузку, а profiler transport был активен.
+Это диагностическое значение, не финальный RAM baseline.
+
 ## Следующий profiling gate
 
-1. Создать Windows x64 Development Build с Autoconnect Profiler.
+1. Открыть Unity Profiler и подключить собранный `WindowsPlayer` до заполнения
+   его profiler buffer.
 2. Измерить Station idle, Station sandstorm/lighting transitions, Expedition
    idle и Expedition combat.
 3. Для каждого сценария записать CPU Main, Render Thread, GPU frame time, GC,
@@ -96,6 +132,9 @@ Profiler recording, Scene/Game windows и EditorLoop сами добавляют
 4. Полный прогон выполнить на High; Medium и Low проверить минимум smoke-pass.
 5. Сравнивать PlayerLoop и профиль build, а не общий EditorLoop.
 6. Не менять quality settings до получения GPU-bound кадров из player build.
+7. Если Profiler не подключается сразу, запускать с
+   `-profiler-maxusedmemory 268435456`; стандартные 128 MB были заполнены за
+   время unattended smoke.
 
 ## Локальные артефакты
 

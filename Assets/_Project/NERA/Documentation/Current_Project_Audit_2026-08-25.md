@@ -1,4 +1,4 @@
-# NERA: технический baseline после отладки
+# NERA: актуальный технический baseline
 
 Дата: 2026-08-25
 
@@ -10,217 +10,198 @@ Save schema: 20
 
 ## Краткий вывод
 
-Проект после августовской отладки стал заметно стабильнее по lifecycle и
-runtime-нагрузке. Исправлены проблемы, которые в аудите от 2026-08-14 были
-отмечены как P1: сохранение authored-состояния обслуживаемых объектов при New
-Game, коллайдеры установленных upgrade visuals, FPS-зависимая стоимость выстрела
-турели и обработка ошибок/same-scene переходов.
+Автоматический технический baseline снова зелёный:
 
-Добавлены и связаны с gameplay:
+- EditMode: `211/211`;
+- PlayMode: `41/41`;
+- First Playable Development Build: успешно, `0 errors`, `22 warnings`,
+  `223.14 MB` по BuildReport;
+- скрытый standalone smoke: Boot загружается, графика/physics/input
+  инициализируются, исключений gameplay-кода нет.
 
-- четыре физических апгрейда солнечной панели;
-- характеристика `Dust Tolerance`;
-- три режима запечённого освещения станции;
-- 3D Boot menu с двумя Cinemachine virtual cameras;
-- event-driven связи энергетики, освещения и station lifecycle;
-- кеширование и интервалы для наиболее частых runtime-проверок;
-- автоматическое отключение Rigidbody interpolation во время наземного
-  перемещения игрока.
-
-Проект пока не является зелёным release candidate:
-
-- EditMode: `206/209`;
-- PlayMode: `36/41`;
-- standalone Development Build после последних изменений не измерен;
-- PlayMode-проверка запечённого света ломается на устаревшем пути Boot UI до
-  того, как доходит до самой проверки света;
-- остаются риски stable persistent ID, восстановления несовместимых деталей и
-  потери staged-part при невозможности вернуть предмет;
-- старый Cinemachine compatibility-код создаёт deprecation warnings.
+First Playable ещё не готов к lock. Оставшиеся блокеры находятся главным
+образом в ручном full-flow QA, player-build profiling и production-контенте,
+а не в отсутствии очередной подсистемы.
 
 ## Проверенный baseline
 
-| Параметр | Текущее значение |
+| Параметр | Значение |
 |---|---|
 | Unity | 6000.0.71f1 |
 | Platform | StandaloneWindows64 |
 | Save schema | 20 |
-| Runtime C# files | 154 |
 | Enabled build scenes | 23 |
-| EditMode | 206 passed / 3 failed / 209 total |
-| PlayMode | 36 passed / 5 failed / 41 total |
-| Общий test result | 242 passed / 8 failed / 250 total |
+| First Playable build scenes | Boot, MainScene, Player_Station, Expedition_01 |
+| EditMode | 211 passed / 0 failed |
+| PlayMode | 41 passed / 0 failed |
+| Общий test result | 252 passed / 0 failed |
+| Development Build | 223.14 MB, 0 errors, 22 warnings |
+| Build output | `Builds/WindowsDevelopment/NERA_FirstPlayable.exe` |
 
-Build Settings по-прежнему содержат Boot, MainScene, Player_Station,
-Expedition_01-08 и UnknownSignal_01-12. Это технически рабочий набор, но он
-шире First Playable scope: большинство поздних сцен остаются placeholder.
+`WindowsPlayerBuild` теперь содержит отдельную команду
+`NERA/Build/First Playable Development x64`. Она валидирует проект, собирает
+только четыре утверждённые сцены, включает Development, Allow Debugging и
+Connect With Profiler. Обычная команда полного Windows build сохранена.
 
-Unity scripts компилируются без ошибок. В проекте остаются предупреждения об
-устаревших `CinemachineFreeLook` и `CinemachineOrbitalTransposer`; их миграцию
-нельзя смешивать с обычным cleanup, потому что она меняет поведение камеры.
+## Что исправлено в этом проходе
 
-## Что закрыто после аудита 2026-08-14
+### Parkour rollback
 
-| Прежний риск | Статус | Реализация |
-|---|---|---|
-| New Game задаёт всем объектам condition = 1 | Закрыт | `MaintainableObject` хранит `initialCondition`, `SaveGameController` вызывает `ResetToInitialCondition()` |
-| Installed visual сохраняет Collider | Закрыт | `StationUpgradeSlot.MakeVisualOnly()` рекурсивно отключает `Collider`, behaviours и физику |
-| Турель тратит энергию в зависимости от FPS | Закрыт | используется `FiringEnergyPerShot` и атомарный `TrySpendEnergy()` |
-| Ошибка scene load считается успешным переходом | Закрыт | введён `SceneTransitionResult`, checkpoint создаётся только после `Success`, pending spawn очищается |
-| Same-scene переход игнорирует spawn | Закрыт | отдельная ветка применяет pending spawn без перезагрузки |
-| Энергия при штатном выходе может не попасть в save | Закрыт | lifecycle flush создаёт свежий snapshot независимо от dirty-состояния |
-| Покадровые поиски energy/station controllers | В основном закрыт | lifecycle events и кеширование заменили постоянный polling |
+Parkour-specific optimization из `3ac2afe` отменена до состояния `c5736ef`:
+восстановлены исходные update/query/detection paths, debug defaults и поведение
+authoring helpers. Остальные подсистемы optimization pass не затронуты.
+Динамическое переключение `Rigidbody.interpolation` из `7385c61` сохранено и
+остаётся покрыто отдельным EditMode test. Предыдущие performance tables были
+сняты до rollback и требуют повторного player capture для parkour-сцен.
 
-## Новые системы и актуальные контракты
+### Автотесты и реальные runtime-контракты
 
-### Солнечная панель
+- save-version test использует `SaveGameData.CurrentVersion`;
+- Quest HUD editor migration больше не задаёт production font size из кода;
+- maintenance quest проверяет generic title и target-specific objective;
+- Boot lighting test использует `MainMenuController`, а не устаревший путь
+  дочерней кнопки;
+- HUD tests ожидают актуальный bullet `•`;
+- terminal status test учитывает coalesced refresh `0.1 s`;
+- decorative 3D station/map нормализуются на Default layer без изменения
+  отдельного `InteractionPoint`;
+- drone range test явно отделён от сюжетной sandstorm, которая закономерно
+  блокирует повторный запуск.
 
-`station_solar_01` является `StationUpgradeableObject`, а не отдельным
-`StationDeviceInteractable`. Один компонент отвечает за обязательное
-обслуживание/запуск удерживанием `E` и за вход в upgrade mode коротким нажатием.
-Ставить оба interactable на один объект нельзя.
+### Baked lighting
 
-Текущие слоты:
+Полный PlayMode flow теперь действительно проходит через Boot -> New Game ->
+Player_Station и подтверждает:
 
-| Slot | Деталь | Модификатор |
-|---|---|---|
-| `Slot_1` | Photovoltaic Cells | Generation `+10` |
-| `Slot_2` | Dust Protection | Dust Tolerance `+35%` |
-| `Slot_3` | Power Optimizer | Generation `+5` |
-| `Slot_4` | Tracking Drive | Generation `x1.15` |
+1. выключенная основная батарея -> `Backup Power Emergency`;
+2. включённая батарея -> `Normal Operation`;
+3. sandstorm -> `Low Energy Warning`.
 
-Полностью улучшенная панель имеет `63.25 kW` при ясной погоде вместо базовых
-`40 kW`. `Dust Tolerance = 35%` означает, что при condition `0` панель сохраняет
-35% потенциальной генерации. При condition `0.5` коэффициент равен `0.675`, а
-при condition `1` — `1.0`.
+Проверка больше не падает до загрузки станции. Пустые массивы `Light` или
+lightmap textures по-прежнему не блокируют вторую часть preset.
 
-### Освещение станции
+### Upgrade safety
 
-`SwitchBakedLights` содержит три независимых preset:
+`RestoreInstalledParts()` теперь принимает сохранённую деталь только если:
 
-- `Normal Operation`;
-- `Low Energy Warning`;
-- `Backup Power Emergency`.
+- slot существует в station definition;
+- item существует в `ItemCatalog_Default`;
+- item имеет тип `EngineeringPart`;
+- compatibility совпадает с system type, object ID и slot ID.
 
-Warning включается во время sandstorm либо при заряде не выше
-`EnergyBalance_Default / Default Consumer Minimum Charge` (`25%`). Emergency
-используется при выключенной основной батарее или нулевой main charge с
-доступным backup reserve. Каждый preset отдельно переключает baked lightmaps и
-свой массив `Light`. Пустой список источников света не блокирует карты, а
-пустой список карт не блокирует источники.
+Отмена staged-детали стала lossless: запись удаляется из staged state только
+после успешного возврата. Если inventory и storage одновременно заполнены,
+upgrade mode остаётся открытым, autosave guard не снимается, а Return To Main
+Menu отменяется. Это защищает от сохранения состояния с потерянным предметом.
 
-### Boot menu
+### Persistent IDs
 
-Boot содержит 3D station presentation и две камеры:
+`ProjectValidator` уже содержит проверку отсутствующих и дублирующихся ID для
+tracked `WorldItem`, `IOEnemyController` и `PersistentWorldFlag`, а также
+команду `NERA/Assign Missing Persistent IDs`. Повторный статический проход по
+всем включённым scene YAML не нашёл tracked scene instances с пустым ID.
 
-- `VirtualCam/VirtualCam_01` — root/options/exit;
-- `VirtualCam/VirtualCam_02` — выбор save slot для New Game/Continue.
+Новые объекты финального маршрута всё равно должны проходить validator перед
+каждой сборкой.
 
-Код меняет только Cinemachine Priority `10/0`. Смешивание принадлежит
-`MainMenuCamera/CinemachineBrain` и asset
-`Resources/MainMenuCamera Custom Blends.asset`; текущая длительность — 2 s.
+### Shader safety
 
-### Runtime performance
+В `VolumetricFog.shader` исправлена формула Henyey-Greenstein: числитель теперь
+использует scattering², а основание степени имеет нижнюю границу. Это убирает
+деление на ноль/`pow` от отрицательного значения в собственном fog shader.
 
-Создан воспроизводимый PlayMode benchmark: 180 warm-up frames и 600 measured
-frames для Player_Station и Expedition_01. Повторный результат считается как
-медиана трёх одинаковых запусков.
+## Повторное Editor profiling
 
-Ключевые изменения относительно baseline:
+После изменений выполнены три одинаковых прогона: 180 warm-up + 600 measured
+frames для станции и Expedition_01. Ниже медиана трёх прогонов.
 
-| Сценарий | Метрика | Было | Стало | Изменение |
+| Сценарий | Метрика | Предыдущий optimized | Сейчас | Изменение |
 |---|---:|---:|---:|---:|
-| Player_Station | CPU Total median | 6.713 ms | 6.434 ms | -4.2% |
-| Player_Station | BehaviourUpdate median | 0.554 ms | 0.358 ms | -35.3% |
-| Player_Station | GC median | 52,221 B/frame | 37,641 B/frame | -27.9% |
-| Expedition_01 | Main Thread median | 3.691 ms | 3.542 ms | -4.0% |
-| Expedition_01 | BehaviourUpdate median | 0.296 ms | 0.251 ms | -15.1% |
-| Expedition_01 | GC median | 25,561 B/frame | 24,447 B/frame | -4.4% |
+| Player_Station | Frame median | 6.506 ms | 5.529 ms | -15.0% |
+| Player_Station | Main Thread median | 3.267 ms | 2.594 ms | -20.6% |
+| Player_Station | CPU Total median | 6.434 ms | 5.563 ms | -13.5% |
+| Player_Station | BehaviourUpdate median | 0.358 ms | 0.307 ms | -14.3% |
+| Player_Station | GC median | 37,641 B/frame | 51,989 B/frame | +38.1% |
+| Expedition_01 | Frame median | 6.879 ms | 6.530 ms | -5.1% |
+| Expedition_01 | Main Thread median | 3.542 ms | 3.072 ms | -13.3% |
+| Expedition_01 | CPU Total median | 6.835 ms | 6.581 ms | -3.7% |
+| Expedition_01 | BehaviourUpdate median | 0.251 ms | 0.211 ms | -15.9% |
+| Expedition_01 | GC median | 24,447 B/frame | 38,867 B/frame | +59.0% |
 
-Draw calls и геометрия не изменились. Render Thread в Editor показал высокую
-вариативность, поэтому эти данные нельзя использовать как финальный GPU или
-player-build baseline. Полная методика находится в
-`Runtime_Performance_Baseline_2026-08-24.md`.
+CPU/Behaviour результат устойчиво лучше предыдущего Editor baseline. GC вырос
+во всех трёх прогонах, но `GC Allocated In Frame` записан внутри Editor/Test
+Runner процесса и включает editor/test overhead. Это сигнал для player capture,
+а не доказанная runtime-регрессия. GPU, 1% low и RAM также нельзя честно
+получить из EditorLoop.
 
-## Текущее состояние тестов
+## Development Build и smoke
 
-### EditMode: 206/209
+Финальная clean build из четырёх сцен завершилась за `105.34 s`. BuildReport
+показывает `223.14 MB`; фактический размер файлов на диске — около
+`223.35 MiB`. Финальный 15-секундный и отдельный 45-секундный скрытый smoke
+подтвердили:
 
-| Failure | Классификация | Следующее действие |
-|---|---|---|
-| `CheckpointMetadataAndWorldStateRoundTripThroughJson` | stale test | заменить ожидание save version `19` на `SaveGameData.CurrentVersion` |
-| `ProductionUiOwnsAllTextSizing` | authoring policy drift | убрать production sizing из `QuestHUDPrefabSetup` после проверки authored prefab |
-| `DynamicMaintenanceQuestUsesTargetContextWithoutDuplicates` | product copy/test drift | утвердить generic текст `Запустите очистку` либо вернуть target-specific текст, затем обновить тест |
+- Direct3D 11 и RTX 4060 Ti инициализировались;
+- assemblies, Input System и PhysX загрузились;
+- Development Player объявил debugger/profiler connection;
+- Boot не записал gameplay exception.
 
-### PlayMode: 36/41
+Финальный 15-секундный snapshot показал около `293.5 MiB` Working Set, но это
+не RAM baseline: Development profiler transport и только что завершившаяся
+загрузка assemblies входят в значение. При запуске без подключённого Profiler
+player через некоторое время
+заполняет стандартный 128 MB profiler buffer и останавливает запись. Для
+следующего замера нужно заранее открыть Profiler и выбрать WindowsPlayer либо
+запустить player с увеличенным `-profiler-maxusedmemory`.
 
-| Failure | Классификация | Следующее действие |
-|---|---|---|
-| `DroneCanSurveySecondLocationAfterRecharge` | fixture/state drift | явно привести drone maintenance condition к рабочему состоянию; `IsFlightReady` теперь требует condition = 1 и отсутствие sandstorm |
-| `MainExpeditionQuestRunsFromRuntimeSignals` | stale test | HUD использует bullet `•`, тест всё ещё ожидает `-` |
-| `StationBakedLightingFollowsRealPowerAndWeather` | broken test bootstrap | путь кнопки изменился на `RootButton/background_button/NewGameButton`; текущий NRE возникает до загрузки Player_Station и ничего не говорит о lightmaps |
-| `StationTerminalIsStatusOnlyAndReflectsPhysicalParts` | async refresh expectation | terminal refresh coalesced до одного обновления за 0.1 s, тест читает текст через один frame; ждать условие/таймаут |
-| `TerminalWorldDecorationFollowsPowerAndLastTab` | scene contract drift | определить правильный layer декоративной станции и нормализовать prefab либо тест |
+## Известные build warnings
 
-PlayMode tests всё ещё слишком сильно зависят от production scene hierarchy,
-текущего баланса и состояния, которое оставляют другие тесты. Общие действия
-Boot menu должны выполняться через helper/API, а не через hardcoded дочерние
-пути.
+Сборка имеет 22 warnings:
 
-## Оставшиеся технические риски
+- legacy `CinemachineFreeLook` и `CinemachineOrbitalTransposer`;
+- `pow` warnings в `BaseShaderForModels.shadergraph` и
+  `DissolveShader.shadergraph`;
+- один URP shadow compile warning.
 
-### P1 — до следующего release candidate
+Собственный fog `pow` исправлен; финальная clean build уже содержит эту правку.
+Оставшиеся graph/camera warnings требуют визуального regression pass; их нельзя
+безопасно закрывать только текстовой заменой.
 
-1. **Stable persistent ID.** Scene objects с пустым authored ID продолжают
-   строить ключ из hierarchy path и sibling index. Переименование может вернуть
-   подобранный item или побеждённого врага.
-2. **Restore installed parts.** `RestoreInstalledParts()` проверяет существование
-   Slot ID, но не проверяет item catalog и полную compatibility детали.
-3. **Staged-part recovery.** `RollbackAll()` очищает staged state даже если
-   предмет не удалось вернуть ни в inventory, ни в storage.
-4. **Baked lighting end-to-end.** Unit tests состояния проходят, но сломанный
-   Boot bootstrap не подтверждает реальные renderer lightmap indices после
-   полного New Game flow.
-5. **Standalone performance.** Editor baseline подтверждает scripting gains,
-   но не определяет GPU time, 1% low, RAM, loading и поведение Render Thread в
-   Development Build.
+## Оставшиеся задачи
 
-### P2 — стабилизация и поддерживаемость
+### Требуют ручного прохода в Unity/standalone
 
-- перейти с устаревших Cinemachine FreeLook/OrbitalTransposer отдельной
-  миграцией с визуальным regression pass;
-- вынести mutable production configs из controller tests в synthetic fixtures;
-- расширить ProjectValidator проверками persistent ID, upgrade compatibility,
-  installed visual purity и Boot UI contracts;
-- создать отдельный First Playable build profile только для Boot, MainScene,
-  Player_Station и Expedition_01;
-- продолжить разделение крупных UI/save controllers только после зелёного
-  baseline.
+1. Пройти Boot -> New Game -> Battery -> Terminal -> Drone -> Expedition_01 ->
+   checkpoint/death -> Continue -> Return To Menu.
+2. В подключённом WindowsPlayer Profiler записать Station idle, sandstorm,
+   Expedition idle и combat: CPU Main, Render Thread, GPU, GC, RAM, loading и
+   1% low. High — полный проход, Medium/Low — smoke.
+3. Визуально сравнить камеры до/после будущей миграции Cinemachine и материалы
+   после исправления Shader Graph `Power` nodes.
+4. Проверить все три lightmap preset глазами: renderer indices, отсутствие
+   вспышки/чёрного кадра и соответствие реальных ламп baked-картам.
 
-## Рекомендуемый порядок следующих задач
+### Production/content
 
-1. Закрыть восемь текущих test failures без изменения утверждённого gameplay.
-2. Исправить Boot test helper и выполнить реальный lighting end-to-end:
-   battery off, battery on, charge threshold, sandstorm, main charge 0/backup.
-3. Добавить validator для stable persistent ID и назначить ID production
-   объектам First Playable сцен.
-4. Валидировать restored installed parts через catalog + compatibility; сделать
-   staged-part rollback без потери предмета.
-5. Создать Development Build First Playable и снять CPU/GPU/GC/RAM/loading/1%
-   low для High, затем smoke для Medium и Low.
-6. Зафиксировать First Playable build scope и пройти Boot -> New Game -> Station
-   -> Expedition_01 -> checkpoint/death -> Continue -> Return to Menu.
-7. После технического baseline перейти к health/damage/death UI, combat/audio/
-   VFX feedback и production blockout Expedition_01.
-8. Миграцию Cinemachine и cleanup demo/dead assets выполнять отдельными
-   задачами после lock.
+1. Очистить Player_Station от test/debug content.
+2. Пересобрать Expedition_01 из parkour playground в читаемый 15–25-минутный
+   production blockout.
+3. Добавить health/damage/death UI, combat feedback и demo-coda после анализа
+   Blue IO shard.
+4. Добавить минимальный audio/VFX kit и пройти внешний playtest.
 
-## Критерий следующего baseline
+### Отдельный технический пакет после First Playable lock
 
-- EditMode и PlayMode полностью зелёные;
-- baked lighting подтверждено через Boot flow, а не только unit tests;
-- First Playable Development Build проходит полный save/checkpoint flow;
-- собраны player-build CPU/GPU/GC/RAM/loading/1% low;
-- все tracked production instances имеют стабильный persistent ID;
-- восстановление и rollback upgrade parts не могут создать несовместимое
-  состояние или потерять предмет.
+- миграция legacy Cinemachine pipeline;
+- визуальное исправление Shader Graph `pow` warnings;
+- synthetic configs для оставшихся controller tests;
+- multi-state persistence для новых составных объектов.
+
+## Следующий критерий готовности
+
+- текущие 252 automated tests остаются зелёными;
+- текущая clean build после fog shader fix проходит ручной full-flow;
+- получен WindowsPlayer, а не EditorLoop performance baseline;
+- blocker/critical bugs закрыты;
+- production route и player-facing feedback готовы к двум полным прохождениям
+  New Game и Continue.

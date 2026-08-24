@@ -551,7 +551,15 @@ namespace NERA.Core
         private IEnumerator ReturnToMainMenuRoutine()
         {
             isLoading = true;
-            StationUpgradeModeController.Instance?.PrepareForSessionEnd();
+            StationUpgradeModeController upgradeMode =
+                StationUpgradeModeController.Instance;
+            if (upgradeMode != null &&
+                !upgradeMode.PrepareForSessionEnd())
+            {
+                isLoading = false;
+                isReturningToMenu = false;
+                yield break;
+            }
             AutoSaveService autoSave = GetComponent<AutoSaveService>();
             if (autoSave == null || !autoSave.Flush())
             {

@@ -202,6 +202,7 @@ namespace NERA.Terminal
         private void ApplyPowerState(bool powered)
         {
             ResolveReferences();
+            NormalizeDecorationLayers();
             if (!powered)
             {
                 if (stationVisual != null)
@@ -230,6 +231,22 @@ namespace NERA.Terminal
             stationVisual ??= visualRoot?.Find("SM_Station_Mini_3D")?
                 .gameObject;
             mapVisual ??= visualRoot?.Find("SM_Map_Mini_3D")?.gameObject;
+        }
+
+        private void NormalizeDecorationLayers()
+        {
+            SetLayerRecursively(stationVisual, 0);
+            SetLayerRecursively(mapVisual, 0);
+        }
+
+        private static void SetLayerRecursively(GameObject root, int layer)
+        {
+            if (root == null)
+                return;
+
+            root.layer = layer;
+            foreach (Transform child in root.transform)
+                SetLayerRecursively(child.gameObject, layer);
         }
 
         private void OnDisable()

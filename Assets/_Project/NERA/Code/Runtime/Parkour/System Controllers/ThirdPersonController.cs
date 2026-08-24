@@ -66,11 +66,6 @@ namespace Climbing
 
         private float turnSmoothTime = 0.1f;
         private float turnSmoothVelocity;
-        private Camera cachedMainCamera;
-        private float nextMainCameraLookupAt;
-        [SerializeField, Range(0.01f, 0.1f)]
-        private float groundCheckInterval = 0.02f;
-        private float nextGroundCheckAt;
 
         private void Awake()
         {
@@ -95,11 +90,7 @@ namespace Climbing
         void Update()
         {
             //Detect if Player is on Ground
-            if (Time.time >= nextGroundCheckAt)
-            {
-                nextGroundCheckAt = Time.time + groundCheckInterval;
-                isGrounded = OnGround();
-            }
+            isGrounded = OnGround();
 
             //Get Input if controller and movement are not disabled
             if (!dummy && allowMovement)
@@ -136,14 +127,8 @@ namespace Climbing
         {
             Vector3 direction = new Vector3(input.x, 0f, input.y).normalized;
 
-            if (mainCamera == null && Time.unscaledTime >= nextMainCameraLookupAt)
-            {
-                nextMainCameraLookupAt = Time.unscaledTime + 0.25f;
-                if (cachedMainCamera == null)
-                    cachedMainCamera = Camera.main;
-                if (cachedMainCamera != null)
-                    mainCamera = cachedMainCamera.transform;
-            }
+            if (mainCamera == null && Camera.main != null)
+                mainCamera = Camera.main.transform;
             if (freeCamera == null)
                 freeCamera = transform;
 
