@@ -1,77 +1,16 @@
-﻿/*
-MIT License
+using System;       // Convert
+using UnityEngine;  // Monobehaviour
+using UnityEditor;  // Handles
 
-Copyright (c) 2023 Èric Canela
-Contact: knela96@gmail.com or @knela96 twitter
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (Dynamic Parkour System), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-using System.Collections;
-using System.Collections.Generic;
-using System;
-using FischlWorks;
-using UnityEngine;
-using UnityEditor;
-
-namespace Climbing
+namespace FischlWorks
 {
-    public enum MovementState { Walking, Running }
 
-    [RequireComponent(typeof(ThirdPersonController))]
-    public class MovementCharacterController : MonoBehaviour
+
+
+    public class csHomebrewIK : MonoBehaviour
     {
-        public bool showDebug = true;
-
-        [HideInInspector] public Rigidbody rb;
-        [HideInInspector] public bool limitMovement = false;
-        [HideInInspector] public bool stopMotion = false;
-        [HideInInspector] public float velLimit = 0;
-        [HideInInspector] public float curSpeed = 6f;
-
-        private ThirdPersonController controller;
-        private MovementState currentState;
-        private Vector3 velocity;
-        private float smoothSpeed;
-        private readonly RigidbodyInterpolation movementInterpolation =
-            RigidbodyInterpolation.Interpolate;
-        private bool locomotionInterpolationDisabled;
-        private bool animationDrivenClimb;
-
-        private const float AirMovementSweepPadding = 0.03f;
-        private const float MovementInputSqrThreshold = 0.0001f;
-        private const float HorizontalMovementSqrThreshold = 0.01f;
-
-        public delegate void OnLandedDelegate();
-        public delegate void OnFallDelegate();
-        public event OnLandedDelegate OnLanded;
-        public event OnFallDelegate OnFall;
-
-        [Header("Movement Settings")]
-        public float walkSpeed;
-        public float JogSpeed;
-        public float RunSpeed;
-        public float fallForce;
-
-        [Header("Feet IK")]
-        public bool enableFeetIK = true;
-
         private Animator playerAnimator = null;
 
         private Transform leftFootTransform = null;
@@ -278,390 +217,35 @@ namespace Climbing
 
         private GUIStyle helperTextStyle = null;
 
-        void Start()
-        {
-            controller = GetComponent<ThirdPersonController>();
-            rb = GetComponent<Rigidbody>();
-            rb.interpolation = movementInterpolation;
-            SetCurrentState(MovementState.Walking);
 
+
+        // --- --- ---
+
+
+
+        private void Start()
+        {
             InitializeVariables();
 
             CreateOrientationReference();
         }
 
-        void Update()
+
+
+        private void Update()
         {
-            //Handle Player Jumps and Landings
-            if (controller.isJumping)
-            {
-                controller.allowMovement = true;
+            UpdateFootProjection();
 
-                if (!controller.isGrounded && !controller.onAir)
-                {
-                    Fall();
-                }
-                else if (controller.isGrounded && controller.onAir)
-                {
-                    Landed();
-                }
-            }
+            UpdateRayHitInfo();
 
-            if (enableFeetIK && !controller.dummy)
-            {
-                UpdateFootProjection();
-
-                UpdateRayHitInfo();
-
-                UpdateIKPositionTarget();
-                UpdateIKRotationTarget();
-            }
+            UpdateIKPositionTarget();
+            UpdateIKRotationTarget();
         }
 
-        private void FixedUpdate()
+
+
+        private void OnAnimatorIK()
         {
-            RefreshLocomotionInterpolation();
-
-            //Limits player movement to avoid falling
-            if (controller.isGrounded)
-            {
-                limitMovement = CheckBoundaries();
-            }
-
-            //Apply Player Movement
-            if (!controller.dummy)
-            {
-                if (!stopMotion && !controller.characterAnimation.animState.IsName("Fall"))
-                {
-                    ApplyInputMovement();
-                }
-            }
-
-            //Grant movement while falling
-            if (!controller.dummy && controller.isJumping && controller.characterInput.movement != Vector2.zero && !controller.isVaulting)
-            {
-                ApplyAirMovement();
-            }
-
-        }
-
-        #region Movement
-
-        public void ApplyInputMovement()
-        {
-            if (GetState() == MovementState.Running)
-            {
-                velocity.Normalize();
-            }
-
-            if (velocity.magnitude > 0.3f)
-            {
-                //Applies Input Movement to the RigidBody
-                smoothSpeed = Mathf.Lerp(smoothSpeed, curSpeed, Time.fixedDeltaTime * 2);
-                rb.linearVelocity = new Vector3(velocity.x * smoothSpeed, velocity.y * smoothSpeed + rb.linearVelocity.y, velocity.z * smoothSpeed);
-
-                //Detect Player on Irregular Surface and adjust movement to avoid slowing down and undesired jumps
-                RaycastHit hit;
-                controller.characterDetection.ThrowRayOnDirection(transform.position, Vector3.down, 1.0f, out hit);
-                if (hit.normal != Vector3.up)
-                {
-                    controller.inSlope = true;
-                    rb.linearVelocity += -new Vector3(hit.normal.x, 0, hit.normal.z) * 1.0f;
-                    rb.linearVelocity = rb.linearVelocity + Vector3.up * Physics.gravity.y * 1.6f * Time.fixedDeltaTime;
-                }
-                else
-                {
-                    controller.inSlope = false;
-                }
-
-                //If player fins Small Obstacle Auto Steps it without affecting the movement
-                AutoStep();
-
-                //Sets velocity for movement animations
-                controller.characterAnimation.SetAnimVelocity(rb.linearVelocity);
-            }
-            else
-            {
-                //Lerp down with current velocity of the rigidbody when no input detected
-                smoothSpeed = Mathf.SmoothStep(smoothSpeed, 0, Time.fixedDeltaTime * 20);
-                rb.linearVelocity = new Vector3(rb.linearVelocity.normalized.x * smoothSpeed, rb.linearVelocity.y, rb.linearVelocity.normalized.z * smoothSpeed);
-                controller.characterAnimation.SetAnimVelocity(controller.characterAnimation.GetAnimVelocity().normalized * smoothSpeed);
-            }
-
-            //Apply fall multiplier as gravity
-            if (rb.linearVelocity.y <= 0)
-            {
-                rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallForce - 1) * Time.fixedDeltaTime;
-            }
-        }
-
-        private void ApplyAirMovement()
-        {
-            Vector3 horizontalVelocity = transform.forward * walkSpeed;
-            float speed = horizontalVelocity.magnitude;
-
-            if (speed > Mathf.Epsilon)
-            {
-                float sweepDistance =
-                    speed * Time.fixedDeltaTime + AirMovementSweepPadding;
-                RaycastHit[] hits = rb.SweepTestAll(
-                    horizontalVelocity / speed,
-                    sweepDistance,
-                    QueryTriggerInteraction.Ignore);
-
-                foreach (RaycastHit hit in hits)
-                {
-                    if (hit.collider == null ||
-                        hit.collider.isTrigger ||
-                        hit.rigidbody == rb)
-                    {
-                        continue;
-                    }
-
-                    horizontalVelocity = RemoveVelocityIntoSurface(
-                        horizontalVelocity,
-                        hit.normal);
-                }
-            }
-
-            rb.linearVelocity = new Vector3(
-                horizontalVelocity.x,
-                rb.linearVelocity.y,
-                horizontalVelocity.z);
-        }
-
-        public static Vector3 RemoveVelocityIntoSurface(
-            Vector3 sourceVelocity,
-            Vector3 surfaceNormal)
-        {
-            if (surfaceNormal.sqrMagnitude <= Mathf.Epsilon)
-                return sourceVelocity;
-
-            surfaceNormal.Normalize();
-            float velocityIntoSurface =
-                Vector3.Dot(sourceVelocity, surfaceNormal);
-            if (velocityIntoSurface >= 0f)
-                return sourceVelocity;
-
-            return sourceVelocity - surfaceNormal * velocityIntoSurface;
-        }
-
-        /// <summary>
-        /// Avoids the Player from falling unintentionally
-        /// </summary>
-        public bool CheckBoundaries()
-        {
-            bool ret = false;
-
-            Vector3 origin = transform.position + transform.forward * 0.5f + new Vector3(0, 0.5f, 0);
-
-            float right = 0.25f;
-
-            //Throws raycasts down to detect limits of surface
-            if (!controller.characterDetection.ThrowRayOnDirection(origin, Vector3.down, 1))
-                ret = CheckSurfaceBoundary();
-            else if (!controller.characterDetection.ThrowRayOnDirection(origin + transform.right * right, Vector3.down, 1) && ret == false)
-                ret = CheckSurfaceBoundary();
-            else if (!controller.characterDetection.ThrowRayOnDirection(origin + transform.right * -right, Vector3.down, 1) && ret == false)
-                ret = CheckSurfaceBoundary();
-
-            if (showDebug)
-            {
-                Debug.DrawLine(origin, origin + Vector3.down * 1);
-                Debug.DrawLine(origin + transform.right * right, origin + transform.right * right + Vector3.down * 1);
-                Debug.DrawLine(origin + transform.right * -right, origin + transform.right * -right + Vector3.down * 1);
-            }
-
-            return ret;
-        }
-
-        /// <summary>
-        /// Calculates the velocity necessary to avoid falling from a surface
-        /// </summary>
-        private bool CheckSurfaceBoundary()
-        {
-            Vector3 origin2 = transform.position + transform.forward * 0.8f + new Vector3(0, -0.05f, 0);
-
-            if (showDebug)
-                Debug.DrawLine(origin2, transform.position + new Vector3(0, -0.05f, 0));
-
-            //Throws a raycast towards the player from a lower position to the surface the player is on
-            RaycastHit hit1;
-            if (controller.characterDetection.ThrowRayOnDirection(origin2, -transform.forward, 1, out hit1))
-            {
-                if (showDebug)
-                    Debug.DrawLine(hit1.point, hit1.point + hit1.normal, Color.cyan);
-
-                //Throws two more raycasts to detect corners
-                RaycastHit hit2;
-                RaycastHit hit3;
-                controller.characterDetection.ThrowRayOnDirection(origin2 + transform.right * 0.05f, -transform.forward, 1, out hit2);
-                controller.characterDetection.ThrowRayOnDirection(origin2 + transform.right * -0.05f, -transform.forward, 1, out hit3);
-
-                if (hit2.normal == Vector3.zero)
-                    hit2.normal = hit1.normal;
-
-                if (hit3.normal == Vector3.zero)
-                    hit3.normal = hit1.normal;
-
-                Vector3 right = Vector3.Cross(Vector3.up, hit1.normal); //Get tangent of current surface (Right Vector)
-                velLimit = Vector3.Dot(velocity.normalized, right); //We get the projection of velocity vector to the tangent
-
-                if (hit1.normal != hit2.normal || hit1.normal != hit3.normal) //These normal checks are used to detect corners and stop movement
-                    velLimit = 0;
-
-                if (velLimit < 0.4 && velLimit > -0.4) //VelLimit direction is almost forward to the normal of the plane, stop movement
-                {
-                    velLimit = 0;
-                }
-
-                //Clamp velocity
-                if (velLimit < -0.7)
-                    velLimit = -0.7f;
-                else if (velLimit > 0.7)
-                    velLimit = 0.7f;
-
-                //Calculate new velocity
-                velocity = right * velLimit;
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public Vector3 GetVelocity() { 
-            return rb.linearVelocity; 
-        }
-
-        public void SetVelocity(Vector3 value)
-        {
-            velocity = value;
-        }
-
-        public void ResetSpeed()
-        {
-            smoothSpeed = 0;
-        }
-
-        public void SetCurrentState(MovementState state)
-        {
-            currentState = state;
-
-            switch (currentState)
-            {
-                case MovementState.Walking:
-                    curSpeed = walkSpeed;
-                    break;
-                case MovementState.Running:
-                    curSpeed = RunSpeed;
-                    smoothSpeed = curSpeed;
-                    break;
-            }
-        }
-
-        public MovementState GetState()
-        {
-            return currentState;
-        }
-
-        public void SetKinematic(bool active)
-        {
-            rb.isKinematic = active;
-        }
-
-        public void SetAnimationDrivenClimb(bool active)
-        {
-            rb ??= GetComponent<Rigidbody>();
-            if (rb == null)
-                return;
-
-            animationDrivenClimb = active;
-            ApplyRigidbodyInterpolation();
-        }
-
-        public void SetLocomotionInterpolation(bool moving)
-        {
-            rb ??= GetComponent<Rigidbody>();
-            if (rb == null)
-                return;
-
-            locomotionInterpolationDisabled = moving;
-            ApplyRigidbodyInterpolation();
-        }
-
-        private void RefreshLocomotionInterpolation()
-        {
-            if (rb == null || controller == null)
-                return;
-
-            bool movementAllowed =
-                !controller.dummy &&
-                controller.allowMovement &&
-                !controller.isVaulting &&
-                !stopMotion &&
-                controller.isGrounded;
-            bool hasMovementInput =
-                controller.characterInput != null &&
-                controller.characterInput.movement.sqrMagnitude >
-                    MovementInputSqrThreshold;
-            float horizontalSpeedSqr =
-                rb.linearVelocity.x * rb.linearVelocity.x +
-                rb.linearVelocity.z * rb.linearVelocity.z;
-
-            SetLocomotionInterpolation(
-                movementAllowed &&
-                (hasMovementInput ||
-                 horizontalSpeedSqr > HorizontalMovementSqrThreshold));
-        }
-
-        private void ApplyRigidbodyInterpolation()
-        {
-            RigidbodyInterpolation targetInterpolation =
-                animationDrivenClimb || locomotionInterpolationDisabled
-                    ? RigidbodyInterpolation.None
-                    : movementInterpolation;
-
-            if (rb.interpolation != targetInterpolation)
-                rb.interpolation = targetInterpolation;
-        }
-
-        public void EnableFeetIK()
-        {
-            enableFeetIK = true;
-        }
-        public void DisableFeetIK()
-        {
-            enableFeetIK = false;
-        }
-
-        public void ApplyGravity()
-        {
-            rb.linearVelocity += Vector3.up * -0.300f;
-        }
-
-        public void Fall()
-        {
-            controller.onAir = true;
-            OnFall?.Invoke();
-        }
-
-        public void Landed()
-        {
-            OnLanded?.Invoke();
-            controller.isJumping = false;
-            controller.onAir = false;
-        }
-
-        #endregion
-
-        #region Foot IK
-
-        private void OnAnimatorIK(int layerIndex)
-        {
-            if (!enableFeetIK || controller.dummy || playerAnimator == null)
-                return;
-
             LerpIKBufferToTarget();
 
             ApplyFootIK();
@@ -1097,6 +681,8 @@ namespace Climbing
             }
         }
 
+
+
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
@@ -1247,42 +833,44 @@ namespace Climbing
             Handles.Label(rightFootTransform.position, "R", helperTextStyle);
         }
 #endif
+    }
 
-        #endregion
 
-        #region Auto Step
 
-        private void AutoStep()
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+    public class ShowIfAttribute : PropertyAttribute
+    {
+        public string _BaseCondition
         {
-            if (controller.inSlope)
-                return;
-
-            Vector3 offset = new Vector3(0, 0.01f, 0);
-            RaycastHit hit;
-            if (controller.characterDetection.ThrowRayOnDirection(transform.position + offset, transform.forward, controller.slidingCapsuleCollider.radius + 0.1f, out hit))
-            {
-                if (!controller.characterDetection.ThrowRayOnDirection(transform.position + offset + new Vector3(0, controller.stepHeight, 0), transform.forward, controller.slidingCapsuleCollider.radius + 0.2f, out hit))
-                {
-                    rb.position += new Vector3(0, controller.stepVelocity, 0);
-                }
-            }
-            else if (controller.characterDetection.ThrowRayOnDirection(transform.position + offset, transform.TransformDirection(new Vector3(-1.5f, 0, 1)), controller.slidingCapsuleCollider.radius + 0.1f, out hit))
-            {
-                if (!controller.characterDetection.ThrowRayOnDirection(transform.position + offset + new Vector3(0, controller.stepHeight, 0), transform.TransformDirection(new Vector3(-1.5f,0,1)), controller.slidingCapsuleCollider.radius + 0.2f, out hit))
-                {
-                    rb.position += new Vector3(0, controller.stepVelocity, 0);
-                }
-            }
-            else if (controller.characterDetection.ThrowRayOnDirection(transform.position + offset, transform.TransformDirection(new Vector3(1.5f, 0, 1)), controller.slidingCapsuleCollider.radius + 0.1f, out hit))
-            {
-                if (!controller.characterDetection.ThrowRayOnDirection(transform.position + offset + new Vector3(0, controller.stepHeight, 0), transform.TransformDirection(new Vector3(1.5f, 0, 1)), controller.slidingCapsuleCollider.radius + 0.2f, out hit))
-                {
-                    rb.position += new Vector3(0, controller.stepVelocity, 0);
-                }
-            }
+            get { return mBaseCondition; }
         }
 
-        #endregion 
+        private string mBaseCondition = String.Empty;
+
+        public ShowIfAttribute(string baseCondition)
+        {
+            mBaseCondition = baseCondition;
+        }
     }
+
+
+
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+    public class BigHeaderAttribute : PropertyAttribute
+    {
+        public string _Text
+        {
+            get { return mText; }
+        }
+
+        private string mText = String.Empty;
+
+        public BigHeaderAttribute(string text)
+        {
+            mText = text;
+        }
+    }
+
+
 
 }
