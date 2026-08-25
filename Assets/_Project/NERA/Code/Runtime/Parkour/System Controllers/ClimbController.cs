@@ -205,7 +205,7 @@ namespace Climbing
             characterController ??= GetComponent<ThirdPersonController>();
             characterController?.cameraController?.ResetOffsetImmediate();
         }
-        public void OnAnimatorIK(int layerIndex)
+        public void onAnimatorIK(int layerIndex)
         {
             Animator animator = characterAnimation?.animator;
             if (animator == null)
