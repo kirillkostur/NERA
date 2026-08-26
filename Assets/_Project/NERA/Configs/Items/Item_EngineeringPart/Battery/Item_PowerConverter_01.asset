@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_PowerConverter_01
   m_EditorClassIdentifier: 
-  itemId: power_converter_01
+  itemId: item_power_converter_01
   displayName: Power Converter
   description: Stores converted energy in the battery backup reserve.
   itemType: 0

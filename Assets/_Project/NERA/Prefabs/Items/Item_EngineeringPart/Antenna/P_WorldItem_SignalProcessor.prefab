@@ -118,7 +118,7 @@ MonoBehaviour:
   questInteractionName: 
   itemData: {fileID: 11400000, guid: 6640365462db8884297742cb75a66f81, type: 2}
   destroyAfterPickup: 1
-  persistentId: 
+  persistentId: id_signal_processor_01
   trackWorldState: 1
 --- !u!65 &2315514919834485644
 BoxCollider:

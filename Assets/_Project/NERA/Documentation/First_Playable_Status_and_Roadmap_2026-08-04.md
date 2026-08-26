@@ -13,26 +13,32 @@ Unity: 6000.0.71f1
 
 Проект имеет сильную системную основу, но первый полноценный срез ещё не собран как цельный пользовательский опыт.
 
-- Техническая база: `PARTIAL`; автоматическая регрессия: `GREEN` (`252/252`).
+- Техническая база: `PARTIAL`; автоматическая регрессия: `UNSTABLE` — PlayMode
+  `41/41`, EditMode зависит от ambient locale (`206/211` при первом RU-run,
+  `211/211` после перехода в EN-state).
 - Основной игровой цикл: `PARTIAL`.
 - Production-контент Station + Expedition 01: `NOT READY`.
 - Сохранение, checkpoint resume и rollback мира: `IMPLEMENTED / NEEDS FULL-FLOW QA`.
 - Player-facing UX, смерть/восстановление и аудио: `NOT READY`.
-- Актуальная standalone-сборка: `BUILT / BOOT SMOKE PASSED / FULL FLOW TODO`.
+- Актуальная standalone-сборка: `BUILT WITH WARNINGS / STARTUP SMOKE PASSED /
+  FULL FLOW TODO`.
 - First Playable lock: `NOT READY`.
 
 Главный дефицит проекта сейчас — не отсутствие новых подсистем. Уже существуют питание станции, терминал, дрон, карта, экспедиции, бой, предметы, инвентарь, исследование, библиотека, квесты и сохранение. Не хватает одного короткого, устойчивого и отполированного пути, в котором эти системы последовательно работают для игрока.
 
 ## Проверенный baseline
 
-- Unity Test Framework: 211/211 EditMode и 41/41 PlayMode passed.
+- Unity Test Framework: PlayMode 41/41 passed; EditMode имеет пять
+  locale-dependent failures и считается conditionally green, а не стабильным
+  `211/211` baseline.
 - В Build Settings включены 23 сцены: Boot, MainScene, Player Station,
   Expedition 01-08 и Unknown Signal 01-12. Для First Playable нужен отдельный
   build profile из четырёх утверждённых сцен.
 - Boot открыт без dirty state; MainScene, Player Station и Expedition 01 были проверены через Unity hierarchy.
-- First Playable Windows Development Build собрана 2026-08-25: 223.14 MB,
-  0 errors и 22 известных camera/shader warnings. Boot smoke passed; полный
-  пользовательский путь ещё не пройден.
+- Fresh First Playable Windows Development Build собрана 2026-08-25: 224.4 MB,
+  0 build errors и 34 warnings. Короткий headless startup smoke passed; Console
+  содержит TMP importer и shader diagnostics, полный пользовательский путь ещё
+  не пройден.
 - Production identity зафиксирован: Company Name `Measured Field`, Product Name
   `Nera`, version `0.1.0`.
 - Production save path зафиксирован на стандартном Unity
@@ -71,10 +77,10 @@ Expedition 02-08, Unknown Signal, полный набор улучшений с�
 | Quest flow | PARTIAL | data-driven quests, 4 main quests, side quests, HUD, save version 20 и opt-in checkpoint после выбранных этапов | нет журнала/уведомлений; после анализа Blue IO отсутствует authored coda/следующая цель |
 | Expedition 01 | PARTIAL | spawn/return, 2 Blue IO, loot, parkour geometry | production-сцена смешана с `Map/TestRoom` и parkour playground; нет цельного маршрута и presentation pass |
 | Combat | PROTOTYPE | hitscan weapon, projectiles, health, damage, enemy drop, death ragdoll и автоматический checkpoint recovery | нет health/damage HUD, hit/death feedback и death screen; AI движется напрямую к игроку без authored navigation/obstacle policy |
-| Inventory/research | PARTIAL | instance inventory, energy, laboratory analysis, library unlock, простой background save, per-slot rolling backups и checkpoint snapshot | нет полного player-facing результата и проверенного standalone resume pass |
+| Inventory/research | PARTIAL | instance inventory, energy, laboratory analysis, library unlock, debounced main-thread save, per-slot rolling backups и checkpoint snapshot | нет полного player-facing результата, проверенного standalone resume pass и замера save spike |
 | World state | PARTIAL | `WorldItem`, `IOEnemyController`, булевы флаги дверей/головоломок и полный rollback после смерти сохраняются в version 20; validator проверяет ID | новые объекты финального маршрута надо повторно валидировать; многосоставные состояния требуют отдельной модели |
 | Audio/VFX | NOT READY | предусмотрены отдельные hooks, есть базовые runtime materials/particles | в project content нет authored audio assets; combat/ambience/VFX pass не выполнен |
-| QA/performance | PARTIAL | 252/252 tests, validator, First Playable Development Build, Boot smoke и повторный Editor baseline | нет standalone full-flow и подключённого player-build GPU/GC/RAM/1% low capture |
+| QA/performance | PARTIAL | условно проходящие tests, validator, First Playable Development Build, startup smoke и повторный Editor baseline | locale-dependent EditMode, validator/importer Console errors, нет standalone full-flow и подключённого player-build GPU/GC/RAM/1% low capture |
 
 ## Подтверждённые риски
 
@@ -148,7 +154,7 @@ audio, authored route, current build и full-flow completion.
 1. `IMPLEMENTED 2026-08-04`: persisted consumption/defeat state для
    `WorldItem`, `IOEnemyController` и enemy drops; назначить production authored
    IDs объектам финального маршрута.
-2. `IMPLEMENTED 2026-08-04`: простой background save, отдельный полный
+2. `PARTIAL 2026-08-25`: debounced synchronous save, отдельный полный
    checkpoint snapshot, current scene/spawn, Continue resume и death rollback;
    выполнить end-to-end PlayMode/standalone QA.
 3. `PARTIAL 2026-08-04`: автоматическое revive/reload и краткий checkpoint HUD готовы;
@@ -199,8 +205,9 @@ audio, authored route, current build и full-flow completion.
 
 ## Ближайший рабочий пакет
 
-Background save, checkpoint snapshot и технический death recovery реализованы
-2026-08-04. Следующий приоритет — не новая система сохранений и не production-
+Debounced save, checkpoint snapshot и технический death recovery реализованы.
+Файловая запись остаётся синхронной и требует player profiling. Следующий
+приоритет — не новая система сохранений и не production-
 контент Expedition 02:
 
 1. end-to-end проверка `pickup/kill -> Continue` и

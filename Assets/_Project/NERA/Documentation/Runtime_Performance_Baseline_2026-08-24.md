@@ -8,6 +8,11 @@ Unity: 6000.0.71f1
 
 Сценарии: Player_Station и Expedition_01
 
+> Актуализация 2026-08-25: таблицы ниже остаются историческими Editor-замерами.
+> Свежая First Playable build имеет 224.4 MB, 0 build errors и 34 warnings.
+> Текущий gate и найденные Console/test проблемы описаны в
+> `Current_Project_Audit_2026-08-25.md`.
+
 ## Методика
 
 `RuntimePerformanceBenchmarkTests` запускает Boot-equivalent New Game flow,
@@ -116,6 +121,11 @@ Windows First Playable Development Build успешно создан:
 - BuildReport: 223.14 MB, 0 errors, 22 warnings;
 - output: `Builds/WindowsDevelopment/NERA_FirstPlayable.exe`;
 - Development Player/debugger/profiler transport подтверждён smoke-запуском.
+
+Эти значения заменены свежей build того же дня: `224.4 MB`, `0 build errors`,
+`34 warnings`, `343.37 s`. Player data пересобран; 20-секундный headless smoke
+подтвердил startup без gameplay exception. Это не full-flow и не новый
+performance baseline.
 
 Финальный 15-секундный snapshot показал около 293.5 MiB Working Set, но
 assemblies только что закончили загрузку, а profiler transport был активен.

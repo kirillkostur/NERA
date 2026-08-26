@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_CalibrationModule_01
   m_EditorClassIdentifier: 
-  itemId: calibration_module_01
+  itemId: item_calibration_module_01
   displayName: Calibration Module
   description: Speeds up antenna calibration and improves scan range.
   itemType: 0

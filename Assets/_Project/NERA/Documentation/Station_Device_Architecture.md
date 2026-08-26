@@ -379,12 +379,16 @@ Assets/_Project/NERA/Resources/ItemCatalog_Default.asset
 
 Текущие детали:
 
+План размещения всех текущих деталей по антенным локациям и требуемое число
+повторных экземпляров находятся в
+`Unknown_Signal_Engineering_Part_Progression.md`.
+
 | Item Id | Slot | Modifier |
 |---|---|---|
-| `solar_cells_01` | `Slot_1` | Generation / Add / `10` |
-| `solar_dust_repeller_01` | `Slot_2` | Dust Tolerance / Add / `35` |
-| `solar_mppt_controller_01` | `Slot_3` | Generation / Add / `5` |
-| `solar_tracker_01` | `Slot_4` | Generation / Multiply / `1.15` |
+| `item_solar_cells_01` | `Slot_1` | Generation / Add / `10` |
+| `item_solar_dust_repeller_01` | `Slot_2` | Dust Tolerance / Add / `35` |
+| `item_solar_mppt_controller_01` | `Slot_3` | Generation / Add / `5` |
+| `item_solar_tracker_01` | `Slot_4` | Generation / Multiply / `1.15` |
 
 Полная Generation рассчитывается по общему правилу:
 

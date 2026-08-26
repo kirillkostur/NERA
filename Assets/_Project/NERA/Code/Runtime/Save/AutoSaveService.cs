@@ -14,8 +14,8 @@ using UnityEngine;
 namespace NERA.Save
 {
     /// <summary>
-    /// A small background writer. Gameplay systems only mark the active slot
-    /// dirty; this service combines bursts and writes one current-state save.
+    /// Debounces dirty-state events and writes one current-state save on the
+    /// main thread. This coordinator does not perform background file I/O.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AutoSaveService : MonoBehaviour

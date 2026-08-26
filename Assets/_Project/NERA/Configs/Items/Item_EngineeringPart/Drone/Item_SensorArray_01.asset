@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_SensorArray_01
   m_EditorClassIdentifier: 
-  itemId: sensor_array_01
+  itemId: item_sensor_array_01
   displayName: Sensor Array
   description: Improves drone navigation and long-range scanning.
   itemType: 0

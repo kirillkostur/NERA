@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_SignalProcessor_01
   m_EditorClassIdentifier: 
-  itemId: signal_processor_01
+  itemId: item_signal_processor_01
   displayName: Signal Processor
   description: Processes signal data for wider scans and faster calibration.
   itemType: 0

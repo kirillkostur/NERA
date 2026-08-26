@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_VoltageRegulator_01
   m_EditorClassIdentifier: 
-  itemId: voltage_regulator_01
+  itemId: item_voltage_regulator_01
   displayName: Voltage Regulator
   description: Stabilizes battery voltage during peak load.
   itemType: 0

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_PowerCore_01
   m_EditorClassIdentifier: 
-  itemId: power_core_01
+  itemId: item_power_core_01
   displayName: Power Core
   description: Expands drone battery capacity and travel range.
   itemType: 0

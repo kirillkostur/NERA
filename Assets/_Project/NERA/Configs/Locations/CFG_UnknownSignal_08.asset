@@ -23,7 +23,7 @@ MonoBehaviour:
   discoverySource: 1
   droneScanDuration: 5
   requiredDroneTravelRange: 0
-  requiredAntennaScanRange: 2
+  requiredAntennaScanRange: 4
   initialState: 0
   mapSymbol: 1
   mapSlot: {fileID: 0}

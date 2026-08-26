@@ -512,7 +512,7 @@ namespace NERA.Tests
         }
 
         [Test]
-        public void RestoreKeepsPhysicalPartsByObjectAndSlot()
+        public void RestoreMigratesLegacyPhysicalPartIdByObjectAndSlot()
         {
             systems.Restore(
                 new Dictionary<StationSystemType, bool>(),
@@ -535,7 +535,7 @@ namespace NERA.Tests
                     StationSystemType.Turret,
                     "station_turret_02",
                     "Slot_3"),
-                Is.EqualTo("emitter_damage_01"));
+                Is.EqualTo("item_emitter_damage_01"));
             Assert.That(
                 systems.GetInstalledPartCount(
                     StationSystemType.Turret,
@@ -561,7 +561,7 @@ namespace NERA.Tests
                                 "missing_part"),
                             new StationInstalledPartState(
                                 "Slot_2",
-                                "emitter_damage_01")
+                                "item_emitter_damage_01")
                         })
                 });
 
@@ -814,7 +814,7 @@ namespace NERA.Tests
 
             Assert.That(controller.ToggleSlot(slot), Is.True);
             Assert.That(
-                slotObject.transform.Find("Installed_emitter_damage_01"),
+                slotObject.transform.Find("Installed_item_emitter_damage_01"),
                 Is.Not.Null,
                 "The selected part must be previewed before Apply.");
             Assert.That(
@@ -1160,7 +1160,7 @@ namespace NERA.Tests
 
             LogAssert.Expect(
                 LogType.Error,
-                "Could not return staged part 'emitter_damage_01'.");
+                "Could not return staged part 'item_emitter_damage_01'.");
             LogAssert.Expect(
                 LogType.Error,
                 "Station upgrade mode cannot close because a staged part " +

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_EnergyCells_01
   m_EditorClassIdentifier: 
-  itemId: energy_cells_01
+  itemId: item_energy_cells_01
   displayName: Energy Cells
   description: Stores the station's main energy reserve.
   itemType: 0

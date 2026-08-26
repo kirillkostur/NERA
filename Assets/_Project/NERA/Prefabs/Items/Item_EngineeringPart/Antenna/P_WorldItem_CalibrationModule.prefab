@@ -118,7 +118,7 @@ MonoBehaviour:
   questInteractionName: 
   itemData: {fileID: 11400000, guid: 41ea2607dc10d054f996225413e518d5, type: 2}
   destroyAfterPickup: 1
-  persistentId: 
+  persistentId: id_calibration_module_01
   trackWorldState: 1
 --- !u!65 &2315514919834485644
 BoxCollider:

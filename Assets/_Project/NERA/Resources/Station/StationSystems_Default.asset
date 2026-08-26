@@ -171,7 +171,7 @@ MonoBehaviour:
       decimals: 1
     - stat: 14
       displayName: Calibration duration
-      baseValue: 10
+      baseValue: 120
       unit: ' s'
       decimals: 1
     slots:

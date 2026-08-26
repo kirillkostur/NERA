@@ -113,9 +113,12 @@ Status: `PARTIAL`
   checkpoint scene/authored spawn or player pose, and supported world-object
   state.
 - DONE: compact HUD with highest-priority main and side quest objectives.
-- DONE: simple event-driven background writer with 2-second debounce,
-  10-second dirty cap, transition/lifecycle flushes and rolling per-slot
-  backups.
+- PARTIAL: event-driven autosave has a 2-second debounce, 10-second dirty cap,
+  transition/lifecycle flushes and rolling per-slot backups, but serialization
+  and `File.WriteAllText` are synchronous on the main thread; the old
+  `background writer` description was inaccurate.
+- TODO: measure save spikes in WindowsPlayer and move file I/O behind a
+  single-writer queue if the capture shows a player-visible stall.
 - DONE: separate full checkpoint snapshot per slot, checkpoint scene with an
   authored spawn or dynamic player pose, Continue resume and death rollback.
 - DONE: Expedition 01 and Expedition 02 start-spawn checkpoint triggers and
@@ -146,17 +149,23 @@ Status: `PARTIAL`
 - TODO: Expedition route readability pass.
 - TODO: planned VFX placeholders.
 - TODO: planned SFX and ambience placeholders; no authored project audio assets
-  were found during the 2026-08-04 audit.
+  were found during the repeated 2026-08-25 audit.
 - TODO: internal playtest checklist.
 
 ## Sprint 08 - QA and Performance Baseline
 
 Status: `PARTIAL`
 
-- DONE: current Unity 6000.0.71f1 automated baseline — 211/211 EditMode and
-  41/41 PlayMode.
-- DONE: permanent editor validation command for required scenes and station
-  foundations, including production Company/Product identity.
+- PARTIAL: Unity 6000.0.71f1 automated baseline is not deterministic. PlayMode
+  passes `41/41`; the first full EditMode run under the Russian ambient locale
+  passed 206 and failed 5, while a later English-state run passed `211/211`.
+- TODO: isolate/restore locale in Quest, Laboratory and StationSystems EditMode
+  fixtures, then pass two consecutive full runs under both RU and EN.
+- PARTIAL: permanent editor validation command covers required scenes and
+  station foundations, including production Company/Product identity, but
+  additive validation from `Testing.unity` emits a Directional vs
+  Non-Directional lightmap mode Console Error.
+- TODO: make validator scene/lightmap checks isolated and state-restoring.
 - TODO: inject synthetic StationSystemsConfig into controller tests instead of
   reading mutable production Resources assets.
 - TODO: isolate every PlayMode fixture with an explicit clean scene and teardown.
@@ -189,8 +198,16 @@ Status: `PARTIAL`
   interpolation from `7385c61` remains enabled and tested.
 - DONE: last known Windows Development Build — 164.56 MB, 0 errors and
   0 warnings (2026-07-30).
-- DONE: First Playable Windows Development Build — 223.14 MB, 0 errors,
-  22 known warnings; Boot smoke completed.
+- DONE: fresh First Playable Windows Development Build — 224.4 MB, 0 build
+  errors, 34 warnings, four scenes, 343.37 seconds (2026-08-25).
+- PARTIAL: fresh 20-second headless startup smoke initialized Mono, Input System
+  and PhysX without a gameplay exception; it is not a Boot-to-gameplay pass.
+- TODO: repair/reimport `LiberationSans SDF - Fallback.asset`; the successful
+  build still emitted a NativeFormatImporter inconsistent-result Console Error.
+- TODO: fix Shader Graph/fog compile diagnostics and verify the materials
+  visually.
+- TODO: rename the misleading lower-case `ClimbController.onAnimatorIK` helper
+  and add an Animator IK integration regression (`UNT0033`).
 - TODO: standalone full-flow QA.
 - DONE: current bug list and priorities are recorded in the 2026-08-25 audit.
 - PARTIAL: repeated Editor CPU/frame-time baseline and current build size are
@@ -203,13 +220,20 @@ Status: `PARTIAL`
 Status: `TODO`
 
 - TODO: close blocker and critical issues.
-- TODO: clean obsolete debug dependencies.
+- TODO: remove/archive tracked `/profile.data` and add a precise ignore rule.
+- TODO: remap production references away from AI Navigation/TMP sample assets,
+  then remove confirmed unused DOTween/demo dependencies with a build after
+  each package change.
 - TODO: create and archive NERA_FP_LOCK_v0.1.0.
 - TODO: release notes, known issues and lock checklist.
 
 ## Sprint 10 - Milestone 02 Foundation
 
 Status: `PARTIAL`
+
+Scope note: no further Sprint 10 feature/content expansion before Sprint 09
+First Playable lock. Only compatibility fixes for already-added foundations are
+in scope.
 
 - DONE: stable string Location Id, serialized SceneReference, LocationType,
   LocationState and DiscoverySource.
@@ -230,15 +254,20 @@ Status: `PARTIAL`
 
 ## Current Order
 
-1. Connect Unity Profiler to the current WindowsPlayer and capture
+1. Restore a deterministic gate: locale-isolated EditMode tests, isolated
+   validator, stable TMP fallback import, explicit parkour IK helper and clean
+   Shader Graph/fog compilation.
+2. Run two consecutive clean First Playable builds and preserve the reports.
+3. Remove test content from Player Station and turn Expedition_01 from a
+   parkour playground into one focused production blockout; add the demo-coda.
+4. Add health HUD, combat/damage/death feedback and respawn/reload
+   presentation; author the minimum audio/VFX/objective feedback kit.
+5. Pass the complete Boot -> Station -> Expedition -> research/coda ->
+   checkpoint/death -> Continue -> Return to Menu flow in WindowsPlayer.
+6. Connect Unity Profiler to WindowsPlayer and capture
    CPU/GPU/GC/RAM/loading/1% low on High, with Medium/Low smoke passes.
-2. Pass the complete Boot -> Station -> Expedition -> checkpoint/death ->
-   Continue -> Return to Menu flow in that build.
-3. Add health HUD, damage/death feedback and respawn/reload presentation.
-4. Remove test content from Player Station and turn Expedition_01 from a
-   parkour playground into a focused production blockout.
-5. Complete combat, objective, audio, VFX and route-readability feedback.
-6. Fix Shader Graph `Power` warnings with visual regression coverage.
-7. Close blocker/critical issues and create the First Playable lock.
-8. After lock, migrate deprecated Cinemachine, remove confirmed dead/demo
-   dependencies and only then expand Expedition_02-08/Unknown Signal content.
+7. Run an external playtest, close blocker/critical issues and create the First
+   Playable lock.
+8. After lock, migrate deprecated Cinemachine, split large controllers and
+   remove confirmed dead/sample packages before expanding Expedition 02–08 or
+   Unknown Signal content.

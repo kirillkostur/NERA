@@ -27,7 +27,7 @@ Unity: 6000.0.71f1
 Отсутствующие батарейные Engineering Part считаются запланированным
 наполнением контента и в список дефектов не входят. После их добавления нужно
 заменить устаревший тест, который сейчас пытается установить дроновый
-`capacitor_01` в батарею.
+`item_capacitor_01` в батарею.
 
 ## Объём и способ проверки
 
@@ -208,7 +208,7 @@ same-scene teleport.
 |---|---|
 | `AntennaCannotCalibrateSignalBeyondConfiguredScanRange` | Тест использует production config; все Unknown Signal сейчас требуют Scan Range 1. |
 | `AntennaUsesCentralObjectCalibrationDuration` | Ожидается 8, текущий config содержит 120. |
-| `EveryItemHasEnglishAndRussianContentEntries` | Реальный content defect: отсутствует EN key `item.antenna_array_01.name`. |
+| `EveryItemHasEnglishAndRussianContentEntries` | Реальный content defect: отсутствует EN key `item.item_antenna_array_01.name`. |
 | `SaveVersion14SerializesQuestAndMaintenanceState` | Устаревшее имя и ожидание version 18; runtime version 19. |
 | `DroneLaunchConsumesConfiguredBatteryCharge` | Ожидается Battery Charge 100, текущий config содержит 200. |
 | `DroneRechargeTimeUsesOnlyMissingBatteryCharge` | Ожидается Energy Consumption 4, текущий config содержит 3. |

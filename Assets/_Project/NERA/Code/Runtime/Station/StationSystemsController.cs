@@ -727,7 +727,7 @@ namespace NERA.Station
                     continue;
                 }
 
-                parts[slotId] = itemId;
+                parts[slotId] = item.ItemId;
             }
             if (parts.Count > 0)
                 installedParts[GetPartStateKey(type, objectId)] = parts;

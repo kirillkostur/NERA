@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_CoolingSystem_01
   m_EditorClassIdentifier: 
-  itemId: cooling_system_01
+  itemId: item_cooling_system_01
   displayName: Cooling System
   description: Removes heat from the battery under heavy load.
   itemType: 0

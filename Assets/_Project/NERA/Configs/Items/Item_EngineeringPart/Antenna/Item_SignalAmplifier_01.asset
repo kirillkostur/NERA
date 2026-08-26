@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
   m_Name: Item_SignalAmplifier_01
   m_EditorClassIdentifier: 
-  itemId: signal_amplifier_01
+  itemId: item_signal_amplifier_01
   displayName: Signal Amplifier
   description: Amplifies weak signals and reduces calibration time.
   itemType: 0

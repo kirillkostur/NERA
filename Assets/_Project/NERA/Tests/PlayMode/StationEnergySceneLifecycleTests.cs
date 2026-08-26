@@ -1024,7 +1024,7 @@ namespace NERA.Tests
                 Is.True);
 
             ItemData emitter = Resources.Load<ItemCatalogData>(
-                "ItemCatalog_Default").Find("emitter_damage_01");
+                "ItemCatalog_Default").Find("item_emitter_damage_01");
             Assert.That(emitter, Is.Not.Null);
             EngineeringPartCompatibility compatibility = turretDefinition
                 .Slots
@@ -1066,7 +1066,7 @@ namespace NERA.Tests
             Transform installedPreview = Array.Find(
                 turretPreview.GetComponentsInChildren<Transform>(true),
                 candidate => candidate.name ==
-                    "Installed_emitter_damage_01");
+                    "Installed_item_emitter_damage_01");
             Assert.That(
                 installedPreview,
                 Is.Not.Null,
@@ -1915,7 +1915,7 @@ namespace NERA.Tests
             StationSystemDefinition definition =
                 systems.GetDefinition(StationSystemType.Drone);
             ItemData powerCore = Resources.Load<ItemCatalogData>(
-                "ItemCatalog_Default").Find("power_core_01");
+                "ItemCatalog_Default").Find("item_power_core_01");
             EngineeringPartCompatibility compatibility = powerCore?
                 .EngineeringPartDefinition?.CompatibleInstallations
                 .FirstOrDefault(candidate =>
@@ -2048,7 +2048,7 @@ namespace NERA.Tests
                 "A distant expedition must remain locked before the drone upgrade.");
 
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-            ItemData propulsion = catalog != null ? catalog.Find("propulsion_01") : null;
+            ItemData propulsion = catalog != null ? catalog.Find("item_propulsion_01") : null;
             Assert.That(systems, Is.Not.Null);
             Assert.That(propulsion, Is.Not.Null);
             EngineeringPartCompatibility propulsionCompatibility =
@@ -2233,7 +2233,7 @@ namespace NERA.Tests
             ItemCatalogData catalog =
                 Resources.Load<ItemCatalogData>("ItemCatalog_Default");
             ItemData item = catalog != null
-                ? catalog.Find("servo_drive_01")
+                ? catalog.Find("item_servo_drive_01")
                 : null;
 
             Assert.That(hud, Is.Not.Null);
@@ -2935,7 +2935,7 @@ namespace NERA.Tests
                 Object.FindFirstObjectByType<Terminal.TerminalUIScreen>(
                     FindObjectsInactive.Include);
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-            ItemData item = catalog != null ? catalog.Find("servo_drive_01") : null;
+            ItemData item = catalog != null ? catalog.Find("item_servo_drive_01") : null;
 
             Assert.That(inventory, Is.Not.Null);
             Assert.That(storage, Is.Not.Null);
@@ -3083,7 +3083,7 @@ namespace NERA.Tests
             StationStorageController storage = StationStorageController.Instance;
             BootInitializer runtime = BootInitializer.Instance;
             ItemCatalogData catalog = Resources.Load<ItemCatalogData>("ItemCatalog_Default");
-            ItemData servoDrive = catalog != null ? catalog.Find("servo_drive_01") : null;
+            ItemData servoDrive = catalog != null ? catalog.Find("item_servo_drive_01") : null;
             Assert.That(inventory, Is.Not.Null);
             Assert.That(storage, Is.Not.Null);
             Assert.That(runtime, Is.Not.Null);
@@ -3102,7 +3102,7 @@ namespace NERA.Tests
             yield return WaitForScene("Player_Station");
             yield return null;
 
-            Assert.That(inventory.Contains("servo_drive_01"), Is.True);
+            Assert.That(inventory.Contains("item_servo_drive_01"), Is.True);
             Assert.That(storage.Count, Is.EqualTo(storedBefore));
         }
 
