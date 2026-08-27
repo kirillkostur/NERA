@@ -52,6 +52,17 @@ namespace NERA.Tests
             Assert.That(
                 serialized.FindProperty("ioEnemyPrefab").objectReferenceValue,
                 Is.Not.Null);
+            Assert.That(
+                serialized.FindProperty("languageButton").objectReferenceValue,
+                Is.Not.Null);
+            Button languageButton = serialized.FindProperty("languageButton")
+                .objectReferenceValue as Button;
+            RectTransform languageRect =
+                languageButton.GetComponent<RectTransform>();
+            Assert.That(languageRect.anchoredPosition,
+                Is.EqualTo(new Vector2(30f, -1002f)));
+            Assert.That(languageRect.sizeDelta,
+                Is.EqualTo(new Vector2(220f, 48f)));
 
             string[] labels = prefab
                 .GetComponentsInChildren<Text>(true)
@@ -67,6 +78,7 @@ namespace NERA.Tests
             Assert.That(labels, Does.Contain("БАТАРЕЯ:"));
             Assert.That(labels, Does.Contain("ТУРЕЛИ:"));
             Assert.That(labels, Does.Contain("ТЕРМИНАЛ"));
+            Assert.That(labels, Does.Contain("ЯЗЫК"));
             Assert.That(labels.Count(label => label == "ВКЛ"), Is.EqualTo(7));
             Assert.That(labels.Count(label => label == "ВЫКЛ"), Is.EqualTo(7));
             Assert.That(labels.Count(label => label == "+1"), Is.EqualTo(25));

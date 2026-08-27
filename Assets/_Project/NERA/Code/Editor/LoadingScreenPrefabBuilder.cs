@@ -215,6 +215,7 @@ namespace NERA.EditorTools
                 "Загрузка...",
                 38f,
                 TextAlignmentOptions.BottomRight);
+            status.gameObject.AddComponent<SequentialEllipsisText>();
             RectTransform statusRect = status.rectTransform;
             statusRect.anchorMin = new Vector2(0.77f, 0.035f);
             statusRect.anchorMax = new Vector2(0.97f, 0.16f);

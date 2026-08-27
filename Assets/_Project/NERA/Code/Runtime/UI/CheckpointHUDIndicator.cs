@@ -1,5 +1,6 @@
 using System.Collections;
 using NERA.Save;
+using TMPro;
 using UnityEngine;
 
 namespace NERA.UI
@@ -9,6 +10,7 @@ namespace NERA.UI
     public sealed class CheckpointHUDIndicator : MonoBehaviour
     {
         [SerializeField, Min(0f)] private float resultDuration = 1.5f;
+        [SerializeField] private SequentialEllipsisText ellipsisAnimator;
 
         private CanvasGroup canvasGroup;
         private Coroutine hideRoutine;
@@ -16,6 +18,9 @@ namespace NERA.UI
         private void Awake()
         {
             canvasGroup = GetComponent<CanvasGroup>();
+            ellipsisAnimator ??= GetComponent<SequentialEllipsisText>();
+            if (ellipsisAnimator == null && GetComponent<TMP_Text>() != null)
+                ellipsisAnimator = gameObject.AddComponent<SequentialEllipsisText>();
             SetVisible(false);
         }
 
@@ -60,6 +65,8 @@ namespace NERA.UI
             canvasGroup.alpha = visible ? 1f : 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
+            if (ellipsisAnimator != null)
+                ellipsisAnimator.enabled = visible;
         }
     }
 }

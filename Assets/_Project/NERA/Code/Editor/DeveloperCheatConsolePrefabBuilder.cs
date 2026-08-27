@@ -388,6 +388,15 @@ namespace NERA.EditorTools
                 220f,
                 48f);
 
+            Button language = CreateButton(
+                window.transform,
+                "LanguageButton",
+                "ЯЗЫК",
+                30f,
+                1002f,
+                220f,
+                48f);
+
             CreateLabel(
                 window.transform,
                 "ItemsHeader",
@@ -492,6 +501,7 @@ namespace NERA.EditorTools
                 stationDisableButtons,
                 spawnIo,
                 killIo,
+                language,
                 itemButtons,
                 orderedItems);
 
@@ -519,6 +529,7 @@ namespace NERA.EditorTools
             IReadOnlyList<Button> stationDisableButtons,
             Button spawnIo,
             Button killIo,
+            Button language,
             IReadOnlyList<Button> itemButtons,
             IReadOnlyList<ItemData> items)
         {
@@ -547,6 +558,7 @@ namespace NERA.EditorTools
                 stationDisableButtons);
             SetReference(serialized, "spawnIoButton", spawnIo);
             SetReference(serialized, "killIoButton", killIo);
+            SetReference(serialized, "languageButton", language);
             SetReference(
                 serialized,
                 "ioEnemyPrefab",

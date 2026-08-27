@@ -82,6 +82,40 @@ namespace NERA.Tests
             Assert.That(
                 prefab.transform.Find("LoadingWindow/LoadingText"),
                 Is.Not.Null);
+            Assert.That(
+                prefab.transform.Find("LoadingWindow/LoadingText")
+                    .GetComponent<SequentialEllipsisText>(),
+                Is.Not.Null);
+        }
+
+        [Test]
+        public void SequentialEllipsisKeepsThreeDotsAndLocalizedBaseText()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                PrefabPath);
+            GameObject source = prefab.transform.Find(
+                "LoadingWindow/LoadingText").gameObject;
+            GameObject root = Object.Instantiate(source);
+            try
+            {
+                SequentialEllipsisText animator =
+                    root.GetComponent<SequentialEllipsisText>();
+
+                animator.SetBaseText("Загрузка...");
+                Component label = root.GetComponent(
+                    "TMPro.TextMeshProUGUI");
+                string animatedText = (string)label.GetType()
+                    .GetProperty("text")?.GetValue(label);
+
+                Assert.That(animator.BaseText, Is.EqualTo("Загрузка"));
+                Assert.That(animatedText.Count(character => character == '.'),
+                    Is.EqualTo(3));
+                Assert.That(animatedText, Does.Contain("<alpha=#FF>."));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
     }
 }

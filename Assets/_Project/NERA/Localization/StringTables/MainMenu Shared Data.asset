@@ -87,10 +87,6 @@ MonoBehaviour:
     m_Key: save.empty
     m_Metadata:
       m_Items: []
-  - m_Id: 4300279775223808
-    m_Key: options.language_shortcut
-    m_Metadata:
-      m_Items: []
   - m_Id: 6328203953037312
     m_Key: ui.boot.canvas_panel_rootbutton_background_button_optionsbutton_text_tmp
     m_Metadata:

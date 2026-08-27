@@ -468,32 +468,36 @@ namespace NERA.Tests
             SaveSlotStorage.DeleteAllSlots();
         }
 
-#if UNITY_EDITOR
         [UnityTest]
-        public IEnumerator EditorPlayModeLanguageSwitcherTogglesLocale()
+        public IEnumerator CheatConsoleLanguageButtonTogglesLocale()
         {
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene("MainScene");
             yield return null;
 
-            PlayModeLanguageSwitcher switcher =
-                Object.FindFirstObjectByType<PlayModeLanguageSwitcher>();
-            Assert.That(switcher, Is.Not.Null);
-            Assert.That(switcher.ButtonText, Does.Contain("EN"));
+            NERA.Development.DeveloperCheatConsoleController cheats =
+                Object.FindFirstObjectByType<
+                    NERA.Development.DeveloperCheatConsoleController>();
+            Assert.That(cheats, Is.Not.Null);
+            Transform languageButton = cheats.transform.Find(
+                "CheatWindow/LanguageButton");
+            Assert.That(languageButton, Is.Not.Null);
+            Button button = languageButton.GetComponent<Button>();
+            Assert.That(button, Is.Not.Null);
 
-            switcher.Toggle();
+            NERALocalization.SetLocale(NERALocalization.EnglishCode);
+            yield return null;
+            button.onClick.Invoke();
             yield return null;
             Assert.That(
                 NERALocalization.CurrentLocaleCode,
                 Is.EqualTo(NERALocalization.RussianCode));
-            Assert.That(switcher.ButtonText, Does.Contain("RU"));
 
-            switcher.Toggle();
+            button.onClick.Invoke();
             yield return null;
             Assert.That(
                 NERALocalization.CurrentLocaleCode,
                 Is.EqualTo(NERALocalization.EnglishCode));
         }
-#endif
 
         [UnityTest]
         public IEnumerator LaboratoryIsUnavailableUntilGridStarts()

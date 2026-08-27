@@ -17,7 +17,6 @@
 "ui.boot.canvas_panel_exitscreen_background_exit_description_text",6751772675,"","EXIT","","ВЫХОД",""
 "ui.boot.canvas_panel_continuescreen_background_screen_station_description_text",6755966977,"","SELECT A GAME SAVE","","ВЫБЕРИТЕ СОХРАНЕНИЕ",""
 "save.empty",6755966980,"","EMPTY","","ПУСТО",""
-"options.language_shortcut",4300279775223808,"","[F8] LANGUAGE: {0}","","[F8] ЯЗЫК: {0}",""
 "ui.boot.canvas_panel_rootbutton_background_button_optionsbutton_text_tmp",6328203953037312,"","OPTIONS","","НАСТРОЙКИ",""
 "ui.boot.canvas_panel_rootbutton_background_button_continuebutton_text_tmp",6328204015951872,"","CONTINUE","","ПРОДОЛЖИТЬ",""
 "ui.boot.canvas_panel_rootbutton_background_button_exitbutton_text_tmp",6328204020146176,"","EXIT","","ВЫХОД",""

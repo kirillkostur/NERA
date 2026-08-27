@@ -9,6 +9,7 @@ using NERA.Expeditions;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Locations;
+using NERA.Localization;
 using NERA.Maintenance;
 using NERA.Player;
 using NERA.Station;
@@ -38,6 +39,7 @@ namespace NERA.Development
         [SerializeField] private Button clearWeatherButton;
         [SerializeField] private Button sandstormButton;
         [SerializeField] private Button contaminateButton;
+        [SerializeField] private Button languageButton;
 
         [Header("Locations")]
         [SerializeField] private Button[] expeditionButtons = Array.Empty<Button>();
@@ -123,7 +125,10 @@ namespace NERA.Development
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            NERALocalization.EnsureInitialized();
+            NERALocalization.LocaleChanged += RefreshLanguageButton;
             BindButtons();
+            RefreshLanguageButton();
             if (windowRoot != null)
                 windowRoot.SetActive(false);
         }
@@ -381,6 +386,12 @@ namespace NERA.Development
                     : $"no free inventory slot for {item.ItemId}");
         }
 
+        public void ToggleLanguage()
+        {
+            NERALocalization.ToggleEnglishRussian();
+            RefreshLanguageButton();
+        }
+
         private bool IsAllowedInCurrentBuild()
         {
             if (Application.isEditor)
@@ -397,6 +408,7 @@ namespace NERA.Development
             Bind(clearWeatherButton, SetClearWeather);
             Bind(sandstormButton, StartSandstorm);
             Bind(contaminateButton, ContaminateAllObjects);
+            Bind(languageButton, ToggleLanguage);
 
             BindIndexed(expeditionButtons, index => UnlockExpedition(index + 1));
             BindIndexed(signalButtons, index => RevealSignal(index + 1));
@@ -418,6 +430,24 @@ namespace NERA.Development
             Bind(spawnIoButton, SpawnIo);
             Bind(killIoButton, KillAllIo);
             BindIndexed(itemButtons, GiveItem);
+        }
+
+        private void RefreshLanguageButton()
+        {
+            Text label = languageButton != null
+                ? languageButton.GetComponentInChildren<Text>(true)
+                : null;
+            if (label == null)
+                return;
+
+            bool russian = NERALocalization.CurrentLocaleCode.StartsWith(
+                NERALocalization.RussianCode,
+                StringComparison.OrdinalIgnoreCase);
+            label.text = NERALocalization.Get(
+                NERALocalization.MainMenuTable,
+                "options.language",
+                "LANGUAGE: {0}",
+                russian ? "РУССКИЙ" : "ENGLISH");
         }
 
         private static void SetStationControlActive(int index, bool active)
@@ -641,6 +671,7 @@ namespace NERA.Development
 
         private void OnDestroy()
         {
+            NERALocalization.LocaleChanged -= RefreshLanguageButton;
             if (IsOpen)
             {
                 player?.SetInputEnabled(this, true);

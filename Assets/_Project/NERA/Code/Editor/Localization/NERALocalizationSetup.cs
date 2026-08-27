@@ -463,7 +463,6 @@ namespace NERA.Editor.Localization
             Add(NERALocalization.MainMenuTable, "save.date_format", "MM.dd.yyyy - HH:mm", "dd.MM.yyyy - HH:mm");
             Add(NERALocalization.MainMenuTable, "save.empty", "EMPTY", "ПУСТО");
             Add(NERALocalization.MainMenuTable, "options.language", "LANGUAGE: {0}", "ЯЗЫК: {0}", true);
-            Add(NERALocalization.MainMenuTable, "options.language_shortcut", "[F8] LANGUAGE: {0}", "[F8] ЯЗЫК: {0}", true);
 
             AddLoadingScreenEntries();
 
