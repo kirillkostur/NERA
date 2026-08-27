@@ -2679,6 +2679,8 @@ namespace NERA.Tests
             ResearchController research = ResearchController.Instance;
             LaboratoryWorkstationController workstation =
                 LaboratoryWorkstationController.Instance;
+            LaboratoryTableItemVisuals tableVisuals =
+                Object.FindFirstObjectByType<LaboratoryTableItemVisuals>();
             ItemCatalogData catalog =
                 Resources.Load<ItemCatalogData>("ItemCatalog_Default");
             ItemData pistol = catalog != null
@@ -2698,6 +2700,7 @@ namespace NERA.Tests
             Assert.That(inventory, Is.Not.Null);
             Assert.That(research, Is.Not.Null);
             Assert.That(workstation, Is.Not.Null);
+            Assert.That(tableVisuals, Is.Not.Null);
             Assert.That(pistol, Is.Not.Null);
             Assert.That(integrator, Is.Not.Null);
             Assert.That(anomaly, Is.Not.Null);
@@ -2804,6 +2807,9 @@ namespace NERA.Tests
             Assert.That(
                 workstation.GetChargingItem(0)?.ItemData,
                 Is.SameAs(pistol));
+            AssertLaboratoryTableVisual(
+                tableVisuals.GetChargingVisual(0),
+                tableVisuals.transform.Find("Slot_Power/Slot_1"));
             Transform progressTransform = FindDescendant(
                 powerScreen,
                 "Text_progress_01");
@@ -2818,6 +2824,7 @@ namespace NERA.Tests
             FindDescendant(powerScreen, "DropButton")
                 .GetComponent<Button>().onClick.Invoke();
             Assert.That(workstation.GetChargingItem(0), Is.Null);
+            Assert.That(tableVisuals.GetChargingVisual(0), Is.Null);
             Assert.That(inventory.Contains(pistol.ItemId), Is.True, "Power Drop did not return pistol.");
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
@@ -2852,6 +2859,25 @@ namespace NERA.Tests
             Assert.That(
                 workstation.GetUpgradeItem(1)?.ItemData,
                 Is.SameAs(anomaly));
+            AssertLaboratoryTableVisual(
+                tableVisuals.GetUpgradeVisual(0),
+                tableVisuals.transform.Find("Slot_Upgrade/Slot_1"));
+            AssertLaboratoryTableVisual(
+                tableVisuals.GetUpgradeVisual(1),
+                tableVisuals.transform.Find("Slot_Upgrade/Slot_2"));
+
+            LaboratoryInventoryItemDrag blockedScanRecord =
+                FindPlayerInventoryDrag(laboratory, record);
+            Assert.That(blockedScanRecord, Is.Not.Null);
+            Assert.That(
+                research.LoadItem(
+                    blockedScanRecord.Item,
+                    inventory,
+                    blockedScanRecord.SourceGroup,
+                    blockedScanRecord.SourceIndex),
+                Is.False,
+                "An occupied upgrade anomaly slot must reserve the laboratory scanner.");
+            Assert.That(research.LoadedItem, Is.Null);
             Assert.That(
                 FindDescendant(upgradeScreen, "UpgradeButton")
                     .GetComponent<Button>().interactable,
@@ -2862,6 +2888,8 @@ namespace NERA.Tests
                 .GetComponent<Button>().onClick.Invoke();
             Assert.That(workstation.GetUpgradeItem(0), Is.Null);
             Assert.That(workstation.GetUpgradeItem(1), Is.Null);
+            Assert.That(tableVisuals.GetUpgradeVisual(0), Is.Null);
+            Assert.That(tableVisuals.GetUpgradeVisual(1), Is.Null);
 
             laboratory.Find("ScanMapButton").GetComponent<Button>()
                 .onClick.Invoke();
@@ -2873,6 +2901,9 @@ namespace NERA.Tests
             scanSlot.GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(scanAnomaly);
             Assert.That(research.LoadedItem, Is.SameAs(anomaly));
+            AssertLaboratoryTableVisual(
+                tableVisuals.ScanVisual,
+                tableVisuals.transform.Find("Slot_Scan/Slot_1"));
 
             LaboratoryInventoryItemDrag scanRecord =
                 FindPlayerInventoryDrag(laboratory, record);
@@ -2890,12 +2921,29 @@ namespace NERA.Tests
                 research.LoadedItem,
                 Is.SameAs(record),
                 "A different item type did not replace the loaded sample.");
+            GameObject scanRecordVisual = tableVisuals.ScanVisual;
+            AssertLaboratoryTableVisual(
+                scanRecordVisual,
+                tableVisuals.transform.Find("Slot_Scan/Slot_1"));
             Assert.That(
                 inventory.GetItem(
                     InventorySlotGroup.Anomaly,
                     0),
                 Is.SameAs(anomaly),
                 "The replaced anomaly did not return to its nearest typed slot.");
+
+            LaboratoryInventoryItemDrag blockedUpgradeAnomaly =
+                FindPlayerInventoryDrag(laboratory, anomaly);
+            Assert.That(blockedUpgradeAnomaly, Is.Not.Null);
+            Assert.That(
+                workstation.LoadUpgradeItem(
+                    1,
+                    inventory,
+                    blockedUpgradeAnomaly.SourceGroup,
+                    blockedUpgradeAnomaly.SourceIndex),
+                Is.False,
+                "An occupied scan slot must reserve the anomaly upgrade slot.");
+            Assert.That(workstation.GetUpgradeItem(1), Is.Null);
 
             Button scanButton = FindDescendant(
                 scanScreen,
@@ -2949,6 +2997,10 @@ namespace NERA.Tests
 
             research.AdvanceAnalysis(999f);
             yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(
+                tableVisuals.ScanVisual,
+                Is.SameAs(scanRecordVisual),
+                "The scan visual must remain after analysis until retrieval.");
             Assert.That(scanDrop.interactable, Is.True, "Scan Drop stayed disabled.");
             Assert.That(scanSlot.LaboratoryDrag.enabled, Is.True, "Scanned sample stayed locked.");
             Assert.That(
@@ -2957,6 +3009,7 @@ namespace NERA.Tests
                 "Scan progress stayed visible after completion.");
             scanDrop.onClick.Invoke();
             Assert.That(research.LoadedItem, Is.Null);
+            Assert.That(tableVisuals.ScanVisual, Is.Null);
             Assert.That(inventory.Contains(anomaly.ItemId), Is.True);
             Assert.That(
                 inventory.Contains(record.ItemId),
@@ -2990,6 +3043,14 @@ namespace NERA.Tests
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(synthesizedAnomaly);
+            AssertLaboratoryTableVisual(
+                tableVisuals.GetUpgradeVisual(0),
+                tableVisuals.transform.Find("Slot_Upgrade/Slot_1"));
+            GameObject synthesisAnomalyVisual =
+                tableVisuals.GetUpgradeVisual(1);
+            AssertLaboratoryTableVisual(
+                synthesisAnomalyVisual,
+                tableVisuals.transform.Find("Slot_Upgrade/Slot_2"));
 
             Button synthesisButton =
                 FindDescendant(upgradeScreen, "UpgradeButton")
@@ -3011,6 +3072,9 @@ namespace NERA.Tests
                 workstation.GetUpgradeItem(1),
                 Is.Not.Null,
                 "The anomaly must remain in its slot until synthesis completes.");
+            Assert.That(
+                tableVisuals.GetUpgradeVisual(1),
+                Is.SameAs(synthesisAnomalyVisual));
             Assert.That(synthesisProgressTransform.gameObject.activeSelf, Is.True);
             Assert.That(
                 synthesisProgressText.GetType().GetProperty("text")
@@ -3046,9 +3110,18 @@ namespace NERA.Tests
                 workstation.GetUpgradeItem(1),
                 Is.Null,
                 "Synthesis did not consume the IO shard.");
+            Assert.That(
+                tableVisuals.GetUpgradeVisual(1),
+                Is.Null,
+                "The consumed anomaly visual remained on the laboratory table.");
+            Assert.That(
+                tableVisuals.GetUpgradeVisual(0),
+                Is.Not.Null,
+                "The upgraded tool visual disappeared before retrieval.");
 
             FindDescendant(upgradeScreen, "DropButton")
                 .GetComponent<Button>().onClick.Invoke();
+            Assert.That(tableVisuals.GetUpgradeVisual(0), Is.Null);
             Assert.That(inventory.Contains(integrator.ItemId), Is.True);
             Assert.That(inventory.Contains(anomaly.ItemId), Is.False);
 
@@ -3724,6 +3797,42 @@ namespace NERA.Tests
             }
 
             return null;
+        }
+
+        private static void AssertLaboratoryTableVisual(
+            GameObject visual,
+            Transform expectedSlot)
+        {
+            Assert.That(visual, Is.Not.Null);
+            Assert.That(expectedSlot, Is.Not.Null);
+            Assert.That(visual.transform.parent, Is.SameAs(expectedSlot));
+            Assert.That(visual.transform.localPosition, Is.EqualTo(Vector3.zero));
+            Assert.That(visual.transform.localRotation, Is.EqualTo(Quaternion.identity));
+
+            foreach (MonoBehaviour behaviour in
+                     visual.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                Assert.That(
+                    behaviour.enabled,
+                    Is.False,
+                    $"{behaviour.GetType().Name} remained active on a table visual.");
+            }
+
+            foreach (Collider collider in
+                     visual.GetComponentsInChildren<Collider>(true))
+            {
+                Assert.That(
+                    collider.enabled,
+                    Is.False,
+                    $"{collider.name} remained interactive on a table visual.");
+            }
+
+            foreach (Rigidbody body in
+                     visual.GetComponentsInChildren<Rigidbody>(true))
+            {
+                Assert.That(body.isKinematic, Is.True);
+                Assert.That(body.detectCollisions, Is.False);
+            }
         }
 
         private static void DropThroughUi(

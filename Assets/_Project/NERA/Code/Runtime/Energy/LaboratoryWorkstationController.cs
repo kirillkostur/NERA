@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Research;
 using NERA.Station;
 using UnityEngine;
 
@@ -140,7 +141,8 @@ namespace NERA.Energy
             InventorySlotGroup sourceGroup,
             int sourceIndex)
         {
-            if (IsUpgradeProcessing)
+            if (IsUpgradeProcessing ||
+                destinationIndex == 1 && IsScanSlotOccupied)
                 return false;
 
             return MoveFromInventory(
@@ -203,6 +205,12 @@ namespace NERA.Energy
             if (IsUpgradeProcessing)
             {
                 reason = "Synthesis is already in progress.";
+                return false;
+            }
+
+            if (IsScanSlotOccupied)
+            {
+                reason = "Remove the item from the scan slot before synthesis.";
                 return false;
             }
 
@@ -552,6 +560,9 @@ namespace NERA.Energy
             StationSystemsController.Instance == null ||
             StationSystemsController.Instance.IsRequestedActive(
                 StationSystemType.Laboratory);
+
+        private static bool IsScanSlotOccupied =>
+            ResearchController.Instance?.LoadedItemInstance?.ItemData != null;
 
         private static bool IsValidUpgradeItem(
             int slotIndex,

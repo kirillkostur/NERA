@@ -273,7 +273,7 @@ namespace NERA.Research
 
         public bool CanLoadItem(ItemData item)
         {
-            return item != null;
+            return item != null && !IsUpgradeAnomalySlotOccupied;
         }
 
         public bool IsAnalyzed(ItemData item)
@@ -310,6 +310,7 @@ namespace NERA.Research
             State == ResearchState.ItemLoaded &&
             LoadedItem != null &&
             LoadedItemInstance.IsScanned == false &&
+            !IsUpgradeAnomalySlotOccupied &&
             IsSystemEnabled &&
             IsResearchable(LoadedItem) &&
             HasOperationalPower;
@@ -318,6 +319,14 @@ namespace NERA.Research
         {
             if (State != ResearchState.ItemLoaded || LoadedItem == null)
                 return false;
+
+            if (IsUpgradeAnomalySlotOccupied)
+            {
+                StatusMessage = LocalizeStatus(
+                    "upgrade_anomaly_loaded",
+                    "Remove the anomaly from the upgrade slot before scanning.");
+                return false;
+            }
 
             if (!IsSystemEnabled)
             {
@@ -420,6 +429,10 @@ namespace NERA.Research
             StationSystemsController.Instance == null ||
             StationSystemsController.Instance.IsRequestedActive(
                 StationSystemType.Laboratory);
+
+        private static bool IsUpgradeAnomalySlotOccupied =>
+            LaboratoryWorkstationController.Instance
+                ?.GetUpgradeItem(1)?.ItemData != null;
 
         private void CompleteAnalysis(ResearchDefinition definition)
         {
