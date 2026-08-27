@@ -54,10 +54,6 @@ MonoBehaviour:
     m_Localized: Use Terminal
     m_Metadata:
       m_Items: []
-  - m_Id: 3635404809
-    m_Localized: Start Computer
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404810
     m_Localized: Clean Solar Panel
     m_Metadata:
@@ -136,10 +132,6 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 1138171735028269373
-  - m_Id: 4300279460651012
-    m_Localized: This system cannot be controlled from the computer.
-    m_Metadata:
-      m_Items: []
   - m_Id: 4300279460651013
     m_Localized: Cleaning or repair required.
     m_Metadata:
@@ -175,6 +167,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4300290160320513
     m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330506999226368
+    m_Localized: Start Terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330507074723840
+    m_Localized: This system cannot be controlled from the terminal.
     m_Metadata:
       m_Items: []
   references:

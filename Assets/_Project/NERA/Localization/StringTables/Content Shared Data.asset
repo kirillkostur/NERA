@@ -271,14 +271,6 @@ MonoBehaviour:
     m_Key: target.station_battery.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1194319882
-    m_Key: station.computer.shared.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319883
-    m_Key: station.computer.shared.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 1194319884
     m_Key: station.drone.station_drone.name
     m_Metadata:
@@ -575,10 +567,6 @@ MonoBehaviour:
     m_Key: station.battery.station_battery.stat.2
     m_Metadata:
       m_Items: []
-  - m_Id: 4300277074092036
-    m_Key: station.computer.shared.stat.0
-    m_Metadata:
-      m_Items: []
   - m_Id: 4300277074092037
     m_Key: station.drone.station_drone.stat.0
     m_Metadata:
@@ -801,6 +789,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4893286165635078
     m_Key: item.item_solar_tracker_01.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328195413434368
+    m_Key: station.solarpanel.station_solar_01.stat.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504629444608
+    m_Key: station.terminal.shared.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504671387648
+    m_Key: station.terminal.shared.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504671387649
+    m_Key: station.terminal.shared.stat.0
     m_Metadata:
       m_Items: []
   m_Metadata:

@@ -476,7 +476,7 @@ namespace NERA.Editor.Localization
             AddPrompt("action", "Start Laboratory", "Запустить лабораторию");
             AddPrompt("action", "Restore Power", "Восстановить питание");
             AddPrompt("action", "Use Terminal", "Использовать терминал");
-            AddPrompt("action", "Start Computer", "Запустить компьютер");
+            AddPrompt("action", "Start Terminal", "Запустить терминал");
             AddPrompt("action", "Clean Solar Panel", "Очистить солнечную панель");
             AddPrompt("action", "Clean Antenna", "Очистить антенну");
             AddPrompt("action", "Clean Turret", "Очистить турель");
@@ -499,7 +499,7 @@ namespace NERA.Editor.Localization
             AddPrompt("unavailable", "Laboratory has no power", "Лаборатория обесточена");
             AddPrompt("unavailable", "Station Power Online", "Питание станции включено");
             AddPrompt("unavailable", "Terminal Offline — Restore Power First", "Терминал отключён — сначала восстановите питание");
-            AddPrompt("unavailable", "This system cannot be controlled from the computer.", "Этой системой нельзя управлять с терминала.");
+            AddPrompt("unavailable", "This system cannot be controlled from the terminal.", "Этой системой нельзя управлять с терминала.");
             AddPrompt("unavailable", "Cleaning or repair required.", "Требуется очистка или ремонт.");
             AddPrompt("unavailable", "Station power is unavailable.", "Питание станции недоступно.");
             Add(
@@ -588,7 +588,7 @@ namespace NERA.Editor.Localization
             AddL("laboratory.status.paused_energy", "Scanning paused — insufficient station energy.", "Сканирование приостановлено — недостаточно энергии станции.");
             AddL("laboratory.status.analysis_not_required", "This item does not require analysis.", "Этот предмет не требует анализа.");
             AddL("laboratory.status.scanning_item", "Scanning {0}...", "Сканирование: {0}...", true);
-            AddL("laboratory.status.stopped_from_terminal", "Laboratory is stopped from the station computer.", "Лаборатория остановлена с терминала станции.");
+            AddL("laboratory.status.stopped_from_terminal", "Laboratory is stopped from the station terminal.", "Лаборатория остановлена с терминала станции.");
             AddL("laboratory.status.already_identified", "This item is already identified and does not require analysis.", "Этот предмет уже опознан и не требует анализа.");
             AddL("laboratory.status.already_scanned", "{0} is already scanned.", "Предмет «{0}» уже отсканирован.", true);
             AddL("laboratory.status.insufficient_energy", "Insufficient station energy.", "Недостаточно энергии станции.");
@@ -958,7 +958,7 @@ namespace NERA.Editor.Localization
             value = Regex.Replace(value, @"\bDRONE\b", "ДРОН", RegexOptions.IgnoreCase);
             value = Regex.Replace(value, @"\bANTENNA\b", "АНТЕННА", RegexOptions.IgnoreCase);
             value = Regex.Replace(value, @"\bSOLAR PANEL\b", "СОЛНЕЧНАЯ ПАНЕЛЬ", RegexOptions.IgnoreCase);
-            value = Regex.Replace(value, @"\bCOMPUTER\b", "ТЕРМИНАЛ", RegexOptions.IgnoreCase);
+            value = Regex.Replace(value, @"\bTERMINAL\b", "ТЕРМИНАЛ", RegexOptions.IgnoreCase);
             value = Regex.Replace(value, @"\bLABORATORY\b", "ЛАБОРАТОРИЯ", RegexOptions.IgnoreCase);
             return value;
         }

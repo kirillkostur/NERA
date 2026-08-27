@@ -332,22 +332,42 @@ namespace NERA.UI
 
         private bool TryResolveAuthoredUi()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            Transform panel = canvas != null
-                ? canvas.transform.Find("Panel")
-                : null;
-            Transform root = panel != null
-                ? panel.Find("RootButton")
-                : null;
-            Transform slotScreen = panel != null
-                ? panel.Find("ContinueScreen")
-                : null;
-            Transform options = panel != null
-                ? panel.Find("OptionsScreen")
-                : null;
-            Transform exit = panel != null
-                ? panel.Find("ExitScreen")
-                : null;
+            Transform panel = null;
+            Transform root = null;
+            Transform slotScreen = null;
+            Transform options = null;
+            Transform exit = null;
+            Canvas[] canvases = FindObjectsByType<Canvas>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (Canvas candidate in canvases)
+            {
+                Transform candidatePanel = candidate.transform.Find("Panel");
+                Transform candidateRoot = candidatePanel != null
+                    ? candidatePanel.Find("RootButton")
+                    : null;
+                Transform candidateSlotScreen = candidatePanel != null
+                    ? candidatePanel.Find("ContinueScreen")
+                    : null;
+                Transform candidateOptions = candidatePanel != null
+                    ? candidatePanel.Find("OptionsScreen")
+                    : null;
+                Transform candidateExit = candidatePanel != null
+                    ? candidatePanel.Find("ExitScreen")
+                    : null;
+                if (candidateRoot == null || candidateSlotScreen == null ||
+                    candidateOptions == null || candidateExit == null)
+                {
+                    continue;
+                }
+
+                panel = candidatePanel;
+                root = candidateRoot;
+                slotScreen = candidateSlotScreen;
+                options = candidateOptions;
+                exit = candidateExit;
+                break;
+            }
 
             if (root == null || slotScreen == null || options == null ||
                 exit == null)

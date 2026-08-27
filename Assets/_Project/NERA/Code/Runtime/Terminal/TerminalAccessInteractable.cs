@@ -22,6 +22,7 @@ namespace NERA.Terminal
         [SerializeField] private GameObject mapVisual;
 
         private StationPowerController subscribedPower;
+        private StationSystemsController subscribedSystems;
         private PrioritySettings previousCameraPriority;
         private bool hasPreviousCameraPriority;
         private int decorScreenIndex = StationScreenIndex;
@@ -39,7 +40,10 @@ namespace NERA.Terminal
         {
             StationPowerController.InstanceChanged +=
                 HandlePowerControllerInstanceChanged;
+            StationSystemsController.InstanceChanged +=
+                HandleSystemsControllerInstanceChanged;
             BindPowerController(StationPowerController.Instance);
+            BindSystemsController(StationSystemsController.Instance);
             RefreshPoweredDecoration();
         }
 
@@ -60,10 +64,10 @@ namespace NERA.Terminal
 
             StationSystemsController systems = StationSystemsController.Instance;
             if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Computer))
+                !systems.IsRequestedActive(StationSystemType.Terminal))
             {
                 return new InteractionPrompt(
-                    "Start Computer",
+                    "Start Terminal",
                     InteractionMode.Press,
                     0f,
                     true,
@@ -82,10 +86,10 @@ namespace NERA.Terminal
 
             StationSystemsController systems = StationSystemsController.Instance;
             if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Computer))
+                !systems.IsRequestedActive(StationSystemType.Terminal))
             {
                 systems.SetCriticalSystemActive(
-                    StationSystemType.Computer,
+                    StationSystemType.Terminal,
                     true);
             }
 
@@ -103,7 +107,7 @@ namespace NERA.Terminal
 
         public void ShowDecorationForScreen(int screenIndex)
         {
-            if (subscribedPower == null || !subscribedPower.IsPowered)
+            if (!IsTerminalOperational())
                 return;
 
             decorScreenIndex = screenIndex == MapScreenIndex
@@ -181,7 +185,7 @@ namespace NERA.Terminal
             bool powered = state == StationPowerState.Online;
             if (!powered)
                 decorScreenIndex = StationScreenIndex;
-            ApplyPowerState(powered);
+            RefreshPoweredDecoration();
         }
 
         private void HandlePowerControllerInstanceChanged(
@@ -190,13 +194,54 @@ namespace NERA.Terminal
             BindPowerController(power);
         }
 
+        private void BindSystemsController(StationSystemsController systems)
+        {
+            if (subscribedSystems == systems)
+                return;
+
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged -= HandleSystemsChanged;
+
+            subscribedSystems = systems;
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged += HandleSystemsChanged;
+            RefreshPoweredDecoration();
+        }
+
+        private void HandleSystemsControllerInstanceChanged(
+            StationSystemsController systems)
+        {
+            BindSystemsController(systems);
+        }
+
+        private void HandleSystemsChanged()
+        {
+            if (subscribedSystems != null &&
+                !subscribedSystems.IsRequestedActive(
+                    StationSystemType.Terminal))
+            {
+                decorScreenIndex = StationScreenIndex;
+            }
+
+            RefreshPoweredDecoration();
+        }
+
         private void RefreshPoweredDecoration()
+        {
+            bool operational = IsTerminalOperational();
+            if (!operational)
+                decorScreenIndex = StationScreenIndex;
+            ApplyPowerState(operational);
+        }
+
+        private bool IsTerminalOperational()
         {
             bool powered = subscribedPower != null &&
                 subscribedPower.IsPowered;
-            if (!powered)
-                decorScreenIndex = StationScreenIndex;
-            ApplyPowerState(powered);
+            bool terminalEnabled = subscribedSystems == null ||
+                subscribedSystems.IsRequestedActive(
+                    StationSystemType.Terminal);
+            return powered && terminalEnabled;
         }
 
         private void ApplyPowerState(bool powered)
@@ -253,12 +298,18 @@ namespace NERA.Terminal
         {
             StationPowerController.InstanceChanged -=
                 HandlePowerControllerInstanceChanged;
+            StationSystemsController.InstanceChanged -=
+                HandleSystemsControllerInstanceChanged;
             TerminalUIScreen.Instance?.HandleTerminalUnavailable(this);
             EndTerminalView();
 
             if (subscribedPower != null)
                 subscribedPower.StateChanged -= HandlePowerStateChanged;
             subscribedPower = null;
+
+            if (subscribedSystems != null)
+                subscribedSystems.SystemsChanged -= HandleSystemsChanged;
+            subscribedSystems = null;
         }
 
         private void OnValidate()

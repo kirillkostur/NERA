@@ -196,7 +196,7 @@ namespace NERA.Tests
         [TestCase(StationSystemType.Turret, true)]
         [TestCase(StationSystemType.Drone, true)]
         [TestCase(StationSystemType.Battery, false)]
-        [TestCase(StationSystemType.Computer, false)]
+        [TestCase(StationSystemType.Terminal, false)]
         [TestCase(StationSystemType.Laboratory, false)]
         public void ConditionIsShownOnlyForOutdoorSystems(
             StationSystemType type,
@@ -292,7 +292,7 @@ namespace NERA.Tests
         public void StationPowerPrioritiesProtectMoreImportantObjects()
         {
             StationSystemsConfig config = systems.Config;
-            int computer = config.Find(StationSystemType.Computer).PowerPriority;
+            int terminal = config.Find(StationSystemType.Terminal).PowerPriority;
             int turret = config.Find(
                 StationSystemType.Turret,
                 "station_turret_01").PowerPriority;
@@ -305,7 +305,7 @@ namespace NERA.Tests
                 StationSystemType.Drone,
                 "station_drone").PowerPriority;
 
-            Assert.That(computer, Is.GreaterThan(turret));
+            Assert.That(terminal, Is.GreaterThan(turret));
             Assert.That(turret, Is.GreaterThan(antenna));
             Assert.That(antenna, Is.GreaterThan(laboratory));
             Assert.That(laboratory, Is.GreaterThan(drone));

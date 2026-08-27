@@ -307,7 +307,7 @@ namespace NERA.Station
             bool reportActivationWhenAlreadyActive = false)
         {
             if (type != StationSystemType.Battery &&
-                type != StationSystemType.Computer)
+                type != StationSystemType.Terminal)
             {
                 return false;
             }
@@ -406,7 +406,7 @@ namespace NERA.Station
             StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null || !definition.Controllable)
             {
-                reason = "This system cannot be controlled from the computer.";
+                reason = "This system cannot be controlled from the terminal.";
                 return false;
             }
             if (!IsMaintenanceReady(type, objectId))
@@ -455,6 +455,37 @@ namespace NERA.Station
             if (IsRequestedActive(type, resolvedId) == active)
                 return true;
             SetRuntimeActive(type, resolvedId, active, definition.InitiallyActive);
+            if (active)
+                ReportSystemActivated(definition, resolvedId);
+            else
+                ReportSystemDeactivated(definition, resolvedId);
+            SystemsChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// Developer-tool entry point. Changes the requested state of any
+        /// configured station object without power, charge, maintenance,
+        /// controllable-state, or in-progress-operation checks.
+        /// </summary>
+        public bool ForceSetRequestedActiveForDebug(
+            StationSystemType type,
+            bool active,
+            string objectId = null)
+        {
+            StationSystemDefinition definition = GetDefinition(type, objectId);
+            if (definition == null)
+                return false;
+
+            string resolvedId = ResolveObjectId(definition, objectId);
+            if (IsRequestedActive(type, resolvedId) == active)
+                return true;
+
+            SetRuntimeActive(
+                type,
+                resolvedId,
+                active,
+                definition.InitiallyActive);
             if (active)
                 ReportSystemActivated(definition, resolvedId);
             else

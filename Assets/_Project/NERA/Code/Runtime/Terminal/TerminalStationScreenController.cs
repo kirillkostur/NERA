@@ -298,7 +298,7 @@ namespace NERA.Terminal
             StationSystemType type = selectedSystem.Value;
             StationSystemsController systems = StationSystemsController.Instance;
             bool critical = type == StationSystemType.Battery ||
-                type == StationSystemType.Computer;
+                type == StationSystemType.Terminal;
             bool controllable = critical ||
                 systems?.GetDefinition(type, selectedObjectId)?.Controllable ==
                     true;
@@ -410,7 +410,7 @@ namespace NERA.Terminal
                             : StationPowerState.Offline);
                 }
             }
-            else if (type == StationSystemType.Computer)
+            else if (type == StationSystemType.Terminal)
             {
                 changed = systems?.SetCriticalSystemActive(type, active) == true;
             }
@@ -433,7 +433,7 @@ namespace NERA.Terminal
             RefreshStatus();
             if (!active &&
                 (type == StationSystemType.Battery ||
-                 type == StationSystemType.Computer))
+                 type == StationSystemType.Terminal))
             {
                 terminal?.Close();
             }

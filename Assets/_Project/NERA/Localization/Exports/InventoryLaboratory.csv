@@ -12,7 +12,7 @@
 "laboratory.status.paused_energy",1429200905,"","Scanning paused — insufficient station energy.","","Сканирование приостановлено — недостаточно энергии станции.",""
 "laboratory.status.analysis_not_required",1429200906,"","This item does not require analysis.","","Этот предмет не требует анализа.",""
 "laboratory.status.scanning_item",1429200907,"","Scanning {0}...","","Сканирование: {0}...",""
-"laboratory.status.stopped_from_terminal",1429200908,"","Laboratory is stopped from the station computer.","","Лаборатория остановлена с терминала станции.",""
+"laboratory.status.stopped_from_terminal",1429200908,"","Laboratory is stopped from the station terminal.","","Лаборатория остановлена с терминала станции.",""
 "laboratory.status.already_identified",1429200909,"","This item is already identified and does not require analysis.","","Этот предмет уже опознан и не требует анализа.",""
 "laboratory.status.already_scanned",1429200910,"","{0} is already scanned.","","Предмет «{0}» уже отсканирован.",""
 "laboratory.status.insufficient_energy",1429200911,"","Insufficient station energy.","","Недостаточно энергии станции.",""

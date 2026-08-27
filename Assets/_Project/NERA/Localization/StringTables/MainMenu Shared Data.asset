@@ -71,10 +71,6 @@ MonoBehaviour:
     m_Key: ui.boot.canvas_panel_exitscreen_background_exit_nobutton_text_tmp
     m_Metadata:
       m_Items: []
-  - m_Id: 6751772673
-    m_Key: ui.boot.canvas_panel_rootbutton_optionsbutton_text_tmp
-    m_Metadata:
-      m_Items: []
   - m_Id: 6751772674
     m_Key: ui.boot.canvas_panel_continuescreen_background_screen_station_closebutton_text_tmp
     m_Metadata:
@@ -83,20 +79,8 @@ MonoBehaviour:
     m_Key: ui.boot.canvas_panel_exitscreen_background_exit_description_text
     m_Metadata:
       m_Items: []
-  - m_Id: 6755966976
-    m_Key: ui.boot.canvas_panel_rootbutton_exitbutton_text_tmp
-    m_Metadata:
-      m_Items: []
   - m_Id: 6755966977
     m_Key: ui.boot.canvas_panel_continuescreen_background_screen_station_description_text
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6755966978
-    m_Key: ui.boot.canvas_panel_rootbutton_newgamebutton_text_tmp
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6755966979
-    m_Key: ui.boot.canvas_panel_rootbutton_continuebutton_text_tmp
     m_Metadata:
       m_Items: []
   - m_Id: 6755966980
@@ -105,6 +89,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4300279775223808
     m_Key: options.language_shortcut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328203953037312
+    m_Key: ui.boot.canvas_panel_rootbutton_background_button_optionsbutton_text_tmp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204015951872
+    m_Key: ui.boot.canvas_panel_rootbutton_background_button_continuebutton_text_tmp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204020146176
+    m_Key: ui.boot.canvas_panel_rootbutton_background_button_exitbutton_text_tmp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204020146177
+    m_Key: ui.boot.canvas_panel_rootbutton_background_button_newgamebutton_text_tmp
     m_Metadata:
       m_Items: []
   m_Metadata:

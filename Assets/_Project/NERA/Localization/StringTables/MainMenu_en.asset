@@ -77,10 +77,6 @@ MonoBehaviour:
     m_Localized: NO
     m_Metadata:
       m_Items: []
-  - m_Id: 6751772673
-    m_Localized: OPTIONS
-    m_Metadata:
-      m_Items: []
   - m_Id: 6751772674
     m_Localized: CLOSE
     m_Metadata:
@@ -89,20 +85,8 @@ MonoBehaviour:
     m_Localized: EXIT
     m_Metadata:
       m_Items: []
-  - m_Id: 6755966976
-    m_Localized: EXIT
-    m_Metadata:
-      m_Items: []
   - m_Id: 6755966977
     m_Localized: SELECT A GAME SAVE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6755966978
-    m_Localized: NEW GAME
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6755966979
-    m_Localized: CONTINUE
     m_Metadata:
       m_Items: []
   - m_Id: 6755966980
@@ -114,6 +98,22 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 1138171735028269372
+  - m_Id: 6328203953037312
+    m_Localized: OPTIONS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204015951872
+    m_Localized: CONTINUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204020146176
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328204020146177
+    m_Localized: NEW GAME
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

@@ -414,7 +414,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator TerminalWorldDecorationFollowsPowerAndLastTab()
+        public IEnumerator TerminalWorldDecorationFollowsPowerStateAndLastTab()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -498,7 +498,7 @@ namespace NERA.Tests
             Assert.That(mapVisual.gameObject.activeSelf, Is.False);
 
             energy.RestoreState(energy.TotalCapacity, true);
-            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            systems.SetCriticalSystemActive(StationSystemType.Terminal, true);
             yield return null;
             Assert.That(visualRoot.gameObject.activeSelf, Is.True);
             Assert.That(stationVisual.gameObject.activeSelf, Is.True);
@@ -537,6 +537,22 @@ namespace NERA.Tests
                         LayerMask.NameToLayer("Default")),
                 Is.True,
                 "The decorative mini map must stay on the Default layer.");
+
+            systems.SetCriticalSystemActive(
+                StationSystemType.Terminal,
+                false);
+            yield return null;
+            Assert.That(visualRoot.gameObject.activeSelf, Is.False);
+            Assert.That(stationVisual.gameObject.activeSelf, Is.False);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.False);
+
+            systems.SetCriticalSystemActive(
+                StationSystemType.Terminal,
+                true);
+            yield return null;
+            Assert.That(visualRoot.gameObject.activeSelf, Is.True);
+            Assert.That(stationVisual.gameObject.activeSelf, Is.True);
+            Assert.That(mapVisual.gameObject.activeSelf, Is.False);
 
             access.CompleteInteraction(player.gameObject);
             Assert.That(terminal.IsOpening, Is.True);
@@ -936,7 +952,7 @@ namespace NERA.Tests
 
             systems.ResetSystems();
             energy.RestoreState(energy.TotalCapacity, true);
-            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            systems.SetCriticalSystemActive(StationSystemType.Terminal, true);
             terminal.Open();
             terminal.ShowStation();
             yield return null;
@@ -1222,23 +1238,23 @@ namespace NERA.Tests
             Button onButton = powerSwitch.Find("OnButton").GetComponent<Button>();
 
             energy.RestoreState(energy.TotalCapacity, true);
-            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            systems.SetCriticalSystemActive(StationSystemType.Terminal, true);
             terminal.Open();
             terminal.ShowStation();
 
-            stationScreen.SelectSystem(StationSystemType.Computer);
+            stationScreen.SelectSystem(StationSystemType.Terminal);
             onButton.onClick.Invoke();
             Assert.That(
                 terminal.IsOpen,
                 Is.False,
-                "Computer shutdown must close the terminal.");
+                "Terminal shutdown must close the terminal UI.");
             Assert.That(
-                systems.IsRequestedActive(StationSystemType.Computer),
+                systems.IsRequestedActive(StationSystemType.Terminal),
                 Is.False,
-                "Computer must be inactive after pressing its active toggle.");
+                "Terminal must be inactive after pressing its active toggle.");
             Assert.That(energy.GridEnabled, Is.True);
 
-            systems.SetCriticalSystemActive(StationSystemType.Computer, true);
+            systems.SetCriticalSystemActive(StationSystemType.Terminal, true);
             terminal.Open();
             terminal.ShowStation();
             stationScreen.SelectSystem(StationSystemType.Battery);
@@ -2892,7 +2908,7 @@ namespace NERA.Tests
                 EnergySystemController.Instance.TotalCapacity,
                 true);
             StationSystemsController.Instance.SetCriticalSystemActive(
-                StationSystemType.Computer,
+                StationSystemType.Terminal,
                 true);
             terminal.Open();
 
@@ -2949,7 +2965,7 @@ namespace NERA.Tests
                 EnergySystemController.Instance.TotalCapacity,
                 true);
             StationSystemsController.Instance.SetCriticalSystemActive(
-                StationSystemType.Computer,
+                StationSystemType.Terminal,
                 true);
             terminal.Open();
             terminal.transform.Find("StorageButton").GetComponent<Button>()

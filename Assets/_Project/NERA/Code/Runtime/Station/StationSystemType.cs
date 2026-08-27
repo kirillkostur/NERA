@@ -4,7 +4,7 @@ namespace NERA.Station
     {
         SolarPanel = 0,
         Battery = 1,
-        Computer = 2,
+        Terminal = 2,
         Drone = 3,
         Laboratory = 4,
         Antenna = 6,

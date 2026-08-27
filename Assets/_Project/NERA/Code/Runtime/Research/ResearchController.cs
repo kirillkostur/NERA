@@ -323,7 +323,7 @@ namespace NERA.Research
             {
                 StatusMessage = LocalizeStatus(
                     "stopped_from_terminal",
-                    "Laboratory is stopped from the station computer.");
+                    "Laboratory is stopped from the station terminal.");
                 return false;
             }
 

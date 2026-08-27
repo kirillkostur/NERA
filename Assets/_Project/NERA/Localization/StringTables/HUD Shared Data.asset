@@ -47,10 +47,6 @@ MonoBehaviour:
     m_Key: interaction.action.use_terminal
     m_Metadata:
       m_Items: []
-  - m_Id: 3635404809
-    m_Key: interaction.action.start_computer
-    m_Metadata:
-      m_Items: []
   - m_Id: 3635404810
     m_Key: interaction.action.clean_solar_panel
     m_Metadata:
@@ -127,10 +123,6 @@ MonoBehaviour:
     m_Key: interaction.action.configure_object
     m_Metadata:
       m_Items: []
-  - m_Id: 4300279460651012
-    m_Key: interaction.unavailable.this_system_cannot_be_controlled_from_the_computer.
-    m_Metadata:
-      m_Items: []
   - m_Id: 4300279460651013
     m_Key: interaction.unavailable.cleaning_or_repair_required.
     m_Metadata:
@@ -165,6 +157,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4300290160320513
     m_Key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330506999226368
+    m_Key: interaction.action.start_terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330507074723840
+    m_Key: interaction.unavailable.this_system_cannot_be_controlled_from_the_terminal.
     m_Metadata:
       m_Items: []
   m_Metadata:

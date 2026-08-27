@@ -305,6 +305,45 @@ namespace NERA.Antenna
             return true;
         }
 
+        /// <summary>
+        /// Developer-tool entry point. Reveals a configured antenna location
+        /// without range, calibration, power, condition, or consumed-state
+        /// checks. A discovered expedition map slot is still required so the
+        /// terminal has a valid anchor for the signal marker.
+        /// </summary>
+        public bool ForceRevealSignalForDebug(ExpeditionLocationData signal)
+        {
+            CacheDependencies();
+            if (discovery == null ||
+                signal == null ||
+                signal.DiscoverySource != DiscoverySource.Antenna)
+            {
+                return false;
+            }
+
+            MapSlotData mapSlot = PickRandomDiscoveredExpeditionSlot();
+            if (mapSlot == null)
+                return false;
+
+            EnergySystemController.Instance?.SetConsumerActive(
+                AntennaConsumerId,
+                false);
+            elapsedCalibrationTime = 0f;
+            CalibrationTarget = null;
+            consumedSignalIds.Remove(signal.LocationId);
+            ActiveSignal = signal;
+            ActiveSignalMapSlot = mapSlot;
+            SetState(AntennaState.SignalFound);
+            SignalFound?.Invoke(signal);
+            QuestController.Instance?.Report(
+                QuestSignalType.AntennaSignalFound,
+                signal.LocationId,
+                signal.DisplayName,
+                cause: "developer_cheat");
+            ActiveSignalChanged?.Invoke(signal);
+            return true;
+        }
+
         public void RestoreSignalState(
             string activeSignalId,
             string activeSignalMapSlotId,

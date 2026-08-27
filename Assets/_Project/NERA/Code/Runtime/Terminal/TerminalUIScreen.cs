@@ -88,9 +88,9 @@ namespace NERA.Terminal
 
             EnergySystemController energy = EnergySystemController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
-            bool computerActive = systems == null ||
-                systems.IsRequestedActive(StationSystemType.Computer);
-            if (!computerActive ||
+            bool terminalActive = systems == null ||
+                systems.IsRequestedActive(StationSystemType.Terminal);
+            if (!terminalActive ||
                 (energy != null && !energy.IsConsumerPowered(TerminalConsumerId)))
             {
                 Close();
@@ -308,7 +308,7 @@ namespace NERA.Terminal
                 return;
 
             float consumption = StationSystemsConfig.GetEffectiveStat(
-                StationSystemType.Computer,
+                StationSystemType.Terminal,
                 string.Empty,
                 StationObjectStat.IdleEnergyConsumption,
                 2f);
@@ -316,8 +316,8 @@ namespace NERA.Terminal
                 TerminalConsumerId,
                 consumption,
                 energy.Config.GetMinimumCharge01(
-                    StationSystemType.Computer),
-                StationSystemType.Computer);
+                    StationSystemType.Terminal),
+                StationSystemType.Terminal);
             energy.SetConsumerActive(TerminalConsumerId, IsOpen);
         }
 
@@ -328,7 +328,7 @@ namespace NERA.Terminal
 
             StationSystemsController systems = StationSystemsController.Instance;
             if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Computer))
+                !systems.IsRequestedActive(StationSystemType.Terminal))
             {
                 return false;
             }

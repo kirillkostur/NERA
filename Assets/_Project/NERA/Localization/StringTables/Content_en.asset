@@ -81,7 +81,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1135599616
-    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
+    m_Localized: Ancient Outpost
     m_Metadata:
       m_Items: []
   - m_Id: 1135599617
@@ -90,7 +90,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1135599619
-    m_Localized: "Expedition 02 \u2014 Signal Array"
+    m_Localized: Signal Array
     m_Metadata:
       m_Items: []
   - m_Id: 1135599620
@@ -307,14 +307,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1194319877
     m_Localized: BATTERY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319882
-    m_Localized: TERMINAL
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319883
-    m_Localized: Central terminal. It cannot be stopped or physically upgraded.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319884
@@ -614,10 +606,6 @@ MonoBehaviour:
     m_Localized: Power Output
     m_Metadata:
       m_Items: []
-  - m_Id: 4300277074092036
-    m_Localized: Idle consumption
-    m_Metadata:
-      m_Items: []
   - m_Id: 4300277074092037
     m_Localized: Travel range
     m_Metadata:
@@ -731,11 +719,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4302062580916224
-    m_Localized: "Expedition 01 \u2014 Ancient Outpost"
+    m_Localized: Ancient Outpost
     m_Metadata:
       m_Items: []
   - m_Id: 4302062597693440
-    m_Localized: "Expedition 02 \u2014 Signal Array"
+    m_Localized: Signal Array
     m_Metadata:
       m_Items: []
   - m_Id: 4302062597693441
@@ -842,6 +830,22 @@ MonoBehaviour:
   - m_Id: 4893286165635078
     m_Localized: Tracks the sun to improve the panel's power output throughout the
       day.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6328195413434368
+    m_Localized: Dust Tolerance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504629444608
+    m_Localized: TERMINAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504671387648
+    m_Localized: Central terminal. It cannot be stopped or physically upgraded.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6330504671387649
+    m_Localized: Idle consumption
     m_Metadata:
       m_Items: []
   references:

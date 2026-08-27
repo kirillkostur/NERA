@@ -1551,6 +1551,36 @@ namespace NERA.Tests
             Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
         }
 
+        [Test]
+        public void DeveloperForceCanEnableDroneWithoutStationPower()
+        {
+            Assert.That(
+                systems.ForceSetRequestedActiveForDebug(
+                    StationSystemType.Drone,
+                    false,
+                    "station_drone"),
+                Is.True);
+            Assert.That(
+                systems.SetRequestedActive(
+                    StationSystemType.Drone,
+                    true,
+                    "station_drone"),
+                Is.False,
+                "The production path must still require station power.");
+
+            Assert.That(
+                systems.ForceSetRequestedActiveForDebug(
+                    StationSystemType.Drone,
+                    true,
+                    "station_drone"),
+                Is.True);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Drone,
+                    "station_drone"),
+                Is.True);
+        }
+
         [TestCase(0.5f, TestName = "DroneCannotLaunchWhileItIsDirty")]
         [TestCase(0f, TestName = "DroneCannotLaunchWhileItIsBroken")]
         public void DroneCannotLaunchWhileMaintenanceIsRequired(
@@ -2079,6 +2109,22 @@ namespace NERA.Tests
 
             antenna.AdvanceCalibration(antenna.CalibrationDuration);
 
+            Assert.That(antenna.State, Is.EqualTo(AntennaState.SignalFound));
+            Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
+            Assert.That(antenna.ActiveSignalMapSlot, Is.EqualTo(mapSlot));
+            Assert.That(discovery.IsDiscovered(signal), Is.False);
+        }
+
+        [Test]
+        public void DeveloperForceRevealSignalBypassesAntennaRange()
+        {
+            SerializedObject serializedSignal = new SerializedObject(signal);
+            serializedSignal.FindProperty("requiredAntennaScanRange").floatValue =
+                99f;
+            serializedSignal.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(antenna.CanCalibrate(signal), Is.False);
+            Assert.That(antenna.ForceRevealSignalForDebug(signal), Is.True);
             Assert.That(antenna.State, Is.EqualTo(AntennaState.SignalFound));
             Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
             Assert.That(antenna.ActiveSignalMapSlot, Is.EqualTo(mapSlot));

@@ -3389,7 +3389,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: MainMenu
-  key: ui.boot.canvas_panel_rootbutton_newgamebutton_text_tmp
+  key: ui.boot.canvas_panel_rootbutton_background_button_newgamebutton_text_tmp
   fallback: NEW GAME
 --- !u!1 &1036498674
 GameObject:
@@ -4986,7 +4986,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: MainMenu
-  key: ui.boot.canvas_panel_rootbutton_continuebutton_text_tmp
+  key: ui.boot.canvas_panel_rootbutton_background_button_continuebutton_text_tmp
   fallback: CONTINUE
 --- !u!21 &1348870485
 Material:
@@ -5547,7 +5547,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: MainMenu
-  key: ui.boot.canvas_panel_rootbutton_optionsbutton_text_tmp
+  key: ui.boot.canvas_panel_rootbutton_background_button_optionsbutton_text_tmp
   fallback: OPTIONS
 --- !u!1 &1520618406
 GameObject:
@@ -7723,7 +7723,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: MainMenu
-  key: ui.boot.canvas_panel_rootbutton_exitbutton_text_tmp
+  key: ui.boot.canvas_panel_rootbutton_background_button_exitbutton_text_tmp
   fallback: EXIT
 --- !u!21 &2003993415
 Material:
