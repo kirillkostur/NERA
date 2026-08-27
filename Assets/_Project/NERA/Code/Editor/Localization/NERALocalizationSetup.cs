@@ -465,6 +465,8 @@ namespace NERA.Editor.Localization
             Add(NERALocalization.MainMenuTable, "options.language", "LANGUAGE: {0}", "ЯЗЫК: {0}", true);
             Add(NERALocalization.MainMenuTable, "options.language_shortcut", "[F8] LANGUAGE: {0}", "[F8] ЯЗЫК: {0}", true);
 
+            AddLoadingScreenEntries();
+
             Add(NERALocalization.HudTable, "interaction.press", "[{0}] Press — {1}", "[{0}] Нажать — {1}", true);
             Add(NERALocalization.HudTable, "interaction.hold", "[{0}] Hold — {1}", "[{0}] Удерживать — {1}", true);
             Add(NERALocalization.HudTable, "interaction.hold_progress", "[{0}] Hold — {1}%", "[{0}] Удерживать — {1}%", true);
@@ -516,6 +518,50 @@ namespace NERA.Editor.Localization
 
             AddTerminalEntries();
             AddLaboratoryEntries();
+        }
+
+        [MenuItem("NERA/Localization/Sync Loading Screen")]
+        public static void SyncLoadingScreenEntries()
+        {
+            EnsureFolders();
+            (Locale english, Locale russian) = EnsureSettingsAndLocales();
+            EnsureCollections(english, russian);
+            AddLoadingScreenEntries();
+            ExportCsv();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log(
+                "NERA loading-screen localization synchronized without " +
+                "opening or modifying scenes.");
+        }
+
+        private static void AddLoadingScreenEntries()
+        {
+            Add(
+                NERALocalization.HudTable,
+                "loading.status",
+                "Loading...",
+                "Загрузка...");
+            Add(
+                NERALocalization.HudTable,
+                "loading.tip.station_power",
+                "Watch the battery charge: station systems stop working without power.",
+                "Следите за зарядом батареи: без энергии системы станции перестанут работать.");
+            Add(
+                NERALocalization.HudTable,
+                "loading.tip.sandstorm",
+                "Clean equipment after sandstorms to preserve its efficiency.",
+                "Очищайте оборудование после песчаных бурь, чтобы сохранить его эффективность.");
+            Add(
+                NERALocalization.HudTable,
+                "loading.tip.antenna",
+                "Upgrade the antenna to discover more distant unknown signals.",
+                "Улучшайте антенну, чтобы находить более далёкие неизвестные сигналы.");
+            Add(
+                NERALocalization.HudTable,
+                "loading.tip.expedition",
+                "Check your gear before an expedition—the return trip may be harder.",
+                "Проверяйте снаряжение перед экспедицией — обратный путь может оказаться сложнее.");
         }
 
         private static void AddTerminalEntries()

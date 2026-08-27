@@ -40,10 +40,23 @@ namespace NERA.Tests
         private string isolatedSaveRoot;
         private bool hadLocalePreference;
         private string previousLocalePreference;
+        private LoadingScreenConfig loadingScreenConfig;
+        private float previousLoadingScreenDuration;
 
         [OneTimeSetUp]
         public void RedirectSavesToTemporaryStorage()
         {
+            GameObject loadingPrefab = Resources.Load<GameObject>(
+                LoadingScreenController.PrefabResourcePath);
+            loadingScreenConfig = loadingPrefab != null
+                ? loadingPrefab.GetComponent<LoadingScreenController>()?.Config
+                : null;
+            if (loadingScreenConfig != null)
+            {
+                previousLoadingScreenDuration =
+                    loadingScreenConfig.MinimumDisplaySeconds;
+            }
+
             hadLocalePreference = PlayerPrefs.HasKey(
                 NERALocalization.LocalePreferenceKey);
             previousLocalePreference = PlayerPrefs.GetString(
@@ -70,6 +83,14 @@ namespace NERA.Tests
         [OneTimeTearDown]
         public void RestoreSaveStorage()
         {
+            if (loadingScreenConfig != null)
+            {
+                SetPrivateField(
+                    loadingScreenConfig,
+                    "minimumDisplaySeconds",
+                    previousLoadingScreenDuration);
+            }
+
             if (hadLocalePreference)
             {
                 PlayerPrefs.SetString(
@@ -98,6 +119,13 @@ namespace NERA.Tests
         public IEnumerator UseEnglishLocaleForEveryTest()
         {
             yield return ResetSceneState();
+            if (loadingScreenConfig != null)
+            {
+                SetPrivateField(
+                    loadingScreenConfig,
+                    "minimumDisplaySeconds",
+                    0f);
+            }
             PlayerPrefs.SetString(
                 NERALocalization.LocalePreferenceKey,
                 NERALocalization.EnglishCode);
@@ -110,6 +138,141 @@ namespace NERA.Tests
         public IEnumerator TearDownPersistentBootRoot()
         {
             yield return ResetSceneState();
+        }
+
+        [UnityTest]
+        public IEnumerator LoadingScreenCoversRuntimeStartupAndUsesPools()
+        {
+            Assert.That(loadingScreenConfig, Is.Not.Null);
+            SetPrivateField(
+                loadingScreenConfig,
+                "minimumDisplaySeconds",
+                0.15f);
+
+            SceneManager.LoadScene("MainScene");
+            yield return null;
+
+            LoadingScreenController loading =
+                LoadingScreenController.Instance;
+            Assert.That(loading, Is.Not.Null);
+            Assert.That(loading.IsVisible, Is.True);
+            Assert.That(loading.LoadingCamera, Is.Not.Null);
+            Assert.That(loading.LoadingCamera.enabled, Is.True);
+            Assert.That(loading.CurrentImage, Is.Not.Null);
+            Assert.That(loading.CurrentTipText, Is.Not.Empty);
+
+            float visibleAt = Time.realtimeSinceStartup;
+            yield return WaitForScene("Player_Station");
+
+            Assert.That(
+                Time.realtimeSinceStartup - visibleAt,
+                Is.GreaterThanOrEqualTo(0.1f));
+            Assert.That(loading.IsVisible, Is.False);
+            Assert.That(loading.LoadingCamera.enabled, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator LoadingScreenCoversNewGameFromMainMenuWithoutBlinking()
+        {
+            SetPrivateField(
+                loadingScreenConfig,
+                "minimumDisplaySeconds",
+                0.15f);
+            SceneManager.LoadScene("Boot");
+            yield return null;
+
+            MainMenuController mainMenu =
+                Object.FindFirstObjectByType<MainMenuController>();
+            Assert.That(mainMenu, Is.Not.Null);
+            Transform menuPanel = GameObject.Find("Canvas")
+                .transform.Find("Panel");
+            mainMenu.StartNewGame();
+            Transform slotScreen = menuPanel.Find(
+                "ContinueScreen/background_Screen_station");
+            slotScreen.Find("Panel_Save_1")
+                .GetComponent<Button>().onClick.Invoke();
+            slotScreen.Find("ContinueButton")
+                .GetComponent<Button>().onClick.Invoke();
+            yield return null;
+
+            LoadingScreenController loading =
+                LoadingScreenController.Instance;
+            Assert.That(loading, Is.Not.Null);
+            Assert.That(loading.IsVisible, Is.True);
+            Assert.That(loading.ActiveRequestCount, Is.GreaterThanOrEqualTo(1));
+
+            yield return WaitForScene("Player_Station");
+            Assert.That(loading.IsVisible, Is.False);
+            Assert.That(loading.ActiveRequestCount, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator LoadingScreenCoversGameplaySceneTransition()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+
+            SetPrivateField(
+                loadingScreenConfig,
+                "minimumDisplaySeconds",
+                0.15f);
+            BootInitializer runtime = BootInitializer.Instance;
+            LoadingScreenController loading =
+                LoadingScreenController.Instance;
+            Assert.That(runtime, Is.Not.Null);
+            Assert.That(loading, Is.Not.Null);
+
+            Assert.That(
+                runtime.LoadGameplayScene("Expedition_01", string.Empty),
+                Is.True);
+            yield return null;
+
+            Assert.That(loading.IsVisible, Is.True);
+            Assert.That(loading.ActiveRequestCount, Is.EqualTo(1));
+            yield return WaitForScene("Expedition_01");
+            Assert.That(loading.IsVisible, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator LoadingScreenCoversDeathUntilPlayerIsRevived()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+
+            SetPrivateField(
+                loadingScreenConfig,
+                "minimumDisplaySeconds",
+                0.15f);
+            PlayerHealth health =
+                Object.FindFirstObjectByType<PlayerHealth>();
+            CheckpointService checkpoints = CheckpointService.Instance;
+            LoadingScreenController loading =
+                LoadingScreenController.Instance;
+            Assert.That(health, Is.Not.Null);
+            Assert.That(checkpoints, Is.Not.Null);
+            Assert.That(loading, Is.Not.Null);
+
+            LogAssert.Expect(
+                LogType.Warning,
+                "Player died and ragdoll was enabled.");
+            health.Kill();
+            yield return null;
+
+            Assert.That(health.IsAlive, Is.False);
+            Assert.That(checkpoints.IsRestoring, Is.True);
+            Assert.That(loading.IsVisible, Is.True);
+
+            float deadline = Time.realtimeSinceStartup + 15f;
+            while (checkpoints.IsRestoring &&
+                   Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(checkpoints.IsRestoring, Is.False);
+            Assert.That(health.IsAlive, Is.True);
+            Assert.That(BootInitializer.Instance.IsLoading, Is.False);
+            Assert.That(loading.IsVisible, Is.False);
         }
 
         [UnityTest]
@@ -3778,6 +3941,16 @@ namespace NERA.Tests
             {
                 if (boot != null)
                     Object.Destroy(boot.gameObject);
+            }
+
+            LoadingScreenController[] loadingScreens =
+                Object.FindObjectsByType<LoadingScreenController>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            foreach (LoadingScreenController loadingScreen in loadingScreens)
+            {
+                if (loadingScreen != null)
+                    Object.Destroy(loadingScreen.gameObject);
             }
 
             yield return null;

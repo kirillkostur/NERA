@@ -19,6 +19,7 @@
 - [`Station_Lighting_Guide.md`](Station_Lighting_Guide.md) — три режима baked lighting, связь с батареей/sandstorm и порядок проверки через Boot.
 - [`Camera_Orbit_Zones.md`](Camera_Orbit_Zones.md) — профили орбит `FreeLookCam` и триггеры комнат, коридоров и узких мест.
 - [`PC_Quality_Presets.md`](PC_Quality_Presets.md) — PC quality baseline и profiling gate.
+- [`Loading_Screen_Guide.md`](Loading_Screen_Guide.md) — окно загрузки для старта, сохранений, переходов и смерти; настройка времени, изображений и локализованных подсказок.
 
 ## Исторические срезы
 

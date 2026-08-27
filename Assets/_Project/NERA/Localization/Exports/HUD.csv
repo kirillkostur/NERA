@@ -37,3 +37,8 @@
 "ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade",4300290160320513,"","UPGRADE","","УЛУЧШИТЬ",""
 "interaction.action.start_terminal",6330506999226368,"","Start Terminal","","Запустить терминал",""
 "interaction.unavailable.this_system_cannot_be_controlled_from_the_terminal.",6330507074723840,"","This system cannot be controlled from the terminal.","","Этой системой нельзя управлять с терминала.",""
+"loading.status",6525937322549248,"","Loading...","","Загрузка...",""
+"loading.tip.station_power",6525937448378368,"","Watch the battery charge: station systems stop working without power.","","Следите за зарядом батареи: без энергии системы станции перестанут работать.",""
+"loading.tip.sandstorm",6525937448378369,"","Clean equipment after sandstorms to preserve its efficiency.","","Очищайте оборудование после песчаных бурь, чтобы сохранить его эффективность.",""
+"loading.tip.antenna",6525937448378370,"","Upgrade the antenna to discover more distant unknown signals.","","Улучшайте антенну, чтобы находить более далёкие неизвестные сигналы.",""
+"loading.tip.expedition",6525937448378371,"","Check your gear before an expedition—the return trip may be harder.","","Проверяйте снаряжение перед экспедицией — обратный путь может оказаться сложнее.",""

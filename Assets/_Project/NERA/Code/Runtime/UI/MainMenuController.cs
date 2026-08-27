@@ -55,6 +55,7 @@ namespace NERA.UI
         private GameLaunchMode slotScreenMode;
         private int selectedSlot;
         private bool isLoading;
+        private bool loadingScreenRequested;
 
         public bool HasSave => SaveSlotStorage.HasAnySave();
 
@@ -312,22 +313,37 @@ namespace NERA.UI
             isLoading = true;
             Refresh();
             GameSessionLaunchState.Request(mode, saveSlot);
+            loadingScreenRequested = LoadingScreenController.BeginLoading();
             StartCoroutine(LoadRuntimeScene());
         }
 
         private IEnumerator LoadRuntimeScene()
         {
+            if (loadingScreenRequested)
+                yield return null;
+
             AsyncOperation operation = SceneManager.LoadSceneAsync(
                 runtimeSceneName,
                 LoadSceneMode.Additive);
             if (operation == null)
             {
+                ReleaseLoadingScreen();
                 isLoading = false;
                 Refresh();
                 yield break;
             }
 
             yield return operation;
+            ReleaseLoadingScreen();
+        }
+
+        private void ReleaseLoadingScreen()
+        {
+            if (!loadingScreenRequested)
+                return;
+
+            loadingScreenRequested = false;
+            LoadingScreenController.EndLoading();
         }
 
         private bool TryResolveAuthoredUi()
@@ -575,6 +591,7 @@ namespace NERA.UI
 
         private void OnDestroy()
         {
+            ReleaseLoadingScreen();
             newGameButton?.onClick.RemoveListener(StartNewGame);
             continueButton?.onClick.RemoveListener(ContinueGame);
             optionsButton?.onClick.RemoveListener(ShowOptions);

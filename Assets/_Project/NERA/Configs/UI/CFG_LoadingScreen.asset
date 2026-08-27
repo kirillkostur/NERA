@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35196d1f386610e48908a1d3250217d8, type: 3}
+  m_Name: CFG_LoadingScreen
+  m_EditorClassIdentifier: 
+  minimumDisplaySeconds: 10
+  images:
+  - {fileID: 2800000, guid: 14dc73cbeb7a62c4c8daf521f605528a, type: 3}
+  - {fileID: 2800000, guid: 61f2dd6ee7f22e641a9d24f8a4a9ffe7, type: 3}
+  - {fileID: 2800000, guid: a171039aecc964841ab4c0730ffb2977, type: 3}
+  tips:
+  - localizationKey: loading.tip.station_power
+    fallbackText: 'Watch the battery charge: station systems stop working without
+      power.'
+  - localizationKey: loading.tip.sandstorm
+    fallbackText: Clean equipment after sandstorms to preserve its efficiency.
+  - localizationKey: loading.tip.antenna
+    fallbackText: Upgrade the antenna to discover more distant unknown signals.
+  - localizationKey: loading.tip.expedition
+    fallbackText: "Check your gear before an expedition\u2014the return trip may
+      be harder."

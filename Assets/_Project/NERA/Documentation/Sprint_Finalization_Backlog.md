@@ -142,8 +142,12 @@ Status: `PARTIAL`
 - DONE: Player death ragdoll foundation and automatic checkpoint restore/revive.
 - PARTIAL: parkour integration has automated coverage but still needs a manual
   production-route regression pass.
-- PARTIAL: checkpoint save/restore message is present; player health, damage
-  feedback and authored death screen remain.
+- PARTIAL: checkpoint save/restore message is present; player health and damage
+  feedback remain.
+- DONE: configurable localized loading screen covers New Game, Continue,
+  additive scene transitions and the complete death-to-revive interval; image
+  and tip pools are independent and the default minimum display time is three
+  seconds.
 - TODO: objective and interaction result feedback pass.
 - TODO: terminal NEW markers and state messages.
 - TODO: Expedition route readability pass.

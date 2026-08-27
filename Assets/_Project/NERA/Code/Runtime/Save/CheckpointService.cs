@@ -4,6 +4,7 @@ using NERA.Combat;
 using NERA.Core;
 using NERA.Player;
 using NERA.Quests;
+using NERA.UI;
 using UnityEngine;
 
 namespace NERA.Save
@@ -31,6 +32,7 @@ namespace NERA.Save
         private QuestController quests;
         private bool initialized;
         private bool restoring;
+        private bool deathLoadingScreenRequested;
         private string suppressedScene;
         private string suppressedCheckpoint;
         private string queuedQuestCheckpointId;
@@ -214,6 +216,10 @@ namespace NERA.Save
             restoring = true;
             autoSave?.CancelPending();
             autoSave?.SetSuspended(true);
+            deathLoadingScreenRequested =
+                LoadingScreenController.BeginLoading();
+            if (deathLoadingScreenRequested)
+                yield return null;
             if (deathRestoreDelay > 0f)
                 yield return new WaitForSecondsRealtime(deathRestoreDelay);
 
@@ -227,6 +233,7 @@ namespace NERA.Save
                 ActivityChanged?.Invoke(CheckpointActivity.RestoreFailed);
                 autoSave?.SetSuspended(false);
                 restoring = false;
+                ReleaseDeathLoadingScreen();
                 yield break;
             }
 
@@ -239,6 +246,7 @@ namespace NERA.Save
                 ActivityChanged?.Invoke(CheckpointActivity.RestoreFailed);
                 autoSave?.SetSuspended(false);
                 restoring = false;
+                ReleaseDeathLoadingScreen();
                 yield break;
             }
 
@@ -247,20 +255,36 @@ namespace NERA.Save
                 checkpointId);
             if (boot.LastTransitionResult != SceneTransitionResult.Success)
             {
+                boot.CompleteCheckpointRestore();
                 ActivityChanged?.Invoke(CheckpointActivity.RestoreFailed);
                 autoSave?.SetSuspended(false);
                 restoring = false;
+                ReleaseDeathLoadingScreen();
                 yield break;
             }
 
+            if (deathLoadingScreenRequested)
+                yield return LoadingScreenController.WaitForMinimumDisplayTime();
             playerHealth?.Revive();
+            boot.CompleteCheckpointRestore();
             ActivityChanged?.Invoke(CheckpointActivity.Restored);
             autoSave?.SetSuspended(false);
             restoring = false;
+            ReleaseDeathLoadingScreen();
+        }
+
+        private void ReleaseDeathLoadingScreen()
+        {
+            if (!deathLoadingScreenRequested)
+                return;
+
+            deathLoadingScreenRequested = false;
+            LoadingScreenController.EndLoading();
         }
 
         private void OnDestroy()
         {
+            ReleaseDeathLoadingScreen();
             if (playerHealth != null)
                 playerHealth.Died -= HandlePlayerDied;
             if (quests != null)

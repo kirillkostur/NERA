@@ -167,6 +167,26 @@ MonoBehaviour:
     m_Key: interaction.unavailable.this_system_cannot_be_controlled_from_the_terminal.
     m_Metadata:
       m_Items: []
+  - m_Id: 6525937322549248
+    m_Key: loading.status
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6525937448378368
+    m_Key: loading.tip.station_power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6525937448378369
+    m_Key: loading.tip.sandstorm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6525937448378370
+    m_Key: loading.tip.antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6525937448378371
+    m_Key: loading.tip.expedition
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -31,6 +31,8 @@ namespace NERA.Core
         private static BootInitializer instance;
         private bool isReturningToMenu;
         private bool isLoading;
+        private bool sessionLoadingScreenRequested;
+        private bool transitionLoadingScreenRequested;
         private string currentGameplaySceneName;
 
         private ParkourPlayerBridge player;
@@ -54,6 +56,8 @@ namespace NERA.Core
             }
 
             instance = this;
+            sessionLoadingScreenRequested =
+                LoadingScreenController.BeginLoading();
             ConnectPersistentServices();
             ConnectRuntimeReferences();
             SetGameplayPresentationActive(false);
@@ -137,6 +141,11 @@ namespace NERA.Core
                 );
                 isLoading = false;
                 autoSave?.SetSuspended(false);
+                if (sessionLoadingScreenRequested)
+                {
+                    sessionLoadingScreenRequested = false;
+                    yield return LoadingScreenController.EndLoadingAndWait();
+                }
                 yield break;
             }
 
@@ -178,6 +187,11 @@ namespace NERA.Core
                 }
             }
 
+            if (sessionLoadingScreenRequested)
+            {
+                sessionLoadingScreenRequested = false;
+                yield return LoadingScreenController.EndLoadingAndWait();
+            }
             RestorePresentationAfterTransition();
             isLoading = false;
         }
@@ -208,6 +222,10 @@ namespace NERA.Core
             autoSave?.Flush();
             autoSave?.SetSuspended(true);
             SetGameplayInputActive(false);
+            transitionLoadingScreenRequested =
+                LoadingScreenController.BeginLoading();
+            if (transitionLoadingScreenRequested)
+                yield return null;
             LastTransitionResult = SceneTransitionResult.None;
             SceneTransitionResult transitionResult =
                 SceneTransitionResult.Failure;
@@ -223,6 +241,11 @@ namespace NERA.Core
                 checkpoints?.SuppressNextActivation(sceneName, spawnPointId);
             }
 
+            if (transitionLoadingScreenRequested)
+            {
+                transitionLoadingScreenRequested = false;
+                yield return LoadingScreenController.EndLoadingAndWait();
+            }
             RestorePresentationAfterTransition();
             isLoading = false;
         }
@@ -252,6 +275,10 @@ namespace NERA.Core
             LastTransitionResult = transitionResult;
             if (transitionResult == SceneTransitionResult.Success)
                 RestorePlayerCheckpointPose(saveController);
+        }
+
+        public void CompleteCheckpointRestore()
+        {
             RestorePresentationAfterTransition();
             isLoading = false;
         }
@@ -568,6 +595,10 @@ namespace NERA.Core
             autoSave?.SetSuspended(true);
             GameSessionLaunchState.Clear();
             SetGameplayPresentationActive(false);
+            transitionLoadingScreenRequested =
+                LoadingScreenController.BeginLoading();
+            if (transitionLoadingScreenRequested)
+                yield return null;
 
             if (!string.IsNullOrWhiteSpace(currentGameplaySceneName))
             {
@@ -589,6 +620,12 @@ namespace NERA.Core
 
             if (menuScene.IsValid() && menuScene.isLoaded)
                 SceneManager.SetActiveScene(menuScene);
+
+            if (transitionLoadingScreenRequested)
+            {
+                transitionLoadingScreenRequested = false;
+                yield return LoadingScreenController.EndLoadingAndWait();
+            }
 
             Scene mainScene = gameObject.scene;
             if (mainScene.IsValid() && mainScene.isLoaded)
@@ -644,6 +681,16 @@ namespace NERA.Core
 
         private void OnDestroy()
         {
+            if (sessionLoadingScreenRequested)
+            {
+                sessionLoadingScreenRequested = false;
+                LoadingScreenController.EndLoading();
+            }
+            if (transitionLoadingScreenRequested)
+            {
+                transitionLoadingScreenRequested = false;
+                LoadingScreenController.EndLoading();
+            }
             if (instance == this)
                 instance = null;
         }
