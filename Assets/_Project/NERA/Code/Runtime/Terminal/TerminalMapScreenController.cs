@@ -36,6 +36,7 @@ namespace NERA.Terminal
         private DroneScanController subscribedDrone;
         private AntennaController subscribedAntenna;
         private ExpeditionDiscoveryController subscribedDiscovery;
+        private TerminalPreviewRenderer previewRenderer;
         private bool initialized;
 
         public ExpeditionLocationData SelectedLocation => selectedLocation;
@@ -64,11 +65,9 @@ namespace NERA.Terminal
                 active &&
                 terminal != null &&
                 terminal.IsOpen;
-            if (mapCamera != null)
-                mapCamera.enabled = shouldRender;
-
             if (!shouldRender)
             {
+                previewRenderer?.SetPreviewActive(false);
                 UnbindDataEvents();
                 TerminalUIUtility.ReleaseCameraTarget(mapCamera);
                 return;
@@ -76,6 +75,7 @@ namespace NERA.Terminal
 
             BindDataEvents();
             RefreshAll();
+            previewRenderer?.SetPreviewActive(true);
         }
 
         private void CacheHierarchy()
@@ -125,6 +125,13 @@ namespace NERA.Terminal
                 transform, "Map_RawImage");
             mapCamera ??= TerminalUIUtility.FindComponent<Camera>(
                 transform, "MapUICamera");
+            if (mapCamera != null)
+            {
+                previewRenderer =
+                    mapCamera.GetComponent<TerminalPreviewRenderer>() ??
+                    mapCamera.gameObject.AddComponent<TerminalPreviewRenderer>();
+                previewRenderer.Initialize(mapCamera);
+            }
             mapModelRoot ??= TerminalUIUtility.Find(
                 transform, "SM_UI_3D");
             if (mapSlotRegistry == null && mapModelRoot != null)
@@ -290,6 +297,7 @@ namespace NERA.Terminal
             RefreshDrone();
             RefreshAntenna();
             RefreshSignalMarker();
+            previewRenderer?.RequestRender();
         }
 
         private void BindDataEvents()
@@ -549,6 +557,7 @@ namespace NERA.Terminal
         private void OnDestroy()
         {
             NERALocalization.LocaleChanged -= RefreshIfVisible;
+            previewRenderer?.SetPreviewActive(false);
             UnbindDataEvents();
         }
     }

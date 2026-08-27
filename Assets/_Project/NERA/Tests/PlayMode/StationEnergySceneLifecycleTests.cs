@@ -609,6 +609,28 @@ namespace NERA.Tests
             Assert.That(access, Is.Not.Null);
             Assert.That(player, Is.Not.Null);
 
+            Camera gameplayCamera = player.GameplayCamera;
+            Camera stationPreviewCamera = Array.Find(
+                terminal.GetComponentsInChildren<Camera>(true),
+                candidate => candidate.name == "StationUICamera");
+            Camera mapPreviewCamera = Array.Find(
+                terminal.GetComponentsInChildren<Camera>(true),
+                candidate => candidate.name == "MapUICamera");
+            Assert.That(gameplayCamera, Is.Not.Null);
+            Assert.That(gameplayCamera.enabled, Is.True);
+            int gameplayCullingMask = gameplayCamera.cullingMask;
+            CameraClearFlags gameplayClearFlags = gameplayCamera.clearFlags;
+            bool gameplayAllowHdr = gameplayCamera.allowHDR;
+            bool gameplayAllowMsaa = gameplayCamera.allowMSAA;
+            bool gameplayUseOcclusionCulling =
+                gameplayCamera.useOcclusionCulling;
+            Assert.That(stationPreviewCamera, Is.Not.Null);
+            Assert.That(mapPreviewCamera, Is.Not.Null);
+            Assert.That(stationPreviewCamera.targetTexture.width, Is.EqualTo(1024));
+            Assert.That(stationPreviewCamera.targetTexture.height, Is.EqualTo(1024));
+            Assert.That(mapPreviewCamera.targetTexture.width, Is.EqualTo(1024));
+            Assert.That(mapPreviewCamera.targetTexture.height, Is.EqualTo(1024));
+
             Transform visualRoot = access.transform.Find("Visual_3D");
             Transform stationVisual =
                 visualRoot?.Find("SM_Station_Mini_3D");
@@ -754,10 +776,36 @@ namespace NERA.Tests
 
             Assert.That(terminal.IsOpen, Is.True);
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(1));
+            Assert.That(gameplayCamera.enabled, Is.True);
+            Assert.That(Camera.allCameras, Does.Contain(gameplayCamera));
+            Assert.That(gameplayCamera.cullingMask, Is.Zero);
+            Assert.That(gameplayCamera.allowHDR, Is.False);
+            Assert.That(gameplayCamera.allowMSAA, Is.False);
+            Assert.That(gameplayCamera.useOcclusionCulling, Is.False);
+            Assert.That(stationPreviewCamera.enabled, Is.False);
+            Assert.That(mapPreviewCamera.enabled, Is.False);
+            Assert.That(
+                stationPreviewCamera.GetComponent<
+                    Terminal.TerminalPreviewRenderer>(),
+                Is.Not.Null);
+            Assert.That(
+                mapPreviewCamera.GetComponent<
+                    Terminal.TerminalPreviewRenderer>(),
+                Is.Not.Null);
             terminal.ShowMap();
+            Assert.That(stationPreviewCamera.enabled, Is.False);
+            Assert.That(mapPreviewCamera.enabled, Is.False);
             Assert.That(stationVisual.gameObject.activeSelf, Is.False);
             Assert.That(mapVisual.gameObject.activeSelf, Is.True);
             terminal.Close();
+            Assert.That(gameplayCamera.enabled, Is.True);
+            Assert.That(gameplayCamera.cullingMask, Is.EqualTo(gameplayCullingMask));
+            Assert.That(gameplayCamera.clearFlags, Is.EqualTo(gameplayClearFlags));
+            Assert.That(gameplayCamera.allowHDR, Is.EqualTo(gameplayAllowHdr));
+            Assert.That(gameplayCamera.allowMSAA, Is.EqualTo(gameplayAllowMsaa));
+            Assert.That(
+                gameplayCamera.useOcclusionCulling,
+                Is.EqualTo(gameplayUseOcclusionCulling));
             Assert.That(mapVisual.gameObject.activeSelf, Is.True);
 
             access.CompleteInteraction(player.gameObject);
@@ -772,8 +820,11 @@ namespace NERA.Tests
 
             Assert.That(terminal.IsOpen, Is.True);
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(0));
+            Assert.That(gameplayCamera.enabled, Is.True);
+            Assert.That(gameplayCamera.cullingMask, Is.Zero);
             terminal.ShowLibrary();
             terminal.Close();
+            Assert.That(gameplayCamera.enabled, Is.True);
             Assert.That(stationVisual.gameObject.activeSelf, Is.True);
             Assert.That(mapVisual.gameObject.activeSelf, Is.False);
 
@@ -787,7 +838,10 @@ namespace NERA.Tests
 
             Assert.That(terminal.IsOpen, Is.True);
             Assert.That(terminal.ActiveScreenIndex, Is.EqualTo(2));
+            Assert.That(gameplayCamera.enabled, Is.True);
+            Assert.That(gameplayCamera.cullingMask, Is.Zero);
             terminal.Close();
+            Assert.That(gameplayCamera.enabled, Is.True);
         }
 
         [UnityTest]

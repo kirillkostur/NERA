@@ -6,6 +6,7 @@ using NERA.Inventory;
 using NERA.Player;
 using NERA.Station;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 namespace NERA.Terminal
@@ -17,6 +18,8 @@ namespace NERA.Terminal
     public sealed class TerminalUIScreen : MonoBehaviour
     {
         private const string TerminalConsumerId = "central_terminal";
+        private const int DefaultGameplayRendererIndex = -1;
+        private const int PreviewRendererIndex = 1;
 
         public static TerminalUIScreen Instance { get; private set; }
         public bool IsOpen { get; private set; }
@@ -43,6 +46,22 @@ namespace NERA.Terminal
         private ParkourPlayerBridge playerController;
         private TerminalAccessInteractable activeTerminal;
         private Coroutine openingRoutine;
+        private Camera suspendedGameplayCamera;
+        private bool suspendedGameplayCameraWasEnabled;
+        private int suspendedGameplayCameraCullingMask;
+        private CameraClearFlags suspendedGameplayCameraClearFlags;
+        private Color suspendedGameplayCameraBackgroundColor;
+        private bool suspendedGameplayCameraAllowHdr;
+        private bool suspendedGameplayCameraAllowMsaa;
+        private bool suspendedGameplayCameraUseOcclusionCulling;
+        private UniversalAdditionalCameraData suspendedGameplayCameraData;
+        private bool suspendedGameplayCameraRenderShadows;
+        private CameraOverrideOption suspendedGameplayCameraDepthOption;
+        private CameraOverrideOption suspendedGameplayCameraColorOption;
+        private bool suspendedGameplayCameraPostProcessing;
+        private AntialiasingMode suspendedGameplayCameraAntialiasing;
+        private bool suspendedGameplayCameraAllowXr;
+        private bool isGameplayCameraRenderingSuspended;
 
         private TerminalMapScreenController mapController;
         private TerminalStationScreenController stationController;
@@ -133,6 +152,7 @@ namespace NERA.Terminal
             if (!IsOpen && !IsOpening)
                 return;
 
+            RestoreGameplayCameraRendering();
             if (openingRoutine != null)
                 StopCoroutine(openingRoutine);
             openingRoutine = null;
@@ -389,6 +409,7 @@ namespace NERA.Terminal
             Cursor.visible = true;
             SetVisible(true);
             ShowScreen(activeScreenIndex);
+            SuspendGameplayCameraRendering();
         }
 
         private void CachePlayerControllers()
@@ -402,6 +423,119 @@ namespace NERA.Terminal
         {
             if (playerController != null)
                 playerController.SetInputEnabled(this, enabled);
+        }
+
+        private void SuspendGameplayCameraRendering()
+        {
+            if (isGameplayCameraRenderingSuspended)
+                return;
+
+            suspendedGameplayCamera = playerController?.GameplayCamera;
+            if (suspendedGameplayCamera == null)
+                return;
+
+            suspendedGameplayCameraWasEnabled =
+                suspendedGameplayCamera.enabled;
+            suspendedGameplayCameraCullingMask =
+                suspendedGameplayCamera.cullingMask;
+            suspendedGameplayCameraClearFlags =
+                suspendedGameplayCamera.clearFlags;
+            suspendedGameplayCameraBackgroundColor =
+                suspendedGameplayCamera.backgroundColor;
+            suspendedGameplayCameraAllowHdr =
+                suspendedGameplayCamera.allowHDR;
+            suspendedGameplayCameraAllowMsaa =
+                suspendedGameplayCamera.allowMSAA;
+            suspendedGameplayCameraUseOcclusionCulling =
+                suspendedGameplayCamera.useOcclusionCulling;
+
+            suspendedGameplayCameraData =
+                suspendedGameplayCamera.GetComponent<
+                    UniversalAdditionalCameraData>();
+            if (suspendedGameplayCameraData != null)
+            {
+                suspendedGameplayCameraRenderShadows =
+                    suspendedGameplayCameraData.renderShadows;
+                suspendedGameplayCameraDepthOption =
+                    suspendedGameplayCameraData.requiresDepthOption;
+                suspendedGameplayCameraColorOption =
+                    suspendedGameplayCameraData.requiresColorOption;
+                suspendedGameplayCameraPostProcessing =
+                    suspendedGameplayCameraData.renderPostProcessing;
+                suspendedGameplayCameraAntialiasing =
+                    suspendedGameplayCameraData.antialiasing;
+                suspendedGameplayCameraAllowXr =
+                    suspendedGameplayCameraData.allowXRRendering;
+
+                suspendedGameplayCameraData.renderShadows = false;
+                suspendedGameplayCameraData.requiresDepthOption =
+                    CameraOverrideOption.Off;
+                suspendedGameplayCameraData.requiresColorOption =
+                    CameraOverrideOption.Off;
+                suspendedGameplayCameraData.renderPostProcessing = false;
+                suspendedGameplayCameraData.antialiasing =
+                    AntialiasingMode.None;
+                suspendedGameplayCameraData.allowXRRendering = false;
+                suspendedGameplayCameraData.SetRenderer(PreviewRendererIndex);
+            }
+
+            // Display 1 needs an active camera even for a Screen Space Overlay
+            // canvas. Keep this camera alive, but prevent world rendering.
+            suspendedGameplayCamera.cullingMask = 0;
+            suspendedGameplayCamera.clearFlags = CameraClearFlags.SolidColor;
+            suspendedGameplayCamera.backgroundColor = Color.black;
+            suspendedGameplayCamera.allowHDR = false;
+            suspendedGameplayCamera.allowMSAA = false;
+            suspendedGameplayCamera.useOcclusionCulling = false;
+            suspendedGameplayCamera.enabled = true;
+            isGameplayCameraRenderingSuspended = true;
+        }
+
+        private void RestoreGameplayCameraRendering()
+        {
+            if (!isGameplayCameraRenderingSuspended)
+                return;
+
+            if (suspendedGameplayCamera != null)
+            {
+                suspendedGameplayCamera.cullingMask =
+                    suspendedGameplayCameraCullingMask;
+                suspendedGameplayCamera.clearFlags =
+                    suspendedGameplayCameraClearFlags;
+                suspendedGameplayCamera.backgroundColor =
+                    suspendedGameplayCameraBackgroundColor;
+                suspendedGameplayCamera.allowHDR =
+                    suspendedGameplayCameraAllowHdr;
+                suspendedGameplayCamera.allowMSAA =
+                    suspendedGameplayCameraAllowMsaa;
+                suspendedGameplayCamera.useOcclusionCulling =
+                    suspendedGameplayCameraUseOcclusionCulling;
+                suspendedGameplayCamera.enabled =
+                    suspendedGameplayCameraWasEnabled;
+            }
+
+            if (suspendedGameplayCameraData != null)
+            {
+                suspendedGameplayCameraData.renderShadows =
+                    suspendedGameplayCameraRenderShadows;
+                suspendedGameplayCameraData.requiresDepthOption =
+                    suspendedGameplayCameraDepthOption;
+                suspendedGameplayCameraData.requiresColorOption =
+                    suspendedGameplayCameraColorOption;
+                suspendedGameplayCameraData.renderPostProcessing =
+                    suspendedGameplayCameraPostProcessing;
+                suspendedGameplayCameraData.antialiasing =
+                    suspendedGameplayCameraAntialiasing;
+                suspendedGameplayCameraData.allowXRRendering =
+                    suspendedGameplayCameraAllowXr;
+                suspendedGameplayCameraData.SetRenderer(
+                    DefaultGameplayRendererIndex);
+            }
+
+            suspendedGameplayCamera = null;
+            suspendedGameplayCameraData = null;
+            suspendedGameplayCameraWasEnabled = false;
+            isGameplayCameraRenderingSuspended = false;
         }
 
         private void SetVisible(bool visible)
@@ -420,6 +554,7 @@ namespace NERA.Terminal
                 StopCoroutine(openingRoutine);
             openingRoutine = null;
             IsOpening = false;
+            RestoreGameplayCameraRendering();
             activeTerminal?.EndTerminalView();
             activeTerminal = null;
             if (playerController != null)

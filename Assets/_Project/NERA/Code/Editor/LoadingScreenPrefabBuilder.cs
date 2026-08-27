@@ -163,6 +163,15 @@ namespace NERA.EditorTools
             loadingCamera.allowMSAA = false;
             loadingCamera.useOcclusionCulling = false;
             loadingCamera.enabled = false;
+            UniversalAdditionalCameraData cameraData =
+                cameraObject.GetComponent<UniversalAdditionalCameraData>();
+            cameraData.renderShadows = false;
+            cameraData.requiresDepthOption = CameraOverrideOption.Off;
+            cameraData.requiresColorOption = CameraOverrideOption.Off;
+            cameraData.renderPostProcessing = false;
+            cameraData.antialiasing = AntialiasingMode.None;
+            cameraData.allowXRRendering = false;
+            cameraData.SetRenderer(1);
 
             GameObject window = CreateImage(
                 root.transform,

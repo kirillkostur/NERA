@@ -49,6 +49,7 @@ namespace NERA.Terminal
         private EnergySystemController subscribedEnergy;
         private DroneScanController subscribedDrone;
         private AntennaController subscribedAntenna;
+        private TerminalPreviewRenderer previewRenderer;
         private bool dataRefreshPending;
         private float nextDataRefreshAt;
 
@@ -111,10 +112,9 @@ namespace NERA.Terminal
         public void SetScreenActive(bool active)
         {
             bool shouldRender = active && terminal != null && terminal.IsOpen;
-            if (stationCamera != null)
-                stationCamera.enabled = shouldRender;
             if (!shouldRender)
             {
+                previewRenderer?.SetPreviewActive(false);
                 UnbindDataEvents();
                 TerminalUIUtility.ReleaseCameraTarget(stationCamera);
                 return;
@@ -123,6 +123,7 @@ namespace NERA.Terminal
             if (statusPanel != null)
                 statusPanel.SetActive(true);
             RefreshAll();
+            previewRenderer?.SetPreviewActive(true);
         }
 
         private void CacheHierarchy()
@@ -131,6 +132,13 @@ namespace NERA.Terminal
                 transform, "Station_RawImage");
             stationCamera ??= TerminalUIUtility.FindComponent<Camera>(
                 transform, "StationUICamera");
+            if (stationCamera != null)
+            {
+                previewRenderer =
+                    stationCamera.GetComponent<TerminalPreviewRenderer>() ??
+                    stationCamera.gameObject.AddComponent<TerminalPreviewRenderer>();
+                previewRenderer.Initialize(stationCamera);
+            }
             objectNameText ??= TerminalUIUtility.FindComponent<TMP_Text>(
                 transform, "Text_nameObj");
             objectInfoText ??= TerminalUIUtility.FindComponent<TMP_Text>(
@@ -260,6 +268,7 @@ namespace NERA.Terminal
             RefreshObjectInfo();
             RefreshPowerSwitch();
             RefreshStatus();
+            previewRenderer?.RequestRender();
         }
 
         private void RefreshObjectInfo()
@@ -696,6 +705,7 @@ namespace NERA.Terminal
         private void OnDestroy()
         {
             NERALocalization.LocaleChanged -= RefreshIfVisible;
+            previewRenderer?.SetPreviewActive(false);
             UnbindDataEvents();
         }
     }
