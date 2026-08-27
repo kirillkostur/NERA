@@ -75,6 +75,9 @@ namespace NERA.Enemies
 
         private void Start()
         {
+            if (!HasPersistentIdentity)
+                return;
+
             WorldStateController worldState = WorldStateController.Instance;
             if (worldState == null ||
                 !worldState.IsEnemyDefeated(persistentKey))
@@ -147,7 +150,11 @@ namespace NERA.Enemies
 
             state = State.Dead;
             ActiveEnemySet.Remove(this);
-            WorldStateController.Instance?.MarkEnemyDefeated(persistentKey);
+            if (HasPersistentIdentity)
+            {
+                WorldStateController.Instance?.MarkEnemyDefeated(
+                    persistentKey);
+            }
             QuestController.Instance?.Report(
                 QuestSignalType.EnemyKilled,
                 config != null ? config.EnemyId : name,
@@ -316,7 +323,17 @@ namespace NERA.Enemies
             WorldItem worldItem = drop != null
                 ? drop.GetComponentInChildren<WorldItem>(true)
                 : null;
-            worldItem?.SetPersistentWorldId(persistentKey + "/drop");
+            if (worldItem == null)
+                return;
+
+            if (HasPersistentIdentity)
+            {
+                worldItem.SetPersistentWorldId(persistentKey + "/drop");
+            }
+            else
+            {
+                worldItem.Initialize(worldItem.ItemData);
+            }
         }
 
         private void OnDisable()
@@ -355,5 +372,7 @@ namespace NERA.Enemies
             : 4f;
         private GameObject DeathDropPrefab => config != null ? config.DeathDropPrefab : null;
         private Vector3 DeathDropOffset => config != null ? config.DeathDropOffset : Vector3.zero;
+        private bool HasPersistentIdentity =>
+            !string.IsNullOrEmpty(persistentKey);
     }
 }

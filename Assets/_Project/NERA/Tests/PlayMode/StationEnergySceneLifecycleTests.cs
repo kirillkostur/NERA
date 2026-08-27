@@ -10,6 +10,7 @@ using NERA.Combat;
 using NERA.Core;
 using NERA.Drone;
 using NERA.Energy;
+using NERA.Enemies;
 using NERA.Expeditions;
 using NERA.Graphics;
 using NERA.Interaction;
@@ -498,6 +499,41 @@ namespace NERA.Tests
             Assert.That(
                 NERALocalization.CurrentLocaleCode,
                 Is.EqualTo(NERALocalization.EnglishCode));
+        }
+
+        [UnityTest]
+        public IEnumerator CheatConsoleEquipmentButtonsAddConfiguredItems()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            NERA.Development.DeveloperCheatConsoleController cheats =
+                Object.FindFirstObjectByType<
+                    NERA.Development.DeveloperCheatConsoleController>();
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            Assert.That(cheats, Is.Not.Null);
+            Assert.That(inventory, Is.Not.Null);
+
+            inventory.RestoreItems(Array.Empty<ItemData>());
+            Button pistolButton = cheats.transform.Find(
+                    "CheatWindow/GiveItemButton_25")
+                ?.GetComponent<Button>();
+            Button integratorButton = cheats.transform.Find(
+                    "CheatWindow/GiveItemButton_26")
+                ?.GetComponent<Button>();
+            Assert.That(pistolButton, Is.Not.Null);
+            Assert.That(integratorButton, Is.Not.Null);
+
+            pistolButton.onClick.Invoke();
+            integratorButton.onClick.Invoke();
+            yield return null;
+
+            Assert.That(inventory.CountItem("energy_pistol_01"), Is.EqualTo(1));
+            Assert.That(inventory.CountItem("io_integrator_01"), Is.EqualTo(1));
+            inventory.RestoreItems(Array.Empty<ItemData>());
         }
 
         [UnityTest]
@@ -2662,6 +2698,119 @@ namespace NERA.Tests
 
             Object.Destroy(droppedItem.gameObject);
             hud.CloseAll();
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeIoDropsIgnorePersistentWorldState()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            WorldStateController worldState = WorldStateController.Instance;
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+            ItemData anomaly = catalog?.Find("io_blue_shard_01");
+            Assert.That(worldState, Is.Not.Null);
+            Assert.That(anomaly, Is.Not.Null);
+            Assert.That(anomaly.WorldPrefab, Is.Not.Null);
+
+            worldState.ResetState();
+            worldState.MarkConsumed("/drop");
+
+            var existingDropIds = new HashSet<int>(
+                Object.FindObjectsByType<WorldItem>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Select(item => item.GetInstanceID()));
+
+            IOEnemyConfig config =
+                ScriptableObject.CreateInstance<IOEnemyConfig>();
+            SetPrivateField(
+                config,
+                "deathDropPrefab",
+                anomaly.WorldPrefab.gameObject);
+
+            GameObject firstEnemyObject = new GameObject("Test_RuntimeIO_1");
+            IOEnemyController firstEnemy =
+                firstEnemyObject.AddComponent<IOEnemyController>();
+            SetPrivateField(firstEnemy, "config", config);
+            firstEnemy.TakeDamage(float.MaxValue, null);
+            yield return null;
+            yield return null;
+
+            WorldItem[] firstDrops = Object.FindObjectsByType<WorldItem>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(item =>
+                    item.ItemData == anomaly &&
+                    !existingDropIds.Contains(item.GetInstanceID()))
+                .ToArray();
+            Assert.That(
+                firstDrops,
+                Has.Length.EqualTo(1),
+                "The first runtime IO drop was suppressed by stale '/drop' state.");
+            Assert.That(firstDrops[0].TracksWorldState, Is.False);
+            Assert.That(firstDrops[0].PersistentKey, Is.Empty);
+
+            GameObject secondEnemyObject = new GameObject("Test_RuntimeIO_2");
+            IOEnemyController secondEnemy =
+                secondEnemyObject.AddComponent<IOEnemyController>();
+            SetPrivateField(secondEnemy, "config", config);
+            secondEnemy.TakeDamage(float.MaxValue, null);
+            yield return null;
+            yield return null;
+
+            WorldItem[] runtimeDrops = Object.FindObjectsByType<WorldItem>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(item =>
+                    item.ItemData == anomaly &&
+                    !existingDropIds.Contains(item.GetInstanceID()))
+                .ToArray();
+            Assert.That(
+                runtimeDrops,
+                Has.Length.EqualTo(2),
+                "Sequential runtime IO kills must produce independent drops.");
+            Assert.That(
+                runtimeDrops.All(item => !item.TracksWorldState),
+                Is.True);
+
+            const string authoredEnemyKey =
+                "player_station/test_authored_io";
+            worldState.MarkConsumed(authoredEnemyKey + "/drop");
+            GameObject authoredEnemyObject =
+                new GameObject("Test_AuthoredIO");
+            IOEnemyController authoredEnemy =
+                authoredEnemyObject.AddComponent<IOEnemyController>();
+            SetPrivateField(authoredEnemy, "config", config);
+            SetPrivateField(
+                authoredEnemy,
+                "persistentKey",
+                authoredEnemyKey);
+            authoredEnemy.TakeDamage(float.MaxValue, null);
+            yield return null;
+            yield return null;
+
+            WorldItem[] dropsAfterAuthoredKill =
+                Object.FindObjectsByType<WorldItem>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Where(item =>
+                        item.ItemData == anomaly &&
+                        !existingDropIds.Contains(item.GetInstanceID()))
+                    .ToArray();
+            Assert.That(
+                dropsAfterAuthoredKill,
+                Has.Length.EqualTo(2),
+                "A consumed authored IO drop must remain suppressed.");
+
+            foreach (WorldItem drop in runtimeDrops)
+                Object.Destroy(drop.gameObject);
+            Object.Destroy(config);
+            worldState.ResetState();
             yield return null;
         }
 

@@ -22,8 +22,16 @@ namespace NERA.EditorTools
 
         private const string EngineeringPartsFolder =
             "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart";
+        private const string EquipmentFolder =
+            "Assets/_Project/NERA/Configs/Items/Item_Equipment";
         private const string IoPrefabPath =
             "Assets/_Project/NERA/Prefabs/IO/IO_Blue_Weak.prefab";
+
+        private static readonly string[] CheatEquipmentItemIds =
+        {
+            "energy_pistol_01",
+            "io_integrator_01"
+        };
 
         private static readonly Color PanelColor =
             new Color(0.025f, 0.035f, 0.055f, 0.96f);
@@ -89,7 +97,7 @@ namespace NERA.EditorTools
             }
 
             EnsureFolder("Assets/_Project/NERA/Prefabs/Developer");
-            ItemData[] items = LoadEngineeringParts();
+            ItemData[] items = LoadInventoryItems();
             GameObject root = BuildPrefabContents(items);
             try
             {
@@ -468,6 +476,51 @@ namespace NERA.EditorTools
                 }
             }
 
+            const float equipmentX = 1468f;
+            const float equipmentY = 768f;
+            CreateLabel(
+                window.transform,
+                "ItemGroup_Equipment",
+                "СНАРЯЖЕНИЕ:",
+                equipmentX,
+                equipmentY,
+                406f,
+                30f,
+                18,
+                TextAnchor.MiddleLeft,
+                AccentColor);
+
+            for (int row = 0; row < CheatEquipmentItemIds.Length; row++)
+            {
+                string itemId = CheatEquipmentItemIds[row];
+                ItemData item = items.Single(candidate =>
+                    candidate != null && candidate.ItemId == itemId);
+                assignedItems.Add(item);
+                orderedItems.Add(item);
+                float y = equipmentY + 34f + row * 42f;
+                CreateLabel(
+                    window.transform,
+                    $"ItemLabel_{itemIndex:00}",
+                    item.DisplayName.ToUpperInvariant(),
+                    equipmentX,
+                    y,
+                    350f,
+                    34f,
+                    16,
+                    TextAnchor.MiddleRight,
+                    TextColor);
+                itemButtons.Add(CreateButton(
+                    window.transform,
+                    $"GiveItemButton_{itemIndex:00}",
+                    "+1",
+                    equipmentX + 360f,
+                    y,
+                    46f,
+                    34f,
+                    15));
+                itemIndex++;
+            }
+
             if (assignedItems.Count != items.Length)
             {
                 string missingItemIds = string.Join(
@@ -477,7 +530,7 @@ namespace NERA.EditorTools
                             !assignedItems.Contains(item))
                         .Select(item => item.ItemId));
                 throw new InvalidOperationException(
-                    "Engineering parts are missing a supported cheat-console " +
+                    "Inventory items are missing a supported cheat-console " +
                     $"group: {missingItemIds}.");
             }
 
@@ -754,9 +807,9 @@ namespace NERA.EditorTools
             rect.offsetMax = Vector2.zero;
         }
 
-        private static ItemData[] LoadEngineeringParts()
+        private static ItemData[] LoadInventoryItems()
         {
-            return AssetDatabase.FindAssets(
+            ItemData[] engineeringParts = AssetDatabase.FindAssets(
                     "t:ItemData",
                     new[] { EngineeringPartsFolder })
                 .Select(AssetDatabase.GUIDToAssetPath)
@@ -764,6 +817,31 @@ namespace NERA.EditorTools
                 .Where(item => item != null &&
                     item.ItemType == ItemType.EngineeringPart)
                 .OrderBy(item => item.ItemId, StringComparer.Ordinal)
+                .ToArray();
+
+            Dictionary<string, ItemData> equipmentById = AssetDatabase.FindAssets(
+                    "t:ItemData",
+                    new[] { EquipmentFolder })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
+                .Where(item => item != null &&
+                    item.ItemType == ItemType.Equipment &&
+                    CheatEquipmentItemIds.Contains(item.ItemId))
+                .ToDictionary(item => item.ItemId, StringComparer.Ordinal);
+
+            string[] missingEquipmentIds = CheatEquipmentItemIds
+                .Where(itemId => !equipmentById.ContainsKey(itemId))
+                .ToArray();
+            if (missingEquipmentIds.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    "Cheat-console equipment items are missing: " +
+                    string.Join(", ", missingEquipmentIds));
+            }
+
+            return engineeringParts
+                .Concat(CheatEquipmentItemIds.Select(itemId =>
+                    equipmentById[itemId]))
                 .ToArray();
         }
 

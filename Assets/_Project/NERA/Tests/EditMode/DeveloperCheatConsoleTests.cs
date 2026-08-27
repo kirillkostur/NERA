@@ -39,10 +39,10 @@ namespace NERA.Tests
                 Is.EqualTo(12));
             Assert.That(
                 serialized.FindProperty("itemButtons").arraySize,
-                Is.EqualTo(25));
+                Is.EqualTo(27));
             Assert.That(
                 serialized.FindProperty("inventoryItems").arraySize,
-                Is.EqualTo(25));
+                Is.EqualTo(27));
             Assert.That(
                 serialized.FindProperty("stationEnableButtons").arraySize,
                 Is.EqualTo(7));
@@ -77,11 +77,14 @@ namespace NERA.Tests
             Assert.That(labels, Does.Contain("ПАНЕЛЬ:"));
             Assert.That(labels, Does.Contain("БАТАРЕЯ:"));
             Assert.That(labels, Does.Contain("ТУРЕЛИ:"));
+            Assert.That(labels, Does.Contain("СНАРЯЖЕНИЕ:"));
+            Assert.That(labels, Does.Contain("ENERGY PISTOL"));
+            Assert.That(labels, Does.Contain("IO INTEGRATOR"));
             Assert.That(labels, Does.Contain("ТЕРМИНАЛ"));
             Assert.That(labels, Does.Contain("ЯЗЫК"));
             Assert.That(labels.Count(label => label == "ВКЛ"), Is.EqualTo(7));
             Assert.That(labels.Count(label => label == "ВЫКЛ"), Is.EqualTo(7));
-            Assert.That(labels.Count(label => label == "+1"), Is.EqualTo(25));
+            Assert.That(labels.Count(label => label == "+1"), Is.EqualTo(27));
 
             string[] orderedItemIds = Enumerable
                 .Range(0, serialized.FindProperty("inventoryItems").arraySize)
@@ -118,7 +121,9 @@ namespace NERA.Tests
                     "item_emitter_damage_01",
                     "item_sensor_01",
                     "item_servo_01",
-                    "item_servo_drive_01"
+                    "item_servo_drive_01",
+                    "energy_pistol_01",
+                    "io_integrator_01"
                 }));
         }
 
