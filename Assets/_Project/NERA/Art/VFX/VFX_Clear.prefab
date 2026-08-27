@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 3617881266711017989}
   - component: {fileID: 1069118604556622839}
   - component: {fileID: 7539281387560199540}
+  - component: {fileID: 6823015704912456123}
   m_Layer: 0
-  m_Name: VFX_Sandstorm
+  m_Name: VFX_Clear
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33,6 +34,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6823015704912456123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7593647553959804283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  particleSystems:
+  - {fileID: 7539281387560199540}
 --- !u!199 &1069118604556622839
 ParticleSystemRenderer:
   serializedVersion: 6

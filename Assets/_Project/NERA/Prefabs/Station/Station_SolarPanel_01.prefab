@@ -763,8 +763,8 @@ Transform:
   - {fileID: 7217264720873018720}
   - {fileID: 6582935440504524283}
   - {fileID: 970550513528134681}
-  - {fileID: 1607667625250840247}
   - {fileID: 4111513562348442378}
+  - {fileID: 4593497906962289123}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 15, y: 154.043, z: 0}
 --- !u!114 &485282140997586392
@@ -831,7 +831,7 @@ MonoBehaviour:
   exposedToWeather: 1
   initialCondition: 1
   cleaningDurationSeconds: 3
-  cleaningVfx: {fileID: 5537798624535904710}
+  cleaningEffect: {fileID: 812340000000000003}
   targetRenderer: {fileID: 3121668921397997119}
   sandAmountProperty: _DissolveStrength
 --- !u!114 &8716632966903397710
@@ -1293,7 +1293,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.13095306, y: 0.0777415, z: 0.2027534}
   m_Center: {x: 0, y: 0.038870744, z: -0.000000014901161}
---- !u!1001 &2628658489427322034
+--- !u!1001 &975638267055926246
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1343,44 +1343,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7593647553959804283, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
       propertyPath: m_Name
-      value: VFX_Sandstorm
-      objectReference: {fileID: 0}
-    - target: {fileID: 7593647553959804283, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: -90
+      value: VFX_Clear
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
---- !u!4 &1607667625250840247 stripped
+--- !u!4 &4593497906962289123 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3617881266711017989, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 2628658489427322034}
+  m_PrefabInstance: {fileID: 975638267055926246}
   m_PrefabAsset: {fileID: 0}
---- !u!198 &5537798624535904710 stripped
+--- !u!198 &7289851906734165650 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 7539281387560199540, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 2628658489427322034}
+  m_PrefabInstance: {fileID: 975638267055926246}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &812340000000000003 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6823015704912456123, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
+  m_PrefabInstance: {fileID: 975638267055926246}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

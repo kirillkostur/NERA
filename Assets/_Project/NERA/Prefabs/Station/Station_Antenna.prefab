@@ -145,7 +145,7 @@ Transform:
   - {fileID: 1119880102914515294}
   - {fileID: 5203901394567562839}
   - {fileID: 6130896320306349946}
-  - {fileID: 7391681078189101467}
+  - {fileID: 4465857348849123596}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -25, z: 0}
 --- !u!114 &3228706877149560857
@@ -231,7 +231,8 @@ MonoBehaviour:
   role: 2
   exposedToWeather: 1
   initialCondition: 1
-  cleaningVfx: {fileID: 4323778257747234538}
+  cleaningDurationSeconds: 3
+  cleaningEffect: {fileID: 812340000000000001}
   targetRenderer: {fileID: 5901973985507245185}
   sandAmountProperty: _DissolveStrength
 --- !u!1 &1990271468218430953
@@ -1353,7 +1354,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.04, y: 1, z: 0.04}
   m_Center: {x: 0, y: 0.06, z: 0}
---- !u!1001 &6098380842859080606
+--- !u!1001 &1138463266043984649
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1403,44 +1404,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7593647553959804283, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
       propertyPath: m_Name
-      value: VFX_Sandstorm
-      objectReference: {fileID: 0}
-    - target: {fileID: 7593647553959804283, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8828255718554326794, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: -90
+      value: VFX_Clear
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
---- !u!198 &4323778257747234538 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 7539281387560199540, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 6098380842859080606}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &7391681078189101467 stripped
+--- !u!4 &4465857348849123596 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3617881266711017989, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 6098380842859080606}
+  m_PrefabInstance: {fileID: 1138463266043984649}
   m_PrefabAsset: {fileID: 0}
+--- !u!198 &7452413075511877245 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 7539281387560199540, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
+  m_PrefabInstance: {fileID: 1138463266043984649}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &812340000000000001 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6823015704912456123, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
+  m_PrefabInstance: {fileID: 1138463266043984649}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

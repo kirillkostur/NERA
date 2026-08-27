@@ -1,6 +1,8 @@
+using NERA.Graphics;
 using NERA.Interaction;
 using NERA.Player;
 using NERA.Station;
+using NERA.World;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -21,6 +23,9 @@ namespace NERA.Terminal
         [SerializeField] private GameObject stationVisual;
         [SerializeField] private GameObject mapVisual;
 
+        [Header("Weather Decoration")]
+        [SerializeField] private ParticleEffectController sandstormEffect;
+
         private StationPowerController subscribedPower;
         private StationSystemsController subscribedSystems;
         private PrioritySettings previousCameraPriority;
@@ -33,11 +38,20 @@ namespace NERA.Terminal
         private void Awake()
         {
             ResolveReferences();
+            RefreshSandstormVisual();
             ApplyPowerState(false);
         }
 
         private void OnEnable()
         {
+            StationWeatherController.AnySandstormStarted -=
+                HandleSandstormStarted;
+            StationWeatherController.AnySandstormStarted +=
+                HandleSandstormStarted;
+            StationWeatherController.AnySandstormEnded -=
+                HandleSandstormEnded;
+            StationWeatherController.AnySandstormEnded +=
+                HandleSandstormEnded;
             StationPowerController.InstanceChanged +=
                 HandlePowerControllerInstanceChanged;
             StationSystemsController.InstanceChanged +=
@@ -45,6 +59,7 @@ namespace NERA.Terminal
             BindPowerController(StationPowerController.Instance);
             BindSystemsController(StationSystemsController.Instance);
             RefreshPoweredDecoration();
+            RefreshSandstormVisual();
         }
 
         public override InteractionPrompt GetPrompt()
@@ -234,6 +249,28 @@ namespace NERA.Terminal
             ApplyPowerState(operational);
         }
 
+        private void HandleSandstormStarted(float _)
+        {
+            SetSandstormEffectPlaying(true);
+        }
+
+        private void HandleSandstormEnded(bool _)
+        {
+            SetSandstormEffectPlaying(false);
+        }
+
+        private void RefreshSandstormVisual()
+        {
+            SetSandstormEffectPlaying(
+                StationWeatherController.Instance?.IsSandstormActive == true);
+        }
+
+        private void SetSandstormEffectPlaying(bool playing)
+        {
+            ResolveReferences();
+            sandstormEffect?.SetPlaying(playing);
+        }
+
         private bool IsTerminalOperational()
         {
             bool powered = subscribedPower != null &&
@@ -276,6 +313,9 @@ namespace NERA.Terminal
             stationVisual ??= visualRoot?.Find("SM_Station_Mini_3D")?
                 .gameObject;
             mapVisual ??= visualRoot?.Find("SM_Map_Mini_3D")?.gameObject;
+            sandstormEffect ??= stationVisual?.transform
+                .Find("VFX_Sandstorm_Mini")?
+                .GetComponent<ParticleEffectController>();
         }
 
         private void NormalizeDecorationLayers()
@@ -296,6 +336,11 @@ namespace NERA.Terminal
 
         private void OnDisable()
         {
+            sandstormEffect?.StopImmediate();
+            StationWeatherController.AnySandstormStarted -=
+                HandleSandstormStarted;
+            StationWeatherController.AnySandstormEnded -=
+                HandleSandstormEnded;
             StationPowerController.InstanceChanged -=
                 HandlePowerControllerInstanceChanged;
             StationSystemsController.InstanceChanged -=

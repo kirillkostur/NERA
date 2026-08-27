@@ -11,6 +11,7 @@ using NERA.Core;
 using NERA.Drone;
 using NERA.Energy;
 using NERA.Expeditions;
+using NERA.Graphics;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
@@ -590,6 +591,8 @@ namespace NERA.Tests
 
             EnergySystemController energy = EnergySystemController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
+            StationWeatherController weather =
+                StationWeatherController.Instance;
             Terminal.TerminalUIScreen terminal =
                 Terminal.TerminalUIScreen.Instance;
             Terminal.TerminalAccessInteractable access =
@@ -601,6 +604,7 @@ namespace NERA.Tests
 
             Assert.That(energy, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
+            Assert.That(weather, Is.Not.Null);
             Assert.That(terminal, Is.Not.Null);
             Assert.That(access, Is.Not.Null);
             Assert.That(player, Is.Not.Null);
@@ -609,12 +613,27 @@ namespace NERA.Tests
             Transform stationVisual =
                 visualRoot?.Find("SM_Station_Mini_3D");
             Transform mapVisual = visualRoot?.Find("SM_Map_Mini_3D");
+            Transform sandstormVisual = stationVisual?.Find(
+                "VFX_Sandstorm_Mini");
+            ParticleEffectController sandstormEffect =
+                sandstormVisual?.GetComponent<ParticleEffectController>();
             Transform interactionPoint =
                 access.transform.Find("InteractionPoint");
             Assert.That(visualRoot, Is.Not.Null);
             Assert.That(stationVisual, Is.Not.Null);
             Assert.That(mapVisual, Is.Not.Null);
+            Assert.That(sandstormVisual, Is.Not.Null);
+            Assert.That(sandstormEffect, Is.Not.Null);
             Assert.That(interactionPoint, Is.Not.Null);
+            weather.StopSandstorm();
+            yield return null;
+            Assert.That(sandstormEffect.IsPlayingRequested, Is.False);
+            Assert.That(weather.StartSandstorm(10f), Is.True);
+            yield return null;
+            Assert.That(sandstormEffect.IsPlayingRequested, Is.True);
+            Assert.That(weather.StopSandstorm(), Is.True);
+            yield return null;
+            Assert.That(sandstormEffect.IsPlayingRequested, Is.False);
             Assert.That(access.InteractionTransform, Is.EqualTo(interactionPoint));
             Assert.That(
                 access.gameObject.layer,

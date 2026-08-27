@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NERA.Energy;
+using NERA.Graphics;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
@@ -219,6 +220,46 @@ namespace NERA.Tests
             Assert.That(maintenance, Is.Not.Null);
             Assert.That(maintenance.Role, Is.EqualTo(MaintenanceRole.Drone));
             Assert.That(maintenance.ExposedToWeather, Is.True);
+        }
+
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/Station_Antenna.prefab")]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/Station_Drone.prefab")]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/Station_SolarPanel_01.prefab")]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/Station_Turret_01.prefab")]
+        [TestCase(
+            "Assets/_Project/NERA/Prefabs/Station/Station_Turret_02.prefab")]
+        public void OutdoorStationPrefabUsesManagedCleaningEffect(
+            string prefabPath)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                prefabPath);
+            MaintainableObject maintenance =
+                prefab?.GetComponent<MaintainableObject>();
+
+            Assert.That(prefab, Is.Not.Null, prefabPath);
+            Assert.That(maintenance, Is.Not.Null, prefabPath);
+
+            var serialized = new SerializedObject(maintenance);
+            ParticleEffectController effect = serialized
+                .FindProperty("cleaningEffect")
+                .objectReferenceValue as ParticleEffectController;
+
+            Assert.That(effect, Is.Not.Null, prefabPath);
+            Assert.That(effect.gameObject.activeSelf, Is.True, prefabPath);
+            ParticleSystem[] particleSystems =
+                effect.GetComponentsInChildren<ParticleSystem>(true);
+            Assert.That(particleSystems, Is.Not.Empty, prefabPath);
+            foreach (ParticleSystem particleSystem in particleSystems)
+            {
+                Assert.That(
+                    particleSystem.main.playOnAwake,
+                    Is.False,
+                    prefabPath);
+            }
         }
 
         [Test]

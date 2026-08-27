@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Drone;
+using NERA.Graphics;
 using NERA.World;
 using NERA.Quests;
 using NERA.Station;
@@ -20,7 +21,7 @@ namespace NERA.Maintenance
         [Tooltip("Time required to completely clean the object.")]
         [SerializeField, Min(0.1f)] private float cleaningDurationSeconds = 3f;
         [Tooltip("Played while the object is being cleaned.")]
-        [SerializeField] private ParticleSystem cleaningVfx;
+        [SerializeField] private ParticleEffectController cleaningEffect;
         [Tooltip("Renderer of the Sand overlay mesh.")]
         [SerializeField] private Renderer targetRenderer;
         [SerializeField] private string sandAmountProperty =
@@ -140,13 +141,7 @@ namespace NERA.Maintenance
             cleaningElapsedSeconds = 0f;
             cleaningStartCondition = condition;
 
-            if (cleaningVfx != null)
-            {
-                cleaningVfx.Stop(
-                    true,
-                    ParticleSystemStopBehavior.StopEmittingAndClear);
-                cleaningVfx.Play(true);
-            }
+            cleaningEffect?.Play();
             return true;
         }
 
@@ -154,6 +149,13 @@ namespace NERA.Maintenance
         {
             CancelCleaning(true);
             ApplyCondition(value);
+        }
+
+        public void CleanInstantly()
+        {
+            CancelCleaning(true);
+            cleaningEffect?.StopImmediate();
+            ApplyCondition(1f);
         }
 
         public void AdvanceCleaning(float deltaTime)
@@ -359,12 +361,7 @@ namespace NERA.Maintenance
             cleaningElapsedSeconds = CleaningDurationSeconds;
             ApplyCondition(1f);
 
-            if (cleaningVfx != null)
-            {
-                cleaningVfx.Stop(
-                    true,
-                    ParticleSystemStopBehavior.StopEmitting);
-            }
+            cleaningEffect?.StopSmooth();
         }
 
         private void CancelCleaning(bool clearParticles)
@@ -376,14 +373,10 @@ namespace NERA.Maintenance
             cleaningElapsedSeconds = 0f;
             cleaningStartCondition = condition;
 
-            if (cleaningVfx != null)
-            {
-                cleaningVfx.Stop(
-                    true,
-                    clearParticles
-                        ? ParticleSystemStopBehavior.StopEmittingAndClear
-                        : ParticleSystemStopBehavior.StopEmitting);
-            }
+            if (clearParticles)
+                cleaningEffect?.StopImmediate();
+            else
+                cleaningEffect?.StopSmooth();
         }
 
         private string GetServiceActionText()

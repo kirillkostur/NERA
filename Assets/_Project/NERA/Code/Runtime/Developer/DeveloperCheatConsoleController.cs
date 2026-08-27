@@ -561,7 +561,10 @@ namespace NERA.Development
                     continue;
                 }
 
-                maintainable.SetCondition(condition);
+                if (condition >= 0.999f)
+                    maintainable.CleanInstantly();
+                else
+                    maintainable.SetCondition(condition);
                 changed++;
             }
 
