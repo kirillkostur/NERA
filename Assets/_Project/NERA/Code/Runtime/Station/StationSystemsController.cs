@@ -171,6 +171,11 @@ namespace NERA.Station
                 reason = "Station object is not configured.";
                 return false;
             }
+            if (IsDroneAway(type))
+            {
+                reason = "Drone is away from the station.";
+                return false;
+            }
 
             string stateKey = GetPartStateKey(type, objectId);
             installedParts.TryGetValue(
@@ -409,6 +414,11 @@ namespace NERA.Station
                 reason = "This system cannot be controlled from the terminal.";
                 return false;
             }
+            if (IsDroneAway(type))
+            {
+                reason = "Drone is away from the station.";
+                return false;
+            }
             if (!IsMaintenanceReady(type, objectId))
             {
                 reason = "Cleaning or repair required.";
@@ -441,13 +451,8 @@ namespace NERA.Station
             StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null || !definition.Controllable)
                 return false;
-            if (type == StationSystemType.Drone &&
-                !active &&
-                DroneScanController.Instance != null &&
-                DroneScanController.Instance.IsExpeditionInProgress)
-            {
+            if (IsDroneAway(type))
                 return false;
-            }
             if (active && !CanStart(type, objectId, out _))
                 return false;
 
@@ -828,6 +833,12 @@ namespace NERA.Station
                 }
             }
             return null;
+        }
+
+        private static bool IsDroneAway(StationSystemType type)
+        {
+            return type == StationSystemType.Drone &&
+                DroneScanController.Instance?.IsAtStation == false;
         }
 
         private static void ReportSystemActivated(

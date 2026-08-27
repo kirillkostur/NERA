@@ -29,6 +29,7 @@ namespace NERA.Drone
         public event Action<float> RechargeProgressChanged;
         public event Action<float> BatteryChargeChanged;
         public event Action<DroneScanResult> ScanCompleted;
+        public event Action<bool> StationPresenceChanged;
 
         public DroneState State { get; private set; } = DroneState.Locked;
         public float ScanProgress =>
@@ -345,6 +346,7 @@ namespace NERA.Drone
             }
 
             scanTimerRunning = true;
+            StationPresenceChanged?.Invoke(false);
             SetCurrentBatteryCharge(
                 CurrentBatteryCharge - GetBatteryConsumption(scanLocation));
             EnsureEnergyRegistration();
@@ -364,6 +366,7 @@ namespace NERA.Drone
             }
 
             waitingForReturnAnimationEvent = false;
+            StationPresenceChanged?.Invoke(true);
             CompleteScan();
         }
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NERA.Drone;
 using NERA.Interaction;
 using NERA.Items;
 using NERA.Maintenance;
@@ -38,6 +39,9 @@ namespace NERA.Station
         public string ObjectId => identity != null
             ? identity.ObjectId
             : string.Empty;
+        public bool IsPresentAtStation =>
+            SystemType != StationSystemType.Drone ||
+            DroneScanController.Instance?.IsAtStation != false;
         public bool IsFullyUpgraded
         {
             get
@@ -78,6 +82,8 @@ namespace NERA.Station
         {
             ResolveReferences();
             InteractionPrompt configured = base.GetPrompt();
+            if (!IsPresentAtStation)
+                return Hidden(configured);
             if (maintenance != null && maintenance.IsCleaning)
                 return Hidden(configured);
 
@@ -143,6 +149,9 @@ namespace NERA.Station
         public override void CompleteInteraction(GameObject interactor)
         {
             ResolveReferences();
+            if (!IsPresentAtStation)
+                return;
+
             RequiredInteraction required = ResolveRequiredInteraction(
                 out bool actionAvailable,
                 out _);

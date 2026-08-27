@@ -315,7 +315,7 @@ namespace NERA.Terminal
                 systems?.CanStart(type, selectedObjectId, out _) == true;
             bool interactable = controllable && canChangeState &&
                 !(type == StationSystemType.Drone &&
-                  DroneScanController.Instance?.IsExpeditionInProgress == true);
+                  DroneScanController.Instance?.IsAtStation == false);
 
             bool visualStateChanged = renderedPowerSystem != selectedSystem ||
                 !string.Equals(
@@ -573,10 +573,18 @@ namespace NERA.Terminal
             if (subscribedDrone != drone)
             {
                 if (subscribedDrone != null)
+                {
                     subscribedDrone.StateChanged -= HandleDroneStateChanged;
+                    subscribedDrone.StationPresenceChanged -=
+                        HandleDronePresenceChanged;
+                }
                 subscribedDrone = drone;
                 if (subscribedDrone != null)
+                {
                     subscribedDrone.StateChanged += HandleDroneStateChanged;
+                    subscribedDrone.StationPresenceChanged +=
+                        HandleDronePresenceChanged;
+                }
             }
 
             AntennaController antenna = AntennaController.Instance;
@@ -604,6 +612,11 @@ namespace NERA.Terminal
         }
 
         private void HandleDroneStateChanged(DroneState _)
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleDronePresenceChanged(bool _)
         {
             RefreshIfVisible();
         }
@@ -647,6 +660,8 @@ namespace NERA.Terminal
             if (subscribedDrone != null)
             {
                 subscribedDrone.StateChanged -= HandleDroneStateChanged;
+                subscribedDrone.StationPresenceChanged -=
+                    HandleDronePresenceChanged;
                 subscribedDrone = null;
             }
             if (subscribedAntenna != null)

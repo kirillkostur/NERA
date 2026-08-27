@@ -84,7 +84,10 @@ namespace NERA.Maintenance
         public bool IsSandClogged => condition <= 0.01f;
         public bool NeedsService => condition < 0.999f;
         public bool CanService =>
-            NeedsService && !isCleaning && !IsSandstormActive();
+            NeedsService &&
+            !isCleaning &&
+            !IsSandstormActive() &&
+            IsPhysicallyPresentAtStation();
         public string ServiceActionText => GetServiceActionText();
 
         private void Awake()
@@ -257,7 +260,9 @@ namespace NERA.Maintenance
 
         public bool RestoreCondition()
         {
-            if ((!NeedsService && !isCleaning) || IsSandstormActive())
+            if ((!NeedsService && !isCleaning) ||
+                IsSandstormActive() ||
+                !IsPhysicallyPresentAtStation())
                 return false;
 
             CancelCleaning(true);
@@ -334,9 +339,11 @@ namespace NERA.Maintenance
 
         private bool CanReceiveSandExposure()
         {
-            if (!exposedToWeather)
-                return false;
+            return exposedToWeather && IsPhysicallyPresentAtStation();
+        }
 
+        private bool IsPhysicallyPresentAtStation()
+        {
             return role != MaintenanceRole.Drone ||
                 DroneScanController.Instance?.IsAtStation != false;
         }

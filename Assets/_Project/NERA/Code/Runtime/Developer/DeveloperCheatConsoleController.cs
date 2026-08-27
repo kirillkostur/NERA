@@ -262,7 +262,10 @@ namespace NERA.Development
 
         public void ContaminateAllObjects()
         {
-            SetAllObjectConditions(0f, "contaminated");
+            SetAllObjectConditions(
+                0f,
+                "contaminated",
+                skipAbsentDrone: true);
         }
 
         public void FullyUpgradeTurretOne() => FullyUpgrade(
@@ -509,20 +512,36 @@ namespace NERA.Development
 
         private static void SetAllObjectConditions(
             float condition,
-            string result)
+            string result,
+            bool skipAbsentDrone = false)
         {
             var objects = new List<MaintainableObject>(
                 MaintainableObject.ActiveObjects);
             int changed = 0;
+            int skipped = 0;
             foreach (MaintainableObject maintainable in objects)
             {
                 if (maintainable == null)
                     continue;
+                if (skipAbsentDrone &&
+                    maintainable.Role == MaintenanceRole.Drone &&
+                    DroneScanController.Instance?.IsAtStation == false)
+                {
+                    skipped++;
+                    continue;
+                }
+
                 maintainable.SetCondition(condition);
                 changed++;
             }
 
-            LogResult("Maintenance", true, $"{changed} objects {result}");
+            string skippedResult = skipped > 0
+                ? $", {skipped} absent drone object skipped"
+                : string.Empty;
+            LogResult(
+                "Maintenance",
+                true,
+                $"{changed} objects {result}{skippedResult}");
         }
 
         private static void FullyUpgrade(

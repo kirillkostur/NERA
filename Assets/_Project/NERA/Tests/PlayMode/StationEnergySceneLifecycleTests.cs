@@ -1723,6 +1723,10 @@ namespace NERA.Tests
             yield return null;
             Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
             Assert.That(drone.LaunchScan(location), Is.True);
+            Assert.That(
+                drone.IsAtStation,
+                Is.True,
+                "The drone remains present until the Start_Scan event.");
 
             DroneAnimationView mainAnimation =
                 Object.FindObjectsByType<DroneAnimationView>(
@@ -1734,6 +1738,15 @@ namespace NERA.Tests
                         DroneAnimationView.MainControllerName);
             mainAnimation.Start_Scan();
             Assert.That(drone.IsAtStation, Is.False);
+
+            NERA.Development.DeveloperCheatConsoleController cheats =
+                NERA.Development.DeveloperCheatConsoleController.Instance;
+            Assert.That(cheats, Is.Not.Null);
+            cheats.ContaminateAllObjects();
+            Assert.That(
+                maintenance.Condition,
+                Is.EqualTo(1f),
+                "The contamination cheat must skip an absent drone.");
 
             Assert.That(weather.StartSandstorm(10f), Is.True);
             maintenance.AdvanceSandExposure(6f, 10f);
@@ -1750,6 +1763,12 @@ namespace NERA.Tests
                 maintenance.Condition,
                 Is.EqualTo(0.6f).Within(0.001f));
             Assert.That(maintenance.IsSandClogged, Is.False);
+
+            cheats.ContaminateAllObjects();
+            Assert.That(
+                maintenance.Condition,
+                Is.Zero,
+                "The contamination cheat must affect the returned drone.");
         }
 
         [UnityTest]
@@ -2116,6 +2135,16 @@ namespace NERA.Tests
                 ExpeditionDiscoveryController.Instance;
             DroneScanController drone = DroneScanController.Instance;
             StationSystemsController systems = StationSystemsController.Instance;
+            StationWeatherController weather = StationWeatherController.Instance;
+            ParkourPlayerBridge player =
+                Object.FindFirstObjectByType<ParkourPlayerBridge>();
+            StationUpgradeableObject physicalDrone = Object
+                .FindObjectsByType<StationUpgradeableObject>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Single(candidate =>
+                    candidate.SystemType == StationSystemType.Drone &&
+                    candidate.ObjectId == "station_drone");
             Terminal.TerminalStationScreenController stationScreen =
                 Object.FindFirstObjectByType<Terminal.TerminalStationScreenController>(
                     FindObjectsInactive.Include);
@@ -2124,7 +2153,15 @@ namespace NERA.Tests
             Assert.That(discovery, Is.Not.Null);
             Assert.That(drone, Is.Not.Null);
             Assert.That(systems, Is.Not.Null);
+            Assert.That(weather, Is.Not.Null);
+            Assert.That(player, Is.Not.Null);
+            Assert.That(physicalDrone, Is.Not.Null);
             Assert.That(stationScreen, Is.Not.Null);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_drone",
+                    out MaintainableObject maintenance),
+                Is.True);
             Assert.That(
                 stationScreen.transform.Find("background_Upgrade"),
                 Is.Null,
@@ -2139,6 +2176,7 @@ namespace NERA.Tests
                     StationObjectStat.EnergyConsumption)));
 
             ExpeditionLocationData location = discovery.KnownLocations[0];
+            weather.StopSandstorm();
             discovery.RestoreDiscovered(Array.Empty<string>());
             energy.RestoreState(energy.TotalCapacity, true);
             Assert.That(
@@ -2148,6 +2186,32 @@ namespace NERA.Tests
             Assert.That(connectedConsumerCount, Is.GreaterThan(0));
             drone.RefreshAvailability();
             Assert.That(drone.LaunchScan(location), Is.True);
+            Assert.That(drone.IsAtStation, Is.True);
+
+            DroneAnimationView mainAnimation =
+                Object.FindObjectsByType<DroneAnimationView>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None)
+                    .Single(view =>
+                        view.GetComponent<Animator>()
+                            .runtimeAnimatorController.name ==
+                        DroneAnimationView.MainControllerName);
+            mainAnimation.Start_Scan();
+            Assert.That(drone.IsAtStation, Is.False);
+            Assert.That(physicalDrone.GetPrompt().IsVisible, Is.False);
+            Assert.That(
+                StationUpgradeModeController.GetOrCreate().Open(
+                    physicalDrone,
+                    player.gameObject),
+                Is.False,
+                "Upgrade mode must not open while the drone is away.");
+
+            maintenance.SetCondition(0.5f);
+            Assert.That(maintenance.Condition, Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(
+                maintenance.CanService,
+                Is.False,
+                "An absent drone must not be serviceable.");
 
             stationScreen.SelectSystem(StationSystemType.Drone);
             Transform powerSwitch = Array.Find(
@@ -2162,21 +2226,27 @@ namespace NERA.Tests
                 systems.SetRequestedActive(StationSystemType.Drone, false),
                 Is.False);
             Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.False,
+                "The drone state must be immutable while it is away.");
+            Assert.That(
                 systems.IsRequestedActive(StationSystemType.Drone),
                 Is.True);
             Assert.That(drone.State, Is.EqualTo(DroneState.Scanning));
 
-            DroneAnimationView mainAnimation =
-                Object.FindObjectsByType<DroneAnimationView>(
-                        FindObjectsInactive.Include,
-                        FindObjectsSortMode.None)
-                    .Single(view =>
-                        view.GetComponent<Animator>()
-                            .runtimeAnimatorController.name ==
-                        DroneAnimationView.MainControllerName);
-            mainAnimation.Start_Scan();
             drone.AdvanceScan(drone.CurrentScanDuration);
             mainAnimation.End_Scan();
+            weather.StopSandstorm();
+            Assert.That(drone.IsAtStation, Is.True);
+            Assert.That(physicalDrone.GetPrompt().IsVisible, Is.True);
+            Assert.That(maintenance.Condition, Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(maintenance.NeedsService, Is.True);
+            Assert.That(maintenance.IsCleaning, Is.False);
+            Assert.That(weather.IsSandstormActive, Is.False);
+            Assert.That(
+                maintenance.CanService,
+                Is.True,
+                "Interaction and service must return with the drone.");
             Assert.That(drone.IsCharging, Is.True);
             Assert.That(
                 energy.ConnectedConsumerCount,

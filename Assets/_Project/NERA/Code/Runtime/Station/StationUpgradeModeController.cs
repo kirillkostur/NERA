@@ -133,7 +133,7 @@ namespace NERA.Station
             GameObject interactor)
         {
             if (target == null || interactor == null || IsOpen ||
-                target.IsFullyUpgraded)
+                target.IsFullyUpgraded || !target.IsPresentAtStation)
                 return false;
 
             player = interactor.GetComponentInParent<ParkourPlayerBridge>();
