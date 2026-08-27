@@ -13,6 +13,8 @@ namespace NERA.Save
             new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> completedWorldFlags =
             new HashSet<string>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<string>> enemySpawnerWaves =
+            new Dictionary<string, List<string>>(StringComparer.Ordinal);
 
         public static WorldStateController Instance { get; private set; }
         public IReadOnlyCollection<string> ConsumedObjects => consumedObjects;
@@ -50,6 +52,53 @@ namespace NERA.Save
         {
             return completedWorldFlags.Contains(
                 PersistentSceneIdentity.Normalize(persistentKey));
+        }
+
+        public IReadOnlyList<string> GetEnemySpawnerWaveIds(
+            string spawnerId)
+        {
+            string normalizedSpawnerId =
+                PersistentSceneIdentity.Normalize(spawnerId);
+            if (string.IsNullOrEmpty(normalizedSpawnerId) ||
+                !enemySpawnerWaves.TryGetValue(
+                    normalizedSpawnerId,
+                    out List<string> waveIds))
+            {
+                return Array.Empty<string>();
+            }
+
+            List<string> result = new List<string>(waveIds);
+            return result;
+        }
+
+        public bool RememberEnemySpawnerWave(
+            string spawnerId,
+            string waveId)
+        {
+            string normalizedSpawnerId =
+                PersistentSceneIdentity.Normalize(spawnerId);
+            string normalizedWaveId =
+                PersistentSceneIdentity.Normalize(waveId);
+            if (string.IsNullOrEmpty(normalizedSpawnerId) ||
+                string.IsNullOrEmpty(normalizedWaveId))
+            {
+                return false;
+            }
+
+            if (!enemySpawnerWaves.TryGetValue(
+                    normalizedSpawnerId,
+                    out List<string> waveIds))
+            {
+                waveIds = new List<string>();
+                enemySpawnerWaves.Add(normalizedSpawnerId, waveIds);
+            }
+
+            if (waveIds.Contains(normalizedWaveId))
+                return false;
+
+            waveIds.Add(normalizedWaveId);
+            StateChanged?.Invoke();
+            return true;
         }
 
         public void MarkConsumed(string persistentKey)
@@ -91,12 +140,38 @@ namespace NERA.Save
             data.defeatedEnemyObjectIds.Clear();
             data.completedWorldFlagIds ??= new List<string>();
             data.completedWorldFlagIds.Clear();
+            data.enemySpawnerWaves ??=
+                new List<EnemySpawnerWaveSaveData>();
+            data.enemySpawnerWaves.Clear();
             data.consumedWorldObjectIds.AddRange(consumedObjects);
             data.defeatedEnemyObjectIds.AddRange(defeatedEnemies);
             data.completedWorldFlagIds.AddRange(completedWorldFlags);
+            foreach (KeyValuePair<string, List<string>> pair in
+                     enemySpawnerWaves)
+            {
+                for (int index = 0; index < pair.Value.Count; index++)
+                {
+                    data.enemySpawnerWaves.Add(
+                        new EnemySpawnerWaveSaveData
+                        {
+                            spawnerId = pair.Key,
+                            waveId = pair.Value[index],
+                            order = index
+                        });
+                }
+            }
             data.consumedWorldObjectIds.Sort(StringComparer.Ordinal);
             data.defeatedEnemyObjectIds.Sort(StringComparer.Ordinal);
             data.completedWorldFlagIds.Sort(StringComparer.Ordinal);
+            data.enemySpawnerWaves.Sort((left, right) =>
+            {
+                int spawnerComparison = string.CompareOrdinal(
+                    left.spawnerId,
+                    right.spawnerId);
+                return spawnerComparison != 0
+                    ? spawnerComparison
+                    : left.order.CompareTo(right.order);
+            });
         }
 
         public void Restore(SaveGameData data)
@@ -104,9 +179,23 @@ namespace NERA.Save
             consumedObjects.Clear();
             defeatedEnemies.Clear();
             completedWorldFlags.Clear();
+            enemySpawnerWaves.Clear();
             AddNormalized(consumedObjects, data?.consumedWorldObjectIds);
             AddNormalized(defeatedEnemies, data?.defeatedEnemyObjectIds);
             AddNormalized(completedWorldFlags, data?.completedWorldFlagIds);
+            if (data?.enemySpawnerWaves != null)
+            {
+                foreach (EnemySpawnerWaveSaveData saved in
+                         data.enemySpawnerWaves)
+                {
+                    if (saved != null)
+                    {
+                        AddEnemySpawnerWave(
+                            saved.spawnerId,
+                            saved.waveId);
+                    }
+                }
+            }
             StateRestored?.Invoke();
         }
 
@@ -115,7 +204,34 @@ namespace NERA.Save
             consumedObjects.Clear();
             defeatedEnemies.Clear();
             completedWorldFlags.Clear();
+            enemySpawnerWaves.Clear();
             StateRestored?.Invoke();
+        }
+
+        private void AddEnemySpawnerWave(
+            string spawnerId,
+            string waveId)
+        {
+            string normalizedSpawnerId =
+                PersistentSceneIdentity.Normalize(spawnerId);
+            string normalizedWaveId =
+                PersistentSceneIdentity.Normalize(waveId);
+            if (string.IsNullOrEmpty(normalizedSpawnerId) ||
+                string.IsNullOrEmpty(normalizedWaveId))
+            {
+                return;
+            }
+
+            if (!enemySpawnerWaves.TryGetValue(
+                    normalizedSpawnerId,
+                    out List<string> waveIds))
+            {
+                waveIds = new List<string>();
+                enemySpawnerWaves.Add(normalizedSpawnerId, waveIds);
+            }
+
+            if (!waveIds.Contains(normalizedWaveId))
+                waveIds.Add(normalizedWaveId);
         }
 
         private static void AddNormalized(

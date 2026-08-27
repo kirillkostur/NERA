@@ -40,9 +40,17 @@ namespace NERA.Save
     }
 
     [Serializable]
+    public sealed class EnemySpawnerWaveSaveData
+    {
+        public string spawnerId;
+        public string waveId;
+        public int order;
+    }
+
+    [Serializable]
     public sealed class SaveGameData
     {
-        public const int CurrentVersion = 20;
+        public const int CurrentVersion = 21;
 
         public int version = CurrentVersion;
         public string checkpointSceneName;
@@ -57,6 +65,8 @@ namespace NERA.Save
         public float checkpointRotationW = 1f;
         public List<string> consumedWorldObjectIds = new List<string>();
         public List<string> defeatedEnemyObjectIds = new List<string>();
+        public List<EnemySpawnerWaveSaveData> enemySpawnerWaves =
+            new List<EnemySpawnerWaveSaveData>();
         public List<string> completedWorldFlagIds = new List<string>();
         public float completionPercent;
         public int stationPowerState;

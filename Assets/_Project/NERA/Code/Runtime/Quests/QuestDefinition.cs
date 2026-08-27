@@ -181,6 +181,15 @@ namespace NERA.Quests
             "Creates a full checkpoint at the player's current position " +
             "after this stage is completed.")]
         [SerializeField] private bool createCheckpointOnCompletion;
+        [Tooltip(
+            "Scene EnemySpawner IDs invoked when this stage becomes active.")]
+        [SerializeField] private List<string>
+            enemySpawnerIdsOnStart = new List<string>();
+        [Tooltip(
+            "Scene EnemySpawner IDs invoked after this stage completes. " +
+            "The wave is created before the optional checkpoint.")]
+        [SerializeField] private List<string>
+            enemySpawnerIdsOnCompletion = new List<string>();
         [SerializeField] private List<QuestConditionDefinition>
             completionConditions = new List<QuestConditionDefinition>();
 
@@ -189,6 +198,12 @@ namespace NERA.Quests
         public QuestConditionLogic CompletionLogic => completionLogic;
         public bool CreateCheckpointOnCompletion =>
             createCheckpointOnCompletion;
+        public IReadOnlyList<string> EnemySpawnerIdsOnStart =>
+            enemySpawnerIdsOnStart ??
+            (IReadOnlyList<string>)Array.Empty<string>();
+        public IReadOnlyList<string> EnemySpawnerIdsOnCompletion =>
+            enemySpawnerIdsOnCompletion ??
+            (IReadOnlyList<string>)Array.Empty<string>();
         public IReadOnlyList<QuestConditionDefinition> CompletionConditions =>
             completionConditions ??
             (IReadOnlyList<QuestConditionDefinition>)
@@ -350,6 +365,55 @@ namespace NERA.Quests
                             $"condition {conditionIndex + 1}: {issue}.";
                         return false;
                     }
+                }
+
+                if (!TryValidateSpawnerIds(
+                        stage.EnemySpawnerIdsOnStart,
+                        "on start",
+                        out string startIssue))
+                {
+                    error = $"Quest '{QuestId}' stage {stageIndex + 1}: " +
+                        startIssue;
+                    return false;
+                }
+
+                if (!TryValidateSpawnerIds(
+                        stage.EnemySpawnerIdsOnCompletion,
+                        "on completion",
+                        out string completionIssue))
+                {
+                    error = $"Quest '{QuestId}' stage {stageIndex + 1}: " +
+                        completionIssue;
+                    return false;
+                }
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        private static bool TryValidateSpawnerIds(
+            IReadOnlyList<string> values,
+            string phase,
+            out string error)
+        {
+            HashSet<string> ids =
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int index = 0; index < values.Count; index++)
+            {
+                string id = values[index]?.Trim();
+                if (string.IsNullOrEmpty(id))
+                {
+                    error = $"empty EnemySpawner action {phase} at " +
+                        $"position {index + 1}.";
+                    return false;
+                }
+
+                if (!ids.Add(id))
+                {
+                    error = $"EnemySpawner '{id}' is invoked more than " +
+                        $"once {phase}.";
+                    return false;
                 }
             }
 

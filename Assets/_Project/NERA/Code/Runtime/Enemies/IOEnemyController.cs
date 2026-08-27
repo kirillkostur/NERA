@@ -1,3 +1,4 @@
+using System;
 using NERA.Combat;
 using NERA.Quests;
 using NERA.Items;
@@ -39,13 +40,30 @@ namespace NERA.Enemies
         private Material runtimeMaterial;
         private bool encounterReported;
         private string persistentKey;
+        private string spawnedPersistentKeyOverride;
         private float nextTargetScanAt;
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
+        public event Action<IOEnemyController> Died;
         public string AuthoredPersistentId => persistentId?.Trim();
         public bool IsAlive => state != State.Dead;
         public string PersistentKey => persistentKey;
+
+        public void ConfigureAsRuntimeSpawn()
+        {
+            persistentId = string.Empty;
+            persistentKey = string.Empty;
+            spawnedPersistentKeyOverride = string.Empty;
+        }
+
+        public void ConfigureAsSpawnedInstance(string spawnedPersistentKey)
+        {
+            persistentId = string.Empty;
+            spawnedPersistentKeyOverride = PersistentSceneIdentity.Normalize(
+                spawnedPersistentKey);
+            persistentKey = spawnedPersistentKeyOverride;
+        }
 
         private void OnValidate()
         {
@@ -54,9 +72,12 @@ namespace NERA.Enemies
 
         private void Awake()
         {
-            persistentKey = PersistentSceneIdentity.CreateKey(
-                transform,
-                persistentId);
+            persistentKey = !string.IsNullOrEmpty(
+                    spawnedPersistentKeyOverride)
+                ? spawnedPersistentKeyOverride
+                : PersistentSceneIdentity.CreateKey(
+                    transform,
+                    persistentId);
             currentHealth = MaxHealth;
             baseY = transform.position.y;
 
@@ -88,6 +109,7 @@ namespace NERA.Enemies
             state = State.Dead;
             ActiveEnemySet.Remove(this);
             SpawnResearchDrop();
+            Died?.Invoke(this);
             Destroy(gameObject);
         }
 
@@ -160,6 +182,7 @@ namespace NERA.Enemies
                 config != null ? config.EnemyId : name,
                 config != null ? config.DisplayName : name);
             SpawnResearchDrop();
+            Died?.Invoke(this);
             Destroy(gameObject);
         }
 

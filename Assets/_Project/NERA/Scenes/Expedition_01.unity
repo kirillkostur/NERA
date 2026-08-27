@@ -5471,6 +5471,70 @@ Transform:
   - {fileID: 1638970514}
   m_Father: {fileID: 1870789655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &591918652
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 591918654}
+  - component: {fileID: 591918653}
+  m_Layer: 0
+  m_Name: EnemySpawner_Easy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &591918653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591918652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05b7944d531ce18418abb7b38054edc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnerId: expedition01_enemy_easy
+  displayName: "Expedition01 Enemies \u2014 Easy"
+  enemyPrefabs:
+  - {fileID: 2007363336556740147, guid: fdcb9018c3302364a9cef00da59f4c69, type: 3}
+  spawnCount: 2
+  randomizePrefab: 1
+  randomizeYaw: 1
+  spawnedEnemiesRoot: {fileID: 0}
+  spawnRadius: 4.14
+  snapToGround: 1
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  groundProbeHeight: 20
+  groundProbeDistance: 50
+  groundOffset: 1.6
+  activationMode: 0
+  spawnOnlyOnce: 0
+  persistWaveState: 1
+  logEvents: 0
+--- !u!4 &591918654
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591918652}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.99, y: 4.73, z: 14.53}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &600209748
 GameObject:
   m_ObjectHideFlags: 0
@@ -21965,3 +22029,4 @@ SceneRoots:
   - {fileID: 1295145797}
   - {fileID: 1870789655}
   - {fileID: 1988261197}
+  - {fileID: 591918654}

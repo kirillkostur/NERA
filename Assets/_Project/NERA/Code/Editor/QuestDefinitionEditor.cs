@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Enemies;
 using NERA.Quests;
 using UnityEditor;
 using UnityEngine;
@@ -27,38 +28,76 @@ namespace NERA.Editor
             "Второстепенное задание"
         };
 
+        private static readonly QuestSignalType[] SignalValues =
+        {
+            QuestSignalType.LocationDiscovered,
+            QuestSignalType.LocationEntered,
+            QuestSignalType.LocationExited,
+            QuestSignalType.AreaExplored,
+            QuestSignalType.ItemCollected,
+            QuestSignalType.ItemRemoved,
+            QuestSignalType.ItemDelivered,
+            QuestSignalType.InventoryItemCountChanged,
+            QuestSignalType.ResearchAnalyzed,
+            QuestSignalType.DroneScanCompleted,
+            QuestSignalType.AntennaSignalFound,
+            QuestSignalType.EnemyEncountered,
+            QuestSignalType.EnemyKilled,
+            QuestSignalType.EnemyWaveSpawned,
+            QuestSignalType.EnemyWaveCleared,
+            QuestSignalType.ObjectInteractionCompleted,
+            QuestSignalType.DeviceConditionBelow,
+            QuestSignalType.DeviceConditionRestored,
+            QuestSignalType.StationFaultStarted,
+            QuestSignalType.StationFaultResolved,
+            QuestSignalType.StationSystemActivated,
+            QuestSignalType.StationSystemDeactivated,
+            QuestSignalType.StationSystemUpgraded,
+            QuestSignalType.StationPowerOnline,
+            QuestSignalType.StationPowerOffline,
+            QuestSignalType.EnergyChargeChanged,
+            QuestSignalType.StationAttackStarted,
+            QuestSignalType.StationAttackRepelled,
+            QuestSignalType.WeatherChanged,
+            QuestSignalType.QuestCompleted,
+            QuestSignalType.TimerElapsed,
+            QuestSignalType.Custom
+        };
+
         private static readonly string[] SignalLabels =
         {
-            "Локация обнаружена",
-            "Игрок вошёл в локацию",
-            "Точка локации исследована",
-            "Предмет получен",
-            "Исследование завершено в лаборатории",
-            "Враг обнаружен",
-            "Враг уничтожен",
-            "Состояние объекта упало ниже значения",
-            "Состояние объекта восстановлено",
-            "На станции возникла неисправность",
-            "Система станции включена",
-            "После завершения квеста",
-            "Игрок покинул локацию",
-            "Взаимодействие с объектом завершено",
-            "Предмет покинул инвентарь",
-            "Предмет передан в цель",
-            "Количество предмета в инвентаре",
-            "Система станции выключена",
-            "Система станции улучшена",
-            "Питание станции восстановлено",
-            "Питание станции потеряно",
-            "Уровень заряда станции",
-            "Неисправность станции устранена",
-            "Нападение на станцию началось",
-            "Нападение на станцию отражено",
-            "Сканирование дроном завершено",
-            "Антенной обнаружен сигнал",
-            "Погода изменилась",
-            "Таймер завершён",
-            "Пользовательское событие"
+            "Локации/Локация обнаружена",
+            "Локации/Игрок вошёл в локацию",
+            "Локации/Игрок покинул локацию",
+            "Локации/Точка локации исследована",
+            "Предметы/Предмет получен (событие)",
+            "Предметы/Предмет покинул инвентарь (событие)",
+            "Предметы/Предмет передан в цель (событие)",
+            "Предметы/Количество предмета в инвентаре (состояние)",
+            "Исследование и разведка/Исследование завершено в лаборатории",
+            "Исследование и разведка/Сканирование дроном завершено",
+            "Исследование и разведка/Антенной обнаружен сигнал",
+            "Враги/Враг обнаружен",
+            "Враги/Враг уничтожен",
+            "Враги/Волна врагов создана",
+            "Враги/Волна врагов уничтожена",
+            "Объекты/Взаимодействие с объектом завершено",
+            "Станция — состояние объектов/Состояние ниже порога",
+            "Станция — состояние объектов/Состояние восстановлено",
+            "Станция — неисправности/Неисправность возникла",
+            "Станция — неисправности/Неисправность устранена",
+            "Станция — системы/Система включена",
+            "Станция — системы/Система выключена",
+            "Станция — системы/Система улучшена",
+            "Станция — питание/Общая сеть восстановлена",
+            "Станция — питание/Общая сеть отключена",
+            "Станция — питание/Уровень заряда",
+            "Станция — нападение/Нападение началось",
+            "Станция — нападение/Нападение отражено",
+            "Окружение/Погода изменилась",
+            "Квесты и служебные/После завершения квеста",
+            "Квесты и служебные/Таймер завершён",
+            "Квесты и служебные/Пользовательское событие"
         };
 
         private static readonly string[] ConditionLogicLabels =
@@ -282,6 +321,12 @@ namespace NERA.Editor
                 SerializedProperty createCheckpointOnCompletion =
                     stage.FindPropertyRelative(
                         "createCheckpointOnCompletion");
+                SerializedProperty enemySpawnerIdsOnStart =
+                    stage.FindPropertyRelative(
+                        "enemySpawnerIdsOnStart");
+                SerializedProperty enemySpawnerIdsOnCompletion =
+                    stage.FindPropertyRelative(
+                        "enemySpawnerIdsOnCompletion");
                 SerializedProperty completionConditions =
                     stage.FindPropertyRelative("completionConditions");
 
@@ -312,6 +357,15 @@ namespace NERA.Editor
                             "Чекпоинт после завершения",
                             "После завершения этого этапа сохраняет весь " +
                             "прогресс и текущую позицию игрока."));
+                    DrawEnemySpawnerActions(
+                        enemySpawnerIdsOnStart,
+                        "Спавн при входе в этап",
+                        "Вызывается, когда этот этап становится активным.");
+                    DrawEnemySpawnerActions(
+                        enemySpawnerIdsOnCompletion,
+                        "Спавн после завершения",
+                        "Вызывается после выполнения этапа, но до " +
+                        "чекпоинта.");
                     EditorGUILayout.LabelField(
                         "Условия завершения этапа",
                         EditorStyles.boldLabel);
@@ -425,15 +479,21 @@ namespace NERA.Editor
             SerializedProperty threshold =
                 condition.FindPropertyRelative("threshold");
 
-            int previousSignal = signal.enumValueIndex;
-            signal.enumValueIndex = EditorGUILayout.Popup(
-                "Игровое событие",
-                signal.enumValueIndex,
-                SignalLabels);
-
-            QuestSignalType signalType =
+            QuestSignalType previousSignal =
                 (QuestSignalType)signal.enumValueIndex;
-            if (signal.enumValueIndex != previousSignal)
+            int selectedSignal = Array.IndexOf(
+                SignalValues,
+                previousSignal);
+            if (selectedSignal < 0)
+                selectedSignal = 0;
+            selectedSignal = EditorGUILayout.Popup(
+                "Игровое событие",
+                selectedSignal,
+                SignalLabels);
+            QuestSignalType signalType =
+                SignalValues[selectedSignal];
+            signal.enumValueIndex = (int)signalType;
+            if (signalType != previousSignal)
             {
                 evaluation.enumValueIndex =
                     (int)QuestConditionEvaluation.Event;
@@ -447,6 +507,8 @@ namespace NERA.Editor
                         ? 1f
                         : 0.5f;
             }
+
+            DrawSignalHint(signalType);
 
             bool numericState = UsesNumericState(signalType);
             if (numericState)
@@ -647,6 +709,149 @@ namespace NERA.Editor
                 signalType == QuestSignalType.EnergyChargeChanged;
         }
 
+        private static void DrawEnemySpawnerActions(
+            SerializedProperty spawnerIds,
+            string title,
+            string description)
+        {
+            EditorGUILayout.Space(3f);
+            EditorGUILayout.LabelField(
+                title,
+                EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                description + " Один спавнер можно использовать в любом " +
+                "количестве квестов и этапов.",
+                MessageType.None);
+
+            List<string> knownIds = GetLoadedSpawnerIds();
+            for (int index = 0; index < spawnerIds.arraySize; index++)
+            {
+                SerializedProperty spawnerId =
+                    spawnerIds.GetArrayElementAtIndex(index);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    DrawSpawnerIdField(spawnerId, knownIds);
+                    if (GUILayout.Button("Удалить", GUILayout.Width(65f)))
+                    {
+                        spawnerIds.DeleteArrayElementAtIndex(index);
+                        break;
+                    }
+                }
+            }
+
+            if (GUILayout.Button("+ Вызвать EnemySpawner"))
+            {
+                int index = spawnerIds.arraySize;
+                spawnerIds.arraySize++;
+                spawnerIds.GetArrayElementAtIndex(index).stringValue =
+                    knownIds.Count > 0 ? knownIds[0] : string.Empty;
+            }
+        }
+
+        private static void DrawSpawnerIdField(
+            SerializedProperty spawnerId,
+            IReadOnlyList<string> knownIds)
+        {
+            string current = spawnerId.stringValue?.Trim() ?? string.Empty;
+            spawnerId.stringValue = EditorGUILayout.TextField(
+                "Spawner ID",
+                current);
+            if (knownIds.Count == 0)
+                return;
+
+            string[] options = new string[knownIds.Count + 1];
+            options[0] = "Из открытой сцены…";
+            for (int index = 0; index < knownIds.Count; index++)
+                options[index + 1] = knownIds[index];
+
+            int selected = EditorGUILayout.Popup(
+                0,
+                options,
+                GUILayout.Width(180f));
+            if (selected > 0)
+                spawnerId.stringValue = options[selected];
+        }
+
+        private static List<string> GetLoadedSpawnerIds()
+        {
+            EnemySpawner[] spawners =
+                UnityEngine.Object.FindObjectsByType<EnemySpawner>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            List<string> result = new List<string>();
+            foreach (EnemySpawner spawner in spawners)
+            {
+                if (spawner == null ||
+                    !spawner.gameObject.scene.IsValid() ||
+                    string.IsNullOrWhiteSpace(spawner.SpawnerId) ||
+                    result.Exists(id => string.Equals(
+                        id,
+                        spawner.SpawnerId,
+                        StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                result.Add(spawner.SpawnerId);
+            }
+
+            result.Sort(StringComparer.OrdinalIgnoreCase);
+            return result;
+        }
+
+        private static void DrawSignalHint(QuestSignalType signalType)
+        {
+            string message = signalType switch
+            {
+                QuestSignalType.ItemCollected or
+                QuestSignalType.ItemRemoved =>
+                    "Это разовое событие перемещения предмета. Для проверки " +
+                    "уже имеющегося количества используйте событие " +
+                    "«Количество предмета в инвентаре».",
+                QuestSignalType.InventoryItemCountChanged =>
+                    "Это текущее состояние инвентаря. Оно не дублирует " +
+                    "разовые события получения и удаления предмета.",
+                QuestSignalType.DeviceConditionBelow or
+                QuestSignalType.DeviceConditionRestored =>
+                    "Это числовое состояние износа объекта. Неисправность " +
+                    "станции — отдельное дискретное событие с причиной.",
+                QuestSignalType.StationFaultStarted or
+                QuestSignalType.StationFaultResolved =>
+                    "Это начало или устранение неисправности. Для обычного " +
+                    "порога износа используйте события состояния объекта.",
+                QuestSignalType.StationSystemActivated or
+                QuestSignalType.StationSystemDeactivated =>
+                    "Относится к конкретной системе станции. События питания " +
+                    "относятся ко всей энергетической сети.",
+                QuestSignalType.StationPowerOnline or
+                QuestSignalType.StationPowerOffline =>
+                    "Относится ко всей энергетической сети станции, а не к " +
+                    "отдельному модулю.",
+                QuestSignalType.EnemyWaveSpawned or
+                QuestSignalType.EnemyWaveCleared =>
+                    "Target ID должен совпадать со Spawner ID нужного " +
+                    "EnemySpawner.",
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrEmpty(message))
+                EditorGUILayout.HelpBox(message, MessageType.Info);
+
+            bool requiresManualSource =
+                signalType == QuestSignalType.ItemDelivered ||
+                signalType == QuestSignalType.StationAttackStarted ||
+                signalType == QuestSignalType.StationAttackRepelled ||
+                signalType == QuestSignalType.TimerElapsed;
+            if (requiresManualSource)
+            {
+                EditorGUILayout.HelpBox(
+                    "Автоматический игровой источник для этого события " +
+                    "пока не подключён. Сейчас его нужно отправлять через " +
+                    "QuestSignalEmitter или из кода игровой системы.",
+                    MessageType.Warning);
+            }
+        }
+
         private static bool TryGetFixedTarget(
             QuestSignalType signalType,
             out string targetId,
@@ -697,6 +902,9 @@ namespace NERA.Editor
                     "Конкретный предмет по Item ID",
                 QuestSignalType.WeatherChanged =>
                     "Конкретная погода по ID",
+                QuestSignalType.EnemyWaveSpawned or
+                QuestSignalType.EnemyWaveCleared =>
+                    "Конкретный спавнер по Spawner ID",
                 QuestSignalType.Custom =>
                     "Конкретное событие по Event ID",
                 _ => "Конкретный объект по ID"
@@ -721,6 +929,10 @@ namespace NERA.Editor
                 QuestSignalType.WeatherChanged => new GUIContent(
                     "Weather ID",
                     "clear, cloudy или sandstorm."),
+                QuestSignalType.EnemyWaveSpawned or
+                QuestSignalType.EnemyWaveCleared => new GUIContent(
+                    "Spawner ID",
+                    "Стабильный ID компонента EnemySpawner."),
                 QuestSignalType.Custom => new GUIContent(
                     "Event ID",
                     "Стабильный ID пользовательского события."),
@@ -793,6 +1005,10 @@ namespace NERA.Editor
                 (int)QuestConditionLogic.All;
             stage.FindPropertyRelative("createCheckpointOnCompletion")
                 .boolValue = false;
+            stage.FindPropertyRelative("enemySpawnerIdsOnStart")
+                .arraySize = 0;
+            stage.FindPropertyRelative("enemySpawnerIdsOnCompletion")
+                .arraySize = 0;
             SerializedProperty conditions =
                 stage.FindPropertyRelative("completionConditions");
             conditions.arraySize = 0;

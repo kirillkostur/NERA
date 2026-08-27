@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Enemies;
 using NERA.World;
 using UnityEngine;
 
@@ -593,13 +594,7 @@ namespace NERA.Quests
             if (!changed || !state.IsStageComplete())
                 return changed;
 
-            if (state.AdvanceStage())
-            {
-                QuestStageChanged?.Invoke(state);
-                return true;
-            }
-
-            Complete(state);
+            AdvanceOrCompleteStage(state);
             return true;
         }
 
@@ -793,17 +788,78 @@ namespace NERA.Quests
                     break;
 
                 changed = true;
-                if (state.AdvanceStage())
-                {
-                    QuestStageChanged?.Invoke(state);
-                    continue;
-                }
-
-                Complete(state);
-                break;
+                if (!AdvanceOrCompleteStage(state))
+                    break;
             }
 
             return changed;
+        }
+
+        private bool AdvanceOrCompleteStage(QuestRuntimeState state)
+        {
+            if (state?.CurrentStage == null)
+                return false;
+
+            QuestStageDefinition completedStage = state.CurrentStage;
+            int completedStageIndex = state.CurrentStageIndex;
+            int questRunNumber = GetCompletionCount(state.InstanceId) + 1;
+            bool advanced = state.AdvanceStage();
+
+            ExecuteEnemySpawnerActions(
+                state,
+                completedStage.EnemySpawnerIdsOnCompletion,
+                completedStageIndex,
+                questRunNumber,
+                "completion");
+
+            if (advanced)
+            {
+                ExecuteEnemySpawnerActions(
+                    state,
+                    state.CurrentStage.EnemySpawnerIdsOnStart,
+                    state.CurrentStageIndex,
+                    questRunNumber,
+                    "start");
+                QuestStageChanged?.Invoke(state);
+                return true;
+            }
+
+            Complete(state);
+            return false;
+        }
+
+        private static void ExecuteEnemySpawnerActions(
+            QuestRuntimeState state,
+            IReadOnlyList<string> spawnerIds,
+            int stageIndex,
+            int questRunNumber,
+            string phase)
+        {
+            if (state == null || spawnerIds == null)
+                return;
+
+            for (int actionIndex = 0;
+                 actionIndex < spawnerIds.Count;
+                 actionIndex++)
+            {
+                string spawnerId = spawnerIds[actionIndex];
+                string waveId =
+                    $"quest/{state.InstanceId}/run/{questRunNumber}/" +
+                    $"stage/{stageIndex + 1}/{phase}/" +
+                    $"action/{actionIndex + 1}";
+                if (EnemySpawner.RequestWave(
+                        spawnerId,
+                        waveId,
+                        out _))
+                {
+                    continue;
+                }
+
+                Debug.LogWarning(
+                    $"Quest '{state.InstanceId}' could not invoke " +
+                    $"EnemySpawner '{spawnerId}' for stage " +
+                    $"{stageIndex + 1} ({phase}). Check the Spawner ID.");
+            }
         }
 
         private bool IsCurrentStateConditionComplete(
@@ -942,6 +998,12 @@ namespace NERA.Quests
                 contextTargetName);
             activeQuests.Add(instanceId, state);
             QuestActivated?.Invoke(state);
+            ExecuteEnemySpawnerActions(
+                state,
+                state.CurrentStage.EnemySpawnerIdsOnStart,
+                state.CurrentStageIndex,
+                GetCompletionCount(state.InstanceId) + 1,
+                "start");
             ExecuteWeatherAction(
                 state,
                 definition.WeatherActionOnActivation);

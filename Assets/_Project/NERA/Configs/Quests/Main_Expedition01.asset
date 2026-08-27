@@ -41,6 +41,9 @@ MonoBehaviour:
       \u0438 \u043D\u0430\u0447\u043D\u0438\u0442\u0435 \u044D\u043A\u0441\u043F\u0435\u0434\u0438\u0446\u0438\u044E."
     completionLogic: 0
     createCheckpointOnCompletion: 0
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion:
+    - expedition01_enemy_easy
     completionConditions:
     - signalType: 1
       evaluation: 0
@@ -56,6 +59,8 @@ MonoBehaviour:
       \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u0438 Blue IO."
     completionLogic: 0
     createCheckpointOnCompletion: 0
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 5
       evaluation: 0
@@ -72,6 +77,8 @@ MonoBehaviour:
       \u0441\u0442\u043E\u043B\u043A\u043D\u043E\u0432\u0435\u043D\u0438\u044F."
     completionLogic: 0
     createCheckpointOnCompletion: 1
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 3
       evaluation: 0
@@ -86,6 +93,8 @@ MonoBehaviour:
       \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044E."
     completionLogic: 0
     createCheckpointOnCompletion: 0
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 1
       evaluation: 0
@@ -101,6 +110,8 @@ MonoBehaviour:
       Blue IO Shard \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438."
     completionLogic: 0
     createCheckpointOnCompletion: 0
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 4
       evaluation: 0
@@ -110,7 +121,7 @@ MonoBehaviour:
       requiredCount: 1
       comparison: 3
       threshold: 0.5
-  weatherActionOnActivation: 1
-  weatherActionOnCompletion: 0
+  weatherActionOnActivation: 0
+  weatherActionOnCompletion: 1
   sandstormDurationMinSeconds: 0
   sandstormDurationMaxSeconds: 0

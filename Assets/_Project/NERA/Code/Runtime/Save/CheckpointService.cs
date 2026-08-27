@@ -174,7 +174,7 @@ namespace NERA.Save
         private void HandleQuestCompleted(QuestRuntimeState state)
         {
             int completedStageIndex = state?.Definition != null
-                ? state.CurrentStageIndex
+                ? state.CurrentStageIndex - 1
                 : -1;
             if (!StageCreatesCheckpoint(state, completedStageIndex))
                 return;

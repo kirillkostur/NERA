@@ -81,7 +81,9 @@ namespace NERA.Quests
         AntennaSignalFound,
         WeatherChanged,
         TimerElapsed,
-        Custom
+        Custom,
+        EnemyWaveSpawned,
+        EnemyWaveCleared
     }
 
     public enum QuestWeatherAction

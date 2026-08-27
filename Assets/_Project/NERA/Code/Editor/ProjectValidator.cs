@@ -340,6 +340,7 @@ namespace NERA.Editor
                 }
 
                 ValidatePersistentSceneIds(scenePath, scene, errors);
+                ValidateEnemySpawners(scenePath, scene, errors);
             }
             finally
             {
@@ -408,6 +409,52 @@ namespace NERA.Editor
                          root.GetComponentsInChildren<PersistentWorldFlag>(true))
                 {
                     yield return flag;
+                }
+            }
+        }
+
+        private static void ValidateEnemySpawners(
+            string scenePath,
+            Scene scene,
+            List<string> errors)
+        {
+            Dictionary<string, EnemySpawner> spawnersById =
+                new Dictionary<string, EnemySpawner>(
+                    StringComparer.OrdinalIgnoreCase);
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (EnemySpawner spawner in
+                         root.GetComponentsInChildren<EnemySpawner>(true))
+                {
+                    string objectPath =
+                        GetHierarchyPath(spawner.transform);
+                    if (string.IsNullOrWhiteSpace(spawner.SpawnerId))
+                    {
+                        errors.Add(
+                            $"{scenePath}: {objectPath} has no EnemySpawner " +
+                            "Spawner ID.");
+                    }
+                    else if (spawnersById.TryGetValue(
+                                 spawner.SpawnerId,
+                                 out EnemySpawner existing))
+                    {
+                        errors.Add(
+                            $"{scenePath}: duplicate EnemySpawner ID " +
+                            $"'{spawner.SpawnerId}' on " +
+                            $"{GetHierarchyPath(existing.transform)} and " +
+                            $"{objectPath}.");
+                    }
+                    else
+                    {
+                        spawnersById.Add(spawner.SpawnerId, spawner);
+                    }
+
+                    if (!spawner.EnemyPrefabs.Any(prefab => prefab != null))
+                    {
+                        errors.Add(
+                            $"{scenePath}: {objectPath} has no enemy prefab.");
+                    }
+
                 }
             }
         }
