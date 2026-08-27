@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NERA.Items;
+using NERA.Library;
 using NERA.Quests;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -94,6 +95,7 @@ namespace NERA.Inventory
 
         private void Start()
         {
+            RegisterKnownItemsWithLibrary();
             ReportAllQuestItemCounts();
         }
 
@@ -129,6 +131,7 @@ namespace NERA.Inventory
             }
 
             slots[emptySlot] = instance;
+            LibraryController.Instance?.RegisterKnownItem(item);
             ItemAdded?.Invoke(item);
             InventoryChanged?.Invoke();
             ReportQuestItemCount(item);
@@ -281,8 +284,19 @@ namespace NERA.Inventory
             RestoreSlotGroup(backpackItemInstances, backpack, Mathf.Max(BackpackCapacity, backpack?.Count ?? 0));
             RestoreSlotGroup(anomalyItemInstances, anomalies, Mathf.Max(AnomalyCapacity, anomalies?.Count ?? 0));
             RestoreSlotGroup(quickAccessItemInstances, quickAccess, Mathf.Max(QuickAccessCapacity, quickAccess?.Count ?? 0));
+            RegisterKnownItemsWithLibrary();
             InventoryChanged?.Invoke();
             ReportAllQuestItemCounts();
+        }
+
+        private void RegisterKnownItemsWithLibrary()
+        {
+            LibraryController library = LibraryController.Instance;
+            if (library == null)
+                return;
+
+            foreach (ItemInstance instance in ItemInstances)
+                library.RegisterKnownItem(instance?.ItemData);
         }
 
         public ItemData GetItem(InventorySlotGroup group, int index)

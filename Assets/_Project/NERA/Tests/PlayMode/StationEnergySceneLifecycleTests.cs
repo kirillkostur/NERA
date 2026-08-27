@@ -16,6 +16,7 @@ using NERA.Graphics;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
+using NERA.Library;
 using NERA.Localization;
 using NERA.Maintenance;
 using NERA.Player;
@@ -514,8 +515,10 @@ namespace NERA.Tests
                     NERA.Development.DeveloperCheatConsoleController>();
             PlayerInventory inventory =
                 Object.FindFirstObjectByType<PlayerInventory>();
+            LibraryController library = LibraryController.Instance;
             Assert.That(cheats, Is.Not.Null);
             Assert.That(inventory, Is.Not.Null);
+            Assert.That(library, Is.Not.Null);
 
             inventory.RestoreItems(Array.Empty<ItemData>());
             Button pistolButton = cheats.transform.Find(
@@ -533,6 +536,12 @@ namespace NERA.Tests
 
             Assert.That(inventory.CountItem("energy_pistol_01"), Is.EqualTo(1));
             Assert.That(inventory.CountItem("io_integrator_01"), Is.EqualTo(1));
+            Assert.That(
+                library.IsKnownItem(library.GetItem("energy_pistol_01")),
+                Is.True);
+            Assert.That(
+                library.IsKnownItem(library.GetItem("io_integrator_01")),
+                Is.True);
             inventory.RestoreItems(Array.Empty<ItemData>());
         }
 

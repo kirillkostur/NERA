@@ -2947,6 +2947,9 @@ namespace NERA.Tests
         private ResearchDefinition definition;
         private LibraryEntryData libraryEntry;
         private ItemData sample;
+        private GameObject isolatedLibraryRoot;
+        private LibraryController previousLibraryInstance;
+        private bool librarySingletonOverridden;
 
         [SetUp]
         public void SetUp()
@@ -2985,6 +2988,12 @@ namespace NERA.Tests
         [TearDown]
         public void TearDown()
         {
+            if (librarySingletonOverridden)
+            {
+                Object.DestroyImmediate(isolatedLibraryRoot);
+                SetLibrarySingleton(previousLibraryInstance);
+            }
+
             Object.DestroyImmediate(sample);
             Object.DestroyImmediate(definition);
             Object.DestroyImmediate(libraryEntry);
@@ -3095,8 +3104,7 @@ namespace NERA.Tests
         [Test]
         public void LibraryCataloguesKnownStationItemsButNotAnomaliesOnPickup()
         {
-            GameObject libraryRoot = new GameObject("Test_Library");
-            LibraryController library = libraryRoot.AddComponent<LibraryController>();
+            LibraryController library = CreateIsolatedLibrary();
             ItemData stationItem = CreateItem("known_station_part", ItemType.EngineeringPart);
             ItemData anomalyItem = CreateItem("unknown_anomaly", ItemType.Anomaly);
 
@@ -3109,7 +3117,66 @@ namespace NERA.Tests
 
             Object.DestroyImmediate(stationItem);
             Object.DestroyImmediate(anomalyItem);
-            Object.DestroyImmediate(libraryRoot);
+        }
+
+        [Test]
+        public void InventoryAdditionRegistersKnownItemsForEveryAcquisitionPath()
+        {
+            LibraryController library = CreateIsolatedLibrary();
+            ItemData equipmentItem = CreateItem(
+                "known_equipment",
+                ItemType.Equipment);
+            ItemData engineeringPart = CreateItem(
+                "known_engineering_part",
+                ItemType.EngineeringPart);
+
+            Assert.That(inventory.AddItem(equipmentItem), Is.True);
+            Assert.That(inventory.AddItem(engineeringPart), Is.True);
+            Assert.That(inventory.AddItem(sample), Is.True);
+            Assert.That(library.IsKnownItem(equipmentItem), Is.True);
+            Assert.That(library.IsKnownItem(engineeringPart), Is.True);
+            Assert.That(library.IsKnownItem(sample), Is.False);
+
+            Object.DestroyImmediate(equipmentItem);
+            Object.DestroyImmediate(engineeringPart);
+        }
+
+        [Test]
+        public void InventoryRestoreBackfillsKnownItemsFromOlderSaves()
+        {
+            LibraryController library = CreateIsolatedLibrary();
+            ItemData engineeringPart = CreateItem(
+                "legacy_known_engineering_part",
+                ItemType.EngineeringPart);
+
+            inventory.RestoreInstanceSlots(
+                new[] { ItemInstance.Create(engineeringPart) },
+                new ItemInstance[PlayerInventory.AnomalyCapacity],
+                new ItemInstance[PlayerInventory.QuickAccessCapacity]);
+
+            Assert.That(library.IsKnownItem(engineeringPart), Is.True);
+
+            Object.DestroyImmediate(engineeringPart);
+        }
+
+        private LibraryController CreateIsolatedLibrary()
+        {
+            previousLibraryInstance = LibraryController.Instance;
+            SetLibrarySingleton(null);
+            librarySingletonOverridden = true;
+            isolatedLibraryRoot = new GameObject("Test_Library");
+            LibraryController library =
+                isolatedLibraryRoot.AddComponent<LibraryController>();
+            SetLibrarySingleton(library);
+            return library;
+        }
+
+        private static void SetLibrarySingleton(LibraryController value)
+        {
+            PropertyInfo instanceProperty = typeof(LibraryController).GetProperty(
+                "Instance",
+                BindingFlags.Static | BindingFlags.Public);
+            instanceProperty?.GetSetMethod(true)?.Invoke(null, new object[] { value });
         }
 
         private static ItemData CreateItem(string id, ItemType type)

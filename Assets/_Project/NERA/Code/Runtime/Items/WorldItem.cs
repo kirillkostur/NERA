@@ -1,6 +1,5 @@
 using NERA.Interaction;
 using NERA.Inventory;
-using NERA.Library;
 using NERA.Quests;
 using NERA.Save;
 using UnityEngine;
@@ -112,7 +111,6 @@ namespace NERA.Items
             if (!inventory.AddItem(instance))
                 return;
 
-            LibraryController.Instance?.RegisterKnownItem(itemData);
             QuestController.Instance?.Report(
                 QuestSignalType.ItemCollected,
                 itemData.ItemId,
