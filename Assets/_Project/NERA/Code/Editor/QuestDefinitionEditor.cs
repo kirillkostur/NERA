@@ -321,6 +321,8 @@ namespace NERA.Editor
                 SerializedProperty createCheckpointOnCompletion =
                     stage.FindPropertyRelative(
                         "createCheckpointOnCompletion");
+                SerializedProperty questMarkerIds =
+                    stage.FindPropertyRelative("questMarkerIds");
                 SerializedProperty enemySpawnerIdsOnStart =
                     stage.FindPropertyRelative(
                         "enemySpawnerIdsOnStart");
@@ -357,6 +359,15 @@ namespace NERA.Editor
                             "Чекпоинт после завершения",
                             "После завершения этого этапа сохраняет весь " +
                             "прогресс и текущую позицию игрока."));
+                    EditorGUILayout.PropertyField(
+                        questMarkerIds,
+                        new GUIContent(
+                            "Квестовые маркеры этапа",
+                            "ID объектов с QuestMarkerAnchor. Маркеры " +
+                            "появятся с началом этапа и исчезнут после " +
+                            "завершения. Для пообъектного квеста можно " +
+                            "указать {targetId}."),
+                        true);
                     DrawEnemySpawnerActions(
                         enemySpawnerIdsOnStart,
                         "Спавн при входе в этап",
@@ -1005,6 +1016,7 @@ namespace NERA.Editor
                 (int)QuestConditionLogic.All;
             stage.FindPropertyRelative("createCheckpointOnCompletion")
                 .boolValue = false;
+            stage.FindPropertyRelative("questMarkerIds").arraySize = 0;
             stage.FindPropertyRelative("enemySpawnerIdsOnStart")
                 .arraySize = 0;
             stage.FindPropertyRelative("enemySpawnerIdsOnCompletion")

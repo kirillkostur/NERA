@@ -183,6 +183,7 @@ namespace NERA.Editor
                 (int)QuestConditionLogic.All;
             stage.FindPropertyRelative("createCheckpointOnCompletion")
                 .boolValue = false;
+            stage.FindPropertyRelative("questMarkerIds").arraySize = 0;
             stage.FindPropertyRelative("enemySpawnerIdsOnStart")
                 .arraySize = 0;
             stage.FindPropertyRelative("enemySpawnerIdsOnCompletion")

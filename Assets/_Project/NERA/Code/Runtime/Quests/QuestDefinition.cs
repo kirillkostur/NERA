@@ -182,6 +182,11 @@ namespace NERA.Quests
             "after this stage is completed.")]
         [SerializeField] private bool createCheckpointOnCompletion;
         [Tooltip(
+            "QuestMarkerAnchor IDs visible while this stage is active. " +
+            "Use {targetId} for a per-object quest target.")]
+        [SerializeField] private List<string> questMarkerIds =
+            new List<string>();
+        [Tooltip(
             "Scene EnemySpawner IDs invoked when this stage becomes active.")]
         [SerializeField] private List<string>
             enemySpawnerIdsOnStart = new List<string>();
@@ -198,6 +203,9 @@ namespace NERA.Quests
         public QuestConditionLogic CompletionLogic => completionLogic;
         public bool CreateCheckpointOnCompletion =>
             createCheckpointOnCompletion;
+        public IReadOnlyList<string> QuestMarkerIds =>
+            questMarkerIds ??
+            (IReadOnlyList<string>)Array.Empty<string>();
         public IReadOnlyList<string> EnemySpawnerIdsOnStart =>
             enemySpawnerIdsOnStart ??
             (IReadOnlyList<string>)Array.Empty<string>();
@@ -367,6 +375,16 @@ namespace NERA.Quests
                     }
                 }
 
+                if (!TryValidateUniqueIds(
+                        stage.QuestMarkerIds,
+                        "quest marker",
+                        out string markerIssue))
+                {
+                    error = $"Quest '{QuestId}' stage {stageIndex + 1}: " +
+                        markerIssue;
+                    return false;
+                }
+
                 if (!TryValidateSpawnerIds(
                         stage.EnemySpawnerIdsOnStart,
                         "on start",
@@ -397,6 +415,17 @@ namespace NERA.Quests
             string phase,
             out string error)
         {
+            return TryValidateUniqueIds(
+                values,
+                $"EnemySpawner action {phase}",
+                out error);
+        }
+
+        private static bool TryValidateUniqueIds(
+            IReadOnlyList<string> values,
+            string label,
+            out string error)
+        {
             HashSet<string> ids =
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (int index = 0; index < values.Count; index++)
@@ -404,15 +433,14 @@ namespace NERA.Quests
                 string id = values[index]?.Trim();
                 if (string.IsNullOrEmpty(id))
                 {
-                    error = $"empty EnemySpawner action {phase} at " +
+                    error = $"empty {label} at " +
                         $"position {index + 1}.";
                     return false;
                 }
 
                 if (!ids.Add(id))
                 {
-                    error = $"EnemySpawner '{id}' is invoked more than " +
-                        $"once {phase}.";
+                    error = $"{label} '{id}' is listed more than once.";
                     return false;
                 }
             }

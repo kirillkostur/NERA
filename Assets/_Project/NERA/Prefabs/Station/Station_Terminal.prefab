@@ -1044,6 +1044,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 7945200922954978837}
   - {fileID: 1997496731494409589}
   - {fileID: 6066607829412916627}
   - {fileID: 2030254124100810064}
@@ -1159,7 +1160,7 @@ MonoBehaviour:
   visualRoot: {fileID: 6066607829412916627}
   stationVisual: {fileID: 7522687007455654124}
   mapVisual: {fileID: 7829420632448909356}
-  sandstormEffect: {fileID: 812340000000000006}
+  sandstormEffect: {fileID: 6138222643447902421}
 --- !u!114 &4105943490659284836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1939,6 +1940,60 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1734054442461178276
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7945200922954978837}
+  - component: {fileID: 4976643054208474226}
+  m_Layer: 0
+  m_Name: Quest Marker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7945200922954978837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734054442461178276}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.0070000067, y: -0.249, z: -0.0710001}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8140161921120917377}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4976643054208474226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734054442461178276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a15637b17aa14e6aa3f610c53d90da7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  markerId: quest_terminal_01
+  positionSource: {fileID: 0}
+  localOffset: {x: 0, y: 1.5, z: 0}
+  icon: {fileID: 21300000, guid: 5a6fae2197aab974283efc83656c62f0, type: 3}
+  color: {r: 0.12, g: 0.9, b: 1, a: 1}
+  showDistance: 1
+  worldMarkerFadeDistance: 4
+  worldMarkerMaxDistance: 50
+  availableWithoutQuest: 0
+  available: 1
 --- !u!1 &1947982937431891889
 GameObject:
   m_ObjectHideFlags: 0
@@ -8105,12 +8160,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8135601175642115019, guid: b90789b474db9be469ce207912527702, type: 3}
   m_PrefabInstance: {fileID: 7528665714304001445}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2533746162495589751 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5427573269271128274, guid: b90789b474db9be469ce207912527702, type: 3}
-  m_PrefabInstance: {fileID: 7528665714304001445}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &812340000000000006 stripped
+--- !u!114 &6138222643447902421 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4419273050881004912, guid: b90789b474db9be469ce207912527702, type: 3}
   m_PrefabInstance: {fileID: 7528665714304001445}
@@ -8119,5 +8169,5 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -36,6 +36,11 @@ MonoBehaviour:
     description: "\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B
       \u0441\u0442\u0430\u043D\u0446\u0438\u0438"
     completionLogic: 0
+    createCheckpointOnCompletion: 0
+    questMarkerIds:
+    - quest_terminal_01
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 13
       evaluation: 0
@@ -45,3 +50,7 @@ MonoBehaviour:
       requiredCount: 1
       comparison: 3
       threshold: 0.5
+  weatherActionOnActivation: 0
+  weatherActionOnCompletion: 0
+  sandstormDurationMinSeconds: 0
+  sandstormDurationMaxSeconds: 0

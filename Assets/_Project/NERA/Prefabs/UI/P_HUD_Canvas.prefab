@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6365221935122308035}
   - component: {fileID: 1447980179182537944}
   - component: {fileID: 6105596734845567750}
+  - component: {fileID: 4879385211406307201}
   m_Layer: 0
   m_Name: P_HUD_Canvas
   m_TagString: Untagged
@@ -116,6 +117,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   referenceResolution: {x: 1920, y: 1080}
+--- !u!114 &4879385211406307201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4121911899816374180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4ed6521f7a84d5d9fe21c402b74f874, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  gameplayCamera: {fileID: 0}
+  distanceOrigin: {fileID: 0}
+  compassWidth: 760
+  visibleHalfAngle: 90
+  markerEdgePadding: 28
+  frameColor: {r: 0.05, g: 0.84, b: 1, a: 0.95}
+  backgroundColor: {r: 0.025, g: 0.055, b: 0.12, a: 0.92}
+  tickColor: {r: 0.82, g: 0.9, b: 0.98, a: 0.9}
 --- !u!1001 &6679514033918167642
 PrefabInstance:
   m_ObjectHideFlags: 0
