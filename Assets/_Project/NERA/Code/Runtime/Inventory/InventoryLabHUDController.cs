@@ -35,9 +35,13 @@ namespace NERA.Inventory
         private readonly List<InventorySlotView> quickViews =
             new List<InventorySlotView>();
         private Canvas rootCanvas;
-        private GameObject quickAccessHud;
-        private GameObject inventoryPanel;
-        private GameObject laboratoryPanel;
+
+        [Header("Authored View")]
+        [SerializeField] private GameObject dynamicHudLayer;
+        [SerializeField] private GameObject questTrackerHud;
+        [SerializeField] private GameObject quickAccessHud;
+        [SerializeField] private GameObject inventoryPanel;
+        [SerializeField] private GameObject laboratoryPanel;
         private GameObject chargingPanel;
         private ScrollRect backpackScrollRect;
         private Transform backpackSlotRoot;
@@ -66,6 +70,8 @@ namespace NERA.Inventory
         private bool chargingOpen;
         private bool stationStorageOpen;
         private bool externalUiLocked;
+        private bool questTrackerSuppressedByExternalUi;
+        private bool questTrackerWasVisibleBeforeSuppression;
         private bool authoredHud;
         private LaboratoryScreenController laboratoryScreenController;
         private float nextInventoryLookupAt;
@@ -81,12 +87,20 @@ namespace NERA.Inventory
             Instance = this;
             NERALocalization.LocaleChanged += RefreshAll;
             rootCanvas = GetComponent<Canvas>();
-            authoredHud = transform.Find("InventoryScreen") != null;
+            dynamicHudLayer ??= FindDescendant(
+                transform,
+                "DynamicHUDCanvas")?.gameObject;
+            questTrackerHud ??= FindDescendant(
+                transform,
+                "Quest_System")?.gameObject;
+            authoredHud = inventoryPanel != null ||
+                FindDescendant(transform, "InventoryScreen") != null;
             CacheHierarchy();
             inventoryPanel.SetActive(false);
             laboratoryPanel.SetActive(false);
             if (!authoredHud && chargingPanel != null)
                 chargingPanel.SetActive(false);
+            RefreshDynamicHudVisibility();
         }
 
         private void Start()
@@ -152,6 +166,7 @@ namespace NERA.Inventory
             inventoryPanel.SetActive(true);
             SetQuickAccessVisible(true);
             SetPlayerInput(false);
+            RefreshDynamicHudVisibility();
             RefreshAll();
         }
 
@@ -173,6 +188,7 @@ namespace NERA.Inventory
                 laboratoryScreenController?.Open(inventory);
             SetQuickAccessVisible(false);
             SetPlayerInput(false);
+            RefreshDynamicHudVisibility();
             RefreshAll();
         }
 
@@ -190,6 +206,7 @@ namespace NERA.Inventory
             chargingPanel.SetActive(false);
             SetQuickAccessVisible(false);
             SetPlayerInput(false);
+            RefreshDynamicHudVisibility();
             RefreshAll();
         }
 
@@ -204,11 +221,24 @@ namespace NERA.Inventory
             inventoryPanel.SetActive(false);
             SetQuickAccessVisible(!externalUiLocked);
             SetPlayerInput(true);
+            RefreshDynamicHudVisibility();
         }
 
         public void SetExternalUiLock(bool locked)
         {
+            SetExternalUiLock(locked, false);
+        }
+
+        public void SetExternalUiLock(
+            bool locked,
+            bool hideQuestTracker)
+        {
             externalUiLocked = locked;
+            if (locked && hideQuestTracker)
+                SuppressQuestTracker();
+            else if (!locked)
+                RestoreQuestTracker();
+
             if (locked)
             {
                 stationStorageOpen = false;
@@ -225,6 +255,7 @@ namespace NERA.Inventory
             }
 
             SetQuickAccessVisible(!locked && !laboratoryOpen && !chargingOpen);
+            RefreshDynamicHudVisibility();
         }
 
         public void CloseAll()
@@ -242,6 +273,7 @@ namespace NERA.Inventory
             laboratoryScreenController?.Close();
             SetQuickAccessVisible(!externalUiLocked);
             SetPlayerInput(true);
+            RefreshDynamicHudVisibility();
         }
 
         private void CacheHierarchy()
@@ -294,12 +326,17 @@ namespace NERA.Inventory
 
         private void CacheAuthoredHierarchy()
         {
-            inventoryPanel = transform.Find("InventoryScreen").gameObject;
-            laboratoryPanel = transform.Find("LaboratoryScreen").gameObject;
+            inventoryPanel ??= FindDescendant(
+                transform,
+                "InventoryScreen")?.gameObject;
+            laboratoryPanel ??= FindDescendant(
+                transform,
+                "LaboratoryScreen")?.gameObject;
             chargingPanel = laboratoryPanel;
 
-            Transform quickAccessRoot = transform.Find("Slot_Invent_Equipment");
-            quickAccessHud = quickAccessRoot != null ? quickAccessRoot.gameObject : null;
+            quickAccessHud ??= FindDescendant(
+                transform,
+                "Slot_Invent_Equipment")?.gameObject;
 
             dropButton = FindDescendant(inventoryPanel.transform, "DropButton")
                 ?.GetComponent<Button>();
@@ -309,6 +346,46 @@ namespace NERA.Inventory
         {
             if (quickAccessHud != null)
                 quickAccessHud.SetActive(visible);
+        }
+
+        private void RefreshDynamicHudVisibility()
+        {
+            if (dynamicHudLayer == null)
+                return;
+
+            bool modalWindowOpen =
+                externalUiLocked ||
+                stationStorageOpen ||
+                laboratoryOpen ||
+                chargingOpen;
+            dynamicHudLayer.SetActive(!modalWindowOpen);
+        }
+
+        private void SuppressQuestTracker()
+        {
+            if (questTrackerHud == null ||
+                questTrackerSuppressedByExternalUi)
+            {
+                return;
+            }
+
+            questTrackerWasVisibleBeforeSuppression =
+                questTrackerHud.activeSelf;
+            questTrackerSuppressedByExternalUi = true;
+            questTrackerHud.SetActive(false);
+        }
+
+        private void RestoreQuestTracker()
+        {
+            if (questTrackerHud == null ||
+                !questTrackerSuppressedByExternalUi)
+            {
+                return;
+            }
+
+            questTrackerSuppressedByExternalUi = false;
+            questTrackerHud.SetActive(
+                questTrackerWasVisibleBeforeSuppression);
         }
 
         private void BuildAuthoredSlotViews()

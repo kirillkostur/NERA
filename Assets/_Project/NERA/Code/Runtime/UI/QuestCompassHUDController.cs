@@ -760,6 +760,7 @@ namespace NERA.UI
             Vector2 position)
         {
             GameObject child = new GameObject(name, typeof(RectTransform));
+            child.layer = parent.gameObject.layer;
             RectTransform rect = (RectTransform)child.transform;
             rect.SetParent(parent, false);
             rect.anchorMin = anchorMin;

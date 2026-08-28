@@ -2569,7 +2569,7 @@ namespace NERA.Tests
             Assert.That(inventory.Config, Is.Not.Null);
 
             Transform content = FindDescendant(
-                hud.transform.Find("InventoryScreen"),
+                FindDescendant(hud.transform, "InventoryScreen"),
                 "background_Screen_Storage_Slot_Invent");
             Assert.That(content, Is.Not.Null);
 
@@ -2588,6 +2588,71 @@ namespace NERA.Tests
                     Is.Not.Null,
                     "P_InventorySlot was not spawned inside Slot_N.");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator HudVisibilityMatchesInventoryAndExternalUiModes()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            InventoryLabHUDController hud =
+                InventoryLabHUDController.Instance;
+            Transform dynamicHud = FindDescendant(
+                hud != null ? hud.transform : null,
+                "DynamicHUDCanvas");
+            Transform questTracker = FindDescendant(
+                hud != null ? hud.transform : null,
+                "Quest_System");
+
+            Assert.That(hud, Is.Not.Null);
+            Assert.That(dynamicHud, Is.Not.Null);
+            Assert.That(questTracker, Is.Not.Null);
+            Assert.That(dynamicHud.gameObject.activeSelf, Is.True);
+            Assert.That(questTracker.gameObject.activeSelf, Is.True);
+
+            hud.OpenInventory();
+            yield return null;
+            Assert.That(
+                dynamicHud.gameObject.activeSelf,
+                Is.True,
+                "Inventory must keep the compass and markers visible.");
+            Assert.That(questTracker.gameObject.activeSelf, Is.True);
+
+            hud.CloseAll();
+            yield return null;
+            Assert.That(dynamicHud.gameObject.activeSelf, Is.True);
+
+            hud.SetExternalUiLock(true);
+            yield return null;
+            Assert.That(
+                dynamicHud.gameObject.activeSelf,
+                Is.False,
+                "Terminal and upgrade modes use the external UI lock.");
+            Assert.That(
+                questTracker.gameObject.activeSelf,
+                Is.True,
+                "Terminal mode must not hide the quest tracker.");
+
+            hud.SetExternalUiLock(false);
+            yield return null;
+            Assert.That(dynamicHud.gameObject.activeSelf, Is.True);
+            Assert.That(questTracker.gameObject.activeSelf, Is.True);
+
+            hud.SetExternalUiLock(true, true);
+            yield return null;
+            Assert.That(dynamicHud.gameObject.activeSelf, Is.False);
+            Assert.That(
+                questTracker.gameObject.activeSelf,
+                Is.False,
+                "Upgrade mode must hide the quest tracker.");
+
+            hud.SetExternalUiLock(false, true);
+            yield return null;
+            Assert.That(dynamicHud.gameObject.activeSelf, Is.True);
+            Assert.That(questTracker.gameObject.activeSelf, Is.True);
         }
 
         [UnityTest]
@@ -2616,14 +2681,18 @@ namespace NERA.Tests
             Assert.That(PlayerInventory.QuickAccessCapacity, Is.EqualTo(4));
             Assert.That(PlayerInventory.ActiveQuickAccessCapacity, Is.EqualTo(4));
 
-            Transform inventoryScreen = hud.transform.Find("InventoryScreen");
+            Transform inventoryScreen = FindDescendant(
+                hud.transform,
+                "InventoryScreen");
             Transform backpackRoot = FindDescendant(
                 inventoryScreen,
                 "background_Screen_Storage_Slot_Invent");
             Transform anomalyRoot = FindDescendant(
                 inventoryScreen,
                 "background_Screen_Storage_Slot_Invent_Anomaly");
-            Transform quickRoot = hud.transform.Find("Slot_Invent_Equipment");
+            Transform quickRoot = FindDescendant(
+                hud.transform,
+                "Slot_Invent_Equipment");
             Button dropButton = FindDescendant(
                 inventoryScreen,
                 "DropButton").GetComponent<Button>();
@@ -2888,7 +2957,9 @@ namespace NERA.Tests
             hud.OpenLaboratory(inventory.gameObject);
             yield return null;
 
-            Transform laboratory = hud.transform.Find("LaboratoryScreen");
+            Transform laboratory = FindDescendant(
+                hud.transform,
+                "LaboratoryScreen");
             LaboratoryScreenController screen =
                 laboratory.GetComponent<LaboratoryScreenController>();
             Transform sharedInventory =

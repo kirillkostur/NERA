@@ -190,7 +190,9 @@ namespace NERA.Station
                 CinemachineVirtualCameraBase;
             target.UpgradeCamera.Priority = cameraPriority;
             player?.SetInputEnabled(this, false);
-            InventoryLabHUDController.Instance?.SetExternalUiLock(true);
+            InventoryLabHUDController.Instance?.SetExternalUiLock(
+                true,
+                true);
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             SetUpgradeScreenVisible(true);
@@ -368,7 +370,9 @@ namespace NERA.Station
             gameplayBlendStartedAt = 0f;
             SetUpgradeScreenVisible(false);
             player?.SetInputEnabled(this, true);
-            InventoryLabHUDController.Instance?.SetExternalUiLock(false);
+            InventoryLabHUDController.Instance?.SetExternalUiLock(
+                false,
+                true);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             EndAutoSaveGuard(closeFlushReturnedParts);

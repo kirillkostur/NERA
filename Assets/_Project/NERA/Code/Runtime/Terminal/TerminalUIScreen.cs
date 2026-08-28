@@ -408,7 +408,6 @@ namespace NERA.Terminal
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             SetVisible(true);
-            ShowScreen(activeScreenIndex);
             SuspendGameplayCameraRendering();
         }
 
@@ -546,6 +545,21 @@ namespace NERA.Terminal
             canvasGroup.alpha = visible ? 1f : 0f;
             canvasGroup.interactable = visible;
             canvasGroup.blocksRaycasts = visible;
+
+            if (screens == null)
+                return;
+
+            if (visible)
+            {
+                ShowScreen(activeScreenIndex);
+                return;
+            }
+
+            for (int index = 0; index < screens.Length; index++)
+            {
+                if (screens[index] != null)
+                    screens[index].SetActive(false);
+            }
         }
 
         private void OnDestroy()

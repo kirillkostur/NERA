@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35196d1f386610e48908a1d3250217d8, type: 3}
   m_Name: CFG_LoadingScreen
   m_EditorClassIdentifier: 
-  minimumDisplaySeconds: 10
+  minimumDisplaySeconds: 1
   images:
   - {fileID: 2800000, guid: 14dc73cbeb7a62c4c8daf521f605528a, type: 3}
   - {fileID: 2800000, guid: 61f2dd6ee7f22e641a9d24f8a4a9ffe7, type: 3}
