@@ -607,7 +607,7 @@ namespace NERA.UI
                     new Vector2(0.5f, 1f),
                     new Vector2(0.5f, 1f),
                     new Vector2(56f, 22f),
-                    new Vector2(0f, -5f),
+                    new Vector2(0f, 0f),
                     17f,
                     tickColor);
                 ticks.Add(new TickView
