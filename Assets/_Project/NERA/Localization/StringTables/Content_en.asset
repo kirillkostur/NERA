@@ -289,7 +289,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319873
-    m_Localized: Generates station power. Clean it outside to restore efficiency.
+    m_Localized: Generates station power.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319874
@@ -301,8 +301,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319876
-    m_Localized: Stores generated energy. Physical parts improve capacity, backup
-      reserve, and power output.
+    m_Localized: Stores generated energy.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319877
@@ -314,8 +313,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1194319885
-    m_Localized: Surveys expedition sectors. Installed parts improve travel range
-      and charging.
+    m_Localized: Surveys expedition sectors.
     m_Metadata:
       m_Items: []
   - m_Id: 1194319886
@@ -327,7 +325,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198514176
-    m_Localized: Analyzes objects, charges equipment, and integrates anomalies.
+    m_Localized: Analyzes objects and anomalies.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514181
@@ -631,7 +629,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687424
-    m_Localized: Finds unknown signals. Installed parts improve scan range and calibration.
+    m_Localized: Detects an unknown signal.
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687425
@@ -651,7 +649,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687429
-    m_Localized: Automatic defense platform. Uses the shared turret part layout.
+    m_Localized: Defends the station automatically.
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687430
@@ -687,7 +685,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687438
-    m_Localized: Automatic defense platform. Uses the shared turret part layout.
+    m_Localized: Defends the station automatically.
     m_Metadata:
       m_Items: []
   - m_Id: 4301256439881728
@@ -841,7 +839,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 6330504671387648
-    m_Localized: Central terminal. It cannot be stopped or physically upgraded.
+    m_Localized: Controls station systems.
     m_Metadata:
       m_Items: []
   - m_Id: 6330504671387649

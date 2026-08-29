@@ -16,7 +16,7 @@ MonoBehaviour:
   - systemType: 0
     objectId: station_solar_01
     displayName: SOLAR PANEL
-    description: Generates station power. Clean it outside to restore efficiency.
+    description: Generates station power.
     controllable: 1
     initiallyActive: 1
     powerPriority: 100
@@ -43,8 +43,7 @@ MonoBehaviour:
   - systemType: 1
     objectId: station_battery
     displayName: BATTERY
-    description: Stores generated energy. Physical parts improve capacity, backup
-      reserve, and power output.
+    description: Stores generated energy.
     controllable: 0
     initiallyActive: 0
     powerPriority: 100
@@ -82,7 +81,7 @@ MonoBehaviour:
   - systemType: 2
     objectId: 
     displayName: TERMINAL
-    description: Central terminal. It cannot be stopped or physically upgraded.
+    description: Controls station systems.
     controllable: 0
     initiallyActive: 1
     powerPriority: 100
@@ -96,8 +95,7 @@ MonoBehaviour:
   - systemType: 3
     objectId: station_drone
     displayName: DRONE
-    description: Surveys expedition sectors. Installed parts improve travel range
-      and charging.
+    description: Surveys expedition sectors.
     controllable: 1
     initiallyActive: 1
     powerPriority: 20
@@ -140,7 +138,7 @@ MonoBehaviour:
   - systemType: 4
     objectId: 
     displayName: LABORATORY
-    description: Analyzes objects, charges equipment, and integrates anomalies.
+    description: Analyzes objects and anomalies.
     controllable: 1
     initiallyActive: 1
     powerPriority: 40
@@ -154,7 +152,7 @@ MonoBehaviour:
   - systemType: 6
     objectId: station_antenna
     displayName: ANTENNA
-    description: Finds unknown signals. Installed parts improve scan range and calibration.
+    description: Detects an unknown signal.
     controllable: 1
     initiallyActive: 0
     powerPriority: 60
@@ -186,7 +184,7 @@ MonoBehaviour:
   - systemType: 7
     objectId: station_turret_01
     displayName: TURRET 1
-    description: Automatic defense platform. Uses the shared turret part layout.
+    description: Defends the station automatically.
     controllable: 1
     initiallyActive: 1
     powerPriority: 80
@@ -242,7 +240,7 @@ MonoBehaviour:
   - systemType: 7
     objectId: station_turret_02
     displayName: TURRET 2
-    description: Automatic defense platform. Uses the shared turret part layout.
+    description: Defends the station automatically.
     controllable: 1
     initiallyActive: 1
     powerPriority: 80

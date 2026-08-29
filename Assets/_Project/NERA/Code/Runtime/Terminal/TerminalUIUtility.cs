@@ -106,21 +106,28 @@ namespace NERA.Terminal
         private RawImage rawImage;
         private Camera previewCamera;
         private Action<RaycastHit> hitHandler;
+        private Action missHandler;
 
         public void Initialize(
             RawImage image,
             Camera camera,
-            Action<RaycastHit> onHit)
+            Action<RaycastHit> onHit,
+            Action onMiss = null)
         {
             rawImage = image;
             previewCamera = camera;
             hitHandler = onHit;
+            missHandler = onMiss;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (rawImage == null || previewCamera == null)
+            if (eventData.button != PointerEventData.InputButton.Left ||
+                rawImage == null ||
+                previewCamera == null)
+            {
                 return;
+            }
 
             RectTransform rectTransform = rawImage.rectTransform;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -148,7 +155,10 @@ namespace NERA.Terminal
                     QueryTriggerInteraction.Collide))
             {
                 hitHandler?.Invoke(hit);
+                return;
             }
+
+            missHandler?.Invoke();
         }
     }
 }

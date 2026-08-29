@@ -671,8 +671,8 @@ namespace NERA.Tests
                 gameplayCamera.useOcclusionCulling;
             Assert.That(stationPreviewCamera, Is.Not.Null);
             Assert.That(mapPreviewCamera, Is.Not.Null);
-            Assert.That(stationPreviewCamera.targetTexture.width, Is.EqualTo(1024));
-            Assert.That(stationPreviewCamera.targetTexture.height, Is.EqualTo(1024));
+            Assert.That(stationPreviewCamera.targetTexture.width, Is.EqualTo(1600));
+            Assert.That(stationPreviewCamera.targetTexture.height, Is.EqualTo(850));
             Assert.That(mapPreviewCamera.targetTexture.width, Is.EqualTo(1024));
             Assert.That(mapPreviewCamera.targetTexture.height, Is.EqualTo(1024));
 
@@ -1242,9 +1242,16 @@ namespace NERA.Tests
             terminal.ShowStation();
             yield return null;
 
+            Transform statusRoot =
+                stationScreen.transform.Find("ScreenStatus");
+            Assert.That(statusRoot, Is.Not.Null);
+            Transform statusPanel =
+                statusRoot.Find("background_Status");
+            Assert.That(statusPanel, Is.Not.Null);
             Assert.That(
-                stationScreen.transform.Find("background_Status"),
-                Is.Not.Null);
+                stationScreen.IsStatusVisible,
+                Is.False,
+                "The status popup must stay hidden until an object is selected.");
             Assert.That(
                 stationScreen.transform.Find("background_Upgrade"),
                 Is.Null);
@@ -1265,6 +1272,90 @@ namespace NERA.Tests
             Assert.That(
                 stationScreen.SelectedObjectId,
                 Is.EqualTo("station_turret_01"));
+            Assert.That(stationScreen.IsStatusVisible, Is.True);
+            Assert.That(stationScreen.IsStatusExpanded, Is.False);
+            Assert.That(statusPanel.gameObject.activeSelf, Is.False);
+            Transform connector =
+                stationScreen.transform.Find("StatusConnectorLine");
+            Assert.That(connector, Is.Not.Null);
+            Assert.That(connector.gameObject.activeSelf, Is.True);
+
+            Button expandButton = Array.Find(
+                statusRoot.GetComponentsInChildren<Button>(true),
+                candidate => candidate.name == "StatusMapButton");
+            Assert.That(expandButton, Is.Not.Null);
+            expandButton.onClick.Invoke();
+            yield return null;
+            Assert.That(stationScreen.IsStatusExpanded, Is.True);
+            Assert.That(statusPanel.gameObject.activeSelf, Is.True);
+            RectTransform objectInfoPanel =
+                statusRoot.Find("background_info_obj") as RectTransform;
+            Assert.That(objectInfoPanel, Is.Not.Null);
+            Assert.That(
+                DistanceFromLineEndpointToRect(
+                    connector as RectTransform,
+                    objectInfoPanel),
+                Is.LessThan(0.5f),
+                "The connector must terminate on background_info_obj.");
+
+            StationObjectIdentity otherPreview = stationScreen
+                .GetComponentsInChildren<StationObjectIdentity>(true)
+                .First(identity =>
+                    identity.SystemType == StationSystemType.Antenna);
+            Assert.That(
+                stationScreen.SelectPreviewObject(otherPreview.transform),
+                Is.True);
+            Assert.That(
+                stationScreen.IsStatusExpanded,
+                Is.False,
+                "Selecting another object must restore the collapsed popup.");
+            Assert.That(statusPanel.gameObject.activeSelf, Is.False);
+
+            RectTransform detailsPanel =
+                statusPanel.transform as RectTransform;
+            Assert.That(detailsPanel, Is.Not.Null);
+            Vector2 authoredDetailsSize = detailsPanel.sizeDelta;
+            detailsPanel.sizeDelta = new Vector2(
+                authoredDetailsSize.x,
+                120f);
+
+            RawImage stationViewport =
+                (RawImage)typeof(
+                        Terminal.TerminalStationScreenController)
+                    .GetField(
+                        "stationImage",
+                        BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.GetValue(stationScreen);
+            Assert.That(stationViewport, Is.Not.Null);
+            Vector3[] viewportCorners = new Vector3[4];
+            Vector3[] infoCorners = new Vector3[4];
+            Vector3[] detailsCorners = new Vector3[4];
+            stationViewport.rectTransform.GetWorldCorners(viewportCorners);
+            objectInfoPanel.GetWorldCorners(infoCorners);
+            (statusPanel.transform as RectTransform)
+                ?.GetWorldCorners(detailsCorners);
+            float detailsHeight = detailsCorners[2].y -
+                detailsCorners[0].y;
+            Assert.That(
+                infoCorners[0].y - detailsHeight,
+                Is.GreaterThan(viewportCorners[0].y + 20f),
+                "The antenna fixture must have room below its info popup.");
+
+            Vector3 collapsedInfoCenter =
+                objectInfoPanel.TransformPoint(objectInfoPanel.rect.center);
+            expandButton.onClick.Invoke();
+            yield return null;
+            Vector3 expandedInfoCenter =
+                objectInfoPanel.TransformPoint(objectInfoPanel.rect.center);
+            Assert.That(
+                Vector2.Distance(collapsedInfoCenter, expandedInfoCenter),
+                Is.LessThan(0.1f),
+                "The info popup must not move when details fit below it.");
+            detailsPanel.sizeDelta = authoredDetailsSize;
+
+            Assert.That(
+                stationScreen.SelectPreviewObject(turretPreview),
+                Is.True);
 
             StationSystemDefinition turretDefinition = systems.Config.Find(
                 StationSystemType.Turret,
@@ -1274,8 +1365,6 @@ namespace NERA.Tests
             Assert.That(turretDefinition, Is.Not.Null);
             Assert.That(damageDefinition, Is.Not.Null);
 
-            Transform statusPanel =
-                stationScreen.transform.Find("background_Status");
             Transform textTransform = Array.Find(
                 statusPanel.GetComponentsInChildren<Transform>(true),
                 candidate => candidate.name == "Text_description");
@@ -1372,6 +1461,9 @@ namespace NERA.Tests
                 installedPreview,
                 Is.Not.Null,
                 "StationUIPreview must spawn the same installed part visual.");
+            stationScreen.DismissSelection();
+            Assert.That(stationScreen.IsStatusVisible, Is.False);
+            Assert.That(connector.gameObject.activeSelf, Is.False);
         }
 
         [UnityTest]
@@ -4434,6 +4526,45 @@ namespace NERA.Tests
                 Is.Not.Null,
                 $"Missing field {target.GetType().Name}.{fieldName}");
             field.SetValue(target, value);
+        }
+
+        private static float DistanceFromLineEndpointToRect(
+            RectTransform line,
+            RectTransform target)
+        {
+            Assert.That(line, Is.Not.Null);
+            Assert.That(target, Is.Not.Null);
+
+            Vector3[] targetCorners = new Vector3[4];
+            target.GetWorldCorners(targetCorners);
+            Rect targetRect = Rect.MinMaxRect(
+                targetCorners[0].x,
+                targetCorners[0].y,
+                targetCorners[2].x,
+                targetCorners[2].y);
+            Vector3 firstEndpoint = line.TransformPoint(
+                new Vector3(line.rect.xMin, line.rect.center.y));
+            Vector3 secondEndpoint = line.TransformPoint(
+                new Vector3(line.rect.xMax, line.rect.center.y));
+            return Mathf.Min(
+                DistanceToRectBoundary(targetRect, firstEndpoint),
+                DistanceToRectBoundary(targetRect, secondEndpoint));
+        }
+
+        private static float DistanceToRectBoundary(
+            Rect rect,
+            Vector2 point)
+        {
+            Vector2 clamped = new Vector2(
+                Mathf.Clamp(point.x, rect.xMin, rect.xMax),
+                Mathf.Clamp(point.y, rect.yMin, rect.yMax));
+            if (!rect.Contains(point))
+                return Vector2.Distance(point, clamped);
+            return Mathf.Min(
+                point.x - rect.xMin,
+                rect.xMax - point.x,
+                point.y - rect.yMin,
+                rect.yMax - point.y);
         }
 
         private static void AssertLightingPreset(
