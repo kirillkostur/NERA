@@ -78,6 +78,73 @@ namespace NERA.Graphics
         [Min(0f)]
         [SerializeField] private float edgeFade = 0.5f;
 
+        public bool ContainsWorldPoint(Vector3 worldPoint)
+        {
+            if (!isActiveAndEnabled)
+                return false;
+            if (volumeColliders.Count == 0)
+                CacheColliders();
+
+            foreach (BoxCollider box in volumeColliders)
+            {
+                if (IsActiveVolumeCollider(box) &&
+                    ContainsWorldPoint(box, worldPoint))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IsWorldPointExcluded(Vector3 worldPoint)
+        {
+            RemoveDestroyedVolumes();
+            int checkedColliderCount = 0;
+            foreach (FogExclusionVolume volume in RegisteredVolumes)
+            {
+                if (volume == null || !volume.isActiveAndEnabled)
+                    continue;
+                if (volume.volumeColliders.Count == 0)
+                    volume.CacheColliders();
+
+                foreach (BoxCollider box in volume.volumeColliders)
+                {
+                    if (!IsActiveVolumeCollider(box))
+                        continue;
+                    if (checkedColliderCount >= MaximumVolumeCount)
+                        return false;
+
+                    checkedColliderCount++;
+                    if (ContainsWorldPoint(box, worldPoint))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsActiveVolumeCollider(BoxCollider box)
+        {
+            return box != null && box.gameObject.activeInHierarchy;
+        }
+
+        private static bool ContainsWorldPoint(
+            BoxCollider box,
+            Vector3 worldPoint)
+        {
+            Vector3 localPoint =
+                box.transform.InverseTransformPoint(worldPoint) - box.center;
+            Vector3 halfSize = box.size * 0.5f;
+            const float tolerance = 0.0001f;
+            return Mathf.Abs(localPoint.x) <=
+                    Mathf.Abs(halfSize.x) + tolerance &&
+                Mathf.Abs(localPoint.y) <=
+                    Mathf.Abs(halfSize.y) + tolerance &&
+                Mathf.Abs(localPoint.z) <=
+                    Mathf.Abs(halfSize.z) + tolerance;
+        }
+
         private readonly List<BoxCollider> volumeColliders =
             new List<BoxCollider>();
         private readonly List<ColliderSnapshot> colliderSnapshots =

@@ -22,7 +22,10 @@ namespace NERA.Save
     [DisallowMultipleComponent]
     public sealed class CheckpointService : MonoBehaviour
     {
-        [SerializeField, Min(0f)] private float deathRestoreDelay = 2f;
+        [Tooltip(
+            "Delay after the player death before the loading screen " +
+            "and checkpoint restore begin.")]
+        [SerializeField, Min(0f)] private float deathRestoreDelay = 3f;
 
         private SaveGameController saveController;
         private AutoSaveService autoSave;
@@ -216,12 +219,13 @@ namespace NERA.Save
             restoring = true;
             autoSave?.CancelPending();
             autoSave?.SetSuspended(true);
+            if (deathRestoreDelay > 0f)
+                yield return new WaitForSecondsRealtime(deathRestoreDelay);
+
             deathLoadingScreenRequested =
                 LoadingScreenController.BeginLoading();
             if (deathLoadingScreenRequested)
                 yield return null;
-            if (deathRestoreDelay > 0f)
-                yield return new WaitForSecondsRealtime(deathRestoreDelay);
 
             ActivityChanged?.Invoke(CheckpointActivity.Restoring);
             bool loaded = saveController != null &&

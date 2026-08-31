@@ -1,4 +1,6 @@
 using System.Reflection;
+using NERA.Combat;
+using NERA.Graphics;
 using NERA.Drone;
 using NERA.Energy;
 using NERA.Maintenance;
@@ -195,6 +197,119 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void FogExclusionVolumeUsesOrientedBoxesForShelter()
+        {
+            var root = new GameObject("Test_FogExclusionVolume");
+            try
+            {
+                root.transform.SetPositionAndRotation(
+                    new Vector3(10f, 2f, -4f),
+                    Quaternion.Euler(0f, 35f, 0f));
+                root.transform.localScale = new Vector3(2f, 1.5f, 0.75f);
+                BoxCollider box = root.AddComponent<BoxCollider>();
+                box.center = new Vector3(0.5f, 1f, -0.25f);
+                box.size = new Vector3(4f, 2f, 6f);
+                FogExclusionVolume volume =
+                    root.AddComponent<FogExclusionVolume>();
+
+                Vector3 inside = root.transform.TransformPoint(box.center);
+                Vector3 outside = root.transform.TransformPoint(
+                    box.center + Vector3.right * 2.1f);
+
+                Assert.That(volume.ContainsWorldPoint(inside), Is.True);
+                Assert.That(volume.ContainsWorldPoint(outside), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void SandstormDamagesPlayerOnlyOutsideFogShelterOnStation()
+        {
+            var shelterRoot = new GameObject("Test_StormShelter");
+            var playerRoot = new GameObject("Test_StormPlayer");
+            try
+            {
+                BoxCollider shelter = shelterRoot.AddComponent<BoxCollider>();
+                shelter.center = new Vector3(0f, 1f, 0f);
+                shelter.size = new Vector3(10f, 4f, 10f);
+                shelter.isTrigger = true;
+                shelterRoot.AddComponent<FogExclusionVolume>();
+
+                Rigidbody locomotionBody =
+                    playerRoot.AddComponent<Rigidbody>();
+                locomotionBody.isKinematic = true;
+                CapsuleCollider exposureCollider =
+                    playerRoot.AddComponent<CapsuleCollider>();
+                exposureCollider.center = Vector3.up;
+                exposureCollider.height = 2f;
+
+                var ragdollRoot = new GameObject("Test_RagdollBody");
+                ragdollRoot.transform.SetParent(playerRoot.transform);
+                ragdollRoot.AddComponent<CapsuleCollider>();
+                Rigidbody ragdollBody =
+                    ragdollRoot.AddComponent<Rigidbody>();
+                ragdollBody.isKinematic = true;
+
+                PlayerHealth health = playerRoot.AddComponent<PlayerHealth>();
+                health.RestoreFullHealth();
+
+                SerializedObject serialized = new SerializedObject(config);
+                serialized.FindProperty("sandstormPlayerDamage").floatValue =
+                    10f;
+                serialized.FindProperty(
+                    "sandstormPlayerDamageIntervalSeconds").floatValue = 1f;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                weather.Configure(config);
+
+                BindingFlags flags =
+                    BindingFlags.Instance | BindingFlags.NonPublic;
+                FieldInfo healthField = typeof(StationWeatherController)
+                    .GetField("playerHealth", flags);
+                FieldInfo colliderField = typeof(StationWeatherController)
+                    .GetField("playerExposureCollider", flags);
+                MethodInfo damageTick = typeof(StationWeatherController)
+                    .GetMethod(
+                        "AdvancePlayerSandstormDamage",
+                        flags,
+                        null,
+                        new[] { typeof(float), typeof(bool) },
+                        null);
+
+                Assert.That(healthField, Is.Not.Null);
+                Assert.That(colliderField, Is.Not.Null);
+                Assert.That(damageTick, Is.Not.Null);
+                healthField.SetValue(weather, health);
+                colliderField.SetValue(weather, exposureCollider);
+
+                Physics.SyncTransforms();
+                float fullHealth = health.CurrentHealth;
+                damageTick.Invoke(weather, new object[] { 2f, true });
+                Assert.That(health.CurrentHealth, Is.EqualTo(fullHealth));
+
+                playerRoot.transform.position =
+                    new Vector3(100f, 0f, 100f);
+                Physics.SyncTransforms();
+                damageTick.Invoke(weather, new object[] { 1f, true });
+                Assert.That(
+                    health.CurrentHealth,
+                    Is.EqualTo(fullHealth - 10f));
+
+                damageTick.Invoke(weather, new object[] { 1f, false });
+                Assert.That(
+                    health.CurrentHealth,
+                    Is.EqualTo(fullHealth - 10f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerRoot);
+                Object.DestroyImmediate(shelterRoot);
+            }
+        }
+
+        [Test]
         public void DefaultEnvironmentConfigReferencesSandstormRendering()
         {
             StationEnvironmentConfig production =
@@ -212,6 +327,12 @@ namespace NERA.Tests
             Assert.That(
                 production.SandstormFogDensity,
                 Is.EqualTo(0.3f));
+            Assert.That(
+                production.SandstormPlayerDamage,
+                Is.EqualTo(5f));
+            Assert.That(
+                production.SandstormPlayerDamageIntervalSeconds,
+                Is.EqualTo(1f));
         }
 
         [Test]

@@ -1,4 +1,6 @@
 using System;
+using NERA.Combat;
+using NERA.Graphics;
 using NERA.Energy;
 using NERA.Quests;
 using UnityEngine;
@@ -12,6 +14,7 @@ namespace NERA.World
     public sealed class StationWeatherController : MonoBehaviour
     {
         private const float MinimumStormDuration = 0.1f;
+        private const float PlayerSearchRetrySeconds = 0.5f;
 
         [SerializeField] private StationEnvironmentConfig config;
         [SerializeField] private StationWeather initialWeather =
@@ -30,6 +33,11 @@ namespace NERA.World
         private float fogTransitionDuration;
         private float fogTransitionStartDensity;
         private float fogTransitionTargetDensity;
+        private PlayerHealth playerHealth;
+        private Collider playerExposureCollider;
+        private float playerDamageElapsed;
+        private float playerSearchCooldown;
+
 
         public static StationWeatherController Instance { get; private set; }
         public static event Action<float> AnySandstormStarted;
@@ -107,6 +115,7 @@ namespace NERA.World
         public void Configure(StationEnvironmentConfig environmentConfig)
         {
             config = environmentConfig;
+            ResetPlayerExposureState(false);
             ScheduleNextAutomaticRoll();
             ApplyRenderingState();
         }
@@ -127,6 +136,12 @@ namespace NERA.World
 
             if (IsSandstormActive)
             {
+                float stormDeltaTime = Mathf.Min(
+                    deltaTime,
+                    Mathf.Max(
+                        0f,
+                        activeSandstormDuration - sandstormElapsed));
+                AdvancePlayerSandstormDamage(stormDeltaTime);
                 sandstormElapsed = Mathf.Min(
                     activeSandstormDuration,
                     sandstormElapsed + deltaTime);
@@ -134,6 +149,7 @@ namespace NERA.World
                     EndSandstorm(true, "duration");
                 return;
             }
+
 
             if (!runAutomaticWeather ||
                 !Config.AutomaticSandstormsEnabled ||
@@ -237,6 +253,7 @@ namespace NERA.World
                 MinimumStormDuration,
                 durationSeconds);
             sandstormElapsed = 0f;
+            ResetPlayerExposureState(false);
             SetWeatherInternal(StationWeather.Sandstorm, cause);
             ApplyRenderingState();
             NotifySandstormStarted();
@@ -251,6 +268,7 @@ namespace NERA.World
             sandstormElapsed = completed
                 ? activeSandstormDuration
                 : sandstormElapsed;
+            ResetPlayerExposureState(false);
             SetWeatherInternal(StationWeather.Clear, cause);
             ApplyRenderingState();
             SandstormEnded?.Invoke(completed);
@@ -341,6 +359,7 @@ namespace NERA.World
 
         private void HandleActiveSceneChanged(Scene _, Scene __)
         {
+            ResetPlayerExposureState(true);
             if (Instance == this)
                 ApplyRenderingState();
         }
@@ -448,6 +467,82 @@ namespace NERA.World
             return material != null && material.HasProperty(propertyName);
         }
 
+        private void AdvancePlayerSandstormDamage(float deltaTime)
+        {
+            AdvancePlayerSandstormDamage(
+                deltaTime,
+                StationEnvironmentController.IsPlayerStationSceneActive);
+        }
+
+        private void AdvancePlayerSandstormDamage(
+            float deltaTime,
+            bool isPlayerStationSceneActive)
+        {
+            if (deltaTime <= 0f ||
+                !isPlayerStationSceneActive ||
+                Config.SandstormPlayerDamage <= 0f)
+            {
+                playerDamageElapsed = 0f;
+                return;
+            }
+
+            if (!TryResolvePlayer(deltaTime) || !playerHealth.IsAlive)
+            {
+                playerDamageElapsed = 0f;
+                return;
+            }
+
+            Vector3 exposurePoint =
+                playerExposureCollider != null &&
+                playerExposureCollider.enabled
+                    ? playerExposureCollider.bounds.center
+                    : playerHealth.transform.position + Vector3.up;
+            if (FogExclusionVolume.IsWorldPointExcluded(exposurePoint))
+            {
+                playerDamageElapsed = 0f;
+                return;
+            }
+
+            float interval = Config.SandstormPlayerDamageIntervalSeconds;
+            playerDamageElapsed += deltaTime;
+            while (playerDamageElapsed >= interval && playerHealth.IsAlive)
+            {
+                playerDamageElapsed -= interval;
+                playerHealth.TakeDamage(
+                    Config.SandstormPlayerDamage,
+                    gameObject);
+            }
+        }
+
+        private bool TryResolvePlayer(float deltaTime)
+        {
+            if (playerHealth != null)
+                return true;
+
+            playerExposureCollider = null;
+            playerSearchCooldown -= deltaTime;
+            if (playerSearchCooldown > 0f)
+                return false;
+
+            playerSearchCooldown = PlayerSearchRetrySeconds;
+            playerHealth = FindFirstObjectByType<PlayerHealth>(
+                FindObjectsInactive.Exclude);
+            if (playerHealth != null)
+                playerExposureCollider = playerHealth.GetComponent<Collider>();
+            return playerHealth != null;
+        }
+
+        private void ResetPlayerExposureState(bool clearTarget)
+        {
+            playerDamageElapsed = 0f;
+            playerSearchCooldown = 0f;
+            if (!clearTarget)
+                return;
+
+            playerHealth = null;
+            playerExposureCollider = null;
+        }
+
         private void ReportQuestWeather()
         {
             QuestController.Instance?.Report(
@@ -469,6 +564,7 @@ namespace NERA.World
         private void OnDisable()
         {
             SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            ResetPlayerExposureState(true);
             fogTransitionActive = false;
             disableRendererFeatureAfterFogTransition = false;
             if (Instance == this && config != null)

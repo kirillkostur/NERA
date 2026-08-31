@@ -33,6 +33,14 @@ namespace NERA.World
         [SerializeField, Min(1f)]
         private float sandstormDurationMaxSeconds = 30f;
 
+        [Header("Sandstorm Player Damage")]
+        [Tooltip(
+            "Damage applied to the player on each interval while exposed " +
+            "outside FogExclusionVolume shelter.")]
+        [SerializeField, Min(0f)] private float sandstormPlayerDamage = 5f;
+        [SerializeField, Min(0.1f)]
+        private float sandstormPlayerDamageIntervalSeconds = 1f;
+
         [Header("Sandstorm Rendering")]
         [Tooltip(
             "Disables the complete fullscreen pass outside a sandstorm, " +
@@ -65,6 +73,10 @@ namespace NERA.World
         public float SandstormDurationMaxSeconds => Mathf.Max(
             SandstormDurationMinSeconds,
             sandstormDurationMaxSeconds);
+        public float SandstormPlayerDamage =>
+            Mathf.Max(0f, sandstormPlayerDamage);
+        public float SandstormPlayerDamageIntervalSeconds =>
+            Mathf.Max(0.1f, sandstormPlayerDamageIntervalSeconds);
         public bool ToggleRendererFeature => toggleRendererFeature;
         public ScriptableRendererFeature SandstormRendererFeature =>
             sandstormRendererFeature;
@@ -120,6 +132,12 @@ namespace NERA.World
             sandstormDurationMaxSeconds = Mathf.Max(
                 sandstormDurationMinSeconds,
                 sandstormDurationMaxSeconds);
+            sandstormPlayerDamage = Mathf.Max(
+                0f,
+                sandstormPlayerDamage);
+            sandstormPlayerDamageIntervalSeconds = Mathf.Max(
+                0.1f,
+                sandstormPlayerDamageIntervalSeconds);
             fogDensityProperty = string.IsNullOrWhiteSpace(fogDensityProperty)
                 ? "_DensityMultiplier"
                 : fogDensityProperty.Trim();

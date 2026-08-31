@@ -21,6 +21,8 @@ MonoBehaviour:
   sandstormRollIntervalMaxSeconds: 3600
   sandstormDurationMinSeconds: 20
   sandstormDurationMaxSeconds: 40
+  sandstormPlayerDamage: 5
+  sandstormPlayerDamageIntervalSeconds: 1
   toggleRendererFeature: 1
   sandstormRendererFeature: {fileID: 8936549895830300434, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
   volumetricFogMaterial: {fileID: 2100000, guid: e9d9fdf7ee9383247a2e24594d72d295, type: 2}

@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
+using System.Reflection;
 using System.IO;
 using NERA.Energy;
 using NERA.Save;
+using UnityEditor;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -342,5 +345,55 @@ namespace NERA.Tests
                 UnityEngine.Object.DestroyImmediate(root);
             }
         }
+        [Test]
+        public void DeathWaitsBeforeOpeningLoadingScreen()
+        {
+            SetCheckpointSingleton(null);
+            var root = new GameObject("CheckpointDeathDelay_Test");
+            try
+            {
+                CheckpointService service =
+                    root.AddComponent<CheckpointService>();
+                SerializedObject serialized = new SerializedObject(service);
+                Assert.That(
+                    serialized.FindProperty("deathRestoreDelay").floatValue,
+                    Is.EqualTo(3f));
+
+                MethodInfo restoreAfterDeath =
+                    typeof(CheckpointService).GetMethod(
+                        "RestoreAfterDeath",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(restoreAfterDeath, Is.Not.Null);
+
+                IEnumerator routine = (IEnumerator)restoreAfterDeath.Invoke(
+                    service,
+                    null);
+                Assert.That(routine.MoveNext(), Is.True);
+                WaitForSecondsRealtime delay =
+                    routine.Current as WaitForSecondsRealtime;
+                Assert.That(
+                    delay,
+                    Is.Not.Null,
+                    "The first death coroutine step must be the ragdoll delay.");
+                Assert.That(delay.waitTime, Is.EqualTo(3f));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                SetCheckpointSingleton(null);
+            }
+        }
+
+        private static void SetCheckpointSingleton(
+            CheckpointService service)
+        {
+            typeof(CheckpointService)
+                .GetProperty(
+                    "Instance",
+                    BindingFlags.Static | BindingFlags.Public)
+                ?.GetSetMethod(true)
+                ?.Invoke(null, new object[] { service });
+        }
+
     }
 }
