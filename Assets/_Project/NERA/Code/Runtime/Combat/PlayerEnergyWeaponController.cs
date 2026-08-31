@@ -58,8 +58,14 @@ namespace NERA.Combat
             return TryFire(item.WeaponDefinition);
         }
 
-        private bool HandleAnomalyUseRequested(
+private bool HandleAnomalyUseRequested(
             ItemInstance _,
+            AnomalyIntegrationDefinition definition)
+        {
+            return TryActivateIntegration(definition);
+        }
+
+public bool TryActivateIntegration(
             AnomalyIntegrationDefinition definition)
         {
             if (definition == null)
@@ -69,21 +75,49 @@ namespace NERA.Combat
             switch (definition.Effect)
             {
                 case AnomalyIntegrationEffect.EnableElectronics:
-                    ApplyElectronicPulse(
-                        center,
-                        definition,
-                        true);
+                    ApplyElectronicPulse(center, definition);
                     break;
 
                 case AnomalyIntegrationEffect.DamageAnomalies:
                     DamageAnomalies(center, definition);
                     break;
 
-                case AnomalyIntegrationEffect.DisableElectronics:
-                    ApplyElectronicPulse(
+                case AnomalyIntegrationEffect.RestoreFullHealth:
+                    PlayerHealth health = GetComponent<PlayerHealth>();
+                    if (health == null)
+                        health = GetComponentInParent<PlayerHealth>();
+                    if (health == null || !health.IsAlive)
+                        return false;
+
+                    health.RestoreFullHealth();
+                    break;
+
+                case AnomalyIntegrationEffect.RevealThroughWalls:
+                    AnomalyScanRevealController scanner =
+                        GetComponent<AnomalyScanRevealController>();
+                    if (scanner == null)
+                    {
+                        scanner =
+                            gameObject.AddComponent<AnomalyScanRevealController>();
+                    }
+
+                    scanner.Reveal(
                         center,
-                        definition,
-                        false);
+                        definition.Radius,
+                        definition.EffectDuration,
+                        definition.AffectedLayers,
+                        definition.DisplayColor);
+                    break;
+
+                case AnomalyIntegrationEffect
+                    .DisableElectronicsPermanently:
+                    AnomalyPowerPulse.DisablePermanently(
+                        center,
+                        definition.Radius,
+                        definition.AffectedLayers,
+                        gameObject,
+                        "Violet IO integration");
+                    DamageAnomalies(center, definition);
                     break;
 
                 default:
@@ -94,7 +128,7 @@ namespace NERA.Combat
             return true;
         }
 
-        private void DamageAnomalies(
+private void DamageAnomalies(
             Vector3 center,
             AnomalyIntegrationDefinition definition)
         {
@@ -122,32 +156,15 @@ namespace NERA.Combat
 
         private void ApplyElectronicPulse(
             Vector3 center,
-            AnomalyIntegrationDefinition definition,
-            bool powered)
+            AnomalyIntegrationDefinition definition)
         {
-            Collider[] hits = Physics.OverlapSphere(
+            AnomalyPowerPulse.ApplyTemporaryState(
                 center,
                 definition.Radius,
                 definition.AffectedLayers,
-                QueryTriggerInteraction.Collide);
-            HashSet<IAnomalyElectronic> affected =
-                new HashSet<IAnomalyElectronic>();
-            foreach (Collider hit in hits)
-            {
-                MonoBehaviour[] behaviours =
-                    hit.GetComponentsInParent<MonoBehaviour>(true);
-                foreach (MonoBehaviour behaviour in behaviours)
-                {
-                    if (behaviour is IAnomalyElectronic electronic &&
-                        affected.Add(electronic))
-                    {
-                        electronic.ApplyAnomalyPowerState(
-                            powered,
-                            definition.ElectronicDuration,
-                            gameObject);
-                    }
-                }
-            }
+                true,
+                definition.ElectronicDuration,
+                gameObject);
         }
 
         private static void DrawPulse(

@@ -151,5 +151,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_inventoryhint
+  key: ui.prefab.p_hud_inventoryhint
   fallback: Inventory TAB

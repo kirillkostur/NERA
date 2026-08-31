@@ -5661,7 +5661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+  key: ui.prefab.p_screen_terminal_mapscreen_dronscreen_launchebutton_launche_upgrade
   fallback: LAUNCHE
 --- !u!1 &1878384316077400383
 GameObject:
@@ -12074,7 +12074,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
+  key: ui.prefab.p_screen_terminal_mapscreen_antennamapbutton_text_antenna
   fallback: ANTENNA
 --- !u!1 &3950245776626689602
 GameObject:
@@ -12227,7 +12227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
+  key: ui.prefab.p_screen_terminal_mapscreen_background_info_move_movenobutton_no_button
   fallback: NO
 --- !u!1 &4004656162900779098
 GameObject:
@@ -12934,7 +12934,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapbutton_text_map
+  key: ui.prefab.p_screen_terminal_mapbutton_text_map
   fallback: MAP
 --- !u!1 &4491279439501458479
 GameObject:
@@ -13087,7 +13087,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_offbutton_text_off
+  key: ui.prefab.p_screen_terminal_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
   fallback: OFF
 --- !u!1 &4495353938524194264
 GameObject:
@@ -14701,7 +14701,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationbutton_text_station
+  key: ui.prefab.p_screen_terminal_stationbutton_text_station
   fallback: STATION
 --- !u!1 &4873861252816961375
 GameObject:
@@ -16037,7 +16037,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_info_progresa
+  key: ui.prefab.p_screen_terminal_mapscreen_antennascreen_info_progresa
   fallback: Progress 100%
 --- !u!1 &5321901927663922149
 GameObject:
@@ -16465,7 +16465,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
+  key: ui.prefab.p_screen_terminal_mapscreen_background_info_move_moveyesbutton_yes_button
   fallback: YES
 --- !u!1 &5382459234795036159
 GameObject:
@@ -18017,7 +18017,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronmapbutton_text_dron
+  key: ui.prefab.p_screen_terminal_mapscreen_dronmapbutton_text_dron
   fallback: DRON
 --- !u!1 &5795068362373398081
 GameObject:
@@ -19002,7 +19002,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_exit
+  key: ui.prefab.p_screen_terminal_exitbutton_exit
   fallback: EXIT
 --- !u!1 &6113081516487439385
 GameObject:
@@ -19155,7 +19155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagescreen_dropbutton_text_drop
+  key: ui.prefab.p_screen_terminal_storagescreen_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &6121411989502656870
 GameObject:
@@ -24856,7 +24856,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagebutton_text_storage
+  key: ui.prefab.p_screen_terminal_storagebutton_text_storage
   fallback: STORAGE
 --- !u!1 &7990044226376434989
 GameObject:
@@ -26420,7 +26420,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_onbutton_text_on
+  key: ui.prefab.p_screen_terminal_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
   fallback: ON
 --- !u!1 &8238294914219883927
 GameObject:
@@ -26961,7 +26961,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+  key: ui.prefab.p_screen_terminal_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
   fallback: CALIBRATION
 --- !u!1 &8469600229937207914
 GameObject:
@@ -27251,7 +27251,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_librarybutton_text_library
+  key: ui.prefab.p_screen_terminal_librarybutton_text_library
   fallback: LIBRARY
 --- !u!1 &8626757259125294252
 GameObject:

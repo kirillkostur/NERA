@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NERA.Combat;
 using NERA.Enemies;
 using NERA.Items;
 using NERA.Quests;
@@ -68,6 +69,86 @@ namespace NERA.Tests
                     spawner.SpawnRadius + 0.2f),
                 Is.True);
         }
+        [UnityTest]
+        public IEnumerator SpawnedWaveEngagesPlayerOutsideDetectionRadius()
+        {
+            GameObject player = CreateGameObject("Test_Player");
+            player.tag = "Player";
+            player.layer = LayerMask.NameToLayer("Player");
+            BoxCollider playerCollider = player.AddComponent<BoxCollider>();
+            playerCollider.size = new Vector3(2f, 3f, 2f);
+            playerCollider.center = Vector3.up * 0.5f;
+
+            GameObject ragdollBone = CreateGameObject("Test_RagdollBone");
+            ragdollBone.transform.SetParent(player.transform, false);
+            ragdollBone.AddComponent<BoxCollider>();
+            ragdollBone.AddComponent<Rigidbody>();
+            PlayerHealth playerHealth = player.AddComponent<PlayerHealth>();
+
+            IOEnemyConfig config =
+                ScriptableObject.CreateInstance<IOEnemyConfig>();
+            createdObjects.Add(config);
+            SetPrivateField(config, "detectionRadius", 2f);
+            SetPrivateField(config, "attackRange", 2f);
+            SetPrivateField(config, "moveSpeed", 8f);
+            SetPrivateField(config, "hoverAmplitude", 0f);
+            SetPrivateField(config, "attackCooldown", 0.1f);
+            SetPrivateField(config, "projectileSpeed", 30f);
+            SetPrivateField(config, "projectileLifetime", 2f);
+            SetPrivateField(config, "projectileDamage", 5f);
+
+            IOEnemyController enemyPrefab = CreateEnemyTemplate(config);
+            EnemySpawner spawner = CreateSpawner(
+                enemyPrefab,
+                "test/alerted_wave",
+                1,
+                0f,
+                EnemySpawnerActivationMode.Manual,
+                persistWaveState: false);
+            spawner.transform.position = new Vector3(0f, 0f, 8f);
+
+            SetPrivateStaticField(
+                typeof(IOEnemyController),
+                "sharedPlayerTransform",
+                null);
+            SetPrivateStaticField(
+                typeof(IOEnemyController),
+                "sharedPlayerHealth",
+                null);
+            SetPrivateStaticField(
+                typeof(IOEnemyController),
+                "nextSharedPlayerSearchAt",
+                float.MaxValue);
+
+            Assert.That(spawner.SpawnWave(), Is.EqualTo(1));
+            yield return null;
+
+            IOEnemyController enemy =
+                GetSpawnedEnemies(enemyPrefab).Single();
+            float initialDistance = Vector3.Distance(
+                enemy.transform.position,
+                player.transform.position);
+            float initialHealth = playerHealth.CurrentHealth;
+            float timeoutAt = Time.realtimeSinceStartup + 4f;
+
+            while (playerHealth.CurrentHealth >= initialHealth &&
+                   Time.realtimeSinceStartup < timeoutAt)
+            {
+                yield return null;
+            }
+
+            Assert.That(enemy.Target, Is.EqualTo(player.transform));
+            Assert.That(
+                Vector3.Distance(
+                    enemy.transform.position,
+                    player.transform.position),
+                Is.LessThan(initialDistance));
+            Assert.That(
+                playerHealth.CurrentHealth,
+                Is.LessThan(initialHealth),
+                "Spawner-created IO must pursue and attack immediately.");
+        }
+
 
         [UnityTest]
         public IEnumerator OneShotWaveRestoresOnlySurvivorsAndUnpickedDrops()
@@ -443,6 +524,18 @@ namespace NERA.Tests
             GameObject gameObject = new GameObject(name);
             createdObjects.Add(gameObject);
             return gameObject;
+        }
+
+        private static void SetPrivateStaticField(
+            System.Type type,
+            string fieldName,
+            object value)
+        {
+            FieldInfo field = type.GetField(
+                fieldName,
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null);
+            field.SetValue(null, value);
         }
 
         private static void SetPrivateField(

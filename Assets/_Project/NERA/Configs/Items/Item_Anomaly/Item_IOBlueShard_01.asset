@@ -30,3 +30,6 @@ MonoBehaviour:
   anomalyIntegrationDefinition: {fileID: 11400000, guid: f4ceca48037e40b2952838d2c53e8025, type: 2}
   weaponDefinition: {fileID: 0}
   energyDefinition: {fileID: 0}
+  engineeringPartDefinition:
+    installedVisualPrefab: {fileID: 0}
+    compatibleInstallations: []

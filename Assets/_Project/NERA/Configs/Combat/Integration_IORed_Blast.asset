@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d885c23210a04d8fa0869a5b625aca21, type: 3}
+  m_Name: Integration_IORed_Blast
+  m_EditorClassIdentifier: 
+  integrationId: io_red_blast
+  displayName: Red IO Blast
+  displayColor: {r: 1, g: 0.12, b: 0.08, a: 1}
+  compatibleEquipment: []
+  synthesisDuration: 18
+  effect: 1
+  radius: 8
+  anomalyDamage: 40
+  electronicDuration: 0
+  affectedLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295

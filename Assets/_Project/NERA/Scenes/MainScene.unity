@@ -619,9 +619,117 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 550046519}
     m_Modifications:
+    - target: {fileID: 366298315889425500, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
+      objectReference: {fileID: 0}
+    - target: {fileID: 450418239547295755, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 516873254057627850, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_upgradescreen_upgradesbutton_text_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 549234050511841337, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 1089187865982927180, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_inventoryscreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284559960561932205, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_interactionprompt_prompttext
+      objectReference: {fileID: 0}
+    - target: {fileID: 1307357771881547476, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
+      objectReference: {fileID: 0}
+    - target: {fileID: 1467897719881611296, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
+      objectReference: {fileID: 0}
+    - target: {fileID: 1973487744070720747, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_info_progresa
+      objectReference: {fileID: 0}
+    - target: {fileID: 2018834319355627565, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 2409124983920148666, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_inventoryhint
+      objectReference: {fileID: 0}
+    - target: {fileID: 2905573502748574308, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
+      objectReference: {fileID: 0}
+    - target: {fileID: 3063855223715497745, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapbutton_text_map
+      objectReference: {fileID: 0}
+    - target: {fileID: 3065506663027926855, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
+      objectReference: {fileID: 0}
+    - target: {fileID: 3073756942785559338, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
+      objectReference: {fileID: 0}
+    - target: {fileID: 3119555019104179362, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+      objectReference: {fileID: 0}
+    - target: {fileID: 3202927072540479054, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 3305721336923847280, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanmapbutton_text_scan
+      objectReference: {fileID: 0}
     - target: {fileID: 4121911899816374180, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 4370560774912728424, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_checkpointindicator
+      objectReference: {fileID: 0}
+    - target: {fileID: 4970404520227873618, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
+      objectReference: {fileID: 0}
+    - target: {fileID: 5112150915387850620, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_storagescreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 5145449577523973218, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_storagebutton_text_storage
+      objectReference: {fileID: 0}
+    - target: {fileID: 5165277497510138610, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_storagescreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 5395605731101667155, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_librarybutton_text_library
+      objectReference: {fileID: 0}
+    - target: {fileID: 6010290452253549441, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349398397254760209, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgrademapbutton_text_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 6557304072980659425, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
       objectReference: {fileID: 0}
     - target: {fileID: 6930836675800518705, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
       propertyPath: m_Pivot.x
@@ -702,6 +810,54 @@ PrefabInstance:
     - target: {fileID: 6930836675800518705, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7014981932958886800, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powermapbutton_text_power
+      objectReference: {fileID: 0}
+    - target: {fileID: 7551908252864178046, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronmapbutton_text_dron
+      objectReference: {fileID: 0}
+    - target: {fileID: 7790900409721262677, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_exitbutton_exit
+      objectReference: {fileID: 0}
+    - target: {fileID: 8095674680927986621, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
+      objectReference: {fileID: 0}
+    - target: {fileID: 8103590140616018195, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationbutton_text_station
+      objectReference: {fileID: 0}
+    - target: {fileID: 8192507830174055278, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_exitbutton_exit
+      objectReference: {fileID: 0}
+    - target: {fileID: 8263559141640919545, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 8428789176780300211, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 8434348650635169658, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
+      objectReference: {fileID: 0}
+    - target: {fileID: 8612300355325868948, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 8869454042906962189, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 8895861233866309800, guid: 3db288c11605797409b7888efa77d7ac, type: 3}
+      propertyPath: key
+      value: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

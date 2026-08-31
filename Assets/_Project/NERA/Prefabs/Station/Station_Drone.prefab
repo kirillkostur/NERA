@@ -159,6 +159,60 @@ MonoBehaviour:
   installedLocalPosition: {x: 0, y: 0, z: 0}
   installedLocalEulerAngles: {x: 0, y: 0, z: 0}
   installedLocalScale: {x: 1, y: 1, z: 1}
+--- !u!1 &645605820146370558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6616310765324809832}
+  - component: {fileID: 4553085439140396857}
+  m_Layer: 0
+  m_Name: Quest Marker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6616310765324809832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645605820146370558}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6089123769139469598}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4553085439140396857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645605820146370558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a15637b17aa14e6aa3f610c53d90da7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  markerId: quest_drone_01
+  positionSource: {fileID: 0}
+  localOffset: {x: 0, y: 1.1, z: 0}
+  icon: {fileID: 0}
+  color: {r: 0.12, g: 0.9, b: 1, a: 1}
+  showDistance: 1
+  worldMarkerFadeDistance: 3
+  worldMarkerMaxDistance: 50
+  availableWithoutQuest: 0
+  available: 1
 --- !u!1 &1934303152325995674
 GameObject:
   m_ObjectHideFlags: 0
@@ -481,8 +535,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3614143907052863408}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.10862642, y: 0.88587797, z: -0.26224747, w: 0.36694255}
-  m_LocalPosition: {x: -2.2000003, y: 2.431, z: 2.2000008}
+  m_LocalRotation: {x: -0.000494748, y: 0.9979183, z: -0.064026125, w: -0.0077111972}
+  m_LocalPosition: {x: 2.2173648, y: 18.900002, z: 143.46779}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -675,6 +729,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6616310765324809832}
   - {fileID: 4821152324154256753}
   - {fileID: 2395260431430439678}
   - {fileID: 1984414910242210901}
@@ -769,7 +824,7 @@ MonoBehaviour:
   exposedToWeather: 1
   initialCondition: 1
   cleaningDurationSeconds: 3
-  cleaningEffect: {fileID: 812340000000000002}
+  cleaningEffect: {fileID: 56724575700807128}
   targetRenderer: {fileID: 60822355355372705}
   sandAmountProperty: _DissolveStrength
 --- !u!1 &4653464154363696318
@@ -1969,12 +2024,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
---- !u!198 &3952285167227560215 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 7539281387560199540, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 6807681293121848419}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &812340000000000002 stripped
+--- !u!114 &56724575700807128 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6823015704912456123, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
   m_PrefabInstance: {fileID: 6807681293121848419}
@@ -1983,8 +2033,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &7803882488186551910 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3617881266711017989, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}

@@ -113,11 +113,14 @@ namespace NERA.UI
         [SerializeField, Min(0f)] private float markerEdgePadding = 28f;
 
         [Header("Style")]
-        [SerializeField] private Color frameColor =
+        [SerializeField]
+        private Color frameColor =
             new Color(0.05f, 0.84f, 1f, 0.95f);
-        [SerializeField] private Color backgroundColor =
+        [SerializeField]
+        private Color backgroundColor =
             new Color(0.025f, 0.055f, 0.12f, 0.92f);
-        [SerializeField] private Color tickColor =
+        [SerializeField]
+        private Color tickColor =
             new Color(0.82f, 0.9f, 0.98f, 0.9f);
 
         private readonly Dictionary<QuestMarkerAnchor, MarkerView> views =
@@ -649,10 +652,10 @@ namespace NERA.UI
                 bool major = Mathf.Abs(Mathf.DeltaAngle(
                     angle,
                     cardinalAngle)) < 0.01f;
-                tick.Line.sizeDelta = new Vector2(2f, major ? 20f : 10f);
+                tick.Line.sizeDelta = new Vector2(2f, major ? 18f : 10f);
                 tick.Line.anchoredPosition = new Vector2(
                     0f,
-                    major ? -17f : -12f);
+                    major ? -18f : -12f);
                 tick.Label.text = major
                     ? CardinalLabels[Mathf.RoundToInt(
                         Mathf.Repeat(cardinalAngle, 360f) / 45f) %

@@ -354,6 +354,7 @@ namespace NERA.Inventory
             WorldItem worldItem = Instantiate(item.WorldPrefab, spawnPosition, Quaternion.identity);
             worldItem.name = $"Dropped_{item.DisplayName}";
             worldItem.Initialize(instance);
+            worldItem.ActivateDropPhysics();
             return true;
         }
 

@@ -39,9 +39,11 @@ MonoBehaviour:
       \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
     completionLogic: 0
     createCheckpointOnCompletion: 0
-    questMarkerIds: []
+    questMarkerIds:
+    - quest_battery_01
     enemySpawnerIdsOnStart: []
-    enemySpawnerIdsOnCompletion: []
+    enemySpawnerIdsOnCompletion:
+    - station_enemy_hard
     completionConditions:
     - signalType: 10
       evaluation: 0

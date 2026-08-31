@@ -1131,7 +1131,7 @@ namespace NERA.Terminal
             {
                 foreach (StationObjectStatDefinition stat in definition.BaseStats)
                 {
-                    if (stat == null)
+                    if (stat == null || !ShouldDisplayStatusStat(type, stat.Stat))
                         continue;
                     float value = systems?.GetStat(
                         type,
@@ -1184,17 +1184,32 @@ namespace NERA.Terminal
                         (energy?.CurrentConsumption ?? 0f).ToString("F1"));
                     builder.AppendLine(" kW");
                 }
-                builder.Append(Localize(
-                    "station.status.installed_parts",
-                    "Installed parts"));
-                builder.Append(" - ");
-                builder.Append(systems?.GetInstalledPartCount(
-                    type,
-                    selectedObjectId) ?? 0);
-                builder.Append('/');
-                builder.Append(definition.Slots.Count);
+                if (definition.SupportsPhysicalUpgrades &&
+                    type != StationSystemType.Terminal &&
+                    type != StationSystemType.Laboratory)
+                {
+                    builder.Append(Localize(
+                        "station.status.installed_parts",
+                        "Installed parts"));
+                    builder.Append(" - ");
+                    builder.Append(systems?.GetInstalledPartCount(
+                        type,
+                        selectedObjectId) ?? 0);
+                    builder.Append('/');
+                    builder.Append(definition.Slots.Count);
+                }
             }
             TerminalUIUtility.SetText(statusText, builder.ToString());
+        }
+
+        private static bool ShouldDisplayStatusStat(
+            StationSystemType type,
+            StationObjectStat stat)
+        {
+            return type != StationSystemType.Turret ||
+                stat != StationObjectStat.RotationSpeed &&
+                stat != StationObjectStat.FireInterval &&
+                stat != StationObjectStat.DamageTaken;
         }
 
         private void BindDataEvents()

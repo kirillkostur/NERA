@@ -355,6 +355,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 5108148439692542444}
   - {fileID: 884619715838058818}
   - {fileID: 5843065815724657795}
   - {fileID: 2249419086856679814}
@@ -490,8 +491,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f6b4c9a12e74c32a58db2fb33db8f46, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5954985596196773693
 GameObject:
   m_ObjectHideFlags: 0
@@ -726,6 +727,60 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8244842803312999319}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8364138378662519209
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5108148439692542444}
+  - component: {fileID: 8698491226303705209}
+  m_Layer: 0
+  m_Name: Quest Marker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5108148439692542444
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8364138378662519209}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4195718103591869155}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8698491226303705209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8364138378662519209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a15637b17aa14e6aa3f610c53d90da7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  markerId: quest_laboratory_01
+  positionSource: {fileID: 0}
+  localOffset: {x: 0, y: 1, z: 0}
+  icon: {fileID: 0}
+  color: {r: 0.12, g: 0.9, b: 1, a: 1}
+  showDistance: 1
+  worldMarkerFadeDistance: 3
+  worldMarkerMaxDistance: 50
+  availableWithoutQuest: 0
+  available: 1
 --- !u!1 &8672365602525348162
 GameObject:
   m_ObjectHideFlags: 0

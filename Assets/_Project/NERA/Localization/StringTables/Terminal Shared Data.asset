@@ -111,90 +111,6 @@ MonoBehaviour:
     m_Key: map.state.locked
     m_Metadata:
       m_Items: []
-  - m_Id: 8421105664
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_storagescreen_dropbutton_text_drop
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8458854400
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8463048705
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8500797440
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8500797441
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagebutton_text_storage
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991744
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991745
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_storagescreen_dropbutton_text_drop
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991746
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_exitbutton_exit
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8509186048
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_offbutton_text_off
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8509186050
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_info_progresa
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712000
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_librarybutton_text_library
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712002
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationbutton_text_station
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712003
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8567906304
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100608
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100609
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100610
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapbutton_text_map
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489216
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489217
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8584683520
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_stationscreen_background_info_obj_toggle_onbutton_text_on
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8584683521
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_terminalscreen_mapscreen_dronmapbutton_text_dron
-    m_Metadata:
-      m_Items: []
   - m_Id: 60594576154624
     m_Key: station.tab.status
     m_Metadata:
@@ -289,6 +205,258 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1483606793904128
     m_Key: station.stat.dusttolerance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623840178176
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121216
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121217
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121218
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121219
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315520
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315521
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_exitbutton_exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315522
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapbutton_text_map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315523
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationbutton_text_station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315524
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_librarybutton_text_library
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315525
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_storagebutton_text_storage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315526
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315527
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315528
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315529
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315530
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315531
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315532
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315533
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315534
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315535
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801024
+    m_Key: ui.prefab.p_screen_laboratory_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801025
+    m_Key: ui.prefab.p_screen_laboratory_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801026
+    m_Key: ui.prefab.p_screen_laboratory_mapscreen_dronscreen_launchebutton_launche_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801027
+    m_Key: ui.prefab.p_screen_laboratory_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801028
+    m_Key: ui.prefab.p_screen_laboratory_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801029
+    m_Key: ui.prefab.p_screen_laboratory_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447296
+    m_Key: ui.prefab.p_screen_terminal_exitbutton_exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447297
+    m_Key: ui.prefab.p_screen_terminal_mapbutton_text_map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447298
+    m_Key: ui.prefab.p_screen_terminal_stationbutton_text_station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447299
+    m_Key: ui.prefab.p_screen_terminal_librarybutton_text_library
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447300
+    m_Key: ui.prefab.p_screen_terminal_storagebutton_text_storage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447301
+    m_Key: ui.prefab.p_screen_terminal_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447302
+    m_Key: ui.prefab.p_screen_terminal_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447303
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_background_info_move_moveyesbutton_yes_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447304
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_background_info_move_movenobutton_no_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447305
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447306
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641600
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_dronscreen_launchebutton_launche_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641601
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641602
+    m_Key: ui.prefab.p_screen_terminal_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641603
+    m_Key: ui.prefab.p_screen_terminal_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632379781120
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918464
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918465
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918466
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918467
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918468
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918469
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_storagescreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918470
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapbutton_text_map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918471
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_librarybutton_text_library
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861504
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861505
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_storagebutton_text_storage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861506
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861507
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861508
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861509
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_info_progresa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055808
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055809
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_stationbutton_text_station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055810
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_exitbutton_exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055811
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055812
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055813
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
     m_Metadata:
       m_Items: []
   m_Metadata:

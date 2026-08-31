@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace NERA.Items
 {
+    [RequireComponent(typeof(Rigidbody))]
     public sealed class WorldItem : BaseInteractable
     {
         [Header("Item")]
@@ -15,9 +16,15 @@ namespace NERA.Items
         [SerializeField] private string persistentId;
         [SerializeField] private bool trackWorldState = true;
 
+        [Header("Drop Physics")]
+        [Tooltip("Minimum upward contact normal that immediately locks a dropped item in place.")]
+        [SerializeField, Range(0f, 1f)] private float minimumSupportNormalY = 0.45f;
+
         private ItemInstance itemInstance;
         private string runtimePersistentKey;
         private string scenePersistentKey;
+        private Rigidbody itemBody;
+        private bool dropPhysicsActive;
 
         public ItemData ItemData => itemData;
         public ItemInstance ItemInstance => itemInstance;
@@ -27,9 +34,23 @@ namespace NERA.Items
 
         private void Awake()
         {
+            itemBody = GetComponent<Rigidbody>();
             scenePersistentKey = PersistentSceneIdentity.CreateKey(
                 transform,
                 persistentId);
+        }
+
+        public void ActivateDropPhysics()
+        {
+            if (itemBody == null)
+                itemBody = GetComponent<Rigidbody>();
+            if (itemBody == null)
+                return;
+
+            dropPhysicsActive = true;
+            itemBody.isKinematic = false;
+            itemBody.useGravity = true;
+            itemBody.WakeUp();
         }
 
         public void Initialize(ItemData item)
@@ -68,11 +89,65 @@ namespace NERA.Items
         private void Reset()
         {
             SetActionText("Pick Up");
+
+            itemBody = GetComponent<Rigidbody>();
+            DisableDropPhysics();
         }
 
         private void OnValidate()
         {
             persistentId = persistentId?.Trim();
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            FreezeOnSupportedSurface(collision);
+        }
+
+        private void OnCollisionStay(Collision collision)
+        {
+            FreezeOnSupportedSurface(collision);
+        }
+
+        private void FreezeOnSupportedSurface(Collision collision)
+        {
+            if (!dropPhysicsActive ||
+                itemBody == null ||
+                itemBody.isKinematic ||
+                collision == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                if (Vector3.Dot(
+                        collision.GetContact(i).normal,
+                        Vector3.up) < minimumSupportNormalY)
+                {
+                    continue;
+                }
+
+                DisableDropPhysics();
+                return;
+            }
+        }
+
+        private void DisableDropPhysics()
+        {
+            dropPhysicsActive = false;
+            if (itemBody == null)
+                return;
+
+            if (!itemBody.isKinematic)
+            {
+                itemBody.linearVelocity = Vector3.zero;
+                itemBody.angularVelocity = Vector3.zero;
+            }
+
+            itemBody.useGravity = false;
+            itemBody.isKinematic = true;
+            itemBody.Sleep();
         }
 
         public override InteractionPrompt GetPrompt()

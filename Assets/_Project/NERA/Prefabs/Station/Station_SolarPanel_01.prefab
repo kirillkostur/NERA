@@ -760,6 +760,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2410703926964877163}
   - {fileID: 7217264720873018720}
   - {fileID: 6582935440504524283}
   - {fileID: 970550513528134681}
@@ -831,7 +832,7 @@ MonoBehaviour:
   exposedToWeather: 1
   initialCondition: 1
   cleaningDurationSeconds: 3
-  cleaningEffect: {fileID: 812340000000000003}
+  cleaningEffect: {fileID: 5997125058962817629}
   targetRenderer: {fileID: 3121668921397997119}
   sandAmountProperty: _DissolveStrength
 --- !u!114 &8716632966903397710
@@ -1185,6 +1186,60 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.13095306, y: 0.0777415, z: 0.2027534}
   m_Center: {x: 0, y: 0.038870744, z: -0.000000014901161}
+--- !u!1 &8168783088240960894
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2410703926964877163}
+  - component: {fileID: 7088712472903092872}
+  m_Layer: 0
+  m_Name: Quest Marker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2410703926964877163
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8168783088240960894}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3181490175523778590}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7088712472903092872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8168783088240960894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a15637b17aa14e6aa3f610c53d90da7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  markerId: quest_solarpanel_01
+  positionSource: {fileID: 0}
+  localOffset: {x: 0, y: 1.1, z: 0}
+  icon: {fileID: 0}
+  color: {r: 0.12, g: 0.9, b: 1, a: 1}
+  showDistance: 1
+  worldMarkerFadeDistance: 3
+  worldMarkerMaxDistance: 50
+  availableWithoutQuest: 0
+  available: 1
 --- !u!1 &8411319274723797241
 GameObject:
   m_ObjectHideFlags: 0
@@ -1355,12 +1410,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3617881266711017989, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
   m_PrefabInstance: {fileID: 975638267055926246}
   m_PrefabAsset: {fileID: 0}
---- !u!198 &7289851906734165650 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 7539281387560199540, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
-  m_PrefabInstance: {fileID: 975638267055926246}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &812340000000000003 stripped
+--- !u!114 &5997125058962817629 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6823015704912456123, guid: 5bb6642f4fd3dc54799fcdad81168b97, type: 3}
   m_PrefabInstance: {fileID: 975638267055926246}
@@ -1369,5 +1419,5 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67e49e27b1f84ecb8d0b216f71e6a540, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 

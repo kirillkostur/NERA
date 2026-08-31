@@ -481,7 +481,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_inventoryscreen_dropbutton_text_drop
+  key: ui.prefab.p_screen_inventory_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &5212556238435180587
 GameObject:

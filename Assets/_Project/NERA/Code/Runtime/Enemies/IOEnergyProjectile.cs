@@ -16,6 +16,7 @@ namespace NERA.Enemies
         private float damage;
         private float remainingLifetime;
         private GameObject source;
+        private float explosionRadius;
         private Action<IOEnergyProjectile> releaseAction;
         private Material runtimeMaterial;
         private Renderer projectileRenderer;
@@ -45,22 +46,24 @@ namespace NERA.Enemies
                 color * Mathf.Max(0f, emissionIntensity));
         }
 
-        public void Initialize(
+public void Initialize(
             Vector3 travelDirection,
             float travelSpeed,
             float damageAmount,
             float lifetime,
-            GameObject damageSource)
+            GameObject damageSource,
+            float areaRadius = 0f)
         {
             direction = travelDirection.normalized;
             speed = travelSpeed;
             damage = damageAmount;
             remainingLifetime = lifetime;
             source = damageSource;
+            explosionRadius = Mathf.Max(0f, areaRadius);
             gameObject.SetActive(true);
         }
 
-        private void Update()
+private void Update()
         {
             float distance = speed * Time.deltaTime;
 
@@ -73,7 +76,10 @@ namespace NERA.Enemies
                     hitMask,
                     QueryTriggerInteraction.Ignore))
             {
-                TryDamage(hit.collider);
+                if (explosionRadius > 0f)
+                    ApplyExplosion(hit.point);
+                else
+                    TryDamage(hit.collider);
                 Release();
                 return;
             }
@@ -85,16 +91,50 @@ namespace NERA.Enemies
                 Release();
         }
 
-        private void TryDamage(Collider hitCollider)
+private void TryDamage(Collider hitCollider)
         {
-            if (hitCollider == null || hitCollider.gameObject == source)
+            if (hitCollider == null ||
+                source != null &&
+                hitCollider.transform.IsChildOf(source.transform))
+            {
                 return;
+            }
 
             IDamageable damageable =
                 hitCollider.GetComponentInParent<IDamageable>();
 
             damageable?.TakeDamage(damage, source);
         }
+
+private void ApplyExplosion(Vector3 impactPoint)
+        {
+            Collider[] hits = Physics.OverlapSphere(
+                impactPoint,
+                explosionRadius,
+                hitMask,
+                QueryTriggerInteraction.Ignore);
+            var damaged =
+                new System.Collections.Generic.HashSet<IDamageable>();
+
+            foreach (Collider hitCollider in hits)
+            {
+                if (hitCollider == null ||
+                    source != null &&
+                    hitCollider.transform.IsChildOf(source.transform))
+                {
+                    continue;
+                }
+
+                if (hitCollider.GetComponentInParent<IOEnemyController>() != null)
+                    continue;
+
+                IDamageable damageable =
+                    hitCollider.GetComponentInParent<IDamageable>();
+                if (damageable != null && damaged.Add(damageable))
+                    damageable.TakeDamage(damage, source);
+            }
+        }
+
 
         private void Release()
         {

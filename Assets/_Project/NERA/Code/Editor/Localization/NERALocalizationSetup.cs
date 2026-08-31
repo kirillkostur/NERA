@@ -217,8 +217,8 @@ namespace NERA.Editor.Localization
                 ["item.item_servo_01.description"] = "Повышает скорость поворота турели.",
                 ["item.item_servo_drive_01.name"] = "Сервопривод",
                 ["item.item_servo_drive_01.description"] = "Добавляет тяговый привод для более быстрого поворота турели.",
-                ["library.io_blue_shard_01.title"] = "ОСКОЛОК BLUE IO // АНАЛИЗ АНОМАЛИИ",
-                ["library.io_blue_shard_01.description"] = "Сконденсированный энергетический кристалл, извлечённый из сущности Blue IO. Лабораторный анализ выявил разрушительный резонанс средней силы. После интеграции в совместимое оборудование осколок создаёт один радиальный импульс, повреждающий ближайшие аномалии IO.",
+                ["library.io_blue_shard_01.title"] = "BLUE IO // ЭНЕРГЕТИЧЕСКИЙ ОСКОЛОК",
+                ["library.io_blue_shard_01.description"] = "Осколок Blue IO хранит стабильный импульс питания. После интеграции в оружие он временно включает обычные приборы в радиусе 8 м, но намеренно игнорирует все системы станции игрока.",
                 ["library.station_primer.title"] = "СТАНЦИЯ NERA // РУКОВОДСТВО ПО ЭКСПЛУАТАЦИИ",
                 ["library.station_primer.description"] = "Станция служит базой для экспедиций. Восстанавливайте и обслуживайте критические системы, запускайте разведывательный дрон, изучайте обнаруженные локации и готовьте оборудование перед выходом. Найденные артефакты будут пополнять библиотеку по мере исследований.",
                 ["library.expedition01_memory_core.title"] = "ЯДРО ПАМЯТИ NERA // ПЕРВИЧНЫЙ АНАЛИЗ",
@@ -232,8 +232,36 @@ namespace NERA.Editor.Localization
                 ["research.research_nera_memory_core_01.name"] = "Ядро памяти NERA",
                 ["research.research_nera_signal_relay_02.name"] = "Ядро сигнального ретранслятора NERA",
                 ["weapon.energy_pistol_01.name"] = "Энергетический пистолет",
-                ["integration.io_blue_discharge.name"] = "Разряд Blue IO",
+                ["integration.io_blue_discharge.name"] = "Заряд Blue IO",
+                ["integration.io_green_restoration.name"] = "Восстановление Green IO",
+                ["integration.io_yellow_scan.name"] = "Сканирование Yellow IO",
+                ["integration.io_red_blast.name"] = "Взрыв Red IO",
+                ["integration.io_violet_overload.name"] = "Перегрузка Violet IO",
                 ["enemy.io_blue_weak.name"] = "Слабый Blue IO",
+                ["enemy.io_green_regenerator.name"] = "Зелёный IO-регенератор",
+                ["enemy.io_yellow_hunter.name"] = "Жёлтый IO-охотник",
+                ["enemy.io_red_enforcer.name"] = "Красный IO-силовик",
+                ["enemy.io_violet_overseer.name"] = "Фиолетовый IO-надзиратель",
+                ["item.io_green_node_02.name"] = "Зелёный ремонтный узел",
+                ["item.io_green_node_02.description"] = "Узел саморемонта, извлечённый из зелёного IO.",
+                ["item.io_yellow_lens_03.name"] = "Жёлтая линза охотника",
+                ["item.io_yellow_lens_03.description"] = "Линза наведения, извлечённая из жёлтого IO.",
+                ["item.io_red_core_04.name"] = "Красное ударное ядро",
+                ["item.io_red_core_04.description"] = "Плотное ударное ядро, извлечённое из красного IO.",
+                ["item.io_violet_core_05.name"] = "Фиолетовое командное ядро",
+                ["item.io_violet_core_05.description"] = "Командное ядро, извлечённое из фиолетового IO.",
+                ["research.research_io_green_node_02.name"] = "Зелёный ремонтный узел",
+                ["research.research_io_yellow_lens_03.name"] = "Жёлтая линза охотника",
+                ["research.research_io_red_core_04.name"] = "Красное ударное ядро",
+                ["research.research_io_violet_core_05.name"] = "Фиолетовое командное ядро",
+                ["library.io_green_node_02.title"] = "ЗЕЛЁНЫЙ IO // РЕМОНТНЫЙ УЗЕЛ",
+                ["library.io_green_node_02.description"] = "Интегрированный ремонтный узел восстанавливает биометрию оператора. При активации здоровье игрока возвращается к 100%.",
+                ["library.io_yellow_lens_03.title"] = "ЖЁЛТЫЙ IO // ЛИНЗА ОХОТНИКА",
+                ["library.io_yellow_lens_03.description"] = "Интегрированная линза сканирует область 10 м и на 6 секунд отмечает сквозь стены врагов, приборы, интерактивные объекты и предметы.",
+                ["library.io_red_core_04.title"] = "КРАСНЫЙ IO // УДАРНОЕ ЯДРО",
+                ["library.io_red_core_04.description"] = "Интегрированное ударное ядро создаёт прежний боевой импульс синего осколка: 40 урона всем врагам IO в радиусе 8 м. Сам Red IO периодически полностью обесточивает ближайшие приборы.",
+                ["library.io_violet_core_05.title"] = "ФИОЛЕТОВЫЙ IO // КОМАНДНОЕ ЯДРО",
+                ["library.io_violet_core_05.description"] = "Интегрированное командное ядро полностью отключает электронику и объекты станции игрока в радиусе 12,5 м и наносит 400 урона всем врагам IO. Сам Violet IO также периодически применяет такое обесточивание.",
                 ["enemy.io_blue_relay_guard.name"] = "Страж ретранслятора Blue IO",
                 ["location.unknownsignal01.name"] = "?",
                 ["location.unknownsignal01.description"] = "Неизвестный сигнал. Требуется анализ антенной.",
@@ -515,8 +543,66 @@ namespace NERA.Editor.Localization
             AddPrompt("unavailable", "Station systems are unavailable", "Системы станции недоступны");
             AddPrompt("unavailable", "Upgrade mode is already open", "Режим улучшения уже открыт");
 
+            RegisterHudNotificationKeys();
             AddTerminalEntries();
             AddLaboratoryEntries();
+        }
+
+        private static void RegisterHudNotificationKeys()
+        {
+            const string catalogPath =
+                "Assets/_Project/NERA/Resources/UI/" +
+                "HUDNotificationCatalog_Default.asset";
+            HUDNotificationCatalog catalog =
+                AssetDatabase.LoadAssetAtPath<HUDNotificationCatalog>(
+                    catalogPath);
+            if (catalog == null)
+            {
+                throw new InvalidOperationException(
+                    $"HUD notification catalog is missing: {catalogPath}");
+            }
+
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.HudTable);
+            if (collection == null)
+            {
+                throw new InvalidOperationException(
+                    $"String table '{NERALocalization.HudTable}' is missing.");
+            }
+
+            StringTable english = collection.GetTable(
+                NERALocalization.EnglishCode) as StringTable;
+            StringTable russian = collection.GetTable(
+                NERALocalization.RussianCode) as StringTable;
+
+            foreach (HUDNotificationDefinition definition in catalog.Entries)
+            {
+                if (definition == null ||
+                    string.IsNullOrWhiteSpace(definition.LocalizationKey))
+                {
+                    throw new InvalidOperationException(
+                        "Every HUD notification requires a localization key.");
+                }
+
+                string key = definition.LocalizationKey;
+                if (expectedKeys != null &&
+                    expectedKeys.TryGetValue(
+                        NERALocalization.HudTable,
+                        out HashSet<string> keys))
+                {
+                    keys.Add(key);
+                }
+
+                if (string.IsNullOrWhiteSpace(english?.GetEntry(key)?.Value) ||
+                    string.IsNullOrWhiteSpace(russian?.GetEntry(key)?.Value))
+                {
+                    throw new InvalidOperationException(
+                        $"HUD notification '{definition.Id}' must have " +
+                        $"non-empty EN and RU entries for '{key}' in the " +
+                        $"'{NERALocalization.HudTable}' String Table.");
+                }
+            }
         }
 
         [MenuItem("NERA/Localization/Sync Loading Screen")]

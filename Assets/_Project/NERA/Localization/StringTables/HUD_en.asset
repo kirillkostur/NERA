@@ -78,18 +78,6 @@ MonoBehaviour:
     m_Localized: '[E] Interact'
     m_Metadata:
       m_Items: []
-  - m_Id: 4683980800
-    m_Localized: '[E] Interact'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10300153856
-    m_Localized: SAVING...
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10354679808
-    m_Localized: '[E] Interact'
-    m_Metadata:
-      m_Items: []
   - m_Id: 1826517671936
     m_Localized: Open Terminal
     m_Metadata:
@@ -165,10 +153,6 @@ MonoBehaviour:
     m_Localized: Upgrade mode is already open
     m_Metadata:
       m_Items: []
-  - m_Id: 4300290160320513
-    m_Localized: UPGRADE
-    m_Metadata:
-      m_Items: []
   - m_Id: 6330506999226368
     m_Localized: Start Terminal
     m_Metadata:
@@ -199,6 +183,98 @@ MonoBehaviour:
       harder."
     m_Metadata:
       m_Items: []
+  - m_Id: 7685672151277568
+    m_Localized: Sandstorm started
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672205803520
+    m_Localized: Sandstorm ended
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672205803521
+    m_Localized: Station battery charge fell to {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 7685672209997824
+    m_Localized: Station battery disabled
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997825
+    m_Localized: Station battery enabled
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997826
+    m_Localized: Station power lost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997827
+    m_Localized: Station power restored
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997828
+    m_Localized: Drone launched
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997829
+    m_Localized: Drone returned
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997830
+    m_Localized: 'Drone discovered: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 7685672209997831
+    m_Localized: Drone found no new locations
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997832
+    m_Localized: 'Unknown signal detected: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 7685672209997833
+    m_Localized: No unknown signals detected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685672209997834
+    m_Localized: 'Research completed: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 7685674231652352
+    m_Localized: SAVING...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685675393474560
+    m_Localized: '[E] Interact'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685675393474561
+    m_Localized: SAVING...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685675439611904
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685677503209472
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685683979214848
+    m_Localized: SAVING...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685684025352192
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685684025352193
+    m_Localized: '[E] Interact'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:
@@ -213,3 +289,7 @@ MonoBehaviour:
         - id: 4300279460651010
         - id: 4300279460651011
         - id: 4300279460651015
+        - id: 7685672205803521
+        - id: 7685672209997830
+        - id: 7685672209997832
+        - id: 7685672209997834

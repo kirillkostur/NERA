@@ -124,64 +124,184 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 1138171735028269374
-  - m_Id: 8018452480
-    m_Localized: EXIT
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8022646784
-    m_Localized: SCAN
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8022646785
-    m_Localized: POWER
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8064589824
-    m_Localized: Slot 3 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8077172736
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8081367040
-    m_Localized: SCAN
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561344
-    m_Localized: Slot 2 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561345
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561346
-    m_Localized: UPGRADE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561347
-    m_Localized: Slot 4 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561348
-    m_Localized: Slot 1 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8085561349
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8093949952
+  - m_Id: 7685672470044672
     m_Localized: Inventory TAB
     m_Metadata:
       m_Items: []
-  - m_Id: 8098144256
+  - m_Id: 7685673124356096
+    m_Localized: Inventory TAB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356097
     m_Localized: DROP
     m_Metadata:
       m_Items: []
-  - m_Id: 8098144257
+  - m_Id: 7685673124356098
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356099
+    m_Localized: POWER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356100
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356101
     m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356102
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356103
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356104
+    m_Localized: Slot 1 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356105
+    m_Localized: Slot 2 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356106
+    m_Localized: Slot 3 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356107
+    m_Localized: Slot 4 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356108
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356109
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356110
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673849970688
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978944
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978945
+    m_Localized: POWER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978946
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978947
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978948
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978949
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978950
+    m_Localized: Slot 1 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978951
+    m_Localized: Slot 2 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978952
+    m_Localized: Slot 3 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978953
+    m_Localized: Slot 4 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978954
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978955
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978956
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681613627392
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681659764736
+    m_Localized: SCAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681659764737
+    m_Localized: Slot 2 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681710096384
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681710096385
+    m_Localized: Inventory TAB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039424
+    m_Localized: POWER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039425
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039426
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039427
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039428
+    m_Localized: Slot 3 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039429
+    m_Localized: Slot 4 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233728
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233729
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233730
+    m_Localized: Slot 1 - %
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233731
+    m_Localized: EXIT
     m_Metadata:
       m_Items: []
   references:

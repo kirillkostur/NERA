@@ -161,14 +161,13 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1148182528
-    m_Localized: BLUE IO SHARD // ANOMALY ANALYSIS
+    m_Localized: BLUE IO // POWER SHARD
     m_Metadata:
       m_Items: []
   - m_Id: 1148182529
-    m_Localized: A condensed energy crystal recovered from a Blue IO entity. Laboratory
-      analysis identifies a medium-strength destructive resonance. When integrated
-      into compatible equipment, the shard releases one radial pulse that damages
-      nearby IO anomalies.
+    m_Localized: The Blue IO shard stores a stable power pulse. Integrated into a
+      weapon, it temporarily powers nearby non-station devices within 8 m. Player
+      station systems are intentionally ignored.
     m_Metadata:
       m_Items: []
   - m_Id: 1148182530
@@ -241,7 +240,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1169154048
-    m_Localized: Blue IO Discharge
+    m_Localized: Blue IO Charge
     m_Metadata:
       m_Items: []
   - m_Id: 1177542656
@@ -844,6 +843,124 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 6330504671387649
     m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465657266176
+    m_Localized: Green IO Regenerator
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986432
+    m_Localized: Green Repair Node
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986433
+    m_Localized: A self-repair node recovered from a Green IO.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986434
+    m_Localized: Green Repair Node
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986435
+    m_Localized: GREEN IO // REPAIR NODE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986436
+    m_Localized: The integrated repair node reconstructs the operator's biometrics.
+      Activating it restores the player's health to 100%.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986437
+    m_Localized: Yellow IO Hunter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986438
+    m_Localized: Yellow Hunter Lens
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986439
+    m_Localized: A tracking lens recovered from a Yellow IO.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986440
+    m_Localized: Yellow Hunter Lens
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986441
+    m_Localized: YELLOW IO // HUNTER LENS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986442
+    m_Localized: The integrated hunter lens scans a 10 m area and marks enemies,
+      devices, interactables, and items through walls for 6 seconds.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986443
+    m_Localized: Red IO Enforcer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986444
+    m_Localized: Red Impact Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986445
+    m_Localized: A dense impact core recovered from a Red IO.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986446
+    m_Localized: Red Impact Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986447
+    m_Localized: RED IO // IMPACT CORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986448
+    m_Localized: 'The integrated impact core releases the former Blue-shard combat
+      pulse: 40 damage to every IO enemy within 8 m. Red IO also casts a periodic
+      power-disruption pulse against nearby devices.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986449
+    m_Localized: Violet IO Overseer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986450
+    m_Localized: Violet Command Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986451
+    m_Localized: A command core recovered from a Violet IO.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986452
+    m_Localized: Violet Command Core
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986453
+    m_Localized: VIOLET IO // COMMAND CORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986454
+    m_Localized: The integrated command core permanently deactivates electronics
+      and player-station objects within 12.5 m and deals 400 damage to every IO enemy.
+      Violet IO also casts this power disruption periodically.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755248641761280
+    m_Localized: Green IO Restoration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755249136689152
+    m_Localized: Yellow IO Scan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755249547730944
+    m_Localized: Red IO Blast
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755250017492992
+    m_Localized: Violet IO Overload
     m_Metadata:
       m_Items: []
   references:

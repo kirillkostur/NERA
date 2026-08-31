@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Integration_IOBlue_Discharge
   m_EditorClassIdentifier: 
   integrationId: io_blue_discharge
-  displayName: Blue IO Discharge
-  displayColor: {r: 0.1, g: 0.65, b: 1, a: 1}
+  displayName: Blue IO Charge
+  displayColor: {r: 0.1, g: 0.55, b: 1, a: 1}
   compatibleEquipment: []
   synthesisDuration: 5
-  effect: 1
+  effect: 0
   radius: 8
-  anomalyDamage: 40
-  electronicDuration: 5
+  anomalyDamage: 0
+  electronicDuration: 8
   affectedLayers:
     serializedVersion: 2
     m_Bits: 4294967295

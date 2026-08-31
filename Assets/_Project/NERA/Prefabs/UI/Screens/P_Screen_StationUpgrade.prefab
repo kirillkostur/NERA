@@ -401,7 +401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: HUD
-  key: ui.mainscene.runtimeroot_hud_canvas_upgradescreen_upgradesbutton_text_upgrade
+  key: ui.prefab.p_screen_stationupgrade_upgradesbutton_text_upgrade
   fallback: UPGRADE
 --- !u!1 &4001644287254993764
 GameObject:

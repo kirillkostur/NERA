@@ -17905,6 +17905,7 @@ GameObject:
   - component: {fileID: 8764477631631577711}
   - component: {fileID: 7866795758031352621}
   - component: {fileID: 2501901845017388778}
+  - component: {fileID: 3296258160568630469}
   m_Layer: 0
   m_Name: P_DeveloperCheatConsole
   m_TagString: Untagged
@@ -18122,6 +18123,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fb118f17221692a47ae13e4889a2a226, type: 2}
   - {fileID: 11400000, guid: f38655df47cc46478c13c637216712d2, type: 2}
   - {fileID: 11400000, guid: 026b5991d7dfbdd40ad0b9e424ed8395, type: 2}
+--- !u!114 &3296258160568630469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8446219485162267398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab010163d7b52c4c99a82642a1eb92c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  referenceResolution: {x: 1920, y: 1080}
 --- !u!1 &8459493814426149360
 GameObject:
   m_ObjectHideFlags: 0

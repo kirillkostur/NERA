@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41cf631f9a3bac4282865e58e0ba863, type: 3}
+  m_Name: HUDNotificationCatalog_Default
+  m_EditorClassIdentifier: 
+  entries:
+  - id: weather.storm_started
+    localizationKey: notification.weather.storm_started
+    severity: 2
+    visibleSeconds: 5
+  - id: weather.storm_ended
+    localizationKey: notification.weather.storm_ended
+    severity: 0
+    visibleSeconds: 4
+  - id: energy.battery_low
+    localizationKey: notification.energy.battery_low
+    severity: 1
+    visibleSeconds: 5
+  - id: energy.battery_disabled
+    localizationKey: notification.energy.battery_disabled
+    severity: 2
+    visibleSeconds: 5
+  - id: energy.battery_enabled
+    localizationKey: notification.energy.battery_enabled
+    severity: 0
+    visibleSeconds: 4
+  - id: energy.power_lost
+    localizationKey: notification.energy.power_lost
+    severity: 2
+    visibleSeconds: 5
+  - id: energy.power_restored
+    localizationKey: notification.energy.power_restored
+    severity: 0
+    visibleSeconds: 4
+  - id: drone.departed
+    localizationKey: notification.drone.departed
+    severity: 1
+    visibleSeconds: 4
+  - id: drone.returned
+    localizationKey: notification.drone.returned
+    severity: 0
+    visibleSeconds: 4
+  - id: drone.location_discovered
+    localizationKey: notification.drone.location_discovered
+    severity: 0
+    visibleSeconds: 5
+  - id: drone.no_new_locations
+    localizationKey: notification.drone.no_new_locations
+    severity: 1
+    visibleSeconds: 4
+  - id: antenna.signal_found
+    localizationKey: notification.antenna.signal_found
+    severity: 0
+    visibleSeconds: 5
+  - id: antenna.signal_not_found
+    localizationKey: notification.antenna.signal_not_found
+    severity: 1
+    visibleSeconds: 4
+  - id: research.completed
+    localizationKey: notification.research.completed
+    severity: 0
+    visibleSeconds: 5
+  successBackground: {r: 0.025, g: 0.16, b: 0.09, a: 0.94}
+  successAccent: {r: 0.12, g: 0.95, b: 0.42, a: 1}
+  warningBackground: {r: 0.22, g: 0.115, b: 0.015, a: 0.94}
+  warningAccent: {r: 1, g: 0.55, b: 0.08, a: 1}
+  criticalBackground: {r: 0.22, g: 0.025, b: 0.035, a: 0.94}
+  criticalAccent: {r: 1, g: 0.1, b: 0.12, a: 1}

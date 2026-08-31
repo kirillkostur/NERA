@@ -22,19 +22,27 @@ namespace NERA.Combat
             SetPowered(initiallyPowered);
         }
 
-        public void ApplyAnomalyPowerState(
+public void ApplyAnomalyPowerState(
             bool powered,
             float duration,
             GameObject _)
         {
-            if (restoreRoutine == null)
-                restoreState = IsPowered;
-            else
+            if (restoreRoutine != null)
+            {
                 StopCoroutine(restoreRoutine);
+                restoreRoutine = null;
+            }
+
+            float clampedDuration = Mathf.Max(0f, duration);
+            if (clampedDuration > 0f)
+                restoreState = IsPowered;
 
             SetPowered(powered);
-            if (duration > 0f)
-                restoreRoutine = StartCoroutine(RestoreAfter(duration));
+            if (clampedDuration > 0f)
+            {
+                restoreRoutine =
+                    StartCoroutine(RestoreAfter(clampedDuration));
+            }
         }
 
         public void SetPowered(bool powered)

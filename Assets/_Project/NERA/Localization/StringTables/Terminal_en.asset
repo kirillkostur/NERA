@@ -128,90 +128,6 @@ MonoBehaviour:
     m_Localized: LOCKED
     m_Metadata:
       m_Items: []
-  - m_Id: 8421105664
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8458854400
-    m_Localized: YES
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8463048705
-    m_Localized: LAUNCHE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8500797440
-    m_Localized: Progress 100%
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8500797441
-    m_Localized: STORAGE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991744
-    m_Localized: CALIBRATION
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991745
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8504991746
-    m_Localized: EXIT
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8509186048
-    m_Localized: OFF
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8509186050
-    m_Localized: Progress 100%
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712000
-    m_Localized: LIBRARY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712002
-    m_Localized: STATION
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8563712003
-    m_Localized: ANTENNA
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8567906304
-    m_Localized: DRON
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100608
-    m_Localized: NO
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100609
-    m_Localized: ANTENNA
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8572100610
-    m_Localized: MAP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489216
-    m_Localized: LAUNCHE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8580489217
-    m_Localized: CALIBRATION
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8584683520
-    m_Localized: ON
-    m_Metadata:
-      m_Items: []
-  - m_Id: 8584683521
-    m_Localized: DRON
-    m_Metadata:
-      m_Items: []
   - m_Id: 60594576154624
     m_Localized: STATUS
     m_Metadata:
@@ -306,6 +222,258 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1483606793904128
     m_Localized: Dust Tolerance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623840178176
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121216
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121217
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121218
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623882121219
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315520
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315521
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315522
+    m_Localized: MAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315523
+    m_Localized: STATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315524
+    m_Localized: LIBRARY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315525
+    m_Localized: STORAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315526
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315527
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315528
+    m_Localized: YES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315529
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315530
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315531
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315532
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315533
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315534
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275623886315535
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801024
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801025
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801026
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801027
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801028
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275625148801029
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447296
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447297
+    m_Localized: MAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447298
+    m_Localized: STATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447299
+    m_Localized: LIBRARY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447300
+    m_Localized: STORAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447301
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447302
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447303
+    m_Localized: YES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447304
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447305
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626587447306
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641600
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641601
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641602
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275626591641603
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632379781120
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918464
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918465
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918466
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918467
+    m_Localized: CALIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918468
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918469
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918470
+    m_Localized: MAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632425918471
+    m_Localized: LIBRARY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861504
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861505
+    m_Localized: STORAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861506
+    m_Localized: LAUNCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861507
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861508
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632467861509
+    m_Localized: Progress 100%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055808
+    m_Localized: ANTENNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055809
+    m_Localized: STATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055810
+    m_Localized: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055811
+    m_Localized: YES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055812
+    m_Localized: DRON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4275632472055813
+    m_Localized: LAUNCHE
     m_Metadata:
       m_Items: []
   references:

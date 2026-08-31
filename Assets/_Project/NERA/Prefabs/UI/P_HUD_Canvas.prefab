@@ -174,7 +174,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2148928744732238344}
   m_Father: {fileID: 6930836675800518705}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -238,6 +239,7 @@ GameObject:
   - component: {fileID: 6365221935122308035}
   - component: {fileID: 6105596734845567750}
   - component: {fileID: 2983203536063629420}
+  - component: {fileID: 381026688768629224}
   m_Layer: 5
   m_Name: P_HUD_Canvas
   m_TagString: Untagged
@@ -343,6 +345,18 @@ MonoBehaviour:
   quickAccessHud: {fileID: 1507721047530263157}
   inventoryPanel: {fileID: 8521115935667863060}
   laboratoryPanel: {fileID: 7314957897537489684}
+--- !u!114 &381026688768629224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4121911899816374180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e77d6e4e99dcc0f4389ef28ed9a12550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &944579845967033797
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -354,6 +368,10 @@ PrefabInstance:
     - target: {fileID: 3474029512276522990, guid: ffe91a07b39d961428ba136241d137a1, type: 3}
       propertyPath: m_Name
       value: CheckpointIndicator
+      objectReference: {fileID: 0}
+    - target: {fileID: 3583892801948379309, guid: ffe91a07b39d961428ba136241d137a1, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_gameplayhudcanvas_checkpointindicator
       objectReference: {fileID: 0}
     - target: {fileID: 7424005002321448204, guid: ffe91a07b39d961428ba136241d137a1, type: 3}
       propertyPath: m_Pivot.x
@@ -453,6 +471,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8752010074341786148}
     m_Modifications:
+    - target: {fileID: 2592297196887705435, guid: a949f7819f64bef44b3ae212cf85200e, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_inventoryscreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
     - target: {fileID: 2845665123322864152, guid: a949f7819f64bef44b3ae212cf85200e, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -560,9 +582,49 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8752010074341786148}
     m_Modifications:
+    - target: {fileID: 37070649421143610, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanmapbutton_text_scan
+      objectReference: {fileID: 0}
+    - target: {fileID: 76823660590049796, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 443913829754908904, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+      objectReference: {fileID: 0}
+    - target: {fileID: 570028148877296397, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
+      objectReference: {fileID: 0}
+    - target: {fileID: 2915695814224959510, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
+      objectReference: {fileID: 0}
+    - target: {fileID: 3108555238827863105, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 3560003815235005543, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 4124451421900201066, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718977603211425311, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_exitbutton_exit
+      objectReference: {fileID: 0}
     - target: {fileID: 5251207018743099230, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
       propertyPath: m_Name
       value: LaboratoryScreen
+      objectReference: {fileID: 0}
+    - target: {fileID: 5492636051000086490, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powermapbutton_text_power
       objectReference: {fileID: 0}
     - target: {fileID: 5524551948005728552, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
       propertyPath: m_Pivot.x
@@ -644,6 +706,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6203577839574607074, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6229985646854688071, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 6456728776649014265, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 6550188852780883934, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 6717794766618576887, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903442928197254579, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695872217266550456, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_storagescreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 8466313983146365787, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgrademapbutton_text_upgrade
+      objectReference: {fileID: 0}
+    - target: {fileID: 9082402376474675147, guid: fb3b8fb10446de740b11b7e0fa266b61, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -667,6 +765,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8752010074341786148}
     m_Modifications:
+    - target: {fileID: 3483440805152345934, guid: bc572abd65217eb49af676ed93c5f9f0, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_upgradescreen_upgradesbutton_text_upgrade
+      objectReference: {fileID: 0}
     - target: {fileID: 4001644287254993764, guid: bc572abd65217eb49af676ed93c5f9f0, type: 3}
       propertyPath: m_Name
       value: UpgradeScreen
@@ -769,6 +871,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5000033644303689867}
     m_Modifications:
+    - target: {fileID: 1983398914482436715, guid: d4195b4711a613543921f6f2170a5f63, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_gameplayhudcanvas_inventoryhint
+      objectReference: {fileID: 0}
     - target: {fileID: 2604534112127242714, guid: d4195b4711a613543921f6f2170a5f63, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -970,6 +1076,108 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 2357604787755421391, guid: 8e104884e54aacf4292d590ea6b5a668, type: 3}
   m_PrefabInstance: {fileID: 4531438325397208227}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &5225900106473815830
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1029423572153714309}
+    m_Modifications:
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8608003535428356940, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+      propertyPath: m_Name
+      value: NotificationFeed
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+--- !u!224 &2148928744732238344 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6148723266256641310, guid: 37027c30d1d75d6498649a5fd90d69e2, type: 3}
+  m_PrefabInstance: {fileID: 5225900106473815830}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6679514033918167642
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1064,7 +1272,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5575960901277064695, guid: df52e6b2a8df0ee41b08dc4431ed6601, type: 3}
       propertyPath: key
-      value: ui.mainscene.runtimeroot_hud_canvas_interactionprompt_prompttext
+      value: ui.prefab.p_hud_canvas_gameplayhudcanvas_interactionprompt_prompttext
       objectReference: {fileID: 0}
     - target: {fileID: 6958727562067793248, guid: df52e6b2a8df0ee41b08dc4431ed6601, type: 3}
       propertyPath: m_Layer
@@ -1251,6 +1459,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8752010074341786148}
     m_Modifications:
+    - target: {fileID: 39139452482734274, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_onbutton_text_on
+      objectReference: {fileID: 0}
     - target: {fileID: 221573177985929828, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1259,9 +1471,17 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 303566372727241942, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_exitbutton_exit
+      objectReference: {fileID: 0}
     - target: {fileID: 424560410209087888, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 428512918247493291, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationbutton_text_station
       objectReference: {fileID: 0}
     - target: {fileID: 481844737008198757, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
@@ -1311,6 +1531,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2110529051944231110, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronmapbutton_text_dron
+      objectReference: {fileID: 0}
     - target: {fileID: 2425486092377893106, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1339,6 +1563,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3352902680593021785, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+      objectReference: {fileID: 0}
     - target: {fileID: 3375358141520849718, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1351,9 +1579,25 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3566203178227983594, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_movenobutton_no_button
+      objectReference: {fileID: 0}
     - target: {fileID: 3575839444493648718, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3670312027651853274, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_storagebutton_text_storage
+      objectReference: {fileID: 0}
+    - target: {fileID: 3708112151020910788, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_storagescreen_dropbutton_text_drop
+      objectReference: {fileID: 0}
+    - target: {fileID: 4568572679554607339, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_librarybutton_text_library
       objectReference: {fileID: 0}
     - target: {fileID: 4671648100097059982, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
@@ -1431,6 +1675,18 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6761439892138722780, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_stationscreen_screenstatus_background_info_obj_toggle_offbutton_text_off
+      objectReference: {fileID: 0}
+    - target: {fileID: 6846278891846353065, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapbutton_text_map
+      objectReference: {fileID: 0}
+    - target: {fileID: 6858968839260470418, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_background_info_move_moveyesbutton_yes_button
+      objectReference: {fileID: 0}
     - target: {fileID: 6999178611926855441, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1463,6 +1719,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7467940705756823916, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennamapbutton_text_antenna
+      objectReference: {fileID: 0}
     - target: {fileID: 7576526536681849351, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1475,6 +1735,10 @@ PrefabInstance:
       propertyPath: m_SortingLayer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7990761036756310867, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_antennascreen_info_progresa
+      objectReference: {fileID: 0}
     - target: {fileID: 8032412224857792712, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
@@ -1482,6 +1746,10 @@ PrefabInstance:
     - target: {fileID: 8215642172050171076, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8221491560010149761, guid: 606860a12dff953419f118fc92a797fa, type: 3}
+      propertyPath: key
+      value: ui.prefab.p_hud_canvas_modalcanvas_terminalscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
       objectReference: {fileID: 0}
     - target: {fileID: 8318697546242512194, guid: 606860a12dff953419f118fc92a797fa, type: 3}
       propertyPath: m_SortingLayer

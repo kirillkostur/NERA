@@ -179,5 +179,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: HUD
-  key: ui.mainscene.runtimeroot_hud_canvas_checkpointindicator
+  key: ui.prefab.p_hud_checkpoint
   fallback: SAVING...

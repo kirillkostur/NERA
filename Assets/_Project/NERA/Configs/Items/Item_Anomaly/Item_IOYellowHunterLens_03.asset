@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c1028d6b13e3604dbd798558da4a244, type: 3}
+  m_Name: Item_IOYellowHunterLens_03
+  m_EditorClassIdentifier: 
+  itemId: io_yellow_lens_03
+  displayName: Yellow Hunter Lens
+  description: A tracking lens recovered from a Yellow IO.
+  itemType: 4
+  icon: {fileID: 0}
+  worldPrefab: {fileID: 7364119062064552855, guid: 253558867bcbaf7429cce882517b5a45, type: 3}
+  equippedVisualPrefab: {fileID: 0}
+  equipmentAnchorName: mixamorig1:RightHand
+  equippedLocalPosition: {x: 0, y: 0, z: 0}
+  equippedLocalEulerAngles: {x: 0, y: 0, z: 0}
+  quickAccessAction: 0
+  useKey: 323
+  researchDefinition: {fileID: 11400000, guid: 81b5c48cf0c503e44a44c37c0d995ccf, type: 2}
+  acceptsAnomalyIntegration: 0
+  anomalyIntegrationDefinition: {fileID: 11400000, guid: 9cec22803c072af448003dcaccd5ea93, type: 2}
+  weaponDefinition: {fileID: 0}
+  energyDefinition: {fileID: 0}
+  engineeringPartDefinition:
+    installedVisualPrefab: {fileID: 0}
+    compatibleInstallations: []

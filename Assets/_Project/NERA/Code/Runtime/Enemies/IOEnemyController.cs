@@ -42,6 +42,10 @@ namespace NERA.Enemies
         private string persistentKey;
         private string spawnedPersistentKeyOverride;
         private float nextTargetScanAt;
+        private bool runtimeDropsEnabled = true;
+        private IOEnemyAbility[] abilities;
+        private IOEnemyAttackAbility attackAbility;
+        private bool waveCombatActive;
 
         public static IReadOnlyCollection<IOEnemyController> ActiveEnemies =>
             ActiveEnemySet;
@@ -49,12 +53,40 @@ namespace NERA.Enemies
         public string AuthoredPersistentId => persistentId?.Trim();
         public bool IsAlive => state != State.Dead;
         public string PersistentKey => persistentKey;
+        public IOEnemyConfig Config => config;
+        public Transform Target => target;
+        public float CurrentHealth => currentHealth;
+        public float MaxHealthValue => MaxHealth;
+        public float HealthNormalized => MaxHealth > 0f
+            ? currentHealth / MaxHealth
+            : 0f;
+        public float AttackCooldownValue => AttackCooldown;
 
-        public void ConfigureAsRuntimeSpawn()
+public void ConfigureAsRuntimeSpawn()
         {
             persistentId = string.Empty;
             persistentKey = string.Empty;
             spawnedPersistentKeyOverride = string.Empty;
+            runtimeDropsEnabled = true;
+        }
+
+public void ConfigureAsSummonedInstance()
+        {
+            ConfigureAsRuntimeSpawn();
+            runtimeDropsEnabled = false;
+        }
+
+        public void ActivateWaveCombat()
+        {
+            waveCombatActive = true;
+            nextTargetScanAt = 0f;
+            nextAttackTime = 0f;
+            nextSharedPlayerSearchAt = 0f;
+
+            if (!enabled)
+                enabled = true;
+
+            AcquireTarget();
         }
 
         public void ConfigureAsSpawnedInstance(string spawnedPersistentKey)
@@ -80,6 +112,20 @@ namespace NERA.Enemies
                     persistentId);
             currentHealth = MaxHealth;
             baseY = transform.position.y;
+
+            abilities = GetComponents<IOEnemyAbility>();
+            foreach (IOEnemyAbility ability in abilities)
+            {
+                if (ability == null)
+                    continue;
+
+                ability.Bind(this);
+                if (attackAbility == null &&
+                    ability is IOEnemyAttackAbility customAttack)
+                {
+                    attackAbility = customAttack;
+                }
+            }
 
             Renderer targetRenderer = GetComponentInChildren<Renderer>();
             if (targetRenderer != null)
@@ -129,6 +175,7 @@ namespace NERA.Enemies
                 return;
 
             Hover();
+            TickAbilities();
             AcquireTarget();
 
             if (!HasLivingTarget())
@@ -140,7 +187,8 @@ namespace NERA.Enemies
 
             float sqrDistance =
                 (transform.position - target.position).sqrMagnitude;
-            if (sqrDistance > DetectionRadius * DetectionRadius)
+            if (!waveCombatActive &&
+                sqrDistance > DetectionRadius * DetectionRadius)
             {
                 ClearTarget();
                 state = State.Idle;
@@ -161,12 +209,14 @@ namespace NERA.Enemies
             TryAttack();
         }
 
-        public void TakeDamage(float amount, GameObject source)
+public void TakeDamage(float amount, GameObject source)
         {
             if (!IsAlive || amount <= 0f)
                 return;
 
+            float previousHealth = currentHealth;
             currentHealth = Mathf.Max(0f, currentHealth - amount);
+            NotifyHealthChanged(previousHealth, currentHealth);
             if (currentHealth > 0f)
                 return;
 
@@ -181,10 +231,25 @@ namespace NERA.Enemies
                 QuestSignalType.EnemyKilled,
                 config != null ? config.EnemyId : name,
                 config != null ? config.DisplayName : name);
+            NotifyDied();
             SpawnResearchDrop();
             Died?.Invoke(this);
             Destroy(gameObject);
         }
+
+public float Heal(float amount)
+        {
+            if (!IsAlive || amount <= 0f)
+                return 0f;
+
+            float previousHealth = currentHealth;
+            currentHealth = Mathf.Min(MaxHealth, currentHealth + amount);
+            float restored = currentHealth - previousHealth;
+            if (restored > 0f)
+                NotifyHealthChanged(previousHealth, currentHealth);
+            return restored;
+        }
+
 
         private void AcquireTarget()
         {
@@ -201,9 +266,12 @@ namespace NERA.Enemies
             if (!TryResolveSharedPlayer())
                 return;
 
-            if ((transform.position - sharedPlayerTransform.position)
+            if (!waveCombatActive &&
+                (transform.position - sharedPlayerTransform.position)
                     .sqrMagnitude > DetectionRadius * DetectionRadius)
+            {
                 return;
+            }
 
             target = sharedPlayerTransform;
             targetHealth = sharedPlayerHealth;
@@ -273,7 +341,7 @@ namespace NERA.Enemies
                 MoveSpeed * Time.deltaTime);
         }
 
-        private void TryAttack()
+private void TryAttack()
         {
             if (!HasLivingTarget())
             {
@@ -282,28 +350,83 @@ namespace NERA.Enemies
                 return;
             }
 
+            if (attackAbility != null)
+            {
+                attackAbility.TickAttack(target);
+                return;
+            }
+
             if (Time.time < nextAttackTime)
                 return;
 
             nextAttackTime = Time.time + AttackCooldown;
+            FireProjectileAt(target);
+        }
+
+public bool FireProjectileAt(
+            Transform aimTarget,
+            float damageMultiplier = 1f,
+            float scaleMultiplier = 1f,
+            float explosionRadius = 0f)
+        {
+            if (!IsAlive || aimTarget == null)
+                return false;
 
             Vector3 origin = transform.position + transform.forward * 0.8f;
-            Vector3 direction = (target.position + Vector3.up - origin).normalized;
+            Vector3 direction =
+                (aimTarget.position + Vector3.up - origin).normalized;
 
             IOEnergyProjectile projectile = IOProjectilePool.Spawn(
                 ProjectilePrefab,
                 origin,
                 Quaternion.LookRotation(direction),
-                ProjectileScale,
+                ProjectileScale * Mathf.Max(0.01f, scaleMultiplier),
                 EnergyColor,
                 ProjectileEmissionIntensity);
             projectile.Initialize(
                 direction,
                 ProjectileSpeed,
-                ProjectileDamage,
+                ProjectileDamage * Mathf.Max(0f, damageMultiplier),
                 ProjectileLifetime,
-                gameObject);
+                gameObject,
+                Mathf.Max(0f, explosionRadius));
+            return true;
         }
+
+public bool TryMoveBy(
+            Vector3 offset,
+            float collisionRadius,
+            LayerMask obstacleMask)
+        {
+            offset.y = 0f;
+            float distance = offset.magnitude;
+            if (!IsAlive || distance <= 0.001f)
+                return false;
+
+            Vector3 direction = offset / distance;
+            RaycastHit[] hits = Physics.SphereCastAll(
+                transform.position,
+                Mathf.Max(0.05f, collisionRadius),
+                direction,
+                distance,
+                obstacleMask,
+                QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider == null ||
+                    hit.collider.transform.IsChildOf(transform))
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            transform.position += direction * distance;
+            return true;
+        }
+
+
 
         private void FaceTarget()
         {
@@ -321,6 +444,46 @@ namespace NERA.Enemies
             transform.position = position;
         }
 
+private void TickAbilities()
+        {
+            if (abilities == null)
+                return;
+
+            foreach (IOEnemyAbility ability in abilities)
+                ability?.TickAbility(Time.deltaTime);
+        }
+
+private void NotifyHealthChanged(float previousHealth, float newHealth)
+        {
+            if (abilities == null)
+                return;
+
+            float previousNormalized = MaxHealth > 0f
+                ? previousHealth / MaxHealth
+                : 0f;
+            float currentNormalized = MaxHealth > 0f
+                ? newHealth / MaxHealth
+                : 0f;
+            foreach (IOEnemyAbility ability in abilities)
+            {
+                ability?.NotifyHealthChanged(
+                    previousNormalized,
+                    currentNormalized);
+            }
+        }
+
+private void NotifyDied()
+        {
+            if (abilities == null)
+                return;
+
+            foreach (IOEnemyAbility ability in abilities)
+                ability?.NotifyDied();
+        }
+
+
+
+
         private void MarkEncountered()
         {
             if (encounterReported)
@@ -335,7 +498,7 @@ namespace NERA.Enemies
 
         private void SpawnResearchDrop()
         {
-            if (DeathDropPrefab == null)
+            if (!runtimeDropsEnabled || DeathDropPrefab == null)
                 return;
 
             GameObject drop = Instantiate(
@@ -357,6 +520,8 @@ namespace NERA.Enemies
             {
                 worldItem.Initialize(worldItem.ItemData);
             }
+
+            worldItem.ActivateDropPhysics();
         }
 
         private void OnDisable()
@@ -372,6 +537,16 @@ namespace NERA.Enemies
 
             if (runtimeMaterial != null)
                 Destroy(runtimeMaterial);
+        }
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRuntimeState()
+        {
+            ActiveEnemySet.Clear();
+            sharedPlayerTransform = null;
+            sharedPlayerHealth = null;
+            nextSharedPlayerSearchAt = 0f;
         }
 
         private float MaxHealth => config != null ? config.MaxHealth : 30f;

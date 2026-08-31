@@ -7,9 +7,11 @@ namespace NERA.Combat
 {
     public enum AnomalyIntegrationEffect
     {
-        EnableElectronics,
-        DamageAnomalies,
-        DisableElectronics
+        EnableElectronics = 0,
+        DamageAnomalies = 1,
+        RestoreFullHealth = 3,
+        RevealThroughWalls = 4,
+        DisableElectronicsPermanently = 5
     }
 
     public interface IAnomalyElectronic
@@ -55,6 +57,7 @@ namespace NERA.Combat
         public float Radius => Mathf.Max(0.1f, radius);
         public float AnomalyDamage => Mathf.Max(0f, anomalyDamage);
         public float ElectronicDuration => Mathf.Max(0f, electronicDuration);
+        public float EffectDuration => Mathf.Max(0f, electronicDuration);
         public LayerMask AffectedLayers => affectedLayers;
 
         public bool Supports(ItemData equipment)

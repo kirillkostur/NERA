@@ -164,8 +164,14 @@ namespace NERA.Station
             target.TakeDamage(EffectiveDamage, gameObject);
         }
 
-        public void TakeDamage(float amount, GameObject _)
+        public void TakeDamage(float amount, GameObject source)
         {
+            if (source != null &&
+                source.GetComponentInParent<IOEnemyController>(true) != null)
+            {
+                return;
+            }
+
             if (maintenance == null || amount <= 0f)
                 return;
 

@@ -1195,6 +1195,22 @@ namespace NERA.Tests
                 StationTurretController.FindById("station_turret_01");
             Assert.That(energy, Is.Not.Null);
             Assert.That(turret, Is.Not.Null);
+            Assert.That(
+                MaintainableObject.TryFind(
+                    "station_turret_01",
+                    out MaintainableObject turretMaintenance),
+                Is.True);
+            turretMaintenance.SetCondition(1f);
+            float cleanDetectionRange = turret.EffectiveDetectionRange;
+            float cleanRotationSpeed = turret.EffectiveRotationSpeed;
+            turretMaintenance.SetCondition(0.5f);
+            Assert.That(
+                turret.EffectiveDetectionRange,
+                Is.LessThan(cleanDetectionRange));
+            Assert.That(
+                turret.EffectiveRotationSpeed,
+                Is.LessThan(cleanRotationSpeed));
+            turretMaintenance.SetCondition(1f);
             energy.RestoreState(energy.TotalCapacity, true);
 
             float energyBefore = energy.CurrentEnergy;
@@ -1306,6 +1322,34 @@ namespace NERA.Tests
                 stationScreen.SelectPreviewObject(otherPreview.transform),
                 Is.True);
             Assert.That(
+                MaintainableObject.TryFind(
+                    "station_antenna",
+                    out MaintainableObject antennaMaintenance),
+                Is.True);
+            antennaMaintenance.SetCondition(1f);
+            float cleanAntennaRange = systems.GetStat(
+                StationSystemType.Antenna,
+                "station_antenna",
+                StationObjectStat.ScanRange);
+            float cleanCalibrationDuration = systems.GetStat(
+                StationSystemType.Antenna,
+                "station_antenna",
+                StationObjectStat.CalibrationDuration);
+            antennaMaintenance.SetCondition(0.5f);
+            Assert.That(
+                systems.GetStat(
+                    StationSystemType.Antenna,
+                    "station_antenna",
+                    StationObjectStat.ScanRange),
+                Is.LessThan(cleanAntennaRange));
+            Assert.That(
+                systems.GetStat(
+                    StationSystemType.Antenna,
+                    "station_antenna",
+                    StationObjectStat.CalibrationDuration),
+                Is.GreaterThan(cleanCalibrationDuration));
+            antennaMaintenance.SetCondition(1f);
+            Assert.That(
                 stationScreen.IsStatusExpanded,
                 Is.False,
                 "Selecting another object must restore the collapsed popup.");
@@ -1385,6 +1429,9 @@ namespace NERA.Tests
                 Does.Contain(
                     $"Installed parts - 0/{turretDefinition.Slots.Count}"));
             Assert.That(initialText, Does.Contain("Condition -"));
+            Assert.That(initialText, Does.Not.Contain("Rotation speed"));
+            Assert.That(initialText, Does.Not.Contain("Fire interval"));
+            Assert.That(initialText, Does.Not.Contain("Damage taken"));
             Assert.That(initialText, Does.Not.Contain("Status -"));
             Assert.That(initialText, Does.Not.Contain("Aim tolerance"));
 
@@ -1408,6 +1455,16 @@ namespace NERA.Tests
             string droneText = statusText.GetType().GetProperty("text")
                 ?.GetValue(statusText)?.ToString();
             Assert.That(droneText, Does.Contain("Condition -"));
+
+            stationScreen.SelectSystem(StationSystemType.Terminal);
+            string terminalText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(terminalText, Does.Not.Contain("Installed parts"));
+
+            stationScreen.SelectSystem(StationSystemType.Laboratory);
+            string laboratoryText = statusText.GetType().GetProperty("text")
+                ?.GetValue(statusText)?.ToString();
+            Assert.That(laboratoryText, Does.Not.Contain("Installed parts"));
 
             Assert.That(
                 stationScreen.SelectPreviewObject(turretPreview),
@@ -1986,7 +2043,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator DirtyDroneCannotLaunchUntilItIsFullyCleaned()
+        public IEnumerator DirtyDroneUsesMoreFlightEnergyUntilCleaned()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -2028,7 +2085,24 @@ namespace NERA.Tests
                     candidate.RequiredDroneTravelRange <= range);
             Assert.That(location, Is.Not.Null);
 
+            maintenance.SetCondition(1f);
+            Assert.That(drone.IsFlightReady, Is.True);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+            Assert.That(drone.CanLaunchScan(location), Is.True);
+            float cleanFlightConsumption = drone.FlightEnergyConsumption;
+            float cleanTripConsumption = drone.GetBatteryConsumption(location);
+
             maintenance.SetCondition(0.5f);
+            Assert.That(drone.IsFlightReady, Is.True);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+            Assert.That(
+                drone.FlightEnergyConsumption,
+                Is.GreaterThan(cleanFlightConsumption));
+            Assert.That(
+                drone.GetBatteryConsumption(location),
+                Is.GreaterThan(cleanTripConsumption));
+
+            maintenance.SetCondition(0f);
             Assert.That(drone.IsFlightReady, Is.False);
             Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
             Assert.That(drone.CanLaunchScan(location), Is.False);
@@ -2036,7 +2110,6 @@ namespace NERA.Tests
 
             maintenance.SetCondition(1f);
             Assert.That(drone.IsFlightReady, Is.True);
-            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
             Assert.That(drone.CanLaunchScan(location), Is.True);
         }
 

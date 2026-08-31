@@ -320,6 +320,7 @@ namespace NERA.Enemies
                 }
                 if (!enemy.gameObject.activeSelf)
                     enemy.gameObject.SetActive(true);
+                enemy.ActivateWaveCombat();
 
                 enemy.name =
                     $"{prefab.name}_Spawned_{index + 1:00}";

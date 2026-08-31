@@ -1222,7 +1222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronscreen_launchebutton_launche_upgrade
+  key: ui.prefab.p_screen_laboratory_mapscreen_dronscreen_launchebutton_launche_upgrade
   fallback: LAUNCHE
 --- !u!1 &604089861453228270
 GameObject:
@@ -3003,7 +3003,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+  key: ui.prefab.p_screen_laboratory_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &1427298680650776057
 GameObject:
@@ -3156,7 +3156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_exitbutton_exit
+  key: ui.prefab.p_screen_laboratory_exitbutton_exit
   fallback: EXIT
 --- !u!1 &1453778614860532596
 GameObject:
@@ -3844,7 +3844,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
+  key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_02
   fallback: Slot 2 - %
 --- !u!1 &1765674693213926839
 GameObject:
@@ -5223,7 +5223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanmapbutton_text_scan
+  key: ui.prefab.p_screen_laboratory_scanmapbutton_text_scan
   fallback: SCAN
 --- !u!1 &2157588945366232685
 GameObject:
@@ -5563,7 +5563,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
+  key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_04
   fallback: Slot 4 - %
 --- !u!1 &2268076856883261779
 GameObject:
@@ -6018,7 +6018,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_dronmapbutton_text_dron
+  key: ui.prefab.p_screen_laboratory_mapscreen_dronmapbutton_text_dron
   fallback: DRON
 --- !u!1 &2413003837659743093
 GameObject:
@@ -6383,7 +6383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
+  key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_03
   fallback: Slot 3 - %
 --- !u!1 &2453371240803017647
 GameObject:
@@ -9591,7 +9591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_info_progresa
+  key: ui.prefab.p_screen_laboratory_mapscreen_antennascreen_info_progresa
   fallback: Progress 100%
 --- !u!1 &3618421150654960539
 GameObject:
@@ -9746,7 +9746,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+  key: ui.prefab.p_screen_laboratory_scanscreen_background_screen_storage_slot_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &3624237997710780243
 GameObject:
@@ -10016,7 +10016,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_storagescreen_dropbutton_text_drop
+  key: ui.prefab.p_screen_laboratory_storagescreen_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &3811566702827276021
 GameObject:
@@ -10169,7 +10169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
+  key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_01
   fallback: Slot 1 - %
 --- !u!1 &3836310766813308781
 GameObject:
@@ -11726,7 +11726,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+  key: ui.prefab.p_screen_laboratory_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
   fallback: UPGRADE
 --- !u!1 &4447789446320711915
 GameObject:
@@ -14210,7 +14210,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+  key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_dropbutton_text_drop
   fallback: DROP
 --- !u!1 &5552596249913946594
 GameObject:
@@ -16185,7 +16185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgrademapbutton_text_upgrade
+  key: ui.prefab.p_screen_laboratory_upgrademapbutton_text_upgrade
   fallback: UPGRADE
 --- !u!1 &6458443110854833637
 GameObject:
@@ -16512,7 +16512,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+  key: ui.prefab.p_screen_laboratory_scanscreen_background_screen_storage_slot_scanbutton_text_scan
   fallback: SCAN
 --- !u!1 &6574555676668682809
 GameObject:
@@ -17986,7 +17986,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: InventoryLaboratory
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powermapbutton_text_power
+  key: ui.prefab.p_screen_laboratory_powermapbutton_text_power
   fallback: POWER
 --- !u!1 &7137530237220620002
 GameObject:
@@ -21126,7 +21126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
+  key: ui.prefab.p_screen_laboratory_mapscreen_antennascreen_calibrationbutton_calibration_upgrade
   fallback: CALIBRATION
 --- !u!1 &8846747290833096503
 GameObject:
@@ -21486,7 +21486,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   table: Terminal
-  key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_mapscreen_antennamapbutton_text_antenna
+  key: ui.prefab.p_screen_laboratory_mapscreen_antennamapbutton_text_antenna
   fallback: ANTENNA
 --- !u!1 &9058763597068958858
 GameObject:

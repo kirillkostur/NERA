@@ -250,41 +250,84 @@ namespace NERA.Station
         {
             StationSystemDefinition definition = GetDefinition(type, objectId);
             float baseValue = definition?.GetBaseStat(stat, fallback) ?? fallback;
-            if (!installedParts.TryGetValue(
+            float effectiveValue = baseValue;
+            if (installedParts.TryGetValue(
                     GetPartStateKey(type, objectId),
-                    out Dictionary<string, string> parts) ||
-                parts.Count == 0)
+                    out Dictionary<string, string> parts) &&
+                parts.Count > 0)
             {
-                return baseValue;
-            }
-
-            itemCatalog ??= Resources.Load<ItemCatalogData>(
-                "ItemCatalog_Default");
-            float additive = 0f;
-            float multiplier = 1f;
-            foreach (KeyValuePair<string, string> part in parts)
-            {
-                ItemData item = itemCatalog?.Find(part.Value);
-                EngineeringPartCompatibility compatibility =
-                    item?.FindEngineeringCompatibility(
-                        type,
-                        objectId,
-                        part.Key);
-                if (compatibility == null)
-                    continue;
-
-                foreach (StationObjectStatModifierDefinition modifier in
-                         compatibility.Modifiers)
+                itemCatalog ??= Resources.Load<ItemCatalogData>(
+                    "ItemCatalog_Default");
+                float additive = 0f;
+                float multiplier = 1f;
+                foreach (KeyValuePair<string, string> part in parts)
                 {
-                    if (modifier == null || modifier.Stat != stat)
+                    ItemData item = itemCatalog?.Find(part.Value);
+                    EngineeringPartCompatibility compatibility =
+                        item?.FindEngineeringCompatibility(
+                            type,
+                            objectId,
+                            part.Key);
+                    if (compatibility == null)
                         continue;
-                    if (modifier.Mode == StationStatModifierMode.Add)
-                        additive += modifier.Value;
-                    else
-                        multiplier *= modifier.Value;
+
+                    foreach (StationObjectStatModifierDefinition modifier in
+                             compatibility.Modifiers)
+                    {
+                        if (modifier == null || modifier.Stat != stat)
+                            continue;
+                        if (modifier.Mode == StationStatModifierMode.Add)
+                            additive += modifier.Value;
+                        else
+                            multiplier *= modifier.Value;
+                    }
                 }
+                effectiveValue = (baseValue + additive) * multiplier;
             }
-            return (baseValue + additive) * multiplier;
+
+            return ApplyConditionToStat(
+                type,
+                objectId,
+                stat,
+                effectiveValue);
+        }
+
+        private float ApplyConditionToStat(
+            StationSystemType type,
+            string objectId,
+            StationObjectStat stat,
+            float value)
+        {
+            float condition = Mathf.Clamp01(GetCondition(type, objectId));
+            if (type == StationSystemType.Turret &&
+                (stat == StationObjectStat.DetectionRange ||
+                 stat == StationObjectStat.RotationSpeed))
+            {
+                return value * condition;
+            }
+
+            if (type == StationSystemType.Drone &&
+                stat == StationObjectStat.FlightEnergyConsumption)
+            {
+                return value * GetWearConsumptionMultiplier(condition);
+            }
+
+            if (type == StationSystemType.Antenna)
+            {
+                if (stat == StationObjectStat.ScanRange)
+                    return value * condition;
+                if (stat == StationObjectStat.CalibrationDuration)
+                    return value * GetWearConsumptionMultiplier(condition);
+            }
+
+            // SolarPowerSource already combines condition with dust tolerance
+            // when it registers its live generation output.
+            return value;
+        }
+
+        private static float GetWearConsumptionMultiplier(float condition)
+        {
+            return Mathf.Lerp(2f, 1f, Mathf.Clamp01(condition));
         }
 
         public bool IsRequestedActive(

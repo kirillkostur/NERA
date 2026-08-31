@@ -111,64 +111,184 @@ MonoBehaviour:
     m_Key: laboratory.status.loaded_ready
     m_Metadata:
       m_Items: []
-  - m_Id: 8018452480
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_exitbutton_exit
+  - m_Id: 7685672470044672
+    m_Key: ui.prefab.p_hud_inventoryhint
     m_Metadata:
       m_Items: []
-  - m_Id: 8022646784
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanmapbutton_text_scan
+  - m_Id: 7685673124356096
+    m_Key: ui.prefab.p_hud_canvas_gameplayhudcanvas_inventoryhint
     m_Metadata:
       m_Items: []
-  - m_Id: 8022646785
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powermapbutton_text_power
+  - m_Id: 7685673124356097
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_inventoryscreen_dropbutton_text_drop
     m_Metadata:
       m_Items: []
-  - m_Id: 8064589824
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
+  - m_Id: 7685673124356098
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_exitbutton_exit
     m_Metadata:
       m_Items: []
-  - m_Id: 8077172736
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_inventoryscreen_dropbutton_text_drop
+  - m_Id: 7685673124356099
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powermapbutton_text_power
     m_Metadata:
       m_Items: []
-  - m_Id: 8081367040
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+  - m_Id: 7685673124356100
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanmapbutton_text_scan
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561344
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
+  - m_Id: 7685673124356101
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgrademapbutton_text_upgrade
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561345
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+  - m_Id: 7685673124356102
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561346
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+  - m_Id: 7685673124356103
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561347
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
+  - m_Id: 7685673124356104
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561348
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
+  - m_Id: 7685673124356105
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
     m_Metadata:
       m_Items: []
-  - m_Id: 8085561349
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+  - m_Id: 7685673124356106
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
     m_Metadata:
       m_Items: []
-  - m_Id: 8093949952
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_inventoryhint
+  - m_Id: 7685673124356107
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
     m_Metadata:
       m_Items: []
-  - m_Id: 8098144256
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+  - m_Id: 7685673124356108
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
     m_Metadata:
       m_Items: []
-  - m_Id: 8098144257
-    m_Key: ui.mainscene.runtimeroot_hud_canvas_laboratoryscreen_upgrademapbutton_text_upgrade
+  - m_Id: 7685673124356109
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673124356110
+    m_Key: ui.prefab.p_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685673849970688
+    m_Key: ui.prefab.p_screen_inventory_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978944
+    m_Key: ui.prefab.p_screen_laboratory_exitbutton_exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978945
+    m_Key: ui.prefab.p_screen_laboratory_powermapbutton_text_power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978946
+    m_Key: ui.prefab.p_screen_laboratory_scanmapbutton_text_scan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978947
+    m_Key: ui.prefab.p_screen_laboratory_upgrademapbutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978948
+    m_Key: ui.prefab.p_screen_laboratory_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978949
+    m_Key: ui.prefab.p_screen_laboratory_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978950
+    m_Key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978951
+    m_Key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978952
+    m_Key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_03
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978953
+    m_Key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_text_progress_04
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978954
+    m_Key: ui.prefab.p_screen_laboratory_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978955
+    m_Key: ui.prefab.p_screen_laboratory_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685674432978956
+    m_Key: ui.prefab.p_screen_laboratory_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681613627392
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanmapbutton_text_scan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681659764736
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_scanbutton_text_scan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681659764737
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681710096384
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681710096385
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_inventoryhint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039424
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powermapbutton_text_power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039425
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgrademapbutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039426
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039427
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_inventoryscreen_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039428
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_03
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681752039429
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_04
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233728
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_upgradescreen_background_screen_storage_slot_upgradebutton_text_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233729
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_scanscreen_background_screen_storage_slot_dropbutton_text_drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233730
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_powerscreen_background_screen_storage_slot_text_progress_01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7685681756233731
+    m_Key: ui.mainscene.runtimeroot_hud_canvas_modalcanvas_laboratoryscreen_exitbutton_exit
     m_Metadata:
       m_Items: []
   m_Metadata:

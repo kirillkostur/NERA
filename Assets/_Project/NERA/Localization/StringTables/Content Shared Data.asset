@@ -807,6 +807,118 @@ MonoBehaviour:
     m_Key: station.terminal.shared.stat.0
     m_Metadata:
       m_Items: []
+  - m_Id: 7742465657266176
+    m_Key: enemy.io_green_regenerator.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986432
+    m_Key: item.io_green_node_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986433
+    m_Key: item.io_green_node_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986434
+    m_Key: research.research_io_green_node_02.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986435
+    m_Key: library.io_green_node_02.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986436
+    m_Key: library.io_green_node_02.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986437
+    m_Key: enemy.io_yellow_hunter.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986438
+    m_Key: item.io_yellow_lens_03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986439
+    m_Key: item.io_yellow_lens_03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986440
+    m_Key: research.research_io_yellow_lens_03.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986441
+    m_Key: library.io_yellow_lens_03.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986442
+    m_Key: library.io_yellow_lens_03.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986443
+    m_Key: enemy.io_red_enforcer.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986444
+    m_Key: item.io_red_core_04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986445
+    m_Key: item.io_red_core_04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986446
+    m_Key: research.research_io_red_core_04.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986447
+    m_Key: library.io_red_core_04.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986448
+    m_Key: library.io_red_core_04.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986449
+    m_Key: enemy.io_violet_overseer.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986450
+    m_Key: item.io_violet_core_05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986451
+    m_Key: item.io_violet_core_05.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986452
+    m_Key: research.research_io_violet_core_05.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986453
+    m_Key: library.io_violet_core_05.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7742465715986454
+    m_Key: library.io_violet_core_05.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755248641761280
+    m_Key: integration.io_green_restoration.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755249136689152
+    m_Key: integration.io_yellow_scan.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755249547730944
+    m_Key: integration.io_red_blast.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7755250017492992
+    m_Key: integration.io_violet_overload.name
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

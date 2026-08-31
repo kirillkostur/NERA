@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e72edfa0fcb84f77b7207af040aa1710, type: 3}
-  m_Name: CFG_IO_Blue_RelayGuard
+  m_Name: CFG_IO_Green_Regenerator
   m_EditorClassIdentifier: 
-  enemyId: io_blue_relay_guard
-  displayName: Blue IO Relay Guard
-  maxHealth: 45
+  enemyId: io_green_regenerator
+  displayName: Green IO Regenerator
+  maxHealth: 80
   detectionRadius: 12
   attackRange: 7
-  moveSpeed: 2.4
-  hoverHeight: 1.8
-  hoverAmplitude: 0.22
-  hoverFrequency: 2.4
-  attackCooldown: 1.6
-  projectileSpeed: 9
-  projectileLifetime: 4
-  projectileDamage: 12
-  projectileScale: 0.28
+  moveSpeed: 1.8
+  hoverHeight: 1.6
+  hoverAmplitude: 0.15
+  hoverFrequency: 2
+  attackCooldown: 2.4
+  projectileSpeed: 8.5
+  projectileLifetime: 5
+  projectileDamage: 8
+  projectileScale: 0.24
   projectilePrefab: {fileID: 0}
-  energyColor: {r: 0.1, g: 0.75, b: 1, a: 1}
+  energyColor: {r: 0.16, g: 0.95, b: 0.35, a: 1}
   emissionIntensity: 3.2
   projectileEmissionIntensity: 5
-  deathDropPrefab: {fileID: 2278190858216321600, guid: 8cfef65c4fe154149a1054233a5086bf, type: 3}
-  deathDropOffset: {x: 0, y: 0, z: 0}
+  deathDropPrefab: {fileID: 3544124127836506669, guid: 13305e2a9906b7a4799224e51b05bb1b, type: 3}
+  deathDropOffset: {x: 0, y: 0.35, z: 0}

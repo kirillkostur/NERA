@@ -97,10 +97,7 @@ namespace NERA.Drone
                             DroneObjectId) ||
                         !stationSystems.IsMaintenanceReady(
                             StationSystemType.Drone,
-                            DroneObjectId) ||
-                        stationSystems.GetCondition(
-                            StationSystemType.Drone,
-                            DroneObjectId) < 0.999f)
+                            DroneObjectId))
                     {
                         return false;
                     }

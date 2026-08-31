@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: Library_IOBlueShard_01
   m_EditorClassIdentifier: 
   entryId: io_blue_shard_01
-  title: BLUE IO SHARD // ANOMALY ANALYSIS
+  title: BLUE IO // POWER SHARD
   category: 1
-  description: A condensed energy crystal recovered from a Blue IO entity. Laboratory
-    analysis identifies a medium-strength destructive resonance. When integrated into
-    compatible equipment, the shard releases one radial pulse that damages nearby IO
-    anomalies.
+  description: The Blue IO shard stores a stable power pulse. Integrated into a weapon,
+    it temporarily powers nearby non-station devices within 8 m. Player station systems
+    are intentionally ignored.
   illustration: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
