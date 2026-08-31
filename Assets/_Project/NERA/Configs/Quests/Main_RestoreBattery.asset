@@ -42,8 +42,7 @@ MonoBehaviour:
     questMarkerIds:
     - quest_battery_01
     enemySpawnerIdsOnStart: []
-    enemySpawnerIdsOnCompletion:
-    - station_enemy_hard
+    enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 10
       evaluation: 0
