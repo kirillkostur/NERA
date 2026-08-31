@@ -44,10 +44,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1886380051
-    m_Localized: Travel to {0}?
+    m_Localized: Travel to this location?
     m_Metadata:
-      m_Items:
-      - rid: 1138171735028269378
+      m_Items: []
   - m_Id: 1886380052
     m_Localized: Select a sector on the 3D map.
     m_Metadata:
@@ -83,7 +82,7 @@ MonoBehaviour:
   - m_Id: 1886380058
     m_Localized: 'ANTENNA
 
-      Calibrate to reveal a hidden signal on an opened
+      Calibrate to reveal a hidden signal in the selected
       sector.'
     m_Metadata:
       m_Items: []
@@ -121,7 +120,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1886380067
-    m_Localized: SIGNALFOUND
+    m_Localized: SIGNAL FOUND
     m_Metadata:
       m_Items: []
   - m_Id: 1886380068
@@ -225,7 +224,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275623840178176
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275623882121216
@@ -233,7 +232,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275623882121217
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   - m_Id: 4275623882121218
@@ -285,7 +284,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275623886315530
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275623886315531
@@ -293,7 +292,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275623886315532
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   - m_Id: 4275623886315533
@@ -309,7 +308,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275625148801024
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275625148801025
@@ -317,7 +316,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275625148801026
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   - m_Id: 4275625148801027
@@ -369,7 +368,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275626587447305
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275626587447306
@@ -377,7 +376,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275626591641600
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   - m_Id: 4275626591641601
@@ -397,7 +396,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275632425918464
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275632425918465
@@ -437,7 +436,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275632467861506
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   - m_Id: 4275632467861507
@@ -469,11 +468,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4275632472055812
-    m_Localized: DRON
+    m_Localized: DRONE
     m_Metadata:
       m_Items: []
   - m_Id: 4275632472055813
-    m_Localized: LAUNCHE
+    m_Localized: LAUNCH
     m_Metadata:
       m_Items: []
   references:

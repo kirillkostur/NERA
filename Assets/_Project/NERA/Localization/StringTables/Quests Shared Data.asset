@@ -63,6 +63,14 @@ MonoBehaviour:
     m_Key: quest.main.expedition_01.stage.05.description
     m_Metadata:
       m_Items: []
+  - m_Id: 8058507449327619
+    m_Key: quest.main.expedition_01.stage.06.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507449327620
+    m_Key: quest.main.expedition_01.stage.06.description
+    m_Metadata:
+      m_Items: []
   - m_Id: 825221131
     m_Key: quest.main.launch_drone_expedition_01.title
     m_Metadata:
@@ -80,67 +88,35 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 825221135
-    m_Key: quest.main.restore_battery.title
+    m_Key: quest.main.restore_station.title
     m_Metadata:
       m_Items: []
   - m_Id: 825221136
-    m_Key: quest.main.restore_battery.description
+    m_Key: quest.main.restore_station.description
     m_Metadata:
       m_Items: []
   - m_Id: 825221137
-    m_Key: quest.main.restore_battery.stage.01.title
+    m_Key: quest.main.restore_station.stage.01.title
     m_Metadata:
       m_Items: []
   - m_Id: 825221138
-    m_Key: quest.main.restore_battery.stage.01.description
+    m_Key: quest.main.restore_station.stage.01.description
     m_Metadata:
       m_Items: []
-  - m_Id: 825221139
-    m_Key: quest.main.first_terminal.title
+  - m_Id: 8057831348494336
+    m_Key: quest.main.restore_station.stage.02.description
     m_Metadata:
       m_Items: []
-  - m_Id: 825221140
-    m_Key: quest.main.first_terminal.description
+  - m_Id: 8058507449327616
+    m_Key: quest.main.restore_station.stage.02.title
     m_Metadata:
       m_Items: []
-  - m_Id: 825221141
-    m_Key: quest.main.first_terminal.stage.01.title
+  - m_Id: 8058507449327617
+    m_Key: quest.main.restore_station.stage.03.title
     m_Metadata:
       m_Items: []
-  - m_Id: 825221142
-    m_Key: quest.main.first_terminal.stage.01.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415424
-    m_Key: quest.side.clean_solar_panel.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415425
-    m_Key: quest.side.clean_solar_panel.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415426
-    m_Key: quest.side.clean_solar_panel.stage.01.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415427
-    m_Key: quest.side.clean_solar_panel.stage.01.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415428
-    m_Key: quest.side.restore_turret.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415429
-    m_Key: quest.side.restore_turret.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415430
-    m_Key: quest.side.restore_turret.stage.01.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415431
-    m_Key: quest.side.restore_turret.stage.01.description
+  - m_Id: 8058507449327618
+    m_Key: quest.main.restore_station.stage.03.description
     m_Metadata:
       m_Items: []
   m_Metadata:

@@ -12,6 +12,7 @@ using NERA.Maintenance;
 using NERA.Station;
 using NERA.Terminal;
 using NERA.Quests;
+using NERA.Research;
 using NERA.UI;
 using NUnit.Framework;
 using UnityEditor;
@@ -123,21 +124,19 @@ namespace NERA.Tests
             }
         }
 
-[Test]
-        public void NewGameStartsOnlySolarPanelsEnabled()
+        [Test]
+        public void NewGameUsesConfiguredInitialSystemStates()
         {
             systems.ResetSystemsForNewGame();
 
             foreach (StationSystemDefinition definition in
                      systems.Config.StationObjects)
             {
-                bool expected =
-                    definition.SystemType == StationSystemType.SolarPanel;
                 Assert.That(
                     systems.IsRequestedActive(
                         definition.SystemType,
                         definition.ObjectId),
-                    Is.EqualTo(expected),
+                    Is.EqualTo(definition.InitiallyActive),
                     definition.DisplayName);
             }
         }
@@ -344,7 +343,63 @@ namespace NERA.Tests
             }
         }
 
+        [Test]
+        public void DisabledLaboratoryUsesHoldAndOpensOnlyAfterStarting()
+        {
+            systems.ResetSystemsForNewGame();
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Laboratory,
+                    "station_laboratory"),
+                Is.False);
 
+            var laboratoryRoot = new GameObject("Test_Laboratory");
+            try
+            {
+                StationObjectIdentity identity =
+                    laboratoryRoot.AddComponent<StationObjectIdentity>();
+                identity.Configure(
+                    StationSystemType.Laboratory,
+                    "station_laboratory");
+                LaboratoryTableInteractable laboratory =
+                    laboratoryRoot.AddComponent<LaboratoryTableInteractable>();
+
+                InteractionPrompt disabledPrompt = laboratory.GetPrompt();
+                Assert.That(disabledPrompt.IsAvailable, Is.True);
+                Assert.That(
+                    disabledPrompt.Mode,
+                    Is.EqualTo(NeraInteractionMode.Hold));
+                Assert.That(disabledPrompt.HoldDuration, Is.GreaterThan(0f));
+                Assert.That(
+                    disabledPrompt.UnavailableReason,
+                    Does.Not.Contain("terminal"));
+
+                laboratory.CompleteInteraction(playerRoot);
+
+                Assert.That(
+                    systems.IsRequestedActive(
+                        StationSystemType.Laboratory,
+                        identity.ObjectId),
+                    Is.True);
+                Assert.That(
+                    laboratory.GetPrompt().Mode,
+                    Is.EqualTo(NeraInteractionMode.Press));
+
+                Assert.That(
+                    systems.SetRequestedActive(
+                        StationSystemType.Laboratory,
+                        false,
+                        identity.ObjectId),
+                    Is.True);
+                Assert.That(
+                    laboratory.GetPrompt().Mode,
+                    Is.EqualTo(NeraInteractionMode.Hold));
+            }
+            finally
+            {
+                Object.DestroyImmediate(laboratoryRoot);
+            }
+        }
 
         [Test]
         public void TurretAimToleranceIsCodeOnlyAndStatIdsRemainStable()

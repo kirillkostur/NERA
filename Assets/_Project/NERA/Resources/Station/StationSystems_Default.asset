@@ -83,7 +83,7 @@ MonoBehaviour:
     displayName: TERMINAL
     description: Controls station systems.
     controllable: 0
-    initiallyActive: 1
+    initiallyActive: 0
     powerPriority: 100
     baseStats:
     - stat: 4
@@ -140,7 +140,7 @@ MonoBehaviour:
     displayName: LABORATORY
     description: Analyzes objects and anomalies.
     controllable: 1
-    initiallyActive: 1
+    initiallyActive: 0
     powerPriority: 40
     baseStats:
     - stat: 4
@@ -152,7 +152,7 @@ MonoBehaviour:
   - systemType: 6
     objectId: station_antenna
     displayName: ANTENNA
-    description: Detects an unknown signal.
+    description: Detects distant signals.
     controllable: 1
     initiallyActive: 1
     powerPriority: 60

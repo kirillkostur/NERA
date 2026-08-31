@@ -15,6 +15,6 @@ MonoBehaviour:
   entryId: io_green_node_02
   title: GREEN IO // REPAIR NODE
   category: 1
-  description: The integrated repair node reconstructs the operator's biometrics.
-    Activating it restores the player's health to 100%.
+  description: The integrated repair node restores the operator's biological functions.
+    Activating it fully restores the player's health.
   illustration: {fileID: 0}

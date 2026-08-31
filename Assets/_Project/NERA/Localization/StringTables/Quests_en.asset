@@ -60,10 +60,18 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 825221129
-    m_Localized: Analyze the Sample
+    m_Localized: Start the Laboratory
     m_Metadata:
       m_Items: []
   - m_Id: 825221130
+    m_Localized: Start the laboratory.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507449327619
+    m_Localized: Analyze the Sample
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507449327620
     m_Localized: Analyze the Blue IO Shard in the laboratory.
     m_Metadata:
       m_Items: []
@@ -85,7 +93,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 825221135
-    m_Localized: First launch.
+    m_Localized: First Startup
     m_Metadata:
       m_Items: []
   - m_Id: 825221136
@@ -93,59 +101,27 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 825221137
-    m_Localized: Restore Station Power
+    m_Localized: Restore Power to the Station
     m_Metadata:
       m_Items: []
   - m_Id: 825221138
     m_Localized: Restore power to the station.
     m_Metadata:
       m_Items: []
-  - m_Id: 825221139
-    m_Localized: Open the Terminal
+  - m_Id: 8057831348494336
+    m_Localized: Activate the main terminal.
     m_Metadata:
       m_Items: []
-  - m_Id: 825221140
-    m_Localized: Open the station terminal.
+  - m_Id: 8058507449327616
+    m_Localized: Activate the Main Terminal
     m_Metadata:
       m_Items: []
-  - m_Id: 825221141
-    m_Localized: Open the Terminal
+  - m_Id: 8058507449327617
+    m_Localized: Enable the Cleaning Systems
     m_Metadata:
       m_Items: []
-  - m_Id: 825221142
-    m_Localized: Open the station terminal.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415424
-    m_Localized: Start cleaning
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415425
-    m_Localized: Contamination has reduced the efficiency of {targetName}.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415426
-    m_Localized: Clean {targetName}
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415427
-    m_Localized: Restore the object's condition to at least 95%.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415428
-    m_Localized: Restart malfunctioning objects
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415429
-    m_Localized: The system was disabled by an external malfunction.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415430
-    m_Localized: Restart {targetName}
-    m_Metadata:
-      m_Items: []
-  - m_Id: 829415431
-    m_Localized: Enable the object from the station terminal.
+  - m_Id: 8058507449327618
+    m_Localized: Clean the station equipment.
     m_Metadata:
       m_Items: []
   references:

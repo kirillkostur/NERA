@@ -215,7 +215,7 @@ namespace NERA.Terminal
                 (discovery != null && discovery.IsDiscovered(selectedLocation)) ||
                 (antenna != null && antenna.ActiveSignal == selectedLocation);
             if (canTravel)
-                ShowTravelConfirmation(selectedLocation);
+                ShowTravelConfirmation();
             else
                 HideTravelConfirmation();
 
@@ -265,7 +265,7 @@ namespace NERA.Terminal
                 RefreshAll();
         }
 
-        private void ShowTravelConfirmation(ExpeditionLocationData location)
+        private void ShowTravelConfirmation()
         {
             if (moveConfirmation == null)
                 return;
@@ -276,8 +276,7 @@ namespace NERA.Terminal
                 NERALocalization.Get(
                     NERALocalization.TerminalTable,
                     "map.travel_confirmation",
-                    "Travel to {0}?",
-                    location.DisplayName));
+                    "Travel to this location?"));
         }
 
         private void HideTravelConfirmation()
@@ -483,7 +482,7 @@ namespace NERA.Terminal
                 : NERALocalization.Get(
                     NERALocalization.TerminalTable,
                     "map.antenna_hint",
-                    "ANTENNA\nCalibrate to reveal a hidden signal on an opened sector.");
+                    "ANTENNA\nCalibrate to reveal a hidden signal in the selected sector.");
             TerminalUIUtility.SetText(antennaDescription, description);
 
             string progress;

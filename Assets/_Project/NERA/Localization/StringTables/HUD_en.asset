@@ -175,7 +175,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 6525937448378370
-    m_Localized: Upgrade the antenna to discover more distant unknown signals.
+    m_Localized: Upgrade the antenna to detect more distant signals.
     m_Metadata:
       m_Items: []
   - m_Id: 6525937448378371
@@ -221,21 +221,19 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7685672209997830
-    m_Localized: 'Drone discovered: {0}'
+    m_Localized: Drone discovered a new location
     m_Metadata:
-      m_Items:
-      - rid: 1138171735028269373
+      m_Items: []
   - m_Id: 7685672209997831
     m_Localized: Drone found no new locations
     m_Metadata:
       m_Items: []
   - m_Id: 7685672209997832
-    m_Localized: 'Unknown signal detected: {0}'
+    m_Localized: Antenna detected a signal
     m_Metadata:
-      m_Items:
-      - rid: 1138171735028269373
+      m_Items: []
   - m_Id: 7685672209997833
-    m_Localized: No unknown signals detected
+    m_Localized: Antenna detected no signals
     m_Metadata:
       m_Items: []
   - m_Id: 7685672209997834
@@ -276,12 +274,12 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7798071684489216
-    m_Localized: Object {0} disabled
+    m_Localized: '{0} has been disabled'
     m_Metadata:
       m_Items:
       - rid: 1138171735028269373
   - m_Id: 7804407331676160
-    m_Localized: Object {0} contaminated
+    m_Localized: '{0} is contaminated'
     m_Metadata:
       m_Items:
       - rid: 1138171735028269373
@@ -300,8 +298,6 @@ MonoBehaviour:
         - id: 4300279460651011
         - id: 4300279460651015
         - id: 7685672205803521
-        - id: 7685672209997830
-        - id: 7685672209997832
         - id: 7685672209997834
         - id: 7798071684489216
         - id: 7804407331676160

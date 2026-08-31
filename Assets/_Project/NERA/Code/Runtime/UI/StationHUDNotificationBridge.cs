@@ -337,8 +337,7 @@ namespace NERA.UI
             if (result.NewlyDiscovered && result.Location != null)
             {
                 HUDNotificationService.Publish(
-                    HUDNotificationIds.DroneLocationDiscovered,
-                    result.Location.DisplayName);
+                    HUDNotificationIds.DroneLocationDiscovered);
                 return;
             }
 
@@ -365,11 +364,10 @@ namespace NERA.UI
         }
 
         private static void HandleAntennaSignalFound(
-            ExpeditionLocationData location)
+            ExpeditionLocationData _)
         {
             HUDNotificationService.Publish(
-                HUDNotificationIds.AntennaSignalFound,
-                location != null ? location.DisplayName : string.Empty);
+                HUDNotificationIds.AntennaSignalFound);
         }
 
         private static void HandleAntennaSignalNotFound()

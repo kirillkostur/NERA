@@ -15,7 +15,7 @@ MonoBehaviour:
   entryId: io_blue_shard_01
   title: BLUE IO // POWER SHARD
   category: 1
-  description: The Blue IO shard stores a stable power pulse. Integrated into a weapon,
-    it temporarily powers nearby non-station devices within 8 m. Player station systems
-    are intentionally ignored.
+  description: The Blue IO shard stores a stable power pulse. When integrated into
+    a weapon, it temporarily powers nearby non-station devices within 8 m. Player
+    station systems are unaffected.
   illustration: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}

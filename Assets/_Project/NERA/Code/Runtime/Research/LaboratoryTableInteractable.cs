@@ -6,28 +6,49 @@ using UnityEngine;
 
 namespace NERA.Research
 {
+    [RequireComponent(typeof(StationObjectIdentity))]
     public sealed class LaboratoryTableInteractable : BaseInteractable
     {
+        private const string LaboratoryObjectId = "station_laboratory";
+
+        [Header("Required Action")]
+        [Tooltip("How long E must be held to start a disabled laboratory.")]
+        [SerializeField, Min(0.1f)]
+        private float requiredActionHoldDuration = 1f;
+
+        [SerializeField] private StationObjectIdentity identity;
+
         private void Awake()
         {
+            ResolveIdentity();
             SetActionText("Use Laboratory");
         }
 
         public override InteractionPrompt GetPrompt()
         {
-            InteractionPrompt prompt = base.GetPrompt();
+            InteractionPrompt configured = base.GetPrompt();
             StationSystemsController systems =
                 StationSystemsController.Instance;
+            string objectId = ResolveObjectId();
             if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Laboratory))
-            {
-                bool canStart = systems.CanStart(
+                !systems.IsRequestedActive(
                     StationSystemType.Laboratory,
-                    out string reason);
+                    objectId))
+            {
+                StationSystemDefinition definition = systems.GetDefinition(
+                    StationSystemType.Laboratory,
+                    objectId);
+                string reason = "Station systems are unavailable";
+                bool canStart = definition?.Controllable == true &&
+                    systems.CanStart(
+                        StationSystemType.Laboratory,
+                        objectId,
+                        out reason);
+
                 return new InteractionPrompt(
                     "Start Laboratory",
-                    prompt.Mode,
-                    prompt.HoldDuration,
+                    InteractionMode.Hold,
+                    RequiredActionHoldDuration,
                     canStart,
                     reason);
             }
@@ -36,17 +57,22 @@ namespace NERA.Research
             bool hasPower = research != null
                 ? research.HasOperationalPower &&
                   (systems == null || systems.IsRequestedActive(
-                      StationSystemType.Laboratory))
+                      StationSystemType.Laboratory,
+                      objectId))
                 : EnergySystemController.Instance != null &&
                   EnergySystemController.Instance.HasUsablePower &&
                   EnergySystemController.Instance.State != EnergyState.Emergency;
 
             return new InteractionPrompt(
-                prompt.ActionText,
-                prompt.Mode,
-                prompt.HoldDuration,
-                hasPower,
-                "Laboratory has no power"
+                configured.ActionText,
+                InteractionMode.Press,
+                0f,
+                configured.IsAvailable && hasPower,
+                configured.IsAvailable
+                    ? hasPower
+                        ? string.Empty
+                        : "Laboratory has no power"
+                    : configured.UnavailableReason
             );
         }
 
@@ -57,12 +83,19 @@ namespace NERA.Research
 
             StationSystemsController systems =
                 StationSystemsController.Instance;
+            string objectId = ResolveObjectId();
             if (systems != null &&
-                !systems.IsRequestedActive(StationSystemType.Laboratory) &&
-                !systems.SetRequestedActive(
+                !systems.IsRequestedActive(
                     StationSystemType.Laboratory,
-                    true))
+                    objectId))
             {
+                if (systems.SetRequestedActive(
+                        StationSystemType.Laboratory,
+                        true,
+                        objectId))
+                {
+                    base.CompleteInteraction(interactor);
+                }
                 return;
             }
 
@@ -78,6 +111,30 @@ namespace NERA.Research
 
             hud.OpenLaboratory(interactor);
             base.CompleteInteraction(interactor);
+        }
+
+        private float RequiredActionHoldDuration =>
+            Mathf.Max(0.1f, requiredActionHoldDuration);
+
+        private string ResolveObjectId()
+        {
+            ResolveIdentity();
+            return identity != null &&
+                !string.IsNullOrWhiteSpace(identity.ObjectId)
+                    ? identity.ObjectId
+                    : LaboratoryObjectId;
+        }
+
+        private void ResolveIdentity()
+        {
+            identity ??=
+                GetComponentInParent<StationObjectIdentity>(true);
+        }
+
+        private void OnValidate()
+        {
+            requiredActionHoldDuration = RequiredActionHoldDuration;
+            ResolveIdentity();
         }
     }
 }

@@ -17,5 +17,5 @@ MonoBehaviour:
   category: 1
   description: The integrated command core permanently deactivates electronics and
     player-station objects within 12.5 m and deals 400 damage to every IO enemy.
-    Violet IO also casts this power disruption periodically.
+    Violet IO entities also emit this disruption pulse periodically.
   illustration: {fileID: 0}

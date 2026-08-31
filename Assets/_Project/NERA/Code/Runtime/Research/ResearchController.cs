@@ -79,7 +79,7 @@ namespace NERA.Research
                     false);
                 StatusMessage = LocalizeStatus(
                     "paused_stopped",
-                    "Scanning paused — laboratory is stopped.");
+                    "Scanning paused — the laboratory is offline.");
                 return;
             }
 
@@ -89,7 +89,7 @@ namespace NERA.Research
             {
                 StatusMessage = LocalizeStatus(
                     "paused_energy",
-                    "Scanning paused — insufficient station energy.");
+                    "Scanning paused — the station does not have enough power.");
                 return;
             }
 
@@ -358,7 +358,7 @@ namespace NERA.Research
             {
                 StatusMessage = LocalizeStatus(
                     "stopped_from_terminal",
-                    "Laboratory is stopped from the station terminal.");
+                    "The laboratory was shut down from the station terminal.");
                 return false;
             }
 
@@ -626,13 +626,13 @@ namespace NERA.Research
             {
                 return LocalizeStatus(
                     "known_type_requires_scan",
-                    "{0} type is known. This sample still requires scanning.",
+                    "Item type identified: {0}. This sample still needs to be scanned.",
                     item.DisplayName);
             }
 
             return LocalizeStatus(
                 "loaded_ready",
-                "{0} loaded. Ready to scan.",
+                "{0} loaded. Ready for scanning.",
                 item.DisplayName);
         }
 

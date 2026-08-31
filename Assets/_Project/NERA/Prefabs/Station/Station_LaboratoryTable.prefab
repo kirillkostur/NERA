@@ -467,6 +467,8 @@ MonoBehaviour:
       m_Calls: []
   questInteractionId: 
   questInteractionName: 
+  requiredActionHoldDuration: 1
+  identity: {fileID: 6290201990220277899}
 --- !u!114 &6290201990220277899
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -168,9 +168,9 @@ namespace NERA.EditorTools
                         "BLUE IO // ЭНЕРГЕТИЧЕСКИЙ ОСКОЛОК",
                     LibraryDescriptionEnglish =
                         "The Blue IO shard stores a stable power pulse. " +
-                        "Integrated into a weapon, it temporarily powers " +
+                        "When integrated into a weapon, it temporarily powers " +
                         "nearby non-station devices within 8 m. Player " +
-                        "station systems are intentionally ignored.",
+                        "station systems are unaffected.",
                     LibraryDescriptionRussian =
                         "Осколок Blue IO хранит стабильный импульс питания. " +
                         "После интеграции в оружие он временно включает " +
@@ -195,9 +195,9 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "ЗЕЛЁНЫЙ IO // РЕМОНТНЫЙ УЗЕЛ",
                     LibraryDescriptionEnglish =
-                        "The integrated repair node reconstructs the " +
-                        "operator's biometrics. Activating it restores the " +
-                        "player's health to 100%.",
+                        "The integrated repair node restores the operator's " +
+                        "biological functions. Activating it fully restores " +
+                        "the player's health.",
                     LibraryDescriptionRussian =
                         "Интегрированный ремонтный узел восстанавливает " +
                         "биометрию оператора. При активации здоровье игрока " +
@@ -221,8 +221,8 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "ЖЁЛТЫЙ IO // ЛИНЗА ОХОТНИКА",
                     LibraryDescriptionEnglish =
-                        "The integrated hunter lens scans a 10 m area and " +
-                        "marks enemies, devices, interactables, and items " +
+                        "The integrated hunter lens scans within a 10 m radius " +
+                        "and reveals enemies, devices, interactable objects, and items " +
                         "through walls for 6 seconds.",
                     LibraryDescriptionRussian =
                         "Интегрированная линза сканирует область 10 м и на " +
@@ -247,10 +247,10 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "КРАСНЫЙ IO // УДАРНОЕ ЯДРО",
                     LibraryDescriptionEnglish =
-                        "The integrated impact core releases the former " +
-                        "Blue-shard combat pulse: 40 damage to every IO " +
-                        "enemy within 8 m. Red IO also casts a periodic " +
-                        "power-disruption pulse against nearby devices.",
+                        "The integrated impact core releases the combat pulse " +
+                        "once associated with the Blue shard, dealing 40 damage " +
+                        "to every IO enemy within 8 m. Red IO entities also emit " +
+                        "periodic disruption pulses that disable nearby devices.",
                     LibraryDescriptionRussian =
                         "Интегрированное ударное ядро создаёт прежний боевой " +
                         "импульс синего осколка: 40 урона всем врагам IO в " +
@@ -279,7 +279,7 @@ namespace NERA.EditorTools
                         "The integrated command core permanently deactivates " +
                         "electronics and player-station objects within " +
                         "12.5 m and deals 400 damage to every IO enemy. " +
-                        "Violet IO also casts this power disruption periodically.",
+                        "Violet IO entities also emit this disruption pulse periodically.",
                     LibraryDescriptionRussian =
                         "Интегрированное командное ядро полностью отключает " +
                         "электронику и объекты станции игрока в радиусе " +

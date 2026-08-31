@@ -207,10 +207,6 @@ MonoBehaviour:
     m_Key: integration.io_blue_discharge.name
     m_Metadata:
       m_Items: []
-  - m_Id: 1177542656
-    m_Key: enemy.io_blue_relay_guard.name
-    m_Metadata:
-      m_Items: []
   - m_Id: 1177542657
     m_Key: enemy.io_blue_weak.name
     m_Metadata:
@@ -281,14 +277,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1194319886
     m_Key: target.station_drone.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319893
-    m_Key: station.laboratory.shared.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514176
-    m_Key: station.laboratory.shared.description
     m_Metadata:
       m_Items: []
   - m_Id: 1198514181
@@ -583,10 +571,6 @@ MonoBehaviour:
     m_Key: station.drone.station_drone.stat.3
     m_Metadata:
       m_Items: []
-  - m_Id: 4300277074092041
-    m_Key: station.laboratory.shared.stat.0
-    m_Metadata:
-      m_Items: []
   - m_Id: 4301256431493120
     m_Key: station.antenna.station_antenna.name
     m_Metadata:
@@ -795,18 +779,6 @@ MonoBehaviour:
     m_Key: station.solarpanel.station_solar_01.stat.1
     m_Metadata:
       m_Items: []
-  - m_Id: 6330504629444608
-    m_Key: station.terminal.shared.name
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6330504671387648
-    m_Key: station.terminal.shared.description
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6330504671387649
-    m_Key: station.terminal.shared.stat.0
-    m_Metadata:
-      m_Items: []
   - m_Id: 7742465657266176
     m_Key: enemy.io_green_regenerator.name
     m_Metadata:
@@ -917,6 +889,38 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 7755250017492992
     m_Key: integration.io_violet_overload.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507805843456
+    m_Key: station.terminal.station_terminal.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592192
+    m_Key: station.terminal.station_terminal.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592193
+    m_Key: target.station_terminal.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592194
+    m_Key: station.terminal.station_terminal.stat.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786496
+    m_Key: station.laboratory.station_laboratory.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786497
+    m_Key: station.laboratory.station_laboratory.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786498
+    m_Key: target.station_laboratory.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786499
+    m_Key: station.laboratory.station_laboratory.stat.0
     m_Metadata:
       m_Items: []
   m_Metadata:

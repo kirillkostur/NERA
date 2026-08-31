@@ -59,11 +59,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1429200904
-    m_Localized: "Scanning paused \u2014 laboratory is stopped."
+    m_Localized: "Scanning paused \u2014 the laboratory is offline."
     m_Metadata:
       m_Items: []
   - m_Id: 1429200905
-    m_Localized: "Scanning paused \u2014 insufficient station energy."
+    m_Localized: "Scanning paused \u2014 the station does not have enough power."
     m_Metadata:
       m_Items: []
   - m_Id: 1429200906
@@ -76,7 +76,7 @@ MonoBehaviour:
       m_Items:
       - rid: 1138171735028269374
   - m_Id: 1429200908
-    m_Localized: Laboratory is stopped from the station terminal.
+    m_Localized: The laboratory was shut down from the station terminal.
     m_Metadata:
       m_Items: []
   - m_Id: 1429200909
@@ -115,21 +115,21 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1429200917
-    m_Localized: '{0} type is known. This sample still requires scanning.'
+    m_Localized: 'Item type identified: {0}. This sample still needs to be scanned.'
     m_Metadata:
       m_Items:
       - rid: 1138171735028269374
   - m_Id: 1429200918
-    m_Localized: '{0} loaded. Ready to scan.'
+    m_Localized: '{0} loaded. Ready for scanning.'
     m_Metadata:
       m_Items:
       - rid: 1138171735028269374
   - m_Id: 7685672470044672
-    m_Localized: Inventory TAB
+    m_Localized: INVENTORY [TAB]
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356096
-    m_Localized: Inventory TAB
+    m_Localized: INVENTORY [TAB]
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356097
@@ -261,7 +261,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7685681710096385
-    m_Localized: Inventory TAB
+    m_Localized: INVENTORY [TAB]
     m_Metadata:
       m_Items: []
   - m_Id: 7685681752039424

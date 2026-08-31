@@ -1500,6 +1500,9 @@ namespace NERA.Tests
             TestStationSystemsConfigFactory.SetSingleton(
                 typeof(StationSystemsController),
                 null);
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(EnergySystemController),
+                null);
             root = new GameObject("Test_DroneState");
             stationConfig =
                 TestStationSystemsConfigFactory.CreateControllerConfig();
@@ -1536,6 +1539,9 @@ namespace NERA.Tests
             TestStationSystemsConfigFactory.SetSingleton(
                 typeof(StationSystemsController),
                 null);
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(EnergySystemController),
+                null);
         }
 
         [Test]
@@ -1547,6 +1553,34 @@ namespace NERA.Tests
             drone.RefreshAvailability();
 
             Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+        }
+
+        [Test]
+        public void DroneUnlocksWhenMainBatteryReachesChargeThreshold()
+        {
+            EnergySystemController energy =
+                root.AddComponent<EnergySystemController>();
+            TestStationSystemsConfigFactory.SetSingleton(
+                typeof(EnergySystemController),
+                energy);
+            energy.RegisterBattery(
+                "station_battery",
+                1000f,
+                0f,
+                1000f,
+                1000f);
+            energy.SetGridEnabled(true);
+            drone.RefreshAvailability();
+
+            Assert.That(power.IsPowered, Is.True);
+            Assert.That(drone.IsFlightReady, Is.False);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+
+            energy.RestoreState(250f, 1000f, true);
+
+            Assert.That(drone.IsFlightReady, Is.True);
+            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
+            Assert.That(drone.CanLaunchScan(location), Is.True);
         }
 
         [Test]

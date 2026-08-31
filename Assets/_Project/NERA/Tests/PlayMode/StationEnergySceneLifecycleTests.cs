@@ -546,7 +546,7 @@ namespace NERA.Tests
         }
 
         [UnityTest]
-        public IEnumerator LaboratoryIsUnavailableUntilGridStarts()
+        public IEnumerator LaboratoryRequiresPowerAndExplicitStartup()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -554,17 +554,42 @@ namespace NERA.Tests
             yield return DisablePersistenceForTest();
 
             EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems =
+                StationSystemsController.Instance;
             LaboratoryTableInteractable laboratory =
                 UnityEngine.Object.FindFirstObjectByType<LaboratoryTableInteractable>();
+            StationObjectIdentity identity =
+                laboratory?.GetComponent<StationObjectIdentity>();
 
             Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
             Assert.That(laboratory, Is.Not.Null);
+            Assert.That(identity, Is.Not.Null);
 
+            systems.ResetSystemsForNewGame();
             energy.RestoreState(energy.TotalCapacity, false);
             Assert.That(laboratory.GetPrompt().IsAvailable, Is.False);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Laboratory,
+                    identity.ObjectId),
+                Is.False);
 
             energy.SetGridEnabled(true);
-            Assert.That(laboratory.GetPrompt().IsAvailable, Is.True);
+            InteractionPrompt startupPrompt = laboratory.GetPrompt();
+            Assert.That(startupPrompt.IsAvailable, Is.True);
+            Assert.That(startupPrompt.Mode, Is.EqualTo(InteractionMode.Hold));
+
+            laboratory.CompleteInteraction(laboratory.gameObject);
+
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Laboratory,
+                    identity.ObjectId),
+                Is.True);
+            Assert.That(
+                laboratory.GetPrompt().Mode,
+                Is.EqualTo(InteractionMode.Press));
         }
 
         [UnityTest]

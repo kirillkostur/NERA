@@ -22216,6 +22216,7 @@ GameObject:
   - component: {fileID: 8764477631631577711}
   - component: {fileID: 7866795758031352621}
   - component: {fileID: 2501901845017388778}
+  - component: {fileID: 4483625759302054910}
   m_Layer: 0
   m_Name: P_DeveloperCheatConsole
   m_TagString: Untagged
@@ -22470,6 +22471,19 @@ MonoBehaviour:
   - {fileID: 425223614998584517, guid: a49a7cf5faf65a248aff18e44c8f6159, type: 3}
   ioSpawnDistance: 5
   ioHoverHeight: 1.6
+--- !u!114 &4483625759302054910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8446219485162267398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab010163d7b52c4c99a82642a1eb92c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  referenceResolution: {x: 1920, y: 1080}
 --- !u!1 &8475000874088260904
 GameObject:
   m_ObjectHideFlags: 0

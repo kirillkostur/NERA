@@ -117,6 +117,40 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void DiscoveryNotificationsUseGenericLocalizedCopy()
+        {
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.HudTable);
+            Assert.That(collection, Is.Not.Null);
+            StringTable english = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.EnglishCode);
+            StringTable russian = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.RussianCode);
+
+            AssertCopy(
+                "notification.drone.location_discovered",
+                "Drone discovered a new location",
+                "Дрон обнаружил новую локацию");
+            AssertCopy(
+                "notification.antenna.signal_found",
+                "Antenna detected a signal",
+                "Антенна обнаружила сигнал");
+
+            void AssertCopy(string key, string expectedEn, string expectedRu)
+            {
+                string englishValue = english.GetEntry(key)?.Value;
+                string russianValue = russian.GetEntry(key)?.Value;
+                Assert.That(englishValue, Is.EqualTo(expectedEn));
+                Assert.That(russianValue, Is.EqualTo(expectedRu));
+                Assert.That(englishValue, Does.Not.Contain("{0}"));
+                Assert.That(russianValue, Does.Not.Contain("{0}"));
+            }
+        }
+
+        [Test]
         public void CatalogDoesNotDuplicateLocalizedText()
         {
             const BindingFlags fields =

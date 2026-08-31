@@ -125,6 +125,7 @@ namespace NERA.Drone
             new HashSet<DroneAnimationView>();
         private StationPowerController stationPower;
         private StationSystemsController stationSystems;
+        private EnergySystemController subscribedEnergy;
         private ExpeditionDiscoveryController discovery;
 
         private float MissingBatteryCharge => Mathf.Max(
@@ -517,6 +518,8 @@ namespace NERA.Drone
         {
             if (stationPower != null)
                 stationPower.StateChanged += HandlePowerStateChanged;
+            EnergySystemController.InstanceChanged +=
+                HandleEnergyInstanceChanged;
             StationSystemsController.InstanceChanged +=
                 HandleStationSystemsInstanceChanged;
             MaintainableObject.AnyConditionChanged +=
@@ -525,6 +528,7 @@ namespace NERA.Drone
                 HandleSandstormStarted;
             StationWeatherController.AnySandstormEnded +=
                 HandleSandstormEnded;
+            BindEnergy(EnergySystemController.Instance);
             BindStationSystems(StationSystemsController.Instance);
         }
 
@@ -532,6 +536,8 @@ namespace NERA.Drone
         {
             if (stationPower != null)
                 stationPower.StateChanged -= HandlePowerStateChanged;
+            EnergySystemController.InstanceChanged -=
+                HandleEnergyInstanceChanged;
             StationSystemsController.InstanceChanged -=
                 HandleStationSystemsInstanceChanged;
             MaintainableObject.AnyConditionChanged -=
@@ -540,7 +546,20 @@ namespace NERA.Drone
                 HandleSandstormStarted;
             StationWeatherController.AnySandstormEnded -=
                 HandleSandstormEnded;
+            BindEnergy(null);
             BindStationSystems(null);
+        }
+
+        private void BindEnergy(EnergySystemController energy)
+        {
+            if (subscribedEnergy == energy)
+                return;
+
+            if (subscribedEnergy != null)
+                subscribedEnergy.EnergyChanged -= HandleEnergyChanged;
+            subscribedEnergy = energy;
+            if (subscribedEnergy != null)
+                subscribedEnergy.EnergyChanged += HandleEnergyChanged;
         }
 
         private void BindStationSystems(StationSystemsController systems)
@@ -556,6 +575,19 @@ namespace NERA.Drone
         }
 
         private void HandlePowerStateChanged(StationPowerState _)
+        {
+            RefreshAvailability();
+        }
+
+        private void HandleEnergyInstanceChanged(
+            EnergySystemController energy)
+        {
+            BindEnergy(energy);
+            EnsureEnergyRegistration();
+            RefreshAvailability();
+        }
+
+        private void HandleEnergyChanged()
         {
             RefreshAvailability();
         }

@@ -61,13 +61,14 @@ namespace NERA.Editor.Localization
                 ["CLOSE"] = "ЗАКРЫТЬ",
                 ["CONTINUE"] = "ПРОДОЛЖИТЬ",
                 ["Description"] = "Описание",
-                ["DRON"] = "ДРОН",
+                ["DRONE"] = "ДРОН",
                 ["DROP"] = "ВЫБРОСИТЬ",
                 ["EXIT"] = "ВЫХОД",
                 ["Inventory TAB"] = "ИНВЕНТАРЬ [TAB]",
+                ["INVENTORY [TAB]"] = "ИНВЕНТАРЬ [TAB]",
                 ["[E] Interact"] = "[E] Взаимодействовать",
                 ["Progress 100%"] = "Прогресс 100%",
-                ["LAUNCHE"] = "ЗАПУСК",
+                ["LAUNCH"] = "ЗАПУСК",
                 ["LIBRARY"] = "БИБЛИОТЕКА",
                 ["MAP"] = "КАРТА",
                 ["Move to the location?"] = "Переместиться в выбранную локацию?",
@@ -90,11 +91,11 @@ namespace NERA.Editor.Localization
                 ["UPGRADE"] = "УЛУЧШИТЬ",
                 ["UPGRADES"] = "УЛУЧШЕНИЯ",
                 ["YES"] = "ДА",
-                ["Unknown signal. Antenna analysis required."] = "Неизвестный сигнал. Требуется анализ с помощью антенны.",
+                ["Unidentified transmission. Antenna analysis required."] = "Неопознанная передача. Требуется анализ с помощью антенны.",
                 ["Controls station systems."] = "Управляет системами станции.",
                 ["Surveys expedition sectors."] = "Исследует секторы экспедиций.",
                 ["Analyzes objects and anomalies."] = "Анализирует объекты и аномалии.",
-                ["Detects an unknown signal."] = "Обнаруживает неизвестный сигнал.",
+                ["Detects distant signals."] = "Обнаруживает дальние сигналы.",
                 ["Defends the station automatically."] = "Автоматически защищает станцию.",
                 ["Generation"] = "Генерация",
                 ["Dust Tolerance"] = "Пылеустойчивость",
@@ -129,7 +130,7 @@ namespace NERA.Editor.Localization
                 ["Long-range expedition drive."] = "Экспедиционный привод большого радиуса действия.",
                 ["Analyzes recovered objects and unlocks Library records."] = "Анализирует найденные объекты и открывает записи в библиотеке.",
                 ["Restores charge to energy-powered equipment."] = "Восстанавливает заряд энергетического оборудования.",
-                ["Finds unknown signals. Install a replacement drive before first use."] = "Обнаруживает неизвестные сигналы. Перед первым использованием установите новый привод.",
+                ["Detects signals. Install a replacement drive before first use."] = "Обнаруживает сигналы. Перед первым использованием установите новый привод.",
                 ["Restores short-range signal reception."] = "Восстанавливает приём сигналов малого радиуса.",
                 ["Improves signal resolution and range."] = "Повышает точность и дальность обнаружения сигналов.",
                 ["Enables deep-range signal acquisition."] = "Позволяет обнаруживать сигналы на большой дальности.",
@@ -264,11 +265,10 @@ namespace NERA.Editor.Localization
                 ["library.io_violet_core_05.description"] = "Интегрированное командное ядро полностью отключает электронику и объекты станции игрока в радиусе 12,5 м и наносит 400 урона всем врагам IO. Сам Violet IO также периодически применяет такое обесточивание.",
                 ["enemy.io_blue_relay_guard.name"] = "Страж ретранслятора Blue IO",
                 ["location.unknownsignal01.name"] = "?",
-                ["location.unknownsignal01.description"] = "Неизвестный сигнал. Требуется анализ антенной.",
+                ["location.unknownsignal01.description"] = "Неопознанная передача. Требуется анализ с помощью антенны.",
                 ["quest.main.expedition_01.title"] = "Древний аванпост",
                 ["quest.main.expedition_01.stage.01.title"] = "Отправляйтесь на Древний аванпост",
                 ["quest.main.expedition_01.stage.02.title"] = "Исследуйте Древний аванпост",
-                ["quest.main.expedition_01.stage.05.description"] = "Проведите анализ Осколка Blue IO в лаборатории.",
                 ["quest.main.launch_drone_expedition_01.stage.01.description"] = "Запустите разведывательный дрон и дождитесь завершения сканирования Экспедиции 01.",
                 ["quest.side.clean_solar_panel.title"] = "Запустите очистку",
                 ["quest.side.restore_turret.title"] = "Перезапустите неисправные объекты"
@@ -287,12 +287,22 @@ namespace NERA.Editor.Localization
                 ["quest.main.expedition_01.stage.03.description"] = "Collect the shard left after the encounter.",
                 ["quest.main.expedition_01.stage.04.title"] = "Return to the Station",
                 ["quest.main.expedition_01.stage.04.description"] = "Deliver the sample to the laboratory.",
-                ["quest.main.expedition_01.stage.05.title"] = "Analyze the Sample",
-                ["quest.main.expedition_01.stage.05.description"] = "Analyze the Blue IO Shard in the laboratory.",
+                ["quest.main.expedition_01.stage.05.title"] = "Start the Laboratory",
+                ["quest.main.expedition_01.stage.05.description"] = "Start the laboratory.",
+                ["quest.main.expedition_01.stage.06.title"] = "Analyze the Sample",
+                ["quest.main.expedition_01.stage.06.description"] = "Analyze the Blue IO Shard in the laboratory.",
                 ["quest.main.launch_drone_expedition_01.title"] = "Launch the Drone Expedition",
                 ["quest.main.launch_drone_expedition_01.description"] = "Send the survey drone on an expedition and wait for it to return with data about a new location.",
                 ["quest.main.launch_drone_expedition_01.stage.01.title"] = "Launch the Drone Expedition",
                 ["quest.main.launch_drone_expedition_01.stage.01.description"] = "Launch the survey drone and wait for the Expedition 01 scan to finish.",
+                ["quest.main.restore_station.title"] = "First Startup",
+                ["quest.main.restore_station.description"] = "Restore power to the station.",
+                ["quest.main.restore_station.stage.01.title"] = "Restore Power to the Station",
+                ["quest.main.restore_station.stage.01.description"] = "Restore power to the station.",
+                ["quest.main.restore_station.stage.02.title"] = "Activate the Main Terminal",
+                ["quest.main.restore_station.stage.02.description"] = "Activate the main terminal.",
+                ["quest.main.restore_station.stage.03.title"] = "Enable the Cleaning Systems",
+                ["quest.main.restore_station.stage.03.description"] = "Clean the station equipment.",
                 ["quest.main.restore_battery.title"] = "Restart the Battery",
                 ["quest.main.restore_battery.description"] = "Restore power to the station.",
                 ["quest.main.restore_battery.stage.01.title"] = "Restore Station Power",
@@ -567,14 +577,29 @@ namespace NERA.Editor.Localization
         {
             Add(
                 NERALocalization.HudTable,
+                "notification.drone.location_discovered",
+                "Drone discovered a new location",
+                "Дрон обнаружил новую локацию");
+            Add(
+                NERALocalization.HudTable,
+                "notification.antenna.signal_found",
+                "Antenna detected a signal",
+                "Антенна обнаружила сигнал");
+            Add(
+                NERALocalization.HudTable,
+                "notification.antenna.signal_not_found",
+                "Antenna detected no signals",
+                "Антенна не обнаружила сигналов");
+            Add(
+                NERALocalization.HudTable,
                 "notification.station.object_disabled",
-                "Object {0} disabled",
+                "{0} has been disabled",
                 "Объект {0} отключён",
                 true);
             Add(
                 NERALocalization.HudTable,
                 "notification.station.object_contaminated",
-                "Object {0} contaminated",
+                "{0} is contaminated",
                 "Объект {0} загрязнён",
                 true);
         }
@@ -671,8 +696,8 @@ namespace NERA.Editor.Localization
             Add(
                 NERALocalization.HudTable,
                 "loading.tip.antenna",
-                "Upgrade the antenna to discover more distant unknown signals.",
-                "Улучшайте антенну, чтобы находить более далёкие неизвестные сигналы.");
+                "Upgrade the antenna to detect more distant signals.",
+                "Улучшайте антенну, чтобы обнаруживать более далёкие сигналы.");
             Add(
                 NERALocalization.HudTable,
                 "loading.tip.expedition",
@@ -721,18 +746,23 @@ namespace NERA.Editor.Localization
                 "station.stat.currentconsumption",
                 "Current Consumption",
                 "Текущее потребление");
-            AddT("map.travel_confirmation", "Travel to {0}?", "Переместиться в локацию «{0}»?", true);
+            AddT("map.travel_confirmation", "Travel to this location?", "Отправиться на эту локацию?");
             AddT("map.select_sector", "Select a sector on the 3D map.", "Выберите сектор на трёхмерной карте.");
             AddT("map.drone_target", "DRONE TARGET\n{0}", "ЦЕЛЬ ДРОНА\n{0}", true);
             AddT("map.drone_unavailable", "DRONE UNAVAILABLE", "ДРОН НЕДОСТУПЕН");
             AddT("map.scanning", "SCANNING {0}%", "СКАНИРОВАНИЕ {0}%", true);
             AddT("map.recharging", "RECHARGING {0}s", "ПЕРЕЗАРЯДКА {0} с", true);
             AddT("map.signal_found", "SIGNAL FOUND\n{0}", "СИГНАЛ ОБНАРУЖЕН\n{0}", true);
-            AddT("map.antenna_hint", "ANTENNA\nCalibrate to reveal a hidden signal on an opened sector.", "АНТЕННА\nВыполните калибровку, чтобы обнаружить скрытый сигнал в открытом секторе.");
+            AddT("map.antenna_hint", "ANTENNA\nCalibrate to reveal a hidden signal in the selected sector.", "АНТЕННА\nВыполните калибровку, чтобы обнаружить скрытый сигнал в открытом секторе.");
             AddT("map.antenna_unavailable", "ANTENNA UNAVAILABLE", "АНТЕННА НЕДОСТУПНА");
             AddT("map.calibrating", "CALIBRATING {0}%", "КАЛИБРОВКА {0}%", true);
             foreach (string state in new[] { "Locked", "Idle", "Scanning", "Returning", "Charging", "Ready", "Calibrating", "SignalFound" })
-                AddT("map.state." + KeyPart(state), state.ToUpperInvariant(), TranslateState(state));
+            {
+                string englishState = state == "SignalFound"
+                    ? "SIGNAL FOUND"
+                    : state.ToUpperInvariant();
+                AddT("map.state." + KeyPart(state), englishState, TranslateState(state));
+            }
         }
 
         private static void AddLaboratoryEntries()
@@ -746,11 +776,11 @@ namespace NERA.Editor.Localization
             AddL("charger.charge", "CHARGE {0}%", "ЗАРЯД {0}%", true);
             AddL("inventory.select_item", "SELECT AN ITEM", "ВЫБЕРИТЕ ПРЕДМЕТ");
             AddL("laboratory.status.ready", "Laboratory ready.", "Лаборатория готова.");
-            AddL("laboratory.status.paused_stopped", "Scanning paused — laboratory is stopped.", "Сканирование приостановлено — лаборатория остановлена.");
-            AddL("laboratory.status.paused_energy", "Scanning paused — insufficient station energy.", "Сканирование приостановлено — недостаточно энергии станции.");
+            AddL("laboratory.status.paused_stopped", "Scanning paused — the laboratory is offline.", "Сканирование приостановлено — лаборатория остановлена.");
+            AddL("laboratory.status.paused_energy", "Scanning paused — the station does not have enough power.", "Сканирование приостановлено — недостаточно энергии станции.");
             AddL("laboratory.status.analysis_not_required", "This item does not require analysis.", "Этот предмет не требует анализа.");
             AddL("laboratory.status.scanning_item", "Scanning {0}...", "Сканирование: {0}...", true);
-            AddL("laboratory.status.stopped_from_terminal", "Laboratory is stopped from the station terminal.", "Лаборатория остановлена с терминала станции.");
+            AddL("laboratory.status.stopped_from_terminal", "The laboratory was shut down from the station terminal.", "Лаборатория остановлена с терминала станции.");
             AddL("laboratory.status.already_identified", "This item is already identified and does not require analysis.", "Этот предмет уже опознан и не требует анализа.");
             AddL("laboratory.status.already_scanned", "{0} is already scanned.", "Предмет «{0}» уже отсканирован.", true);
             AddL("laboratory.status.insufficient_energy", "Insufficient station energy.", "Недостаточно энергии станции.");
@@ -759,8 +789,8 @@ namespace NERA.Editor.Localization
             AddL("laboratory.status.analysis_complete", "Analysis complete: {0}", "Анализ завершён: {0}", true);
             AddL("laboratory.status.sample_complete", "Sample scan complete: {0}", "Сканирование образца завершено: {0}", true);
             AddL("laboratory.status.no_inventory_slot", "No free inventory slot for this sample.", "Для этого образца нет свободной ячейки инвентаря.");
-            AddL("laboratory.status.known_type_requires_scan", "{0} type is known. This sample still requires scanning.", "Тип «{0}» известен. Этот образец всё ещё нужно отсканировать.", true);
-            AddL("laboratory.status.loaded_ready", "{0} loaded. Ready to scan.", "Загружено: {0}. Можно начинать сканирование.", true);
+            AddL("laboratory.status.known_type_requires_scan", "Item type identified: {0}. This sample still needs to be scanned.", "Тип «{0}» известен. Этот образец всё ещё нужно отсканировать.", true);
+            AddL("laboratory.status.loaded_ready", "{0} loaded. Ready for scanning.", "Загружено: {0}. Можно начинать сканирование.", true);
         }
 
         private static void AddContentEntries()

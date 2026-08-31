@@ -15,7 +15,7 @@ MonoBehaviour:
   locationId: UnknownSignal12
   locationType: 1
   displayName: '?'
-  description: Unknown signal. Antenna analysis required.
+  description: Unidentified transmission. Antenna analysis required.
   scene:
     assetGuid: 4c2fe3fa91cf60f45ba20679bf629c71
     assetPath: Assets/_Project/NERA/Scenes/UnknownSignal_12.unity

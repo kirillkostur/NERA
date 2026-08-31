@@ -157,7 +157,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1139793939
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 1148182528
@@ -165,9 +165,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1148182529
-    m_Localized: The Blue IO shard stores a stable power pulse. Integrated into a
+    m_Localized: The Blue IO shard stores a stable power pulse. When integrated into a
       weapon, it temporarily powers nearby non-station devices within 8 m. Player
-      station systems are intentionally ignored.
+      station systems are unaffected.
     m_Metadata:
       m_Items: []
   - m_Id: 1148182530
@@ -243,10 +243,6 @@ MonoBehaviour:
     m_Localized: Blue IO Charge
     m_Metadata:
       m_Items: []
-  - m_Id: 1177542656
-    m_Localized: Blue IO Relay Guard
-    m_Metadata:
-      m_Items: []
   - m_Id: 1177542657
     m_Localized: Weak Blue IO
     m_Metadata:
@@ -317,14 +313,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1194319886
     m_Localized: DRONE
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1194319893
-    m_Localized: LABORATORY
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198514176
-    m_Localized: Analyzes objects and anomalies.
     m_Metadata:
       m_Items: []
   - m_Id: 1198514181
@@ -504,7 +492,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276981817344
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011648
@@ -512,7 +500,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011649
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011651
@@ -520,7 +508,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011652
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011654
@@ -528,7 +516,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011655
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011657
@@ -536,7 +524,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276986011658
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276990205952
@@ -544,7 +532,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276990205953
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400256
@@ -552,7 +540,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400257
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400259
@@ -560,7 +548,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400260
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400262
@@ -568,7 +556,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400263
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400265
@@ -576,7 +564,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276994400266
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300276998594560
@@ -584,7 +572,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4300276998594561
-    m_Localized: Unknown signal. Antenna analysis required.
+    m_Localized: Unidentified transmission. Antenna analysis required.
     m_Metadata:
       m_Items: []
   - m_Id: 4300277074092032
@@ -619,16 +607,12 @@ MonoBehaviour:
     m_Localized: Flight energy consumption
     m_Metadata:
       m_Items: []
-  - m_Id: 4300277074092041
-    m_Localized: Idle consumption
-    m_Metadata:
-      m_Items: []
   - m_Id: 4301256431493120
     m_Localized: ANTENNA
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687424
-    m_Localized: Detects an unknown signal.
+    m_Localized: Detects distant signals.
     m_Metadata:
       m_Items: []
   - m_Id: 4301256435687425
@@ -833,18 +817,6 @@ MonoBehaviour:
     m_Localized: Dust Tolerance
     m_Metadata:
       m_Items: []
-  - m_Id: 6330504629444608
-    m_Localized: TERMINAL
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6330504671387648
-    m_Localized: Controls station systems.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 6330504671387649
-    m_Localized: Idle consumption
-    m_Metadata:
-      m_Items: []
   - m_Id: 7742465657266176
     m_Localized: Green IO Regenerator
     m_Metadata:
@@ -866,8 +838,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986436
-    m_Localized: The integrated repair node reconstructs the operator's biometrics.
-      Activating it restores the player's health to 100%.
+    m_Localized: The integrated repair node restores the operator's biological functions.
+      Activating it fully restores the player's health.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986437
@@ -891,8 +863,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986442
-    m_Localized: The integrated hunter lens scans a 10 m area and marks enemies,
-      devices, interactables, and items through walls for 6 seconds.
+    m_Localized: The integrated hunter lens scans within a 10 m radius and reveals
+      enemies, devices, interactable objects, and items through walls for 6 seconds.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986443
@@ -916,9 +888,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986448
-    m_Localized: 'The integrated impact core releases the former Blue-shard combat
-      pulse: 40 damage to every IO enemy within 8 m. Red IO also casts a periodic
-      power-disruption pulse against nearby devices.'
+    m_Localized: The integrated impact core releases the combat pulse once associated
+      with the Blue shard, dealing 40 damage to every IO enemy within 8 m. Red IO
+      entities also emit periodic disruption pulses that disable nearby devices.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986449
@@ -944,7 +916,7 @@ MonoBehaviour:
   - m_Id: 7742465715986454
     m_Localized: The integrated command core permanently deactivates electronics
       and player-station objects within 12.5 m and deals 400 damage to every IO enemy.
-      Violet IO also casts this power disruption periodically.
+      Violet IO entities also emit this disruption pulse periodically.
     m_Metadata:
       m_Items: []
   - m_Id: 7755248641761280
@@ -961,6 +933,38 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 7755250017492992
     m_Localized: Violet IO Overload
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507805843456
+    m_Localized: TERMINAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592192
+    m_Localized: Controls station systems.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592193
+    m_Localized: TERMINAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507843592194
+    m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786496
+    m_Localized: LABORATORY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786497
+    m_Localized: Analyzes objects and anomalies.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786498
+    m_Localized: LABORATORY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8058507847786499
+    m_Localized: Idle consumption
     m_Metadata:
       m_Items: []
   references:

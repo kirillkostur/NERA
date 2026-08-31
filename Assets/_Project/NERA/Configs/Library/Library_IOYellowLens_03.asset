@@ -15,6 +15,6 @@ MonoBehaviour:
   entryId: io_yellow_lens_03
   title: YELLOW IO // HUNTER LENS
   category: 1
-  description: The integrated hunter lens scans a 10 m area and marks enemies, devices,
-    interactables, and items through walls for 6 seconds.
+  description: The integrated hunter lens scans within a 10 m radius and reveals enemies,
+    devices, interactable objects, and items through walls for 6 seconds.
   illustration: {fileID: 0}

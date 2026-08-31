@@ -29,7 +29,7 @@ namespace NERA.EditorTools
                 "Clean equipment after sandstorms to preserve its efficiency."),
             new TipSeed(
                 "loading.tip.antenna",
-                "Upgrade the antenna to discover more distant unknown signals."),
+                "Upgrade the antenna to detect more distant signals."),
             new TipSeed(
                 "loading.tip.expedition",
                 "Check your gear before an expedition—the return trip may be harder.")

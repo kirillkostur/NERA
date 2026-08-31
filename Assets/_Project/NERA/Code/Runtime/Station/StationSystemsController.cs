@@ -975,23 +975,9 @@ namespace NERA.Station
         }
     
 
-public void ResetSystemsForNewGame()
+        public void ResetSystemsForNewGame()
         {
             InitializeDefaults();
-
-            var sharedTypes = new List<StationSystemType>(
-                requestedStates.Keys);
-            foreach (StationSystemType type in sharedTypes)
-            {
-                requestedStates[type] =
-                    type == StationSystemType.SolarPanel;
-            }
-
-            foreach (ObjectRuntimeState state in objectStates.Values)
-            {
-                state.RequestedActive =
-                    state.SystemType == StationSystemType.SolarPanel;
-            }
 
             SystemsChanged?.Invoke();
             SynchronizeQuestStates();

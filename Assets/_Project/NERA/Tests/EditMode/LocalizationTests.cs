@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using NERA.Interaction;
 using NERA.Items;
 using NERA.Localization;
+using NERA.Quests;
 using NERA.UI;
 using NUnit.Framework;
 using UnityEditor;
@@ -86,6 +87,152 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void EnglishTablesDoNotContainRussianFallbacks()
+        {
+            foreach (string collectionName in RequiredCollections)
+            {
+                StringTableCollection collection =
+                    LocalizationEditorSettings.GetStringTableCollection(
+                        collectionName);
+                Assert.That(collection, Is.Not.Null, collectionName);
+                StringTable english = collection.StringTables.First(
+                    table => table.LocaleIdentifier.Code ==
+                        NERALocalization.EnglishCode);
+
+                foreach (SharedTableData.SharedTableEntry sharedEntry in
+                         collection.SharedData.Entries)
+                {
+                    string value = english.GetEntry(sharedEntry.Id)?.Value;
+                    Assert.That(
+                        value,
+                        Does.Not.Match("[А-Яа-яЁё]"),
+                        $"{collectionName}/{sharedEntry.Key}: English text " +
+                        "contains a Russian fallback.");
+                }
+            }
+        }
+
+        [Test]
+        public void ApprovedEnglishUiCopyIsUsed()
+        {
+            StringTable terminal = EnglishTable(
+                NERALocalization.TerminalTable);
+            StringTable quests = EnglishTable(
+                NERALocalization.QuestsTable);
+
+            Assert.That(
+                terminal.GetEntry("map.travel_confirmation")?.Value,
+                Is.EqualTo("Travel to this location?"));
+            Assert.That(
+                terminal.GetEntry("map.state.signalfound")?.Value,
+                Is.EqualTo("SIGNAL FOUND"));
+            Assert.That(
+                quests.GetEntry(
+                    "quest.main.restore_station.stage.03.title")?.Value,
+                Is.EqualTo("Enable the Cleaning Systems"));
+            Assert.That(
+                quests.GetEntry(
+                    "quest.main.restore_station.stage.03.description")?.Value,
+                Is.EqualTo("Clean the station equipment."));
+            Assert.That(
+                quests.GetEntry(
+                    "quest.main.expedition_01.stage.05.title")?.Value,
+                Is.EqualTo("Start the Laboratory"));
+            Assert.That(
+                quests.GetEntry(
+                    "quest.main.expedition_01.stage.06.title")?.Value,
+                Is.EqualTo("Analyze the Sample"));
+        }
+
+        [Test]
+        public void LocalizedCopyDoesNotUseUnknownSignalWording()
+        {
+            foreach (string collectionName in RequiredCollections)
+            {
+                StringTableCollection collection =
+                    LocalizationEditorSettings.GetStringTableCollection(
+                        collectionName);
+                Assert.That(collection, Is.Not.Null, collectionName);
+
+                foreach (StringTable table in collection.StringTables)
+                {
+                    foreach (SharedTableData.SharedTableEntry sharedEntry in
+                             collection.SharedData.Entries)
+                    {
+                        string value =
+                            table.GetEntry(sharedEntry.Id)?.Value ?? string.Empty;
+                        Assert.That(
+                            value.ToLowerInvariant(),
+                            Does.Not.Contain("unknown signal"),
+                            $"{collectionName}/{sharedEntry.Key}");
+                        Assert.That(
+                            value.ToLowerInvariant(),
+                            Does.Not.Contain("неизвестн"),
+                            $"{collectionName}/{sharedEntry.Key}");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void EveryQuestStageHasEnglishAndRussianEntries()
+        {
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    NERALocalization.QuestsTable);
+            Assert.That(collection, Is.Not.Null);
+            StringTable english = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.EnglishCode);
+            StringTable russian = collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.RussianCode);
+
+            foreach (string guid in AssetDatabase.FindAssets(
+                         "t:QuestDefinition",
+                         new[] { "Assets/_Project/NERA/Configs/Quests" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                QuestDefinition quest =
+                    AssetDatabase.LoadAssetAtPath<QuestDefinition>(path);
+                Assert.That(quest, Is.Not.Null, path);
+                string baseKey = "quest." + quest.QuestId;
+                AssertQuestEntry(baseKey + ".title", path);
+                AssertQuestEntry(baseKey + ".description", path);
+                for (int index = 0; index < quest.Stages.Count; index++)
+                {
+                    string stageKey =
+                        $"{baseKey}.stage.{index + 1:00}";
+                    AssertQuestEntry(stageKey + ".title", path);
+                    AssertQuestEntry(stageKey + ".description", path);
+                }
+            }
+
+            void AssertQuestEntry(string key, string path)
+            {
+                Assert.That(
+                    english.GetEntry(key)?.Value,
+                    Is.Not.Null.And.Not.Empty,
+                    $"Missing English quest text '{key}' for {path}");
+                Assert.That(
+                    russian.GetEntry(key)?.Value,
+                    Is.Not.Null.And.Not.Empty,
+                    $"Missing Russian quest text '{key}' for {path}");
+            }
+        }
+
+        private static StringTable EnglishTable(string collectionName)
+        {
+            StringTableCollection collection =
+                LocalizationEditorSettings.GetStringTableCollection(
+                    collectionName);
+            Assert.That(collection, Is.Not.Null, collectionName);
+            return collection.StringTables.First(
+                table => table.LocaleIdentifier.Code ==
+                    NERALocalization.EnglishCode);
+        }
+
+        [Test]
         public void RussianTablesDoNotContainUntranslatedEnglishFallbacks()
         {
             foreach (string collectionName in RequiredCollections)
@@ -127,8 +274,14 @@ namespace NERA.Tests
                 "interaction.action.clean_turret",
                 "interaction.action.clean_drone",
                 "interaction.action.service_device",
+                "interaction.action.use_laboratory",
+                "interaction.action.start_laboratory",
+                "interaction.action.use_terminal",
+                "interaction.action.start_terminal",
                 "interaction.action.start_object",
                 "interaction.action.configure_object",
+                "interaction.unavailable.laboratory_has_no_power",
+                "interaction.unavailable.terminal_offline_restore_power_first",
                 "interaction.unavailable.station_power_is_unavailable.",
                 "interaction.unavailable.maintenance_is_unavailable",
                 "interaction.unavailable.cleaning_is_in_progress",

@@ -24,7 +24,7 @@ MonoBehaviour:
   - localizationKey: loading.tip.sandstorm
     fallbackText: Clean equipment after sandstorms to preserve its efficiency.
   - localizationKey: loading.tip.antenna
-    fallbackText: Upgrade the antenna to discover more distant unknown signals.
+    fallbackText: Upgrade the antenna to detect more distant signals.
   - localizationKey: loading.tip.expedition
     fallbackText: "Check your gear before an expedition\u2014the return trip may
       be harder."
