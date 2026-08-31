@@ -1152,11 +1152,12 @@ MonoBehaviour:
   onInteractionCompleted:
     m_PersistentCalls:
       m_Calls: []
-  questInteractionId: station_terminal
+  questInteractionId: 
   questInteractionName: 
   terminalCamera: {fileID: 1041841529227486423}
   terminalCameraPriority: 200
   cameraBlendTimeout: 5
+  requiredActionHoldDuration: 1
   visualRoot: {fileID: 6066607829412916627}
   stationVisual: {fileID: 7522687007455654124}
   mapVisual: {fileID: 7829420632448909356}
@@ -1174,7 +1175,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   systemType: 2
-  objectId: 
+  objectId: station_terminal
 --- !u!1 &1035202175221259439
 GameObject:
   m_ObjectHideFlags: 0

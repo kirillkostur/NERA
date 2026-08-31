@@ -1128,14 +1128,24 @@ namespace NERA.Tests
                 "The battery must receive the charge restored before registration.");
         }
 
-        [Test]
+[Test]
         public void ReRegisteringBatteryUpdatesCapacityAndPreservesCharge()
         {
-            energy.RegisterBattery("battery_01", 1000f, 1000f);
+            energy.RegisterBattery(
+                "battery_01",
+                1000f,
+                1000f,
+                50f,
+                20f);
             energy.RestoreState(600f, true);
 
             Assert.That(
-                energy.RegisterBattery("battery_01", 2000f, 2000f),
+                energy.RegisterBattery(
+                    "battery_01",
+                    2000f,
+                    2000f,
+                    100f,
+                    40f),
                 Is.True);
 
             Assert.That(energy.TotalCapacity, Is.EqualTo(2000f));
@@ -1144,9 +1154,33 @@ namespace NERA.Tests
             energy.ResetForNewGame();
             Assert.That(
                 energy.CurrentEnergy,
-                Is.EqualTo(2000f),
-                "The updated stage parameters must become the new-game baseline.");
+                Is.Zero,
+                "A new station must start with an empty main battery.");
+            Assert.That(
+                energy.CurrentBackupReserve,
+                Is.EqualTo(100f),
+                "A new station must start with a full backup battery.");
         }
+
+[Test]
+        public void NewGameChargeRemainsInitializedWhenBatteryRegistersLater()
+        {
+            energy.ResetForNewGame();
+
+            Assert.That(
+                energy.RegisterBattery(
+                    "station_battery",
+                    1000f,
+                    1000f,
+                    100f,
+                    20f),
+                Is.True);
+            Assert.That(energy.TotalCapacity, Is.EqualTo(1000f));
+            Assert.That(energy.TotalBackupReserve, Is.EqualTo(100f));
+            Assert.That(energy.CurrentEnergy, Is.Zero);
+            Assert.That(energy.CurrentBackupReserve, Is.EqualTo(100f));
+        }
+
 
         [Test]
         public void ReloadingStationDoesNotDuplicateBatteryOrSolarPanel()
@@ -2219,6 +2253,30 @@ namespace NERA.Tests
                 Object.DestroyImmediate(catalog);
                 Object.DestroyImmediate(rangePart);
             }
+        }
+
+        [Test]
+        public void BindingMaintenanceKeepsItsAuthoritativeCondition()
+        {
+            maintenance.SetCondition(0f);
+
+            const BindingFlags Flags =
+                BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(AntennaController)
+                .GetField("maintenance", Flags)
+                ?.SetValue(antenna, null);
+            typeof(AntennaController)
+                .GetField("subscribedMaintenance", Flags)
+                ?.SetValue(antenna, null);
+            typeof(AntennaController)
+                .GetField("fallbackCondition", Flags)
+                ?.SetValue(antenna, 1f);
+            typeof(AntennaController)
+                .GetMethod("CacheMaintenanceSource", Flags)
+                ?.Invoke(antenna, null);
+
+            Assert.That(maintenance.Condition, Is.Zero);
+            Assert.That(antenna.Condition, Is.Zero);
         }
 
         [Test]

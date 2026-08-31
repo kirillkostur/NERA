@@ -79,7 +79,7 @@ MonoBehaviour:
     - slotId: Slot_7
       displayName: Voltage Regulator
   - systemType: 2
-    objectId: 
+    objectId: station_terminal
     displayName: TERMINAL
     description: Controls station systems.
     controllable: 0
@@ -136,7 +136,7 @@ MonoBehaviour:
     - slotId: Slot_7
       displayName: Sensor Array
   - systemType: 4
-    objectId: 
+    objectId: station_laboratory
     displayName: LABORATORY
     description: Analyzes objects and anomalies.
     controllable: 1
@@ -154,7 +154,7 @@ MonoBehaviour:
     displayName: ANTENNA
     description: Detects an unknown signal.
     controllable: 1
-    initiallyActive: 0
+    initiallyActive: 1
     powerPriority: 60
     baseStats:
     - stat: 8

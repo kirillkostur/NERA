@@ -480,7 +480,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   systemType: 4
-  objectId: 
+  objectId: station_laboratory
 --- !u!114 &7644851392164378022
 MonoBehaviour:
   m_ObjectHideFlags: 0

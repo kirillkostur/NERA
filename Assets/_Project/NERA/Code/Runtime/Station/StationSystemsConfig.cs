@@ -247,7 +247,11 @@ namespace NERA.Station
                     continue;
                 string type =
                     definition.SystemType.ToString().ToLowerInvariant();
-                string id = string.IsNullOrWhiteSpace(definition.ObjectId)
+                bool usesSharedLocalization =
+                    definition.SystemType == StationSystemType.Terminal ||
+                    definition.SystemType == StationSystemType.Laboratory;
+                string id = usesSharedLocalization ||
+                    string.IsNullOrWhiteSpace(definition.ObjectId)
                     ? "shared"
                     : definition.ObjectId.ToLowerInvariant();
                 definition.SetLocalizationKey($"station.{type}.{id}");

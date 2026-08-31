@@ -489,6 +489,8 @@ namespace NERA.Editor
                 condition.FindPropertyRelative("comparison");
             SerializedProperty threshold =
                 condition.FindPropertyRelative("threshold");
+            SerializedProperty questMarkerId =
+                condition.FindPropertyRelative("questMarkerId");
 
             QuestSignalType previousSignal =
                 (QuestSignalType)signal.enumValueIndex;
@@ -662,6 +664,17 @@ namespace NERA.Editor
             else
             {
                 requiredCount.intValue = 1;
+            }
+
+            if (!activation)
+            {
+                EditorGUILayout.PropertyField(
+                    questMarkerId,
+                    new GUIContent(
+                        "Квестовый маркер условия",
+                        "ID QuestMarkerAnchor. Маркер виден, пока это " +
+                        "условие не выполнено. Маркеры этапа остаются " +
+                        "видимыми до завершения всего этапа."));
             }
         }
 
@@ -1000,6 +1013,8 @@ namespace NERA.Editor
             condition.FindPropertyRelative("comparison").enumValueIndex =
                 (int)QuestValueComparison.GreaterOrEqual;
             condition.FindPropertyRelative("threshold").floatValue = 0.5f;
+            condition.FindPropertyRelative("questMarkerId").stringValue =
+                string.Empty;
         }
 
         private static void AddStage(

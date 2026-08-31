@@ -206,6 +206,16 @@ namespace NERA.Quests
             CurrentStage?.Description));
         public IReadOnlyList<int> ConditionProgress => conditionProgress;
 
+        public bool IsConditionComplete(int index)
+        {
+            QuestStageDefinition stage = CurrentStage;
+            return stage != null &&
+                index >= 0 &&
+                index < stage.CompletionConditions.Count &&
+                GetConditionProgress(index) >=
+                stage.CompletionConditions[index].RequiredCount;
+        }
+
         internal int GetConditionProgress(int index)
         {
             return index >= 0 && index < conditionProgress.Length
@@ -258,8 +268,7 @@ namespace NERA.Quests
                  index < stage.CompletionConditions.Count;
                  index++)
             {
-                bool complete = GetConditionProgress(index) >=
-                    stage.CompletionConditions[index].RequiredCount;
+                bool complete = IsConditionComplete(index);
                 if (stage.CompletionLogic == QuestConditionLogic.All &&
                     !complete)
                 {

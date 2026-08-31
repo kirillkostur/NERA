@@ -628,7 +628,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   role: 3
   exposedToWeather: 1
-  initialCondition: 1
+  initialCondition: 0
   cleaningDurationSeconds: 3
   cleaningEffect: {fileID: 1597647640867518969}
   targetRenderer: {fileID: 7640813621881707202}

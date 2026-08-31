@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f225bda9471423bb51ae6532f7a16bf, type: 3}
+  m_Name: Main_RestoreStation
+  m_EditorClassIdentifier: 
+  questId: main.restore_station
+  category: 0
+  availability: 0
+  targetScope: 0
+  title: "\u041F\u0435\u0440\u0432\u044B\u0439 \u0437\u0430\u043F\u0443\u0441\u043A"
+  description: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C
+    \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+  priority: 100
+  showInHud: 1
+  activationLogic: 0
+  activationConditions:
+  - signalType: 1
+    evaluation: 0
+    target: 0
+    targetId: Player_Station
+    cause: 
+    requiredCount: 1
+    comparison: 3
+    threshold: 0.5
+  stages:
+  - title: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C
+      \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+    description: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C
+      \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+    completionLogic: 0
+    createCheckpointOnCompletion: 0
+    questMarkerIds:
+    - quest_battery_01
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
+    completionConditions:
+    - signalType: 10
+      evaluation: 0
+      target: 0
+      targetId: station_battery
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 0.5
+  - title: "\u0410\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C
+      \u0433\u043B\u0430\u0432\u043D\u044B\u0439 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B."
+    description: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B
+      \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+    completionLogic: 0
+    createCheckpointOnCompletion: 0
+    questMarkerIds:
+    - quest_terminal_01
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
+    completionConditions:
+    - signalType: 10
+      evaluation: 0
+      target: 0
+      targetId: station_terminal
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 0.5
+  - title: "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0441\u0438\u0441\u0442\u0435\u043C\u0443
+      \u043E\u0447\u0438\u0441\u0442\u043A\u0438 \u0443 \u043E\u0431\u044A\u0435\u043A\u0442\u043E\u0432."
+    description: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043E\u0431\u044A\u0435\u043A\u0442\u044B
+      \u0441\u0442\u0430\u043D\u0446\u0438\u0438."
+    completionLogic: 0
+    createCheckpointOnCompletion: 0
+    questMarkerIds: []
+    enemySpawnerIdsOnStart: []
+    enemySpawnerIdsOnCompletion: []
+    completionConditions:
+    - signalType: 8
+      evaluation: 0
+      target: 0
+      targetId: station_solar_01
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 1
+      questMarkerId: quest_solarpanel_01
+    - signalType: 8
+      evaluation: 0
+      target: 0
+      targetId: station_drone
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 1
+      questMarkerId: quest_drone_01
+    - signalType: 8
+      evaluation: 0
+      target: 0
+      targetId: station_antenna
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 1
+      questMarkerId: quest_antenna_01
+    - signalType: 8
+      evaluation: 0
+      target: 0
+      targetId: station_turret_01
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 1
+      questMarkerId: quest_turret_01
+    - signalType: 8
+      evaluation: 0
+      target: 0
+      targetId: station_turret_02
+      cause: 
+      requiredCount: 1
+      comparison: 3
+      threshold: 1
+      questMarkerId: quest_turret_02
+  weatherActionOnActivation: 0
+  weatherActionOnCompletion: 0
+  sandstormDurationMinSeconds: 0
+  sandstormDurationMaxSeconds: 0

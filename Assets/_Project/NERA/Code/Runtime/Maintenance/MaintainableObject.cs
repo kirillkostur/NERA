@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Development;
 using NERA.Drone;
 using NERA.Graphics;
 using NERA.World;
@@ -10,7 +11,8 @@ using UnityEngine;
 namespace NERA.Maintenance
 {
     [DisallowMultipleComponent]
-    public sealed class MaintainableObject : MonoBehaviour
+    public sealed class MaintainableObject : MonoBehaviour,
+        IDeveloperProgressSkippable
     {
         private const string DefaultSandProperty = "_DissolveStrength";
         private const float RuntimeTickInterval = 0.1f;
@@ -184,6 +186,15 @@ namespace NERA.Maintenance
                 cleaningStartCondition,
                 1f,
                 progress));
+        }
+
+        public bool CompleteActiveProgressForDebug()
+        {
+            if (!isCleaning)
+                return false;
+
+            CleanInstantly();
+            return true;
         }
 
         private void ApplyCondition(float value)

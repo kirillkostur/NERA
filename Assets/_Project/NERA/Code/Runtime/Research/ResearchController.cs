@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Development;
 using NERA.Library;
 using NERA.Inventory;
 using NERA.Items;
@@ -11,7 +12,8 @@ using UnityEngine;
 
 namespace NERA.Research
 {
-    public sealed class ResearchController : MonoBehaviour
+    public sealed class ResearchController : MonoBehaviour,
+        IDeveloperProgressSkippable
     {
         private const string LaboratoryConsumerId = "laboratory_scan";
         public enum ResearchState
@@ -114,6 +116,30 @@ namespace NERA.Research
 
             if (analysisRemaining <= 0f)
                 CompleteAnalysis(definition);
+        }
+
+        public bool CompleteActiveProgressForDebug()
+        {
+            if (State != ResearchState.Analyzing || LoadedItem == null)
+                return false;
+
+            ResearchDefinition definition = LoadedItem.ResearchDefinition;
+            if (definition == null)
+            {
+                analysisRemaining = 0f;
+                Progress = 0f;
+                SetState(ResearchState.ItemLoaded);
+                EnergySystemController.Instance?.SetConsumerActive(
+                    LaboratoryConsumerId,
+                    false);
+                return true;
+            }
+
+            analysisRemaining = 0f;
+            Progress = 1f;
+            ProgressChanged?.Invoke(Progress);
+            CompleteAnalysis(definition);
+            return true;
         }
 
         public bool LoadItem(ItemData item, PlayerInventory inventory)

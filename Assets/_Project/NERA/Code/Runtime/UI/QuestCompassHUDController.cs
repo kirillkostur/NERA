@@ -329,14 +329,38 @@ namespace NERA.UI
                      markerIndex < markerIds.Count;
                      markerIndex++)
                 {
-                    string resolved = QuestMarkerAnchor.ResolveStageId(
-                        markerIds[markerIndex],
-                        state.QuestId,
-                        state.ContextTargetId);
-                    if (!string.IsNullOrEmpty(resolved))
-                        activeMarkerIds.Add(resolved);
+                    AddActiveMarkerId(markerIds[markerIndex], state);
+                }
+
+                IReadOnlyList<QuestConditionDefinition> conditions =
+                    state.CurrentStage?.CompletionConditions;
+                if (conditions == null)
+                    continue;
+
+                for (int conditionIndex = 0;
+                     conditionIndex < conditions.Count;
+                     conditionIndex++)
+                {
+                    if (state.IsConditionComplete(conditionIndex))
+                        continue;
+
+                    AddActiveMarkerId(
+                        conditions[conditionIndex].QuestMarkerId,
+                        state);
                 }
             }
+        }
+
+        private void AddActiveMarkerId(
+            string markerId,
+            QuestRuntimeState state)
+        {
+            string resolved = QuestMarkerAnchor.ResolveStageId(
+                markerId,
+                state.QuestId,
+                state.ContextTargetId);
+            if (!string.IsNullOrEmpty(resolved))
+                activeMarkerIds.Add(resolved);
         }
 
         private bool ShouldDisplay(QuestMarkerAnchor anchor)

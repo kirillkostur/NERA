@@ -10,8 +10,8 @@ namespace NERA.Station
     public sealed class StationObjectIdentity : MonoBehaviour
     {
         [SerializeField] private StationSystemType systemType;
-        [Tooltip("Stable StationSystems_Default object ID. It may stay empty " +
-                 "only for a system represented by one shared definition.")]
+        [Tooltip("Stable StationSystems_Default object ID. Every physical " +
+                 "station object must have a non-empty unique ID.")]
         [SerializeField] private string objectId;
 
         public StationSystemType SystemType => systemType;

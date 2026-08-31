@@ -1,4 +1,5 @@
 using System;
+using NERA.Development;
 using NERA.Energy;
 using NERA.Expeditions;
 using NERA.Locations;
@@ -10,7 +11,8 @@ using UnityEngine;
 
 namespace NERA.Antenna
 {
-    public sealed class AntennaController : MonoBehaviour
+    public sealed class AntennaController : MonoBehaviour,
+        IDeveloperProgressSkippable
     {
         private const string AntennaConsumerId = "antenna_calibration";
         private const string AntennaObjectId = "station_antenna";
@@ -178,6 +180,17 @@ namespace NERA.Antenna
 
             if (elapsedCalibrationTime >= CalibrationDuration)
                 CompleteCalibration();
+        }
+
+        public bool CompleteActiveProgressForDebug()
+        {
+            if (State != AntennaState.Calibrating)
+                return false;
+
+            elapsedCalibrationTime = CalibrationDuration;
+            CalibrationProgressChanged?.Invoke(1f);
+            CompleteCalibration();
+            return true;
         }
 
         public bool Repair()
@@ -572,7 +585,7 @@ namespace NERA.Antenna
             if (subscribedMaintenance != null)
             {
                 subscribedMaintenance.ConditionChanged += HandleConditionChanged;
-                subscribedMaintenance.SetCondition(fallbackCondition);
+                fallbackCondition = subscribedMaintenance.Condition;
             }
         }
 

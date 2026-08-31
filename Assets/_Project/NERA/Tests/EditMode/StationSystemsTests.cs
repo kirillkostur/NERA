@@ -10,6 +10,8 @@ using NERA.Inventory;
 using NERA.Items;
 using NERA.Maintenance;
 using NERA.Station;
+using NERA.Terminal;
+using NERA.Quests;
 using NERA.UI;
 using NUnit.Framework;
 using UnityEditor;
@@ -34,6 +36,7 @@ namespace NERA.Tests
             SetSingleton(typeof(EnergySystemController), null);
             SetSingleton(typeof(StationStorageController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(StationPowerController), null);
             SetSingleton(typeof(StationUpgradeModeController), null);
 
             stationRoot = new GameObject("Test_StationSystems");
@@ -60,6 +63,7 @@ namespace NERA.Tests
             SetSingleton(typeof(EnergySystemController), null);
             SetSingleton(typeof(StationStorageController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(StationPowerController), null);
             SetSingleton(typeof(StationUpgradeModeController), null);
         }
 
@@ -118,6 +122,26 @@ namespace NERA.Tests
                 reportedSource = eventSource;
             }
         }
+
+[Test]
+        public void NewGameStartsOnlySolarPanelsEnabled()
+        {
+            systems.ResetSystemsForNewGame();
+
+            foreach (StationSystemDefinition definition in
+                     systems.Config.StationObjects)
+            {
+                bool expected =
+                    definition.SystemType == StationSystemType.SolarPanel;
+                Assert.That(
+                    systems.IsRequestedActive(
+                        definition.SystemType,
+                        definition.ObjectId),
+                    Is.EqualTo(expected),
+                    definition.DisplayName);
+            }
+        }
+
 
         [Test]
         public void IoBatteryFaultQueuesOnlyWarningAndRecoveryStaysSilent()
@@ -220,6 +244,107 @@ namespace NERA.Tests
                 Assert.That(definition.BaseStats, Is.Not.Empty, definition.ObjectId);
             }
         }
+
+        [Test]
+        public void CanonicalStationIdsMatchRestoreQuest()
+        {
+            StationSystemDefinition terminal = systems.Config.FindByObjectId(
+                "station_terminal");
+            StationSystemDefinition laboratory = systems.Config.FindByObjectId(
+                "station_laboratory");
+
+            Assert.That(terminal, Is.Not.Null);
+            Assert.That(
+                terminal.SystemType,
+                Is.EqualTo(StationSystemType.Terminal));
+            Assert.That(laboratory, Is.Not.Null);
+            Assert.That(
+                laboratory.SystemType,
+                Is.EqualTo(StationSystemType.Laboratory));
+
+            QuestDefinition quest = AssetDatabase.LoadAssetAtPath<QuestDefinition>(
+                "Assets/_Project/NERA/Configs/Quests/Main_RestoreStation.asset");
+            Assert.That(quest, Is.Not.Null);
+            Assert.That(quest.Stages, Has.Count.GreaterThan(1));
+
+            QuestConditionDefinition activationCondition =
+                quest.Stages[1].CompletionConditions.FirstOrDefault(
+                    item => item.SignalType ==
+                        QuestSignalType.StationSystemActivated);
+            Assert.That(activationCondition, Is.Not.Null);
+            Assert.That(
+                activationCondition.Evaluation,
+                Is.EqualTo(QuestConditionEvaluation.Event));
+            Assert.That(
+                activationCondition.Target,
+                Is.EqualTo(QuestConditionTarget.SpecificObject));
+            Assert.That(
+                activationCondition.TargetId,
+                Is.EqualTo(terminal.ObjectId));
+        }
+
+        [Test]
+        public void DisabledTerminalUsesHoldAndOnlyStartsOnFirstInteraction()
+        {
+            systems.ResetSystemsForNewGame();
+            StationPowerController power =
+                stationRoot.AddComponent<StationPowerController>();
+            SetSingleton(typeof(StationPowerController), power);
+            power.SetState(StationPowerState.Online);
+            Assert.That(power.IsPowered, Is.True);
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Terminal,
+                    "station_terminal"),
+                Is.False);
+
+            var terminalRoot = new GameObject("Test_Terminal");
+            try
+            {
+                StationObjectIdentity identity =
+                    terminalRoot.AddComponent<StationObjectIdentity>();
+                identity.Configure(
+                    StationSystemType.Terminal,
+                    "station_terminal");
+                TerminalAccessInteractable terminal =
+                    terminalRoot.AddComponent<TerminalAccessInteractable>();
+
+                Assert.That(
+                    StationPowerController.Instance,
+                    Is.SameAs(power));
+                Assert.That(
+                    StationSystemsController.Instance,
+                    Is.SameAs(systems));
+                Assert.That(
+                    systems.IsRequestedActive(StationSystemType.Terminal),
+                    Is.False);
+
+                InteractionPrompt disabledPrompt = terminal.GetPrompt();
+                Assert.That(disabledPrompt.IsAvailable, Is.True);
+                Assert.That(
+                    disabledPrompt.Mode,
+                    Is.EqualTo(NeraInteractionMode.Hold));
+                Assert.That(disabledPrompt.IsAvailable, Is.True);
+                Assert.That(disabledPrompt.HoldDuration, Is.GreaterThan(0f));
+
+                terminal.CompleteInteraction(playerRoot);
+
+                Assert.That(
+                    systems.IsRequestedActive(
+                        StationSystemType.Terminal,
+                        identity.ObjectId),
+                    Is.True);
+                Assert.That(
+                    terminal.GetPrompt().Mode,
+                    Is.EqualTo(NeraInteractionMode.Press));
+            }
+            finally
+            {
+                Object.DestroyImmediate(terminalRoot);
+            }
+        }
+
+
 
         [Test]
         public void TurretAimToleranceIsCodeOnlyAndStatIdsRemainStable()
@@ -363,6 +488,15 @@ namespace NERA.Tests
 
             Assert.That(prefab, Is.Not.Null, prefabPath);
             Assert.That(maintenance, Is.Not.Null, prefabPath);
+            Assert.That(
+                maintenance.ExposedToWeather,
+                Is.True,
+                prefabPath);
+            Assert.That(
+                maintenance.InitialCondition,
+                Is.Zero,
+                $"{prefabPath} must start fully contaminated.");
+
 
             var serialized = new SerializedObject(maintenance);
             ParticleEffectController effect = serialized

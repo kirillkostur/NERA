@@ -24,8 +24,30 @@ namespace NERA.EditorTools
             "Assets/_Project/NERA/Configs/Items/Item_EngineeringPart";
         private const string EquipmentFolder =
             "Assets/_Project/NERA/Configs/Items/Item_Equipment";
-        private const string IoPrefabPath =
-            "Assets/_Project/NERA/Prefabs/IO/IO_Blue_Weak.prefab";
+        private static readonly string[] IoPrefabPaths =
+        {
+            "Assets/_Project/NERA/Prefabs/IO/IO_Blue_Weak.prefab",
+            "Assets/_Project/NERA/Prefabs/IO/IO_Green_Regenerator.prefab",
+            "Assets/_Project/NERA/Prefabs/IO/IO_Yellow_Hunter.prefab",
+            "Assets/_Project/NERA/Prefabs/IO/IO_Red_Enforcer.prefab",
+            "Assets/_Project/NERA/Prefabs/IO/IO_Violet_Overseer.prefab"
+        };
+        private static readonly string[] IoButtonLabels =
+        {
+            "B",
+            "G",
+            "Y",
+            "R",
+            "V"
+        };
+        private static readonly Color[] IoButtonColors =
+        {
+            new Color(0.08f, 0.42f, 1f, 1f),
+            new Color(0.12f, 0.82f, 0.30f, 1f),
+            new Color(1f, 0.78f, 0.08f, 1f),
+            new Color(0.95f, 0.10f, 0.10f, 1f),
+            new Color(0.62f, 0.18f, 0.92f, 1f)
+        };
 
         private static readonly string[] CheatEquipmentItemIds =
         {
@@ -50,27 +72,11 @@ namespace NERA.EditorTools
 
         private static readonly ItemGroupLayout[] ItemGroups =
         {
-            new ItemGroupLayout("ДРОН:", StationSystemType.Drone, 1040f, 184f),
-            new ItemGroupLayout(
-                "АНТЕННА:",
-                StationSystemType.Antenna,
-                1040f,
-                434f),
-            new ItemGroupLayout(
-                "ПАНЕЛЬ:",
-                StationSystemType.SolarPanel,
-                1040f,
-                642f),
-            new ItemGroupLayout(
-                "БАТАРЕЯ:",
-                StationSystemType.Battery,
-                1468f,
-                184f),
-            new ItemGroupLayout(
-                "ТУРЕЛИ:",
-                StationSystemType.Turret,
-                1468f,
-                476f)
+            new ItemGroupLayout("ДРОН:", StationSystemType.Drone),
+            new ItemGroupLayout("АНТЕННА:", StationSystemType.Antenna),
+            new ItemGroupLayout("ПАНЕЛЬ:", StationSystemType.SolarPanel),
+            new ItemGroupLayout("БАТАРЕЯ:", StationSystemType.Battery),
+            new ItemGroupLayout("ТУРЕЛИ:", StationSystemType.Turret)
         };
 
         [InitializeOnLoadMethod]
@@ -162,7 +168,8 @@ namespace NERA.EditorTools
             CanvasScaler scaler = root.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.screenMatchMode =
+                CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
 
             GameObject window = CreatePanel(root.transform, "CheatWindow");
@@ -229,23 +236,31 @@ namespace NERA.EditorTools
                 72f,
                 220f,
                 48f);
+            Button timer = CreateButton(
+                window.transform,
+                "CompleteTimersButton",
+                "ТАЙМЕР+",
+                1260f,
+                72f,
+                170f,
+                48f);
 
             CreateBoxLabel(
                 window.transform,
                 "TerminalPowerLabel",
                 "ТЕРМИНАЛ",
-                1430f,
+                1450f,
                 72f,
-                170f,
+                160f,
                 48f,
-                19);
+                18);
             Button terminalEnable = CreateButton(
                 window.transform,
                 "TerminalEnableButton",
                 "ВКЛ",
-                1610f,
+                1620f,
                 72f,
-                86f,
+                84f,
                 48f,
                 15,
                 EnableColor,
@@ -254,41 +269,46 @@ namespace NERA.EditorTools
                 window.transform,
                 "TerminalDisableButton",
                 "ВЫКЛ",
-                1706f,
+                1714f,
                 72f,
-                86f,
+                94f,
                 48f,
                 15,
                 DisableColor,
                 DisableColor);
 
-            var expeditionButtons = new List<Button>();
-            for (int index = 0; index < 8; index++)
+            var batteryChargeButtons = new List<Button>(5);
+            for (int index = 0; index < 5; index++)
             {
-                int ordinal = index + 1;
-                expeditionButtons.Add(CreateButton(
+                batteryChargeButtons.Add(CreateButton(
                     window.transform,
-                    $"ExpeditionButton_{ordinal:00}",
-                    $"ЭКСПЕДИЦИЯ {ordinal}",
-                    30f,
+                    $"BatteryChargeButton_{index * 25:000}",
+                    $"{index * 25}%",
+                    1820f,
                     150f + index * 56f,
-                    220f,
-                    44f));
+                    70f,
+                    44f,
+                    16,
+                    DisableColor,
+                    DisableColor));
             }
 
-            var signalButtons = new List<Button>();
-            for (int index = 0; index < 12; index++)
-            {
-                int ordinal = index + 1;
-                signalButtons.Add(CreateButton(
-                    window.transform,
-                    $"SignalButton_{ordinal:00}",
-                    $"СИГНАЛ {ordinal}",
-                    275f,
-                    150f + index * 56f,
-                    220f,
-                    44f));
-            }
+            Button expeditionDropdownButton = CreateButton(
+                window.transform,
+                "ExpeditionDropdownButton",
+                "ЭКСПЕДИЦИИ",
+                30f,
+                150f,
+                220f,
+                44f);
+            Button signalDropdownButton = CreateButton(
+                window.transform,
+                "SignalDropdownButton",
+                "СИГНАЛЫ",
+                275f,
+                150f,
+                220f,
+                44f);
 
             Button turretOne = CreateButton(
                 window.transform,
@@ -379,22 +399,14 @@ namespace NERA.EditorTools
             stationEnableButtons.Add(terminalEnable);
             stationDisableButtons.Add(terminalDisable);
 
-            Button spawnIo = CreateButton(
+            Button inventoryDropdownButton = CreateButton(
                 window.transform,
-                "SpawnIoButton",
-                "ЗАСПАВНИТЬ IO",
-                540f,
-                822f,
-                220f,
-                48f);
-            Button killIo = CreateButton(
-                window.transform,
-                "KillIoButton",
-                "УБИТЬ IO",
-                780f,
-                822f,
-                220f,
-                48f);
+                "InventoryDropdownButton",
+                "ДЕТАЛИ В ИНВЕНТАРЬ",
+                1040f,
+                150f,
+                400f,
+                44f);
 
             Button language = CreateButton(
                 window.transform,
@@ -405,35 +417,132 @@ namespace NERA.EditorTools
                 220f,
                 48f);
 
-            CreateLabel(
-                window.transform,
-                "ItemsHeader",
-                "ДЕТАЛИ В ИНВЕНТАРЬ (+1)",
-                1040f,
-                132f,
-                800f,
-                40f,
-                20,
-                TextAnchor.MiddleLeft,
-                AccentColor);
+            GameObject[] ioPrefabs = IoPrefabPaths
+                .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
+                .ToArray();
+            if (ioPrefabs.Any(prefab => prefab == null))
+            {
+                throw new InvalidOperationException(
+                    "One or more IO cheat prefabs are missing.");
+            }
 
+            var spawnIoButtons = new List<Button>(ioPrefabs.Length);
+            const float ioStartX = 540f;
+            const float ioY = 992f;
+            const float ioSize = 52f;
+            const float ioStep = 62f;
+            for (int index = 0; index < ioPrefabs.Length; index++)
+            {
+                Color labelColor = index == 2 ? Color.black : Color.white;
+                spawnIoButtons.Add(CreateButton(
+                    window.transform,
+                    $"SpawnIoButton_{index:00}",
+                    IoButtonLabels[index],
+                    ioStartX + index * ioStep,
+                    ioY,
+                    ioSize,
+                    ioSize,
+                    19,
+                    IoButtonColors[index],
+                    labelColor,
+                    IoButtonColors[index]));
+            }
+
+            Button killIo = CreateButton(
+                window.transform,
+                "KillIoButton",
+                "УБИТЬ IO",
+                ioStartX + ioPrefabs.Length * ioStep,
+                ioY,
+                132f,
+                ioSize,
+                16,
+                DisableColor,
+                DisableColor);
+
+            GameObject expeditionDropdown = CreateDropdownPanel(
+                window.transform,
+                "ExpeditionDropdown",
+                30f,
+                202f,
+                220f,
+                364f);
+            var expeditionButtons = new List<Button>(8);
+            for (int index = 0; index < 8; index++)
+            {
+                int ordinal = index + 1;
+                expeditionButtons.Add(CreateButton(
+                    expeditionDropdown.transform,
+                    $"ExpeditionButton_{ordinal:00}",
+                    $"ЭКСПЕДИЦИЯ {ordinal}",
+                    6f,
+                    6f + index * 44f,
+                    208f,
+                    38f,
+                    16));
+            }
+
+            GameObject signalDropdown = CreateDropdownPanel(
+                window.transform,
+                "SignalDropdown",
+                275f,
+                202f,
+                220f,
+                492f);
+            var signalButtons = new List<Button>(12);
+            for (int index = 0; index < 12; index++)
+            {
+                int ordinal = index + 1;
+                signalButtons.Add(CreateButton(
+                    signalDropdown.transform,
+                    $"SignalButton_{ordinal:00}",
+                    $"СИГНАЛ {ordinal}",
+                    6f,
+                    6f + index * 40f,
+                    208f,
+                    34f,
+                    16));
+            }
+
+            GameObject inventoryDropdown = CreateDropdownPanel(
+                window.transform,
+                "InventoryDropdown",
+                1040f,
+                202f,
+                820f,
+                430f);
+            var inventoryGroupButtons = new List<Button>(6);
+            var inventoryGroupRoots = new List<GameObject>(6);
             var itemButtons = new List<Button>(items.Length);
             var orderedItems = new List<ItemData>(items.Length);
             var assignedItems = new HashSet<ItemData>();
             int itemIndex = 0;
-            foreach (ItemGroupLayout group in ItemGroups)
+
+            for (int groupIndex = 0;
+                 groupIndex < ItemGroups.Length;
+                 groupIndex++)
             {
-                CreateLabel(
-                    window.transform,
-                    $"ItemGroup_{group.SystemType}",
+                ItemGroupLayout group = ItemGroups[groupIndex];
+                int column = groupIndex % 3;
+                int row = groupIndex / 3;
+                inventoryGroupButtons.Add(CreateButton(
+                    inventoryDropdown.transform,
+                    $"InventoryGroupButton_{group.SystemType}",
                     group.Label,
-                    group.X,
-                    group.Y,
-                    406f,
-                    30f,
-                    18,
-                    TextAnchor.MiddleLeft,
-                    AccentColor);
+                    12f + column * 264f,
+                    12f + row * 48f,
+                    250f,
+                    40f,
+                    17));
+
+                GameObject groupRoot = CreateDropdownPanel(
+                    inventoryDropdown.transform,
+                    $"InventoryGroupRoot_{group.SystemType}",
+                    12f,
+                    112f,
+                    796f,
+                    306f);
+                inventoryGroupRoots.Add(groupRoot);
 
                 ItemData[] groupItems = items
                     .Where(item =>
@@ -445,81 +554,90 @@ namespace NERA.EditorTools
                         group.SystemType))
                     .ThenBy(item => item.ItemId, StringComparer.Ordinal)
                     .ToArray();
-
-                for (int row = 0; row < groupItems.Length; row++)
+                for (int rowIndex = 0;
+                     rowIndex < groupItems.Length;
+                     rowIndex++)
                 {
-                    ItemData item = groupItems[row];
+                    ItemData item = groupItems[rowIndex];
                     assignedItems.Add(item);
                     orderedItems.Add(item);
-                    float y = group.Y + 34f + row * 42f;
+                    float itemY = 10f + rowIndex * 40f;
                     CreateLabel(
-                        window.transform,
+                        groupRoot.transform,
                         $"ItemLabel_{itemIndex:00}",
                         item.DisplayName.ToUpperInvariant(),
-                        group.X,
-                        y,
-                        350f,
+                        12f,
+                        itemY,
+                        708f,
                         34f,
                         16,
                         TextAnchor.MiddleRight,
                         TextColor);
                     itemButtons.Add(CreateButton(
-                        window.transform,
+                        groupRoot.transform,
                         $"GiveItemButton_{itemIndex:00}",
                         "+1",
-                        group.X + 360f,
-                        y,
-                        46f,
+                        728f,
+                        itemY,
+                        50f,
                         34f,
                         15));
                     itemIndex++;
                 }
+                groupRoot.SetActive(false);
             }
 
-            const float equipmentX = 1468f;
-            const float equipmentY = 768f;
-            CreateLabel(
-                window.transform,
-                "ItemGroup_Equipment",
+            const int equipmentGroupIndex = 5;
+            inventoryGroupButtons.Add(CreateButton(
+                inventoryDropdown.transform,
+                "InventoryGroupButton_Equipment",
                 "СНАРЯЖЕНИЕ:",
-                equipmentX,
-                equipmentY,
-                406f,
-                30f,
-                18,
-                TextAnchor.MiddleLeft,
-                AccentColor);
-
-            for (int row = 0; row < CheatEquipmentItemIds.Length; row++)
+                12f + (equipmentGroupIndex % 3) * 264f,
+                12f + (equipmentGroupIndex / 3) * 48f,
+                250f,
+                40f,
+                17));
+            GameObject equipmentRoot = CreateDropdownPanel(
+                inventoryDropdown.transform,
+                "InventoryGroupRoot_Equipment",
+                12f,
+                112f,
+                796f,
+                306f);
+            inventoryGroupRoots.Add(equipmentRoot);
+            for (int rowIndex = 0;
+                 rowIndex < CheatEquipmentItemIds.Length;
+                 rowIndex++)
             {
-                string itemId = CheatEquipmentItemIds[row];
+                string itemId = CheatEquipmentItemIds[rowIndex];
                 ItemData item = items.Single(candidate =>
                     candidate != null && candidate.ItemId == itemId);
                 assignedItems.Add(item);
                 orderedItems.Add(item);
-                float y = equipmentY + 34f + row * 42f;
+                float itemY = 10f + rowIndex * 40f;
                 CreateLabel(
-                    window.transform,
+                    equipmentRoot.transform,
                     $"ItemLabel_{itemIndex:00}",
                     item.DisplayName.ToUpperInvariant(),
-                    equipmentX,
-                    y,
-                    350f,
+                    12f,
+                    itemY,
+                    708f,
                     34f,
                     16,
                     TextAnchor.MiddleRight,
                     TextColor);
                 itemButtons.Add(CreateButton(
-                    window.transform,
+                    equipmentRoot.transform,
                     $"GiveItemButton_{itemIndex:00}",
                     "+1",
-                    equipmentX + 360f,
-                    y,
-                    46f,
+                    728f,
+                    itemY,
+                    50f,
                     34f,
                     15));
                 itemIndex++;
             }
+            equipmentRoot.SetActive(false);
 
             if (assignedItems.Count != items.Length)
             {
@@ -542,7 +660,13 @@ namespace NERA.EditorTools
                 clear,
                 sandstorm,
                 contaminate,
+                timer,
+                batteryChargeButtons,
+                expeditionDropdownButton,
+                expeditionDropdown,
                 expeditionButtons,
+                signalDropdownButton,
+                signalDropdown,
                 signalButtons,
                 turretOne,
                 turretTwo,
@@ -552,12 +676,20 @@ namespace NERA.EditorTools
                 solar,
                 stationEnableButtons,
                 stationDisableButtons,
-                spawnIo,
-                killIo,
-                language,
+                inventoryDropdownButton,
+                inventoryDropdown,
+                inventoryGroupButtons,
+                inventoryGroupRoots,
                 itemButtons,
-                orderedItems);
+                orderedItems,
+                spawnIoButtons,
+                killIo,
+                ioPrefabs,
+                language);
 
+            expeditionDropdown.SetActive(false);
+            signalDropdown.SetActive(false);
+            inventoryDropdown.SetActive(false);
             window.SetActive(false);
             return root;
         }
@@ -570,7 +702,13 @@ namespace NERA.EditorTools
             Button clear,
             Button sandstorm,
             Button contaminate,
+            Button timer,
+            IReadOnlyList<Button> batteryChargeButtons,
+            Button expeditionDropdownButton,
+            GameObject expeditionDropdown,
             IReadOnlyList<Button> expeditionButtons,
+            Button signalDropdownButton,
+            GameObject signalDropdown,
             IReadOnlyList<Button> signalButtons,
             Button turretOne,
             Button turretTwo,
@@ -580,11 +718,16 @@ namespace NERA.EditorTools
             Button solar,
             IReadOnlyList<Button> stationEnableButtons,
             IReadOnlyList<Button> stationDisableButtons,
-            Button spawnIo,
-            Button killIo,
-            Button language,
+            Button inventoryDropdownButton,
+            GameObject inventoryDropdown,
+            IReadOnlyList<Button> inventoryGroupButtons,
+            IReadOnlyList<GameObject> inventoryGroupRoots,
             IReadOnlyList<Button> itemButtons,
-            IReadOnlyList<ItemData> items)
+            IReadOnlyList<ItemData> items,
+            IReadOnlyList<Button> spawnIoButtons,
+            Button killIo,
+            IReadOnlyList<GameObject> ioPrefabs,
+            Button language)
         {
             var serialized = new SerializedObject(controller);
             SetReference(serialized, "windowRoot", window);
@@ -593,7 +736,27 @@ namespace NERA.EditorTools
             SetReference(serialized, "clearWeatherButton", clear);
             SetReference(serialized, "sandstormButton", sandstorm);
             SetReference(serialized, "contaminateButton", contaminate);
+            SetReference(serialized, "timerButton", timer);
+            SetReferences(
+                serialized,
+                "batteryChargeButtons",
+                batteryChargeButtons);
+
+            SetReference(serialized, "languageButton", language);
+            SetReference(
+                serialized,
+                "expeditionDropdownButton",
+                expeditionDropdownButton);
+            SetReference(
+                serialized,
+                "expeditionDropdownRoot",
+                expeditionDropdown);
             SetReferences(serialized, "expeditionButtons", expeditionButtons);
+            SetReference(
+                serialized,
+                "signalDropdownButton",
+                signalDropdownButton);
+            SetReference(serialized, "signalDropdownRoot", signalDropdown);
             SetReferences(serialized, "signalButtons", signalButtons);
             SetReference(serialized, "turretOneButton", turretOne);
             SetReference(serialized, "turretTwoButton", turretTwo);
@@ -609,15 +772,27 @@ namespace NERA.EditorTools
                 serialized,
                 "stationDisableButtons",
                 stationDisableButtons);
-            SetReference(serialized, "spawnIoButton", spawnIo);
-            SetReference(serialized, "killIoButton", killIo);
-            SetReference(serialized, "languageButton", language);
             SetReference(
                 serialized,
-                "ioEnemyPrefab",
-                AssetDatabase.LoadAssetAtPath<GameObject>(IoPrefabPath));
+                "inventoryDropdownButton",
+                inventoryDropdownButton);
+            SetReference(
+                serialized,
+                "inventoryDropdownRoot",
+                inventoryDropdown);
+            SetReferences(
+                serialized,
+                "inventoryGroupButtons",
+                inventoryGroupButtons);
+            SetReferences(
+                serialized,
+                "inventoryGroupRoots",
+                inventoryGroupRoots);
             SetReferences(serialized, "itemButtons", itemButtons);
             SetReferences(serialized, "inventoryItems", items);
+            SetReferences(serialized, "spawnIoButtons", spawnIoButtons);
+            SetReference(serialized, "killIoButton", killIo);
+            SetReferences(serialized, "ioEnemyPrefabs", ioPrefabs);
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -636,6 +811,36 @@ namespace NERA.EditorTools
             return panel;
         }
 
+        private static GameObject CreateDropdownPanel(
+            Transform parent,
+            string name,
+            float x,
+            float y,
+            float width,
+            float height)
+        {
+            var panel = new GameObject(
+                name,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Outline));
+            panel.transform.SetParent(parent, false);
+            SetTopLeftRect(
+                panel.GetComponent<RectTransform>(),
+                x,
+                y,
+                width,
+                height);
+            Image image = panel.GetComponent<Image>();
+            image.color = new Color(0.035f, 0.05f, 0.075f, 0.995f);
+            image.raycastTarget = true;
+            Outline outline = panel.GetComponent<Outline>();
+            outline.effectColor = AccentColor;
+            outline.effectDistance = new Vector2(1f, -1f);
+            return panel;
+        }
+
         private static void CreateBoxLabel(
             Transform parent,
             string name,
@@ -644,7 +849,7 @@ namespace NERA.EditorTools
             float y,
             float width,
             float height,
-            int fontSize)
+            int textScale)
         {
             var box = new GameObject(
                 name,
@@ -668,7 +873,7 @@ namespace NERA.EditorTools
                 box.transform,
                 "Label",
                 label,
-                fontSize,
+                textScale,
                 TextAnchor.MiddleCenter,
                 TextColor);
             Stretch(text.rectTransform);
@@ -682,9 +887,10 @@ namespace NERA.EditorTools
             float y,
             float width,
             float height,
-            int fontSize = 19,
+            int textScale = 19,
             Color? outlineColor = null,
-            Color? labelColor = null)
+            Color? labelColor = null,
+            Color? backgroundColor = null)
         {
             var buttonObject = new GameObject(
                 name,
@@ -701,8 +907,9 @@ namespace NERA.EditorTools
                 width,
                 height);
 
+            Color background = backgroundColor ?? ButtonColor;
             Image image = buttonObject.GetComponent<Image>();
-            image.color = ButtonColor;
+            image.color = background;
             Outline outline = buttonObject.GetComponent<Outline>();
             Color accent = outlineColor ?? AccentColor;
             outline.effectColor = accent;
@@ -710,11 +917,15 @@ namespace NERA.EditorTools
 
             Button button = buttonObject.GetComponent<Button>();
             ColorBlock colors = button.colors;
-            colors.normalColor = ButtonColor;
-            colors.highlightedColor = outlineColor.HasValue
-                ? Color.Lerp(ButtonColor, accent, 0.25f)
-                : ButtonHighlightColor;
-            colors.pressedColor = Color.Lerp(ButtonColor, accent, 0.45f);
+            colors.normalColor = background;
+            colors.highlightedColor = Color.Lerp(
+                background,
+                Color.white,
+                0.18f);
+            colors.pressedColor = Color.Lerp(
+                background,
+                Color.black,
+                0.25f);
             colors.selectedColor = colors.highlightedColor;
             colors.disabledColor = new Color(0.08f, 0.09f, 0.11f, 0.6f);
             colors.colorMultiplier = 1f;
@@ -724,7 +935,7 @@ namespace NERA.EditorTools
                 buttonObject.transform,
                 "Label",
                 label,
-                fontSize,
+                textScale,
                 TextAnchor.MiddleCenter,
                 labelColor ?? TextColor);
             Stretch(text.rectTransform);
@@ -740,7 +951,7 @@ namespace NERA.EditorTools
             float y,
             float width,
             float height,
-            int fontSize,
+            int textScale,
             TextAnchor alignment,
             Color color)
         {
@@ -748,7 +959,7 @@ namespace NERA.EditorTools
                 parent,
                 name,
                 value,
-                fontSize,
+                textScale,
                 alignment,
                 color);
             SetTopLeftRect(text.rectTransform, x, y, width, height);
@@ -759,7 +970,7 @@ namespace NERA.EditorTools
             Transform parent,
             string name,
             string value,
-            int fontSize,
+            int textScale,
             TextAnchor alignment,
             Color color)
         {
@@ -772,14 +983,11 @@ namespace NERA.EditorTools
             Text text = textObject.GetComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.text = value;
-            text.fontSize = fontSize;
+
             text.alignment = alignment;
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = Mathf.Max(9, fontSize - 6);
-            text.resizeTextMaxSize = fontSize;
             text.raycastTarget = false;
             return text;
         }
@@ -974,20 +1182,14 @@ namespace NERA.EditorTools
         {
             public ItemGroupLayout(
                 string label,
-                StationSystemType systemType,
-                float x,
-                float y)
+                StationSystemType systemType)
             {
                 Label = label;
                 SystemType = systemType;
-                X = x;
-                Y = y;
             }
 
             public string Label { get; }
             public StationSystemType SystemType { get; }
-            public float X { get; }
-            public float Y { get; }
         }
     }
 }

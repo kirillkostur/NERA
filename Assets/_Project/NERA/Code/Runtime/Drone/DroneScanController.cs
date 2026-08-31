@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Development;
 using NERA.Expeditions;
 using NERA.Energy;
 using NERA.Maintenance;
@@ -10,7 +11,8 @@ using UnityEngine;
 
 namespace NERA.Drone
 {
-    public sealed class DroneScanController : MonoBehaviour
+    public sealed class DroneScanController : MonoBehaviour,
+        IDeveloperProgressSkippable
     {
         private const string DroneChargerConsumerId = "drone_charger";
         private const string DroneObjectId = "station_drone";
@@ -264,6 +266,30 @@ namespace NERA.Drone
 
             if (elapsedScanTime >= CurrentScanDuration)
                 BeginReturn();
+        }
+
+        public bool CompleteActiveProgressForDebug()
+        {
+            bool completed =
+                IsExpeditionInProgress || IsCharging;
+
+            if (State == DroneState.Scanning && !scanTimerRunning)
+                NotifyLaunchAnimationEvent();
+
+            if (State == DroneState.Scanning && scanTimerRunning)
+            {
+                elapsedScanTime = CurrentScanDuration;
+                ScanProgressChanged?.Invoke(1f);
+                BeginReturn();
+            }
+
+            if (waitingForReturnAnimationEvent)
+                NotifyReturnAnimationEvent();
+
+            if (IsCharging)
+                RestoreBatteryCharge(BatteryCapacity);
+
+            return completed;
         }
 
         public void AdvanceRecharge(float deltaTime)

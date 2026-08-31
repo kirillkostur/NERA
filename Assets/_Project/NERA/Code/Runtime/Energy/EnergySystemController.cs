@@ -728,28 +728,20 @@ namespace NERA.Energy
             }
         }
 
-        public void ResetForNewGame()
+public void ResetForNewGame()
         {
-            restoredFromSave = false;
+            // A new station begins with an empty main battery and a fully
+            // charged emergency reserve. Preserve this initialized state when
+            // the physical battery registers after entering Player_Station.
+            restoredFromSave = true;
             hasPendingRestoredEnergy = false;
             pendingRestoredEnergy = 0f;
             hasPendingRestoredBackupReserve = false;
-            pendingRestoredBackupReserve = 0f;
-            restoreBackupReserveToFull = false;
+            restoreBackupReserveToFull = true;
             gridEnabled = false;
             currentEnergy = 0f;
-            currentBackupReserve = 0f;
-
-            foreach (BatteryRecord battery in batteries.Values)
-            {
-                currentEnergy += battery.InitialCharge;
-                currentBackupReserve += battery.BackupReserve;
-            }
-
-            currentEnergy = Mathf.Min(currentEnergy, TotalCapacity);
-            currentBackupReserve = Mathf.Min(
-                currentBackupReserve,
-                TotalBackupReserve);
+            currentBackupReserve = TotalBackupReserve;
+            pendingRestoredBackupReserve = currentBackupReserve;
 
             RefreshState();
             RefreshConsumers();
@@ -1118,7 +1110,34 @@ namespace NERA.Energy
                 InstanceChanged?.Invoke(null);
             }
         }
-    }
+    
+
+public bool SetBatteryChargeForDebug(
+            float charge01,
+            bool fillBackupReserve)
+        {
+            if (TotalCapacity <= 0f || batteries.Count == 0)
+                return false;
+
+            currentEnergy = TotalCapacity * Mathf.Clamp01(charge01);
+            pendingRestoredEnergy = currentEnergy;
+            hasPendingRestoredEnergy = false;
+
+            if (fillBackupReserve)
+            {
+                currentBackupReserve = TotalBackupReserve;
+                pendingRestoredBackupReserve = currentBackupReserve;
+                hasPendingRestoredBackupReserve = false;
+                restoreBackupReserveToFull = false;
+            }
+
+            RefreshState();
+            RefreshConsumers();
+            EnergyChanged?.Invoke();
+            ReportQuestCharge();
+            return true;
+        }
+}
 
     internal static class StationEnergyDeviceId
     {

@@ -1,4 +1,5 @@
 using NERA.Quests;
+using NERA.Station;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -26,7 +27,8 @@ namespace NERA.Interaction
         [SerializeField] private UnityEvent onInteractionCompleted;
 
         [Header("Quest (Optional)")]
-        [Tooltip("Stable object ID. Leave empty if this interaction is not used by quests.")]
+        [Tooltip("Fallback quest ID for non-station objects. Station objects use " +
+                 "StationObjectIdentity.ObjectId.")]
         [SerializeField] private string questInteractionId;
         [SerializeField] private string questInteractionName;
 
@@ -57,15 +59,30 @@ namespace NERA.Interaction
         public virtual void CompleteInteraction(GameObject interactor)
         {
             onInteractionCompleted?.Invoke();
-            if (!string.IsNullOrWhiteSpace(questInteractionId))
+            string resolvedQuestInteractionId =
+                ResolveQuestInteractionId();
+            if (!string.IsNullOrWhiteSpace(resolvedQuestInteractionId))
             {
                 QuestController.Instance?.Report(
                     QuestSignalType.ObjectInteractionCompleted,
-                    questInteractionId,
+                    resolvedQuestInteractionId,
                     string.IsNullOrWhiteSpace(questInteractionName)
                         ? gameObject.name
                         : questInteractionName);
             }
+        }
+
+        protected virtual string ResolveQuestInteractionId()
+        {
+            StationObjectIdentity stationIdentity =
+                GetComponentInParent<StationObjectIdentity>(true);
+            if (stationIdentity != null &&
+                !string.IsNullOrWhiteSpace(stationIdentity.ObjectId))
+            {
+                return stationIdentity.ObjectId;
+            }
+
+            return questInteractionId?.Trim() ?? string.Empty;
         }
 
         public void SetAvailable(bool available, string reason = null)

@@ -21,6 +21,11 @@ namespace NERA.Quests
             QuestValueComparison.GreaterOrEqual;
         [Tooltip("Numeric value used by state and threshold conditions.")]
         [SerializeField, Min(0f)] private float threshold = 0.5f;
+        [Tooltip(
+            "Optional QuestMarkerAnchor ID visible while this condition is " +
+            "incomplete. Use stage markers for markers that must remain " +
+            "visible for the entire stage.")]
+        [SerializeField] private string questMarkerId;
 
         public QuestSignalType SignalType => signalType;
         public QuestConditionEvaluation Evaluation => evaluation;
@@ -32,6 +37,7 @@ namespace NERA.Quests
         public float Threshold => UsesNormalizedValue
             ? Mathf.Clamp01(threshold)
             : Mathf.Max(0f, threshold);
+        public string QuestMarkerId => questMarkerId?.Trim() ?? string.Empty;
         public bool UsesCurrentState =>
             evaluation == QuestConditionEvaluation.CurrentState;
         public bool UsesValueComparison => signalType ==

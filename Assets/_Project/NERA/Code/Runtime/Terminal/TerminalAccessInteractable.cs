@@ -17,6 +17,11 @@ namespace NERA.Terminal
         [SerializeField] private CinemachineVirtualCameraBase terminalCamera;
         [SerializeField, Min(1)] private int terminalCameraPriority = 200;
         [SerializeField, Min(0.1f)] private float cameraBlendTimeout = 5f;
+        [Header("Required Action")]
+        [Tooltip("How long E must be held to start a disabled terminal.")]
+        [SerializeField, Min(0.1f)]
+        private float requiredActionHoldDuration = 1f;
+
 
         [Header("Powered Decoration")]
         [SerializeField] private Transform visualRoot;
@@ -83,8 +88,8 @@ namespace NERA.Terminal
             {
                 return new InteractionPrompt(
                     "Start Terminal",
-                    InteractionMode.Press,
-                    0f,
+                    InteractionMode.Hold,
+                    RequiredActionHoldDuration,
                     true,
                     string.Empty);
             }
@@ -99,26 +104,36 @@ namespace NERA.Terminal
             if (power == null || !power.IsPowered)
                 return;
 
-            StationSystemsController systems = StationSystemsController.Instance;
+            StationSystemsController systems =
+                StationSystemsController.Instance;
             if (systems != null &&
                 !systems.IsRequestedActive(StationSystemType.Terminal))
             {
-                systems.SetCriticalSystemActive(
-                    StationSystemType.Terminal,
-                    true);
+                if (systems.SetCriticalSystemActive(
+                        StationSystemType.Terminal,
+                        true))
+                {
+                    base.CompleteInteraction(interactor);
+                }
+                return;
             }
 
             TerminalUIScreen screen = TerminalUIScreen.Instance;
 
             if (screen == null)
             {
-                Debug.LogError("TerminalAccessInteractable: TerminalUIScreen is missing.", this);
+                Debug.LogError(
+                    "TerminalAccessInteractable: TerminalUIScreen is missing.",
+                    this);
                 return;
             }
 
             base.CompleteInteraction(interactor);
             screen.Open(this);
         }
+
+        private float RequiredActionHoldDuration =>
+            Mathf.Max(0.1f, requiredActionHoldDuration);
 
         public void ShowDecorationForScreen(int screenIndex)
         {
@@ -359,6 +374,7 @@ namespace NERA.Terminal
 
         private void OnValidate()
         {
+            requiredActionHoldDuration = RequiredActionHoldDuration;
             ResolveReferences();
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NERA.Development;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Research;
@@ -8,7 +9,8 @@ using UnityEngine;
 
 namespace NERA.Energy
 {
-    public sealed class LaboratoryWorkstationController : MonoBehaviour
+    public sealed class LaboratoryWorkstationController : MonoBehaviour,
+        IDeveloperProgressSkippable
     {
         private const string ChargingConsumerId = "laboratory_charging";
         private const string SynthesisConsumerId = "laboratory_synthesis";
@@ -344,6 +346,38 @@ namespace NERA.Energy
             RefreshPowerRequest();
             if (changed)
                 StateChanged?.Invoke();
+        }
+
+        public bool CompleteActiveProgressForDebug()
+        {
+            bool completed = false;
+            if (IsUpgradeProcessing)
+            {
+                synthesisElapsed = synthesisDuration;
+                StateChanged?.Invoke();
+                CompleteSynthesis();
+                completed = true;
+            }
+
+            EnsureSlotCounts();
+            bool chargeChanged = false;
+            foreach (ItemInstance item in chargingItems)
+            {
+                if (item?.ItemData == null || item.IsFullyCharged)
+                    continue;
+
+                item.SetCharge(item.MaxCharge);
+                chargeChanged = true;
+            }
+
+            if (chargeChanged)
+            {
+                RefreshPowerRequest();
+                StateChanged?.Invoke();
+                completed = true;
+            }
+
+            return completed;
         }
 
         public void RestoreItems(

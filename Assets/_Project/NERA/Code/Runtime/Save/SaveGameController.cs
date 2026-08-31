@@ -1065,7 +1065,6 @@ namespace NERA.Save
                 stationPower.SetState(StationPowerState.Offline);
 
             energySystem?.ResetForNewGame();
-            antenna?.RestoreCondition(1f);
             antenna?.RestoreSignalState(
                 string.Empty,
                 string.Empty,
@@ -1084,7 +1083,7 @@ namespace NERA.Save
             research?.RestoreLoadedItem(null, inventory);
 
             stationStorage?.ResetStorage();
-            stationSystems?.ResetSystems();
+            stationSystems?.ResetSystemsForNewGame();
             drone?.ResetBatteryCharge();
             quests?.ResetProgress();
 

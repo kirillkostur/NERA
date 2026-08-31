@@ -39,11 +39,18 @@ namespace NERA.Development
         [SerializeField] private Button clearWeatherButton;
         [SerializeField] private Button sandstormButton;
         [SerializeField] private Button contaminateButton;
+        [SerializeField] private Button timerButton;
         [SerializeField] private Button languageButton;
 
         [Header("Locations")]
-        [SerializeField] private Button[] expeditionButtons = Array.Empty<Button>();
-        [SerializeField] private Button[] signalButtons = Array.Empty<Button>();
+        [SerializeField] private Button expeditionDropdownButton;
+        [SerializeField] private GameObject expeditionDropdownRoot;
+        [SerializeField] private Button[] expeditionButtons =
+            Array.Empty<Button>();
+        [SerializeField] private Button signalDropdownButton;
+        [SerializeField] private GameObject signalDropdownRoot;
+        [SerializeField] private Button[] signalButtons =
+            Array.Empty<Button>();
 
         [Header("Station Upgrades")]
         [SerializeField] private Button turretOneButton;
@@ -59,20 +66,35 @@ namespace NERA.Development
         [SerializeField] private Button[] stationDisableButtons =
             Array.Empty<Button>();
 
-        [Header("IO")]
-        [SerializeField] private Button spawnIoButton;
-        [SerializeField] private Button killIoButton;
-        [SerializeField] private GameObject ioEnemyPrefab;
-        [SerializeField, Min(0.1f)] private float ioSpawnDistance = 5f;
-        [SerializeField, Min(0f)] private float ioHoverHeight = 1.6f;
+        [Header("Battery Charge")]
+        [SerializeField] private Button[] batteryChargeButtons =
+            Array.Empty<Button>();
 
         [Header("Inventory")]
+        [SerializeField] private Button inventoryDropdownButton;
+        [SerializeField] private GameObject inventoryDropdownRoot;
+        [SerializeField] private Button[] inventoryGroupButtons =
+            Array.Empty<Button>();
+        [SerializeField] private GameObject[] inventoryGroupRoots =
+            Array.Empty<GameObject>();
         [SerializeField] private Button[] itemButtons = Array.Empty<Button>();
-        [SerializeField] private ItemData[] inventoryItems = Array.Empty<ItemData>();
+        [SerializeField] private ItemData[] inventoryItems =
+            Array.Empty<ItemData>();
+
+        [Header("IO")]
+        [SerializeField] private Button[] spawnIoButtons =
+            Array.Empty<Button>();
+        [SerializeField] private Button killIoButton;
+        [SerializeField] private GameObject[] ioEnemyPrefabs =
+            Array.Empty<GameObject>();
+        [SerializeField, Min(0.1f)] private float ioSpawnDistance = 5f;
+        [SerializeField, Min(0f)] private float ioHoverHeight = 1.6f;
 
         private ParkourPlayerBridge player;
         private CursorLockMode cursorLockBeforeOpen;
         private bool cursorVisibleBeforeOpen;
+        private GameObject activeDropdownRoot;
+        private Button activeDropdownButton;
 
         private static readonly StationControlTarget[] StationControlTargets =
         {
@@ -129,6 +151,7 @@ namespace NERA.Development
             NERALocalization.LocaleChanged += RefreshLanguageButton;
             BindButtons();
             RefreshLanguageButton();
+            CloseDropdowns();
             if (windowRoot != null)
                 windowRoot.SetActive(false);
         }
@@ -141,8 +164,17 @@ namespace NERA.Development
                 return;
             }
 
-            if (IsOpen && Input.GetKeyDown(KeyCode.Escape))
+            if (!IsOpen)
+                return;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
                 SetOpen(false);
+                return;
+            }
+
+            if (Input.GetMouseButtonDown(0))
+                CloseDropdownIfPointerOutside();
         }
 
         public void SetOpen(bool open)
@@ -159,11 +191,13 @@ namespace NERA.Development
                 player?.SetInputEnabled(this, false);
                 if (windowRoot != null)
                     windowRoot.SetActive(true);
+                CloseDropdowns();
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 return;
             }
 
+            CloseDropdowns();
             if (windowRoot != null)
                 windowRoot.SetActive(false);
             player?.SetInputEnabled(this, true);
@@ -299,9 +333,18 @@ namespace NERA.Development
 
         public void SpawnIo()
         {
-            if (ioEnemyPrefab == null)
+            SpawnIo(0);
+        }
+
+        public void SpawnIo(int prefabIndex)
+        {
+            if (prefabIndex < 0 ||
+                prefabIndex >= ioEnemyPrefabs.Length ||
+                ioEnemyPrefabs[prefabIndex] == null)
             {
-                LogFailure("Spawn IO", "enemy prefab is not configured.");
+                LogFailure(
+                    "Spawn IO",
+                    $"enemy prefab index {prefabIndex} is not configured.");
                 return;
             }
 
@@ -341,12 +384,16 @@ namespace NERA.Development
             Quaternion rotation = lookDirection.sqrMagnitude > 0.01f
                 ? Quaternion.LookRotation(lookDirection.normalized)
                 : Quaternion.identity;
+            GameObject prefab = ioEnemyPrefabs[prefabIndex];
             GameObject enemy = Instantiate(
-                ioEnemyPrefab,
+                prefab,
                 spawnPosition,
                 rotation);
-            enemy.name = $"Debug_{ioEnemyPrefab.name}";
-            LogResult("Spawn IO", enemy != null, "one enemy spawned");
+            enemy.name = $"Debug_{prefab.name}";
+            LogResult(
+                "Spawn IO",
+                enemy != null,
+                $"{prefab.name} spawned");
         }
 
         public void KillAllIo()
@@ -364,6 +411,33 @@ namespace NERA.Development
             }
 
             LogResult("Kill IO", true, $"{killed} enemies killed");
+        }
+
+        public void CompleteActiveTimers()
+        {
+            MonoBehaviour[] behaviours = FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            var handled = new HashSet<IDeveloperProgressSkippable>();
+            int completed = 0;
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is not IDeveloperProgressSkippable progress ||
+                    !handled.Add(progress))
+                {
+                    continue;
+                }
+
+                if (progress.CompleteActiveProgressForDebug())
+                    completed++;
+            }
+
+            LogResult(
+                "Timer+",
+                true,
+                completed > 0
+                    ? $"{completed} active progress timers completed"
+                    : "no active progress timers");
         }
 
         public void GiveItem(int itemIndex)
@@ -408,10 +482,33 @@ namespace NERA.Development
             Bind(clearWeatherButton, SetClearWeather);
             Bind(sandstormButton, StartSandstorm);
             Bind(contaminateButton, ContaminateAllObjects);
+            Bind(timerButton, CompleteActiveTimers);
+            BindIndexed(
+                batteryChargeButtons,
+                index => SetMainBatteryCharge(index * 25));
+
             Bind(languageButton, ToggleLanguage);
 
-            BindIndexed(expeditionButtons, index => UnlockExpedition(index + 1));
-            BindIndexed(signalButtons, index => RevealSignal(index + 1));
+            Bind(
+                expeditionDropdownButton,
+                () => ToggleDropdown(
+                    expeditionDropdownRoot,
+                    expeditionDropdownButton));
+            BindIndexed(expeditionButtons, index =>
+            {
+                UnlockExpedition(index + 1);
+                CloseDropdowns();
+            });
+            Bind(
+                signalDropdownButton,
+                () => ToggleDropdown(
+                    signalDropdownRoot,
+                    signalDropdownButton));
+            BindIndexed(signalButtons, index =>
+            {
+                RevealSignal(index + 1);
+                CloseDropdowns();
+            });
 
             Bind(turretOneButton, FullyUpgradeTurretOne);
             Bind(turretTwoButton, FullyUpgradeTurretTwo);
@@ -427,9 +524,92 @@ namespace NERA.Development
                 stationDisableButtons,
                 index => SetStationControlActive(index, false));
 
-            Bind(spawnIoButton, SpawnIo);
-            Bind(killIoButton, KillAllIo);
+            Bind(
+                inventoryDropdownButton,
+                () => ToggleDropdown(
+                    inventoryDropdownRoot,
+                    inventoryDropdownButton));
+            BindIndexed(inventoryGroupButtons, ToggleInventoryGroup);
             BindIndexed(itemButtons, GiveItem);
+
+            BindIndexed(spawnIoButtons, SpawnIo);
+            Bind(killIoButton, KillAllIo);
+        }
+
+        private void ToggleDropdown(GameObject root, Button button)
+        {
+            if (root == null || button == null)
+                return;
+
+            bool shouldOpen = !root.activeSelf;
+            CloseDropdowns();
+            if (!shouldOpen)
+                return;
+
+            root.SetActive(true);
+            activeDropdownRoot = root;
+            activeDropdownButton = button;
+        }
+
+        private void ToggleInventoryGroup(int index)
+        {
+            if (index < 0 || index >= inventoryGroupRoots.Length)
+                return;
+
+            GameObject target = inventoryGroupRoots[index];
+            if (target == null)
+                return;
+
+            bool shouldOpen = !target.activeSelf;
+            CloseInventoryGroups();
+            if (shouldOpen)
+                target.SetActive(true);
+        }
+
+        private void CloseDropdownIfPointerOutside()
+        {
+            if (activeDropdownRoot == null)
+                return;
+
+            Vector2 pointer = Input.mousePosition;
+            RectTransform dropdownRect =
+                activeDropdownRoot.transform as RectTransform;
+            RectTransform buttonRect = activeDropdownButton != null
+                ? activeDropdownButton.transform as RectTransform
+                : null;
+            bool insideDropdown = dropdownRect != null &&
+                RectTransformUtility.RectangleContainsScreenPoint(
+                    dropdownRect,
+                    pointer);
+            bool insideButton = buttonRect != null &&
+                RectTransformUtility.RectangleContainsScreenPoint(
+                    buttonRect,
+                    pointer);
+            if (!insideDropdown && !insideButton)
+                CloseDropdowns();
+        }
+
+        private void CloseDropdowns()
+        {
+            if (expeditionDropdownRoot != null)
+                expeditionDropdownRoot.SetActive(false);
+            if (signalDropdownRoot != null)
+                signalDropdownRoot.SetActive(false);
+            if (inventoryDropdownRoot != null)
+                inventoryDropdownRoot.SetActive(false);
+
+            CloseInventoryGroups();
+            activeDropdownRoot = null;
+            activeDropdownButton = null;
+        }
+
+        private void CloseInventoryGroups()
+        {
+            foreach (GameObject groupRoot in inventoryGroupRoots)
+            {
+                if (groupRoot != null)
+                    groupRoot.SetActive(false);
+            }
         }
 
         private void RefreshLanguageButton()
@@ -702,5 +882,26 @@ namespace NERA.Development
             public StationSystemType SystemType { get; }
             public string ObjectId { get; }
         }
-    }
+    
+
+        public void SetMainBatteryCharge(int percentage)
+        {
+            EnergySystemController energy = EnergySystemController.Instance;
+            int clampedPercentage = Mathf.Clamp(percentage, 0, 100);
+            bool fillBackupReserve = clampedPercentage > 0;
+            bool changed = energy != null &&
+                energy.SetBatteryChargeForDebug(
+                    clampedPercentage / 100f,
+                    fillBackupReserve);
+
+            LogResult(
+                "Battery charge",
+                changed,
+                changed
+                    ? $"main: {clampedPercentage}%, backup: " +
+                      $"{energy.CurrentBackupReserve:0.#}/" +
+                      $"{energy.TotalBackupReserve:0.#}"
+                    : "station battery is unavailable");
+        }
+}
 }

@@ -110,6 +110,86 @@ namespace NERA.Tests.PlayMode
             Assert.That(hud.VisibleWorldMarkerCount, Is.EqualTo(0));
         }
 
+        [UnityTest]
+        public IEnumerator CompletedConditionHidesOnlyItsOwnMarker()
+        {
+            Assert.That(QuestController.Instance, Is.Null);
+
+            GameObject runtimeRoot = CreateGameObject("Runtime Root");
+            GameObject player = CreateGameObject("Player");
+            player.tag = "Player";
+            player.transform.SetParent(runtimeRoot.transform, false);
+            GameObject cameraObject = CreateGameObject("Gameplay Camera");
+            cameraObject.tag = "MainCamera";
+            cameraObject.transform.SetParent(runtimeRoot.transform, false);
+            cameraObject.AddComponent<Camera>();
+
+            CreateMarkerAnchor("Stage Marker", "test.stage");
+            CreateMarkerAnchor("First Marker", "test.first");
+            CreateMarkerAnchor("Second Marker", "test.second");
+
+            QuestDefinition definition = CreateConditionMarkerQuest();
+            QuestCatalog catalog = ScriptableObject.CreateInstance<QuestCatalog>();
+            createdObjects.Add(catalog);
+            SetPrivateField(
+                catalog,
+                "definitions",
+                new List<QuestDefinition> { definition });
+
+            GameObject questObject = CreateGameObject("Quest Controller");
+            QuestController quests = questObject.AddComponent<QuestController>();
+            quests.Configure(catalog);
+
+            GameObject canvasObject = new GameObject(
+                "HUD",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster));
+            createdObjects.Add(canvasObject);
+            Canvas canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            QuestCompassHUDController hud =
+                canvasObject.AddComponent<QuestCompassHUDController>();
+
+            yield return null;
+            hud.RefreshNow();
+
+            Assert.That(hud.CompassMarkerCount, Is.EqualTo(3));
+            Assert.That(
+                hud.TryGetMarkerState("test.stage", out _),
+                Is.True);
+            Assert.That(
+                hud.TryGetMarkerState("test.first", out _),
+                Is.True);
+            Assert.That(
+                hud.TryGetMarkerState("test.second", out _),
+                Is.True);
+
+            Assert.That(
+                quests.Report(QuestSignalType.Custom, "complete.first"),
+                Is.True);
+            hud.RefreshNow();
+
+            Assert.That(hud.CompassMarkerCount, Is.EqualTo(2));
+            Assert.That(
+                hud.TryGetMarkerState("test.stage", out _),
+                Is.True);
+            Assert.That(
+                hud.TryGetMarkerState("test.first", out _),
+                Is.False);
+            Assert.That(
+                hud.TryGetMarkerState("test.second", out _),
+                Is.True);
+
+            Assert.That(
+                quests.Report(QuestSignalType.Custom, "complete.second"),
+                Is.True);
+            hud.RefreshNow();
+
+            Assert.That(hud.CompassMarkerCount, Is.EqualTo(0));
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {
@@ -170,6 +250,102 @@ namespace NERA.Tests.PlayMode
                 "stages",
                 new List<QuestStageDefinition> { stage });
             return definition;
+        }
+
+        private QuestDefinition CreateConditionMarkerQuest()
+        {
+            QuestConditionDefinition firstCondition =
+                new QuestConditionDefinition();
+            SetPrivateField(
+                firstCondition,
+                "signalType",
+                QuestSignalType.Custom);
+            SetPrivateField(
+                firstCondition,
+                "target",
+                QuestConditionTarget.SpecificObject);
+            SetPrivateField(
+                firstCondition,
+                "targetId",
+                "complete.first");
+            SetPrivateField(
+                firstCondition,
+                "questMarkerId",
+                "test.first");
+
+            QuestConditionDefinition secondCondition =
+                new QuestConditionDefinition();
+            SetPrivateField(
+                secondCondition,
+                "signalType",
+                QuestSignalType.Custom);
+            SetPrivateField(
+                secondCondition,
+                "target",
+                QuestConditionTarget.SpecificObject);
+            SetPrivateField(
+                secondCondition,
+                "targetId",
+                "complete.second");
+            SetPrivateField(
+                secondCondition,
+                "questMarkerId",
+                "test.second");
+
+            QuestStageDefinition stage = new QuestStageDefinition();
+            SetPrivateField(stage, "title", "Complete both targets");
+            SetPrivateField(
+                stage,
+                "completionLogic",
+                QuestConditionLogic.All);
+            SetPrivateField(
+                stage,
+                "questMarkerIds",
+                new List<string> { "test.stage" });
+            SetPrivateField(
+                stage,
+                "completionConditions",
+                new List<QuestConditionDefinition>
+                {
+                    firstCondition,
+                    secondCondition
+                });
+
+            QuestDefinition definition =
+                ScriptableObject.CreateInstance<QuestDefinition>();
+            createdObjects.Add(definition);
+            SetPrivateField(definition, "questId", "test.condition-markers");
+            SetPrivateField(definition, "title", "Condition marker test");
+            SetPrivateField(
+                definition,
+                "availability",
+                QuestAvailability.Once);
+            SetPrivateField(
+                definition,
+                "targetScope",
+                QuestTargetScope.Single);
+            SetPrivateField(
+                definition,
+                "activationConditions",
+                new List<QuestConditionDefinition>());
+            SetPrivateField(
+                definition,
+                "stages",
+                new List<QuestStageDefinition> { stage });
+            return definition;
+        }
+
+        private QuestMarkerAnchor CreateMarkerAnchor(
+            string objectName,
+            string markerId)
+        {
+            GameObject markerObject = CreateGameObject(objectName);
+            markerObject.transform.position = new Vector3(0f, 0f, 10f);
+            QuestMarkerAnchor anchor =
+                markerObject.AddComponent<QuestMarkerAnchor>();
+            SetPrivateField(anchor, "markerId", markerId);
+            SetPrivateField(anchor, "localOffset", Vector3.zero);
+            return anchor;
         }
 
         private GameObject CreateGameObject(string name)
