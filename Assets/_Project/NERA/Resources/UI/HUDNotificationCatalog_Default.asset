@@ -69,6 +69,14 @@ MonoBehaviour:
     localizationKey: notification.research.completed
     severity: 0
     visibleSeconds: 5
+  - id: station.object_disabled
+    localizationKey: notification.station.object_disabled
+    severity: 1
+    visibleSeconds: 5
+  - id: station.object_contaminated
+    localizationKey: notification.station.object_contaminated
+    severity: 1
+    visibleSeconds: 5
   successBackground: {r: 0.025, g: 0.16, b: 0.09, a: 0.94}
   successAccent: {r: 0.12, g: 0.95, b: 0.42, a: 1}
   warningBackground: {r: 0.22, g: 0.115, b: 0.015, a: 0.94}

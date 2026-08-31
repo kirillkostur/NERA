@@ -3,12 +3,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NERA.Energy;
+using NERA.Enemies;
 using NERA.Graphics;
 using NERA.Interaction;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Maintenance;
 using NERA.Station;
+using NERA.UI;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -59,6 +61,125 @@ namespace NERA.Tests
             SetSingleton(typeof(StationStorageController), null);
             SetSingleton(typeof(StationSystemsController), null);
             SetSingleton(typeof(StationUpgradeModeController), null);
+        }
+
+        [Test]
+        public void FaultEventPreservesSourceAndFiresOnlyForStateChange()
+        {
+            StationSystemDefinition turret = systems.Config.StationObjects.First(
+                item => item.SystemType == StationSystemType.Turret &&
+                    item.InitiallyActive);
+            var source = new GameObject("Test_IO_Fault_Source");
+            int eventCount = 0;
+            StationSystemDefinition reportedDefinition = null;
+            string reportedObjectId = null;
+            string reportedCause = null;
+            GameObject reportedSource = null;
+
+            systems.SystemFaulted += HandleFault;
+            try
+            {
+                Assert.That(
+                    systems.DisableFromFault(
+                        turret.SystemType,
+                        turret.ObjectId,
+                        "Test fault",
+                        source),
+                    Is.True);
+                Assert.That(
+                    systems.DisableFromFault(
+                        turret.SystemType,
+                        turret.ObjectId,
+                        "Repeated fault",
+                        source),
+                    Is.True);
+                Assert.That(eventCount, Is.EqualTo(1));
+                Assert.That(reportedDefinition, Is.SameAs(turret));
+                Assert.That(reportedObjectId, Is.EqualTo(turret.ObjectId));
+                Assert.That(reportedCause, Is.EqualTo("Test fault"));
+                Assert.That(reportedSource, Is.SameAs(source));
+            }
+            finally
+            {
+                systems.SystemFaulted -= HandleFault;
+                Object.DestroyImmediate(source);
+            }
+
+            void HandleFault(
+                StationSystemDefinition definition,
+                string objectId,
+                string cause,
+                GameObject eventSource)
+            {
+                eventCount++;
+                reportedDefinition = definition;
+                reportedObjectId = objectId;
+                reportedCause = cause;
+                reportedSource = eventSource;
+            }
+        }
+
+        [Test]
+        public void IoBatteryFaultQueuesOnlyWarningAndRecoveryStaysSilent()
+        {
+            StationSystemDefinition battery = systems.Config.StationObjects.First(
+                item => item.SystemType == StationSystemType.Battery);
+            Assert.That(
+                systems.ForceSetRequestedActiveForDebug(
+                    battery.SystemType,
+                    true,
+                    battery.ObjectId),
+                Is.True);
+            var bridgeRoot = new GameObject("Test_Notification_Bridge");
+            StationHUDNotificationBridge bridge =
+                bridgeRoot.AddComponent<StationHUDNotificationBridge>();
+            MethodInfo bindSystems = typeof(StationHUDNotificationBridge)
+                .GetMethod(
+                    "BindSystems",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(bindSystems, Is.Not.Null);
+            bindSystems.Invoke(bridge, new object[] { systems });
+            var source = new GameObject("Test_IO_Source");
+            source.AddComponent<IOEnemyController>();
+            HUDNotificationService.ClearPending();
+
+            try
+            {
+                Assert.That(
+                    systems.DisableFromFault(
+                        battery.SystemType,
+                        battery.ObjectId,
+                        "IO enemy power disruption",
+                        source),
+                    Is.True);
+                Assert.That(HUDNotificationService.PendingCount, Is.EqualTo(1));
+                Assert.That(
+                    HUDNotificationService.TryDequeueHighestPriority(
+                        _ => 0,
+                        out HUDNotificationRequest request),
+                    Is.True);
+                Assert.That(
+                    request.Id,
+                    Is.EqualTo(HUDNotificationIds.StationObjectDisabled));
+                Assert.That(
+                    request.Arguments,
+                    Is.EqualTo(new object[] { battery.DisplayName }));
+
+                Assert.That(
+                    systems.ForceSetRequestedActiveForDebug(
+                        battery.SystemType,
+                        true,
+                        battery.ObjectId),
+                    Is.True);
+                Assert.That(HUDNotificationService.PendingCount, Is.Zero);
+            }
+            finally
+            {
+                bindSystems.Invoke(bridge, new object[] { null });
+                HUDNotificationService.ClearPending();
+                Object.DestroyImmediate(source);
+                Object.DestroyImmediate(bridgeRoot);
+            }
         }
 
         [Test]

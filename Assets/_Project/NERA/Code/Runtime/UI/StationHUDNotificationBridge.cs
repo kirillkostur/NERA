@@ -1,7 +1,9 @@
 using NERA.Antenna;
+using NERA.Enemies;
 using NERA.Drone;
 using NERA.Energy;
 using NERA.Expeditions;
+using NERA.Maintenance;
 using NERA.Research;
 using NERA.Station;
 using NERA.World;
@@ -24,6 +26,8 @@ namespace NERA.UI
         private bool powerSnapshotReady;
         private bool systemsSnapshotReady;
         private bool batteryWasEnabled;
+        private bool suppressNextBatteryStateNotification;
+        private bool silenceNextBatteryRestoreNotification;
         private StationPowerState? suppressedPowerState;
         private int lastPowerTransitionFrame = -1;
         private StationPowerState lastPowerTransitionState;
@@ -34,6 +38,7 @@ namespace NERA.UI
             StationPowerController.InstanceChanged += BindPower;
             StationSystemsController.InstanceChanged += BindSystems;
             DroneScanController.InstanceChanged += BindDrone;
+            MaintainableObject.AnyContaminated += HandleObjectContaminated;
             StationWeatherController.AnySandstormStarted +=
                 HandleSandstormStarted;
             StationWeatherController.AnySandstormEnded +=
@@ -60,6 +65,7 @@ namespace NERA.UI
             StationPowerController.InstanceChanged -= BindPower;
             StationSystemsController.InstanceChanged -= BindSystems;
             DroneScanController.InstanceChanged -= BindDrone;
+            MaintainableObject.AnyContaminated -= HandleObjectContaminated;
             StationWeatherController.AnySandstormStarted -=
                 HandleSandstormStarted;
             StationWeatherController.AnySandstormEnded -=
@@ -78,6 +84,17 @@ namespace NERA.UI
         {
             BindAntenna(AntennaController.Instance);
             BindResearch(ResearchController.Instance);
+        }
+
+        private static void HandleObjectContaminated(
+            MaintainableObject maintainable)
+        {
+            if (maintainable == null)
+                return;
+
+            HUDNotificationService.Publish(
+                HUDNotificationIds.StationObjectContaminated,
+                maintainable.DisplayName);
         }
 
         private static void HandleSandstormStarted(float _)
@@ -167,10 +184,13 @@ namespace NERA.UI
             lastPowerTransitionFrame = Time.frameCount;
             lastPowerTransitionState = state;
 
-            bool suppressed = suppressedPowerState == state;
-            if (suppressed)
+            bool explicitlySuppressed = suppressedPowerState == state;
+            bool silentFaultRecovery =
+                silenceNextBatteryRestoreNotification &&
+                state == StationPowerState.Online;
+            if (explicitlySuppressed)
                 suppressedPowerState = null;
-            if (!wasReady || suppressed ||
+            if (!wasReady || explicitlySuppressed || silentFaultRecovery ||
                 EnergySystemController.Instance?.IsRestoringState == true)
             {
                 return;
@@ -182,6 +202,7 @@ namespace NERA.UI
                     : HUDNotificationIds.PowerLost);
         }
 
+
         private void BindSystems(StationSystemsController value)
         {
             if (systems == value)
@@ -191,10 +212,16 @@ namespace NERA.UI
             }
 
             if (systems != null)
+            {
                 systems.SystemsChanged -= HandleSystemsChanged;
+                systems.SystemFaulted -= HandleSystemFaulted;
+            }
             systems = value;
             if (systems != null)
+            {
                 systems.SystemsChanged += HandleSystemsChanged;
+                systems.SystemFaulted += HandleSystemFaulted;
+            }
             SnapshotSystems();
         }
 
@@ -206,6 +233,30 @@ namespace NERA.UI
                 batteryWasEnabled = systems.IsRequestedActive(
                     StationSystemType.Battery);
             }
+        }
+
+        private void HandleSystemFaulted(
+            StationSystemDefinition definition,
+            string _,
+            string __,
+            GameObject source)
+        {
+            if (definition == null || source == null ||
+                source.GetComponentInParent<IOEnemyController>(true) == null)
+            {
+                return;
+            }
+
+            HUDNotificationService.Publish(
+                HUDNotificationIds.StationObjectDisabled,
+                definition.DisplayName);
+
+            if (definition.SystemType != StationSystemType.Battery)
+                return;
+
+            suppressNextBatteryStateNotification = true;
+            silenceNextBatteryRestoreNotification = true;
+            suppressedPowerState = StationPowerState.Offline;
         }
 
         private void HandleSystemsChanged()
@@ -222,6 +273,14 @@ namespace NERA.UI
                 return;
             }
 
+            bool suppressHudNotification =
+                !enabled && suppressNextBatteryStateNotification ||
+                enabled && silenceNextBatteryRestoreNotification;
+            if (!enabled)
+                suppressNextBatteryStateNotification = false;
+            else
+                silenceNextBatteryRestoreNotification = false;
+
             batteryWasEnabled = enabled;
             StationPowerState expectedPowerState = enabled
                 ? StationPowerState.Online
@@ -230,7 +289,8 @@ namespace NERA.UI
                 lastPowerTransitionFrame == Time.frameCount &&
                 lastPowerTransitionState == expectedPowerState;
 
-            if (!powerAlreadyReportedThisFrame &&
+            if (!suppressHudNotification &&
+                !powerAlreadyReportedThisFrame &&
                 EnergySystemController.Instance?.IsRestoringState != true)
             {
                 HUDNotificationService.Publish(

@@ -259,6 +259,14 @@ MonoBehaviour:
     m_Key: ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_interactionprompt_prompttext
     m_Metadata:
       m_Items: []
+  - m_Id: 7798071684489216
+    m_Key: notification.station.object_disabled
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7804407331676160
+    m_Key: notification.station.object_contaminated
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

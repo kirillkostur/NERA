@@ -47,6 +47,7 @@ namespace NERA.Maintenance
         public event Action<float> ConditionChanged;
         public static event Action<MaintainableObject> Registered;
         public static event Action<string, float> AnyConditionChanged;
+        public static event Action<MaintainableObject> AnyContaminated;
 
         public string ObjectId
         {
@@ -228,9 +229,12 @@ namespace NERA.Maintenance
                 return;
             }
 
+            bool wasClean = !NeedsService;
             participatedInCurrentSandstorm = true;
             float duration = Mathf.Max(0.1f, fullContaminationDuration);
             SetCondition(condition - deltaTime / duration);
+            if (wasClean && NeedsService)
+                AnyContaminated?.Invoke(this);
         }
 
         public static bool TryFind(
@@ -449,6 +453,7 @@ namespace NERA.Maintenance
         {
             ObjectsById.Clear();
             StaleObjectIds.Clear();
+            AnyContaminated = null;
         }
 
         private static string NormalizeId(string value)

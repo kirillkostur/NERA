@@ -40,6 +40,8 @@ namespace NERA.Tests
             HUDNotificationIds.DroneNoNewLocations,
             HUDNotificationIds.AntennaSignalFound,
             HUDNotificationIds.AntennaSignalNotFound,
+            HUDNotificationIds.StationObjectContaminated,
+            HUDNotificationIds.StationObjectDisabled,
             HUDNotificationIds.ResearchCompleted
         };
 
@@ -64,6 +66,24 @@ namespace NERA.Tests
             Assert.That(
                 catalog.Entries.Count,
                 Is.GreaterThanOrEqualTo(RequiredIds.Length));
+        }
+
+        [TestCase(HUDNotificationIds.StationObjectDisabled)]
+        [TestCase(HUDNotificationIds.StationObjectContaminated)]
+        public void StationObjectNotificationsAreWarnings(string id)
+        {
+            HUDNotificationCatalog catalog =
+                AssetDatabase.LoadAssetAtPath<HUDNotificationCatalog>(
+                    CatalogPath);
+            Assert.That(catalog, Is.Not.Null);
+            Assert.That(
+                catalog.TryGet(
+                    id,
+                    out HUDNotificationDefinition definition),
+                Is.True);
+            Assert.That(
+                definition.Severity,
+                Is.EqualTo(HUDNotificationSeverity.Warning));
         }
 
         [Test]

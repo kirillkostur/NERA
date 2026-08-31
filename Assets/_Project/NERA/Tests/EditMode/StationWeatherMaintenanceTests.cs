@@ -68,6 +68,41 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void ContaminationEventFiresOncePerDirtyCycle()
+        {
+            int eventCount = 0;
+            MaintainableObject reported = null;
+            MaintainableObject.AnyContaminated += HandleContaminated;
+            try
+            {
+                Assert.That(weather.StartSandstorm(10f), Is.True);
+                maintainable.AdvanceSandExposure(1f, 10f);
+                maintainable.AdvanceSandExposure(1f, 10f);
+
+                Assert.That(eventCount, Is.EqualTo(1));
+                Assert.That(reported, Is.SameAs(maintainable));
+
+                weather.StopSandstorm();
+                maintainable.CleanInstantly();
+                Assert.That(weather.StartSandstorm(10f), Is.True);
+                maintainable.AdvanceSandExposure(1f, 10f);
+
+                Assert.That(eventCount, Is.EqualTo(2));
+            }
+            finally
+            {
+                MaintainableObject.AnyContaminated -= HandleContaminated;
+                weather.StopSandstorm();
+            }
+
+            void HandleContaminated(MaintainableObject value)
+            {
+                eventCount++;
+                reported = value;
+            }
+        }
+
+        [Test]
         public void DroneAwayForEntireSandstormDoesNotNeedCleaning()
         {
             DroneScanController drone = ConfigureDeviceAsDrone();

@@ -90,11 +90,32 @@ namespace NERA.EditorTools
                 HUDNotificationSeverity.Warning,
                 4f),
             new NotificationSeed(
+                HUDNotificationIds.StationObjectContaminated,
+                "notification.station.object_contaminated",
+                HUDNotificationSeverity.Warning,
+                5f),
+            new NotificationSeed(
+                HUDNotificationIds.StationObjectDisabled,
+                "notification.station.object_disabled",
+                HUDNotificationSeverity.Warning,
+                5f),
+            new NotificationSeed(
                 HUDNotificationIds.ResearchCompleted,
                 "notification.research.completed",
                 HUDNotificationSeverity.Success,
                 5f)
         };
+
+        [MenuItem("NERA/UI/Sync HUD Notification Catalog")]
+        public static void SyncCatalog()
+        {
+            EnsureFolder("Assets/_Project/NERA/Resources/UI");
+            BuildCatalog();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log(
+                $"HUD notification catalog synchronized: {Seeds.Length} events.");
+        }
 
         [MenuItem("NERA/UI/Setup HUD Notifications")]
         public static void Setup()

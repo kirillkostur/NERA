@@ -59,6 +59,12 @@ namespace NERA.Station
         public static StationSystemsController Instance { get; private set; }
         public static event Action<StationSystemsController> InstanceChanged;
         public event Action SystemsChanged;
+        public event Action<
+            StationSystemDefinition,
+            string,
+            string,
+            GameObject> SystemFaulted;
+
 
         public StationSystemsConfig Config =>
             config != null ? config : config = StationSystemsConfig.LoadDefault();
@@ -545,7 +551,8 @@ namespace NERA.Station
         public bool DisableFromFault(
             StationSystemType type,
             string objectId,
-            string cause)
+            string cause,
+            GameObject source = null)
         {
             StationSystemDefinition definition = GetDefinition(type, objectId);
             if (definition == null)
@@ -559,9 +566,17 @@ namespace NERA.Station
                 cause);
             ReportSystemDeactivated(definition, resolvedId, cause);
             if (changed)
+            {
+                SystemFaulted?.Invoke(
+                    definition,
+                    resolvedId,
+                    cause,
+                    source);
                 SystemsChanged?.Invoke();
+            }
             return true;
         }
+
 
         public bool DisableFromPowerLimit(
             StationSystemType type,

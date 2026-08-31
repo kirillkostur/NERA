@@ -543,9 +543,40 @@ namespace NERA.Editor.Localization
             AddPrompt("unavailable", "Station systems are unavailable", "Системы станции недоступны");
             AddPrompt("unavailable", "Upgrade mode is already open", "Режим улучшения уже открыт");
 
+            AddHudNotificationEntries();
             RegisterHudNotificationKeys();
             AddTerminalEntries();
             AddLaboratoryEntries();
+        }
+
+        [MenuItem("NERA/Localization/Sync HUD Notification Entries")]
+        public static void SyncHudNotificationEntries()
+        {
+            EnsureFolders();
+            (Locale english, Locale russian) = EnsureSettingsAndLocales();
+            EnsureCollections(english, russian);
+            AddHudNotificationEntries();
+            ExportCsv();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log(
+                "NERA HUD notification localization synchronized.");
+        }
+
+        private static void AddHudNotificationEntries()
+        {
+            Add(
+                NERALocalization.HudTable,
+                "notification.station.object_disabled",
+                "Object {0} disabled",
+                "Объект {0} отключён",
+                true);
+            Add(
+                NERALocalization.HudTable,
+                "notification.station.object_contaminated",
+                "Object {0} contaminated",
+                "Объект {0} загрязнён",
+                true);
         }
 
         private static void RegisterHudNotificationKeys()

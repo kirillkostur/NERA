@@ -60,3 +60,5 @@
 "ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_checkpointindicator",7685683979214848,"","SAVING...","","СОХРАНЕНИЕ...",""
 "ui.mainscene.runtimeroot_hud_canvas_modalcanvas_upgradescreen_upgradesbutton_text_upgrade",7685684025352192,"","UPGRADE","","УЛУЧШИТЬ",""
 "ui.mainscene.runtimeroot_hud_canvas_gameplayhudcanvas_interactionprompt_prompttext",7685684025352193,"","[E] Interact","","[E] Взаимодействовать",""
+"notification.station.object_disabled",7798071684489216,"","Object {0} disabled","","Объект {0} отключён",""
+"notification.station.object_contaminated",7804407331676160,"","Object {0} contaminated","","Объект {0} загрязнён",""

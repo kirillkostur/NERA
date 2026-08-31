@@ -137,6 +137,10 @@ namespace NERA.UI
         public const string AntennaSignalFound = "antenna.signal_found";
         public const string AntennaSignalNotFound =
             "antenna.signal_not_found";
+        public const string StationObjectContaminated =
+            "station.object_contaminated";
+        public const string StationObjectDisabled =
+            "station.object_disabled";
         public const string ResearchCompleted = "research.completed";
     }
 }

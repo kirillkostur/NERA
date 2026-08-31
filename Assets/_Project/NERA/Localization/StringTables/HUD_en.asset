@@ -275,6 +275,16 @@ MonoBehaviour:
     m_Localized: '[E] Interact'
     m_Metadata:
       m_Items: []
+  - m_Id: 7798071684489216
+    m_Localized: Object {0} disabled
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
+  - m_Id: 7804407331676160
+    m_Localized: Object {0} contaminated
+    m_Metadata:
+      m_Items:
+      - rid: 1138171735028269373
   references:
     version: 2
     RefIds:
@@ -293,3 +303,5 @@ MonoBehaviour:
         - id: 7685672209997830
         - id: 7685672209997832
         - id: 7685672209997834
+        - id: 7798071684489216
+        - id: 7804407331676160
