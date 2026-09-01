@@ -208,7 +208,6 @@ namespace NERA.Terminal
                 return false;
             }
 
-            antenna?.ConsumeActiveSignal(location);
             Close();
             return true;
         }

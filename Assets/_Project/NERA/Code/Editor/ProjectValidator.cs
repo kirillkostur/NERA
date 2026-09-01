@@ -622,6 +622,7 @@ namespace NERA.Editor
             try
             {
                 int matchingSpawnPoints = 0;
+                int persistentWorldItemCount = 0;
                 foreach (GameObject root in scene.GetRootGameObjects())
                 {
                     SceneSpawnPoint[] spawnPoints =
@@ -631,6 +632,13 @@ namespace NERA.Editor
                             spawnPoint.SpawnPointId,
                             location.SpawnPointId,
                             StringComparison.Ordinal));
+
+                    persistentWorldItemCount +=
+                        root.GetComponentsInChildren<WorldItem>(true)
+                            .Count(worldItem =>
+                                worldItem.TracksWorldState &&
+                                !string.IsNullOrWhiteSpace(
+                                    worldItem.PersistentKey));
                 }
 
                 if (matchingSpawnPoints == 0)
@@ -645,6 +653,14 @@ namespace NERA.Editor
                         errorPrefix + $"scene has {matchingSpawnPoints} " +
                         $"SceneSpawnPoints with duplicate ID " +
                         $"'{location.SpawnPointId}'.");
+                }
+
+                if (location.UsesPostCollectionLifetime &&
+                    persistentWorldItemCount == 0)
+                {
+                    errors.Add(
+                        errorPrefix + "Unknown Signal scene has no persistent " +
+                        "WorldItem objects to complete its close timer.");
                 }
             }
             finally

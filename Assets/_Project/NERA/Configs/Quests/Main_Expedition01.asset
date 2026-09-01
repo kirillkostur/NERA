@@ -121,7 +121,7 @@ MonoBehaviour:
     enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 10
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_laboratory
       cause: 

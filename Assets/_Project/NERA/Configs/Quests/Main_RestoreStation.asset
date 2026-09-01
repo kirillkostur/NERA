@@ -65,7 +65,7 @@ MonoBehaviour:
     enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 10
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_terminal
       cause: 
@@ -84,7 +84,7 @@ MonoBehaviour:
     enemySpawnerIdsOnCompletion: []
     completionConditions:
     - signalType: 8
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_solar_01
       cause: 
@@ -93,7 +93,7 @@ MonoBehaviour:
       threshold: 1
       questMarkerId: quest_solarpanel_01
     - signalType: 8
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_drone
       cause: 
@@ -102,7 +102,7 @@ MonoBehaviour:
       threshold: 1
       questMarkerId: quest_drone_01
     - signalType: 8
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_antenna
       cause: 
@@ -111,7 +111,7 @@ MonoBehaviour:
       threshold: 1
       questMarkerId: quest_antenna_01
     - signalType: 8
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_turret_01
       cause: 
@@ -120,7 +120,7 @@ MonoBehaviour:
       threshold: 1
       questMarkerId: quest_turret_01
     - signalType: 8
-      evaluation: 0
+      evaluation: 1
       target: 0
       targetId: station_turret_02
       cause: 

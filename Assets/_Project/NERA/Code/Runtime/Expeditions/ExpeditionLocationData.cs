@@ -38,6 +38,13 @@ namespace NERA.Expeditions
         [SerializeField, Min(0f)]
         [Tooltip("Required configured Scan Range of the station antenna.")]
         private float requiredAntennaScanRange;
+        [SerializeField, Min(1f)]
+        [InspectorName("Close Delay After Collection")]
+        [Tooltip(
+            "How many seconds an antenna-discovered Unknown Signal remains " +
+            "available after all of its persistent world items have been " +
+            "collected.")]
+        private float postCollectionLifetime = 60f;
         [SerializeField] private LocationState initialState;
 
         [Header("Map")]
@@ -73,6 +80,11 @@ namespace NERA.Expeditions
             Mathf.Max(0f, requiredDroneTravelRange);
         public float RequiredAntennaScanRange =>
             Mathf.Max(0f, requiredAntennaScanRange);
+        public bool UsesPostCollectionLifetime =>
+            locationType == LocationType.UnknownSignal &&
+            discoverySource == DiscoverySource.Antenna;
+        public float PostCollectionLifetime =>
+            Mathf.Max(1f, postCollectionLifetime);
         public LocationState InitialState => initialState;
         public MapSymbol MapSymbol => mapSymbol;
         public MapSlotData MapSlot => mapSlot;

@@ -1,13 +1,17 @@
 using System;
+using System.Collections.Generic;
 using NERA.Development;
 using NERA.Energy;
 using NERA.Expeditions;
+using NERA.Items;
 using NERA.Locations;
 using NERA.Maintenance;
 using NERA.Quests;
+using NERA.Save;
 using NERA.Station;
 using NERA.Terminal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NERA.Antenna
 {
@@ -28,11 +32,34 @@ namespace NERA.Antenna
         public event Action<ExpeditionLocationData> SignalFound;
         public event Action SignalNotFound;
         public event Action<ExpeditionLocationData> ActiveSignalChanged;
+        public event Action ActiveSignalLifecycleChanged;
 
         public AntennaState State { get; private set; } = AntennaState.Locked;
         public ExpeditionLocationData CalibrationTarget { get; private set; }
         public ExpeditionLocationData ActiveSignal { get; private set; }
         public MapSlotData ActiveSignalMapSlot { get; private set; }
+        public bool ActiveSignalExpiryStarted =>
+            activeSignalExpiryStarted;
+        public long ActiveSignalExpiryUtcTicks =>
+            activeSignalExpiryStarted
+                ? activeSignalExpiryUtcTicks
+                : 0L;
+        public float ActiveSignalExpiryRemaining
+        {
+            get
+            {
+                if (!activeSignalExpiryStarted ||
+                    activeSignalExpiryUtcTicks <= 0L)
+                {
+                    return 0f;
+                }
+
+                double seconds =
+                    (activeSignalExpiryUtcTicks - DateTime.UtcNow.Ticks) /
+                    (double)TimeSpan.TicksPerSecond;
+                return Mathf.Max(0f, (float)seconds);
+            }
+        }
         [Obsolete("Use ActiveSignalMapSlot. Kept for old save migration.")]
         public int ActiveSignalSectorIndex =>
             ActiveSignalMapSlot != null
@@ -64,8 +91,13 @@ namespace NERA.Antenna
         private StationPowerController stationPower;
         private ExpeditionDiscoveryController discovery;
         private MaintainableObject subscribedMaintenance;
-        private readonly System.Collections.Generic.HashSet<string> consumedSignalIds =
-            new System.Collections.Generic.HashSet<string>();
+        private readonly HashSet<string> consumedSignalIds =
+            new HashSet<string>();
+        private readonly HashSet<string> activeSignalWorldItemKeys =
+            new HashSet<string>(StringComparer.Ordinal);
+        private WorldStateController subscribedWorldState;
+        private bool activeSignalExpiryStarted;
+        private long activeSignalExpiryUtcTicks;
 
         private void Awake()
         {
@@ -82,12 +114,17 @@ namespace NERA.Antenna
         private void OnEnable()
         {
             MaintainableObject.Registered += HandleMaintenanceRegistered;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
             CacheMaintenanceSource();
+            BindWorldState();
         }
 
         private void OnDisable()
         {
             MaintainableObject.Registered -= HandleMaintenanceRegistered;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            UnbindWorldState();
         }
 
         private void Start()
@@ -95,11 +132,16 @@ namespace NERA.Antenna
             CacheDependencies();
             EnsureEnergyRegistration();
             RefreshAvailability();
+            TrackActiveSignalSceneIfLoaded();
         }
 
         private void Update()
         {
             AdvanceCalibration(Time.deltaTime);
+            UpdateActiveSignalExpiry();
+
+            if (subscribedWorldState != WorldStateController.Instance)
+                BindWorldState();
         }
 
         public bool StartCalibration()
@@ -184,12 +226,19 @@ namespace NERA.Antenna
 
         public bool CompleteActiveProgressForDebug()
         {
-            if (State != AntennaState.Calibrating)
+            if (State == AntennaState.Calibrating)
+            {
+                elapsedCalibrationTime = CalibrationDuration;
+                CalibrationProgressChanged?.Invoke(1f);
+                CompleteCalibration();
+                return true;
+            }
+
+            if (!activeSignalExpiryStarted || ActiveSignal == null)
                 return false;
 
-            elapsedCalibrationTime = CalibrationDuration;
-            CalibrationProgressChanged?.Invoke(1f);
-            CompleteCalibration();
+            activeSignalExpiryUtcTicks = DateTime.UtcNow.Ticks;
+            UpdateActiveSignalExpiry();
             return true;
         }
 
@@ -283,6 +332,7 @@ namespace NERA.Antenna
             {
                 ActiveSignal = target;
                 ActiveSignalMapSlot = PickRandomDiscoveredExpeditionSlot();
+                ResetActiveSignalLifecycle();
                 SetState(AntennaState.SignalFound);
                 SignalFound?.Invoke(target);
                 QuestController.Instance?.Report(
@@ -313,7 +363,9 @@ namespace NERA.Antenna
             consumedSignalIds.Add(signal.LocationId);
             ActiveSignal = null;
             ActiveSignalMapSlot = null;
+            ResetActiveSignalLifecycle();
             ActiveSignalChanged?.Invoke(null);
+            ActiveSignalLifecycleChanged?.Invoke();
             RefreshAvailability();
             return true;
         }
@@ -346,6 +398,7 @@ namespace NERA.Antenna
             consumedSignalIds.Remove(signal.LocationId);
             ActiveSignal = signal;
             ActiveSignalMapSlot = mapSlot;
+            ResetActiveSignalLifecycle();
             SetState(AntennaState.SignalFound);
             SignalFound?.Invoke(signal);
             QuestController.Instance?.Report(
@@ -362,6 +415,24 @@ namespace NERA.Antenna
             string activeSignalMapSlotId,
             int legacySignalSectorIndex,
             System.Collections.Generic.IEnumerable<string> consumedSignalIds
+        )
+        {
+            RestoreSignalState(
+                activeSignalId,
+                activeSignalMapSlotId,
+                legacySignalSectorIndex,
+                consumedSignalIds,
+                false,
+                0L);
+        }
+
+        public void RestoreSignalState(
+            string activeSignalId,
+            string activeSignalMapSlotId,
+            int legacySignalSectorIndex,
+            System.Collections.Generic.IEnumerable<string> consumedSignalIds,
+            bool expiryStarted,
+            long expiryUtcTicks
         )
         {
             this.consumedSignalIds.Clear();
@@ -381,8 +452,34 @@ namespace NERA.Antenna
                     activeSignalMapSlotId,
                     legacySignalSectorIndex)
                 : null;
-            RefreshAvailability();
+            if (ActiveSignal != null && ActiveSignalMapSlot == null)
+                ActiveSignalMapSlot = PickRandomDiscoveredExpeditionSlot();
+            activeSignalWorldItemKeys.Clear();
+            activeSignalExpiryStarted =
+                ActiveSignal != null && expiryStarted;
+            activeSignalExpiryUtcTicks =
+                activeSignalExpiryStarted ? expiryUtcTicks : 0L;
+
+            if (activeSignalExpiryStarted &&
+                (activeSignalExpiryUtcTicks <= 0L ||
+                 ActiveSignalExpiryRemaining <= 0f))
+            {
+                ConsumeActiveSignal(ActiveSignal);
+                return;
+            }
+
+            if (ActiveSignal != null)
+            {
+                SetState(AntennaState.SignalFound);
+                TrackActiveSignalSceneIfLoaded();
+            }
+            else
+            {
+                RefreshAvailability();
+            }
+
             ActiveSignalChanged?.Invoke(ActiveSignal);
+            ActiveSignalLifecycleChanged?.Invoke();
         }
 
         [Obsolete("Use the overload with a stable map-slot ID.")]
@@ -529,6 +626,173 @@ namespace NERA.Antenna
             return null;
         }
 
+        private void HandleSceneLoaded(
+            Scene scene,
+            LoadSceneMode _)
+        {
+            TrackActiveSignalScene(scene);
+        }
+
+        private void TrackActiveSignalSceneIfLoaded()
+        {
+            if (ActiveSignal == null ||
+                activeSignalExpiryStarted ||
+                string.IsNullOrWhiteSpace(ActiveSignal.SceneName))
+            {
+                return;
+            }
+
+            Scene scene = SceneManager.GetSceneByName(ActiveSignal.SceneName);
+            if (scene.IsValid() && scene.isLoaded)
+                TrackActiveSignalScene(scene);
+        }
+
+        private void TrackActiveSignalScene(Scene scene)
+        {
+            if (ActiveSignal == null ||
+                !ActiveSignal.UsesPostCollectionLifetime ||
+                activeSignalExpiryStarted ||
+                !scene.IsValid() ||
+                !scene.isLoaded ||
+                !string.Equals(
+                    scene.name,
+                    ActiveSignal.SceneName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            activeSignalWorldItemKeys.Clear();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (WorldItem worldItem in
+                         root.GetComponentsInChildren<WorldItem>(true))
+                {
+                    if (worldItem == null || !worldItem.TracksWorldState)
+                        continue;
+
+                    string key = PersistentSceneIdentity.Normalize(
+                        worldItem.PersistentKey);
+                    if (!string.IsNullOrEmpty(key))
+                        activeSignalWorldItemKeys.Add(key);
+                }
+            }
+
+            if (activeSignalWorldItemKeys.Count == 0)
+            {
+                Debug.LogWarning(
+                    $"Antenna: Unknown Signal '{ActiveSignal.LocationId}' " +
+                    "has no persistent WorldItem objects, so it will remain " +
+                    "available instead of closing automatically.",
+                    this);
+                return;
+            }
+
+            EvaluateActiveSignalCollection();
+        }
+
+        private void BindWorldState()
+        {
+            WorldStateController current = WorldStateController.Instance;
+            if (subscribedWorldState == current)
+                return;
+
+            UnbindWorldState();
+            subscribedWorldState = current;
+            if (subscribedWorldState != null)
+            {
+                subscribedWorldState.StateChanged +=
+                    HandleWorldStateChanged;
+                subscribedWorldState.StateRestored +=
+                    HandleWorldStateChanged;
+            }
+
+            EvaluateActiveSignalCollection();
+        }
+
+        private void UnbindWorldState()
+        {
+            if (subscribedWorldState == null)
+                return;
+
+            subscribedWorldState.StateChanged -= HandleWorldStateChanged;
+            subscribedWorldState.StateRestored -= HandleWorldStateChanged;
+            subscribedWorldState = null;
+        }
+
+        private void HandleWorldStateChanged()
+        {
+            EvaluateActiveSignalCollection();
+        }
+
+        private void EvaluateActiveSignalCollection()
+        {
+            if (ActiveSignal == null ||
+                !ActiveSignal.UsesPostCollectionLifetime ||
+                activeSignalExpiryStarted ||
+                subscribedWorldState == null ||
+                activeSignalWorldItemKeys.Count == 0)
+            {
+                return;
+            }
+
+            foreach (string persistentKey in activeSignalWorldItemKeys)
+            {
+                if (!subscribedWorldState.IsConsumed(persistentKey))
+                    return;
+            }
+
+            StartActiveSignalExpiry();
+        }
+
+        private void StartActiveSignalExpiry()
+        {
+            if (ActiveSignal == null ||
+                !ActiveSignal.UsesPostCollectionLifetime ||
+                activeSignalExpiryStarted)
+            {
+                return;
+            }
+
+            activeSignalExpiryStarted = true;
+            long lifetimeTicks = (long)Math.Ceiling(
+                ActiveSignal.PostCollectionLifetime *
+                TimeSpan.TicksPerSecond);
+            activeSignalExpiryUtcTicks =
+                DateTime.UtcNow.Ticks +
+                Math.Max(TimeSpan.TicksPerSecond, lifetimeTicks);
+            ActiveSignalLifecycleChanged?.Invoke();
+            Debug.Log(
+                $"Antenna: All items from '{ActiveSignal.LocationId}' were " +
+                $"collected. Location closes in " +
+                $"{ActiveSignal.PostCollectionLifetime:0.#} seconds.",
+                this);
+        }
+
+        private void UpdateActiveSignalExpiry()
+        {
+            if (!activeSignalExpiryStarted ||
+                ActiveSignal == null ||
+                ActiveSignalExpiryRemaining > 0f)
+            {
+                return;
+            }
+
+            ExpeditionLocationData expiredSignal = ActiveSignal;
+            Debug.Log(
+                $"Antenna: Unknown Signal '{expiredSignal.LocationId}' " +
+                "expired and was removed from the terminal map.",
+                this);
+            ConsumeActiveSignal(expiredSignal);
+        }
+
+        private void ResetActiveSignalLifecycle()
+        {
+            activeSignalWorldItemKeys.Clear();
+            activeSignalExpiryStarted = false;
+            activeSignalExpiryUtcTicks = 0L;
+        }
+
         private bool IsConsumed(ExpeditionLocationData signal)
         {
             return signal != null && consumedSignalIds.Contains(signal.LocationId);
@@ -661,6 +925,8 @@ namespace NERA.Antenna
         private void OnDestroy()
         {
             MaintainableObject.Registered -= HandleMaintenanceRegistered;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            UnbindWorldState();
             EnergySystemController.Instance?.SetConsumerActive(
                 AntennaConsumerId,
                 false

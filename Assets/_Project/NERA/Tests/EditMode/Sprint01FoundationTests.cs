@@ -2198,6 +2198,7 @@ Assert.That(
         private ExpeditionDiscoveryController discovery;
         private MaintainableObject maintenance;
         private AntennaController antenna;
+        private WorldStateController worldState;
         private ExpeditionLocationData expedition;
         private ExpeditionLocationData signal;
         private MapSlotData mapSlot;
@@ -2211,6 +2212,7 @@ Assert.That(
             SetSingleton(typeof(ExpeditionDiscoveryController), null);
             SetSingleton(typeof(AntennaController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(WorldStateController), null);
 
             root = new GameObject("Test_AntennaSystems");
             stationConfig =
@@ -2222,6 +2224,7 @@ Assert.That(
             energy = root.AddComponent<EnergySystemController>();
             power = root.AddComponent<StationPowerController>();
             discovery = root.AddComponent<ExpeditionDiscoveryController>();
+            worldState = root.AddComponent<WorldStateController>();
             StationObjectIdentity identity =
                 root.AddComponent<StationObjectIdentity>();
             identity.Configure(
@@ -2242,6 +2245,7 @@ Assert.That(
             SetSingleton(typeof(StationPowerController), power);
             SetSingleton(typeof(ExpeditionDiscoveryController), discovery);
             SetSingleton(typeof(AntennaController), antenna);
+            SetSingleton(typeof(WorldStateController), worldState);
 
             energy.RegisterBattery("battery_01", 1000f, 1000f);
             energy.SetGridEnabled(true);
@@ -2285,6 +2289,7 @@ Assert.That(
             SetSingleton(typeof(ExpeditionDiscoveryController), null);
             SetSingleton(typeof(AntennaController), null);
             SetSingleton(typeof(StationSystemsController), null);
+            SetSingleton(typeof(WorldStateController), null);
         }
 
         [Test]
@@ -2329,6 +2334,52 @@ Assert.That(
         }
 
         [Test]
+        public void UnknownSignalExpiresOnlyAfterEveryWorldItemIsCollected()
+        {
+            Assert.That(
+                antenna.ForceRevealSignalForDebug(signal),
+                Is.True,
+                "The test signal must be revealed before lifecycle checks.");
+            TrackActiveSignalItems(
+                "unknown_signal_01/item_a",
+                "unknown_signal_01/item_b");
+
+            Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
+            Assert.That(antenna.ActiveSignalExpiryStarted, Is.False);
+
+            worldState.MarkConsumed("unknown_signal_01/item_a");
+
+            Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
+            Assert.That(antenna.ActiveSignalExpiryStarted, Is.False);
+
+            worldState.MarkConsumed("unknown_signal_01/item_b");
+
+            Assert.That(antenna.ActiveSignal, Is.EqualTo(signal));
+            Assert.That(
+                antenna.ActiveSignalExpiryStarted,
+                Is.True,
+                "Collecting the final tracked item must start the close timer.");
+            Assert.That(
+                antenna.ActiveSignalExpiryRemaining,
+                Is.GreaterThan(0f));
+            Assert.That(
+                antenna.ConsumedSignalIds,
+                Does.Not.Contain(signal.LocationId));
+
+            Assert.That(
+                antenna.CompleteActiveProgressForDebug(),
+                Is.True,
+                "The developer timer completion hook must expire the signal.");
+
+            Assert.That(antenna.ActiveSignal, Is.Null);
+            Assert.That(antenna.ActiveSignalExpiryStarted, Is.False);
+            Assert.That(
+                antenna.ConsumedSignalIds,
+                Does.Contain(signal.LocationId));
+            Assert.That(antenna.CanCalibrate(signal), Is.False);
+        }
+
+        [Test]
         public void AntennaCannotCalibrateDroneLocations()
         {
             ExpeditionLocationData expedition = CreateLocation(
@@ -2340,6 +2391,35 @@ Assert.That(
             Assert.That(antenna.StartCalibration(expedition), Is.False);
 
             Object.DestroyImmediate(expedition);
+        }
+
+        [Test]
+        public void PostCollectionLifetimeOnlyAppliesToAntennaUnknownSignals()
+        {
+            ExpeditionLocationData antennaExpedition = CreateLocation(
+                "antenna_expedition",
+                LocationType.Expedition,
+                DiscoverySource.Antenna);
+            ExpeditionLocationData droneSignal = CreateLocation(
+                "drone_signal",
+                LocationType.UnknownSignal,
+                DiscoverySource.Drone);
+
+            try
+            {
+                Assert.That(signal.UsesPostCollectionLifetime, Is.True);
+                Assert.That(
+                    expedition.UsesPostCollectionLifetime,
+                    Is.False,
+                    "Drone expeditions must remain available indefinitely.");
+                Assert.That(antennaExpedition.UsesPostCollectionLifetime, Is.False);
+                Assert.That(droneSignal.UsesPostCollectionLifetime, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(antennaExpedition);
+                Object.DestroyImmediate(droneSignal);
+            }
         }
 
         [Test]
@@ -2471,6 +2551,30 @@ Assert.That(
             locations.GetArrayElementAtIndex(index).objectReferenceValue =
                 knownLocation;
             serializedDiscovery.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private void TrackActiveSignalItems(params string[] persistentKeys)
+        {
+            const BindingFlags Flags =
+                BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(AntennaController)
+                .GetMethod("BindWorldState", Flags)
+                ?.Invoke(antenna, null);
+            var trackedKeys = (HashSet<string>)typeof(AntennaController)
+                .GetField("activeSignalWorldItemKeys", Flags)
+                ?.GetValue(antenna);
+            Assert.That(trackedKeys, Is.Not.Null);
+
+            trackedKeys.Clear();
+            foreach (string persistentKey in persistentKeys)
+            {
+                trackedKeys.Add(
+                    PersistentSceneIdentity.Normalize(persistentKey));
+            }
+
+            typeof(AntennaController)
+                .GetMethod("EvaluateActiveSignalCollection", Flags)
+                ?.Invoke(antenna, null);
         }
 
         private static ExpeditionLocationData CreateLocation(

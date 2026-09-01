@@ -50,7 +50,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public const int CurrentVersion = 21;
+        public const int CurrentVersion = 22;
 
         public int version = CurrentVersion;
         public string checkpointSceneName;
@@ -82,6 +82,8 @@ namespace NERA.Save
         public string activeAntennaSignalMapSlotId;
         // Version 12 and older: migrated through MapSlotData.legacySectorIndex.
         public int activeAntennaSignalSectorIndex = -1;
+        public bool activeAntennaSignalExpiryStarted;
+        public long activeAntennaSignalExpiryUtcTicks;
         public List<string> consumedAntennaSignalLocationIds = new List<string>();
         public List<string> discoveredLocationIds = new List<string>();
         public List<string> inventoryItemIds = new List<string>();

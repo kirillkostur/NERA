@@ -24,6 +24,7 @@ MonoBehaviour:
   droneScanDuration: 5
   requiredDroneTravelRange: 0
   requiredAntennaScanRange: 1
+  postCollectionLifetime: 60
   initialState: 0
   mapSymbol: 1
   mapSlot: {fileID: 0}

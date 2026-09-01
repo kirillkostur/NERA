@@ -183,6 +183,7 @@ namespace NERA.Save
             {
                 antenna.ConditionChanged += HandleFloatChanged;
                 antenna.ActiveSignalChanged += HandleSignalChanged;
+                antenna.ActiveSignalLifecycleChanged += MarkDirty;
             }
             if (inventory != null)
                 inventory.InventoryChanged += MarkDirty;
@@ -228,6 +229,7 @@ namespace NERA.Save
             {
                 antenna.ConditionChanged -= HandleFloatChanged;
                 antenna.ActiveSignalChanged -= HandleSignalChanged;
+                antenna.ActiveSignalLifecycleChanged -= MarkDirty;
             }
             if (inventory != null)
                 inventory.InventoryChanged -= MarkDirty;

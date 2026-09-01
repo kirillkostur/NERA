@@ -3,6 +3,8 @@ using System.Collections;
 using System.Reflection;
 using System.IO;
 using NERA.Energy;
+using NERA.Expeditions;
+using NERA.Locations;
 using NERA.Save;
 using UnityEditor;
 using NUnit.Framework;
@@ -246,7 +248,9 @@ namespace NERA.Tests
                 checkpointRotationY = 0.7071068f,
                 checkpointRotationW = 0.7071068f,
                 hasDroneBatteryCharge = true,
-                droneBatteryCharge = 42.5f
+                droneBatteryCharge = 42.5f,
+                activeAntennaSignalExpiryStarted = true,
+                activeAntennaSignalExpiryUtcTicks = 638922816000000000L
             };
             source.consumedWorldObjectIds.Add("expedition_02/loot_a");
             source.defeatedEnemyObjectIds.Add("expedition_02/enemy_a");
@@ -260,6 +264,12 @@ namespace NERA.Tests
                 Is.EqualTo(SaveGameData.CurrentVersion));
             Assert.That(restored.hasDroneBatteryCharge, Is.True);
             Assert.That(restored.droneBatteryCharge, Is.EqualTo(42.5f));
+            Assert.That(
+                restored.activeAntennaSignalExpiryStarted,
+                Is.True);
+            Assert.That(
+                restored.activeAntennaSignalExpiryUtcTicks,
+                Is.EqualTo(638922816000000000L));
             Assert.That(
                 restored.checkpointSceneName,
                 Is.EqualTo("Expedition_02"));
@@ -279,6 +289,78 @@ namespace NERA.Tests
             Assert.That(
                 restored.completedWorldFlagIds,
                 Is.EquivalentTo(new[] { "expedition_02/puzzle_a" }));
+        }
+
+        [Test]
+        public void LegacyConsumedSignalAtCheckpointIsRestoredAsActive()
+        {
+            GameObject root = new GameObject("LegacySignalMigration_Test");
+            ExpeditionLocationData location =
+                ScriptableObject.CreateInstance<ExpeditionLocationData>();
+            try
+            {
+                ExpeditionDiscoveryController discovery =
+                    root.AddComponent<ExpeditionDiscoveryController>();
+                SaveGameController saveController =
+                    root.AddComponent<SaveGameController>();
+
+                SerializedObject serializedLocation =
+                    new SerializedObject(location);
+                serializedLocation.FindProperty("locationId").stringValue =
+                    "UnknownSignal01";
+                serializedLocation.FindProperty("locationType").enumValueIndex =
+                    (int)LocationType.UnknownSignal;
+                serializedLocation.FindProperty("discoverySource").enumValueIndex =
+                    (int)DiscoverySource.Antenna;
+                serializedLocation.FindProperty("scene")
+                    .FindPropertyRelative("assetPath").stringValue =
+                    "Assets/_Project/NERA/Scenes/UnknownSignal_01.unity";
+                serializedLocation.ApplyModifiedPropertiesWithoutUndo();
+
+                SerializedObject serializedDiscovery =
+                    new SerializedObject(discovery);
+                SerializedProperty knownLocations =
+                    serializedDiscovery.FindProperty("knownLocations");
+                knownLocations.arraySize = 1;
+                knownLocations.GetArrayElementAtIndex(0)
+                    .objectReferenceValue = location;
+                serializedDiscovery.ApplyModifiedPropertiesWithoutUndo();
+
+                typeof(SaveGameController)
+                    .GetField(
+                        "discovery",
+                        BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.SetValue(saveController, discovery);
+
+                SaveGameData data = new SaveGameData
+                {
+                    version = 21,
+                    checkpointSceneName = "UnknownSignal_01"
+                };
+                data.consumedAntennaSignalLocationIds.Add(
+                    location.LocationId);
+
+                typeof(SaveGameController)
+                    .GetMethod(
+                        "MigrateLegacyAntennaSignalLifecycle",
+                        BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(saveController, new object[] { data });
+
+                Assert.That(
+                    data.activeAntennaSignalLocationId,
+                    Is.EqualTo(location.LocationId));
+                Assert.That(
+                    data.consumedAntennaSignalLocationIds,
+                    Does.Not.Contain(location.LocationId));
+                Assert.That(
+                    data.activeAntennaSignalExpiryStarted,
+                    Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(location);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
 
         [Test]

@@ -12,6 +12,8 @@ namespace NERA.Editor
         {
             serializedObject.Update();
 
+            SerializedProperty locationType =
+                serializedObject.FindProperty("locationType");
             SerializedProperty discoverySource =
                 serializedObject.FindProperty("discoverySource");
             SerializedProperty property = serializedObject.GetIterator();
@@ -23,6 +25,7 @@ namespace NERA.Editor
 
                 if (ShouldHideDiscoveryProperty(
                         property.propertyPath,
+                        locationType,
                         discoverySource))
                 {
                     continue;
@@ -40,8 +43,22 @@ namespace NERA.Editor
 
         private static bool ShouldHideDiscoveryProperty(
             string propertyPath,
+            SerializedProperty locationType,
             SerializedProperty discoverySource)
         {
+            if (propertyPath == "postCollectionLifetime")
+            {
+                bool excludesTimerByType =
+                    !locationType.hasMultipleDifferentValues &&
+                    (LocationType)locationType.enumValueIndex !=
+                    LocationType.UnknownSignal;
+                bool excludesTimerBySource =
+                    !discoverySource.hasMultipleDifferentValues &&
+                    (DiscoverySource)discoverySource.enumValueIndex !=
+                    DiscoverySource.Antenna;
+                return excludesTimerByType || excludesTimerBySource;
+            }
+
             if (discoverySource.hasMultipleDifferentValues)
                 return false;
 

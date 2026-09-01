@@ -9,6 +9,7 @@ using NERA.Energy;
 using NERA.Inventory;
 using NERA.Items;
 using NERA.Library;
+using NERA.Locations;
 using NERA.Maintenance;
 using NERA.Quests;
 using NERA.Research;
@@ -528,6 +529,10 @@ namespace NERA.Save
                     antenna.ActiveSignalMapSlot != null
                         ? antenna.ActiveSignalMapSlot.LegacySectorIndex
                         : -1;
+                data.activeAntennaSignalExpiryStarted =
+                    antenna.ActiveSignalExpiryStarted;
+                data.activeAntennaSignalExpiryUtcTicks =
+                    antenna.ActiveSignalExpiryUtcTicks;
                 data.consumedAntennaSignalLocationIds.AddRange(
                     antenna.ConsumedSignalIds
                 );
@@ -711,16 +716,19 @@ namespace NERA.Save
                 stationPower.SetState((StationPowerState)data.stationPowerState);
             }
 
+            if (discovery != null)
+                discovery.RestoreDiscovered(data.discoveredLocationIds);
+
+            MigrateLegacyAntennaSignalLifecycle(data);
             antenna?.RestoreCondition(data.antennaCondition);
             antenna?.RestoreSignalState(
                 data.activeAntennaSignalLocationId,
                 data.activeAntennaSignalMapSlotId,
                 data.activeAntennaSignalSectorIndex,
-                data.consumedAntennaSignalLocationIds
+                data.consumedAntennaSignalLocationIds,
+                data.activeAntennaSignalExpiryStarted,
+                data.activeAntennaSignalExpiryUtcTicks
             );
-
-            if (discovery != null)
-                discovery.RestoreDiscovered(data.discoveredLocationIds);
 
             RegisterResearchLibraryEntries();
             research?.RestoreAnalyzed(data.analyzedResearchIds);
@@ -862,6 +870,46 @@ namespace NERA.Save
             SynchronizeQuestStates();
             if (data.version < 14)
                 SynchronizeQuestFacts();
+        }
+
+        private void MigrateLegacyAntennaSignalLifecycle(
+            SaveGameData data)
+        {
+            if (data == null ||
+                data.version >= 22 ||
+                discovery == null ||
+                !string.IsNullOrWhiteSpace(
+                    data.activeAntennaSignalLocationId) ||
+                string.IsNullOrWhiteSpace(data.checkpointSceneName) ||
+                data.consumedAntennaSignalLocationIds == null ||
+                !discovery.TryGetKnownLocationBySceneName(
+                    data.checkpointSceneName,
+                    out ExpeditionLocationData location) ||
+                location.LocationType != LocationType.UnknownSignal ||
+                location.DiscoverySource != DiscoverySource.Antenna)
+            {
+                return;
+            }
+
+            int consumedIndex =
+                data.consumedAntennaSignalLocationIds.FindIndex(
+                    locationId => string.Equals(
+                        locationId?.Trim(),
+                        location.LocationId,
+                        StringComparison.Ordinal));
+            if (consumedIndex < 0)
+                return;
+
+            data.consumedAntennaSignalLocationIds.RemoveAt(consumedIndex);
+            data.activeAntennaSignalLocationId = location.LocationId;
+            data.activeAntennaSignalMapSlotId = string.Empty;
+            data.activeAntennaSignalSectorIndex = -1;
+            data.activeAntennaSignalExpiryStarted = false;
+            data.activeAntennaSignalExpiryUtcTicks = 0L;
+            Debug.Log(
+                $"SaveGame: Restored legacy Unknown Signal " +
+                $"'{location.LocationId}' so its collection lifecycle can " +
+                "complete.");
         }
 
         private static void CaptureInstalledParts(
