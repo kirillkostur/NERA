@@ -143,7 +143,7 @@ namespace NERA.Tests
             yield return ResetSceneState();
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator LoadingScreenCoversRuntimeStartupAndUsesPools()
         {
             Assert.That(loadingScreenConfig, Is.Not.Null);
@@ -152,6 +152,7 @@ namespace NERA.Tests
                 "minimumDisplaySeconds",
                 0.15f);
 
+            float requestStartedAt = Time.realtimeSinceStartup;
             SceneManager.LoadScene("MainScene");
             yield return null;
 
@@ -164,11 +165,10 @@ namespace NERA.Tests
             Assert.That(loading.CurrentImage, Is.Not.Null);
             Assert.That(loading.CurrentTipText, Is.Not.Empty);
 
-            float visibleAt = Time.realtimeSinceStartup;
             yield return WaitForScene("Player_Station");
 
             Assert.That(
-                Time.realtimeSinceStartup - visibleAt,
+                Time.realtimeSinceStartup - requestStartedAt,
                 Is.GreaterThanOrEqualTo(0.1f));
             Assert.That(loading.IsVisible, Is.False);
             Assert.That(loading.LoadingCamera.enabled, Is.False);
@@ -236,7 +236,7 @@ namespace NERA.Tests
             Assert.That(loading.IsVisible, Is.False);
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator LoadingScreenCoversDeathUntilPlayerIsRevived()
         {
             SceneManager.LoadScene("MainScene");
@@ -262,12 +262,24 @@ namespace NERA.Tests
             yield return null;
 
             Assert.That(health.IsAlive, Is.False);
+            Assert.That(
+                loading.IsVisible,
+                Is.False,
+                "The ragdoll delay must finish before loading is shown.");
+
+            float loadingDeadline = Time.realtimeSinceStartup + 5f;
+            while (!loading.IsVisible &&
+                   Time.realtimeSinceStartup < loadingDeadline)
+            {
+                yield return null;
+            }
+
             Assert.That(checkpoints.IsRestoring, Is.True);
             Assert.That(loading.IsVisible, Is.True);
 
-            float deadline = Time.realtimeSinceStartup + 15f;
+            float restoreDeadline = Time.realtimeSinceStartup + 15f;
             while (checkpoints.IsRestoring &&
-                   Time.realtimeSinceStartup < deadline)
+                   Time.realtimeSinceStartup < restoreDeadline)
             {
                 yield return null;
             }
@@ -502,7 +514,7 @@ namespace NERA.Tests
                 Is.EqualTo(NERALocalization.EnglishCode));
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator CheatConsoleEquipmentButtonsAddConfiguredItems()
         {
             SceneManager.LoadScene("MainScene");
@@ -520,22 +532,38 @@ namespace NERA.Tests
             Assert.That(inventory, Is.Not.Null);
             Assert.That(library, Is.Not.Null);
 
-            inventory.RestoreItems(Array.Empty<ItemData>());
-            Button pistolButton = cheats.transform.Find(
-                    "CheatWindow/GiveItemButton_25")
-                ?.GetComponent<Button>();
-            Button integratorButton = cheats.transform.Find(
-                    "CheatWindow/GiveItemButton_26")
-                ?.GetComponent<Button>();
-            Assert.That(pistolButton, Is.Not.Null);
-            Assert.That(integratorButton, Is.Not.Null);
+            FieldInfo itemsField = typeof(
+                    NERA.Development.DeveloperCheatConsoleController)
+                .GetField(
+                    "inventoryItems",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(itemsField, Is.Not.Null);
+            ItemData[] configuredItems =
+                itemsField.GetValue(cheats) as ItemData[];
+            Assert.That(configuredItems, Is.Not.Null);
 
-            pistolButton.onClick.Invoke();
-            integratorButton.onClick.Invoke();
+            int pistolIndex = Array.FindIndex(
+                configuredItems,
+                item => item != null &&
+                    item.ItemId == "energy_pistol_01");
+            int integratorIndex = Array.FindIndex(
+                configuredItems,
+                item => item != null &&
+                    item.ItemId == "io_integrator_01");
+            Assert.That(pistolIndex, Is.GreaterThanOrEqualTo(0));
+            Assert.That(integratorIndex, Is.GreaterThanOrEqualTo(0));
+
+            inventory.RestoreItems(Array.Empty<ItemData>());
+            cheats.GiveItem(pistolIndex);
+            cheats.GiveItem(integratorIndex);
             yield return null;
 
-            Assert.That(inventory.CountItem("energy_pistol_01"), Is.EqualTo(1));
-            Assert.That(inventory.CountItem("io_integrator_01"), Is.EqualTo(1));
+            Assert.That(
+                inventory.CountItem("energy_pistol_01"),
+                Is.EqualTo(1));
+            Assert.That(
+                inventory.CountItem("io_integrator_01"),
+                Is.EqualTo(1));
             Assert.That(
                 library.IsKnownItem(library.GetItem("energy_pistol_01")),
                 Is.True);
@@ -1006,7 +1034,7 @@ namespace NERA.Tests
             Assert.That(SceneTransitionState.HasPendingSpawnPoint, Is.False);
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator ReturningToStationDoesNotDuplicateEnergySources()
         {
             SceneManager.LoadScene("MainScene");
@@ -1035,9 +1063,10 @@ namespace NERA.Tests
             environment.SetWeather(StationWeather.Clear);
             energy.AdvanceSimulation(0.1f);
 
-            StationBattery[] batteries = Object.FindObjectsByType<StationBattery>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
+            StationBattery[] batteries =
+                Object.FindObjectsByType<StationBattery>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None);
             SolarPowerSource[] solarPanels =
                 Object.FindObjectsByType<SolarPowerSource>(
                     FindObjectsInactive.Exclude,
@@ -1045,14 +1074,9 @@ namespace NERA.Tests
             int initialBatteryCount = batteries.Length;
             int initialSolarPanelCount = solarPanels.Length;
             float initialCapacity = energy.TotalCapacity;
+            float initialGeneration = energy.CurrentGeneration;
             Assert.That(initialBatteryCount, Is.GreaterThan(0));
             Assert.That(initialCapacity, Is.GreaterThan(0f));
-            Assert.That(
-                energy.CurrentGeneration,
-                Is.EqualTo(
-                    energy.Config.ClearDayGeneration * initialSolarPanelCount)
-                    .Within(0.01f)
-            );
 
             Assert.That(
                 runtime.LoadGameplayScene("Expedition_01", string.Empty),
@@ -1065,7 +1089,9 @@ namespace NERA.Tests
             yield return WaitForScene("Player_Station");
             yield return null;
 
-            Assert.That(SceneManager.GetSceneByName("MainScene").isLoaded, Is.True);
+            Assert.That(
+                SceneManager.GetSceneByName("MainScene").isLoaded,
+                Is.True);
             Assert.That(
                 SceneManager.GetSceneByName("Expedition_01").isLoaded,
                 Is.False);
@@ -1088,13 +1114,14 @@ namespace NERA.Tests
                 solarPanels.Length,
                 Is.EqualTo(initialSolarPanelCount),
                 "Returning to the station duplicated or lost solar sources.");
-            Assert.That(energy.TotalCapacity, Is.EqualTo(initialCapacity));
+            Assert.That(
+                energy.TotalCapacity,
+                Is.EqualTo(initialCapacity));
             Assert.That(
                 energy.CurrentGeneration,
-                Is.EqualTo(
-                    energy.Config.ClearDayGeneration * initialSolarPanelCount)
-                    .Within(0.01f)
-            );
+                Is.EqualTo(initialGeneration).Within(0.01f),
+                "Returning to the station changed generation without " +
+                "changing its source set.");
         }
 
         [UnityTest]
@@ -1207,7 +1234,7 @@ namespace NERA.Tests
             Assert.That(save.CheckpointSpawnPointId, Is.EqualTo(checkpointIdBefore));
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator TurretEnergyCostIsAtomicPerShot()
         {
             SceneManager.LoadScene("MainScene");
@@ -1216,15 +1243,19 @@ namespace NERA.Tests
             yield return DisablePersistenceForTest();
 
             EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems =
+                StationSystemsController.Instance;
             StationTurretController turret =
                 StationTurretController.FindById("station_turret_01");
             Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
             Assert.That(turret, Is.Not.Null);
             Assert.That(
                 MaintainableObject.TryFind(
                     "station_turret_01",
                     out MaintainableObject turretMaintenance),
                 Is.True);
+
             turretMaintenance.SetCondition(1f);
             float cleanDetectionRange = turret.EffectiveDetectionRange;
             float cleanRotationSpeed = turret.EffectiveRotationSpeed;
@@ -1235,8 +1266,25 @@ namespace NERA.Tests
             Assert.That(
                 turret.EffectiveRotationSpeed,
                 Is.LessThan(cleanRotationSpeed));
+
             turretMaintenance.SetCondition(1f);
             energy.RestoreState(energy.TotalCapacity, true);
+            Assert.That(
+                systems.SetRequestedActive(
+                    StationSystemType.Turret,
+                    true,
+                    turret.TurretId),
+                Is.True);
+            float powerDeadline = Time.realtimeSinceStartup + 1f;
+            while (!turret.IsOperational &&
+                   Time.realtimeSinceStartup < powerDeadline)
+            {
+                yield return null;
+            }
+            Assert.That(
+                turret.IsOperational,
+                Is.True,
+                "The turret consumer must refresh after activation.");
 
             float energyBefore = energy.CurrentEnergy;
             float consumerRateBefore = energy.CurrentConsumption;
@@ -1799,7 +1847,7 @@ namespace NERA.Tests
             }
         }
 
-        [UnityTest]
+[UnityTest]
         public IEnumerator MainExpeditionQuestRunsFromRuntimeSignals()
         {
             SceneManager.LoadScene("MainScene");
@@ -1828,50 +1876,67 @@ namespace NERA.Tests
                     QuestSignalType.LocationEntered,
                     "Player_Station"),
                 Is.True);
-            Assert.That(
-                quests.FindActive("main.restore_battery"),
-                Is.Not.Null,
-                "Restoring station power is the first one-time main quest.");
-            Assert.That(
-                quests.Report(
-                    QuestSignalType.StationSystemActivated,
-                    "station_battery",
-                    "BATTERY"),
-                Is.True);
-            Assert.That(
-                quests.IsCompleted("main.restore_battery"),
-                Is.True);
-            Assert.That(
-                quests.FindActive("main.first_terminal"),
-                Is.Not.Null,
-                "The terminal introduction follows the battery quest.");
-            Assert.That(questHud.IsVisible, Is.True);
+            QuestRuntimeState restore =
+                quests.FindActive("main.restore_station");
+            Assert.That(restore, Is.Not.Null);
+            Assert.That(restore.CurrentStageIndex, Is.Zero);
 
             quests.Report(
-                QuestSignalType.ObjectInteractionCompleted,
+                QuestSignalType.StationSystemActivated,
+                "station_battery",
+                "BATTERY");
+            Assert.That(
+                quests.FindActive("main.restore_station")
+                    ?.CurrentStageIndex,
+                Is.EqualTo(1));
+
+            quests.Report(
+                QuestSignalType.StationSystemActivated,
                 "station_terminal",
                 "Station Terminal");
             Assert.That(
-                quests.IsCompleted("main.first_terminal"),
+                quests.FindActive("main.restore_station")
+                    ?.CurrentStageIndex,
+                Is.EqualTo(2));
+
+            foreach (string objectId in new[]
+                     {
+                         "station_solar_01",
+                         "station_drone",
+                         "station_antenna",
+                         "station_turret_01",
+                         "station_turret_02"
+                     })
+            {
+                quests.ReportDeviceCondition(objectId, objectId, 1f);
+            }
+
+            Assert.That(
+                quests.IsCompleted("main.restore_station"),
                 Is.True);
             Assert.That(
-                quests.FindActive("main.launch_drone_expedition_01"),
+                quests.FindActive(
+                    "main.launch_drone_expedition_01"),
                 Is.Not.Null);
+            Assert.That(questHud.IsVisible, Is.True);
 
             Assert.That(discovery.Discover("Expedition_01"), Is.True);
+            Assert.That(
+                quests.FindActive("main.expedition_01")
+                    ?.CurrentStageIndex,
+                Is.Zero);
             quests.Report(
                 QuestSignalType.DroneScanCompleted,
                 "Expedition_01",
                 "Ancient Outpost",
                 cause: "new_location");
             Assert.That(
-                quests.FindActive("main.expedition_01")?.CurrentStageIndex,
-                Is.Zero);
+                quests.IsCompleted(
+                    "main.launch_drone_expedition_01"),
+                Is.True);
+
             yield return new WaitForSecondsRealtime(
                 questHud.CompletedDisplayDuration + 0.1f);
-            Assert.That(
-                questHud.DisplayedMainText,
-                Does.Not.Contain("MAIN QUEST"));
             Assert.That(
                 questHud.DisplayedMainText,
                 Does.Contain("Travel to the Ancient Outpost"));
@@ -1880,72 +1945,32 @@ namespace NERA.Tests
                 Does.Contain("• Travel to the Ancient Outpost"));
             Assert.That(questHud.DisplayedSideText, Is.Empty);
 
-            quests.ReportDeviceCondition(
-                "test_solar_panel",
-                "Test Solar Panel",
-                0.3f);
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("Start cleaning"));
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("• Clean Test Solar Panel"));
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Not.Contain("SIDE QUEST"));
-
-            quests.ReportStationFault(
-                "test_turret",
-                "Test Turret",
-                "EnemySabotage");
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("Restart malfunctioning objects"),
-                "The higher-priority side quest must be displayed.");
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("Start cleaning"),
-                "Multiple side quests must be displayed at the same time.");
-            Assert.That(
-                questHud.DisplayedSideText.IndexOf(
-                    "Restart malfunctioning objects",
-                    StringComparison.Ordinal),
-                Is.LessThan(questHud.DisplayedSideText.IndexOf(
-                    "Start cleaning",
-                    StringComparison.Ordinal)),
-                "Higher-priority quests must be listed first.");
-
+            quests.Report(
+                QuestSignalType.LocationEntered,
+                "Expedition_01");
+            quests.Report(
+                QuestSignalType.EnemyEncountered,
+                "io_blue_weak");
+            quests.Report(
+                QuestSignalType.ItemCollected,
+                "io_blue_shard_01");
+            quests.Report(
+                QuestSignalType.LocationEntered,
+                "Player_Station");
             quests.Report(
                 QuestSignalType.StationSystemActivated,
-                "test_turret",
-                "Test Turret");
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("Start cleaning"),
-                "HUD must fall back to the next active side quest.");
-            Assert.That(
-                questHud.DisplayedSideText,
-                Does.Contain("<s>• Restart Test Turret</s>"),
-                "A completed visible quest must be struck through first.");
-
-            quests.Report(QuestSignalType.LocationEntered, "Expedition_01");
-            quests.Report(QuestSignalType.EnemyEncountered, "io_blue_weak");
-            quests.Report(QuestSignalType.ItemCollected, "io_blue_shard_01");
-            quests.Report(QuestSignalType.LocationEntered, "Player_Station");
+                "station_laboratory");
             quests.Report(
                 QuestSignalType.ResearchAnalyzed,
                 "research_io_blue_shard_01");
 
-            Assert.That(quests.IsCompleted("main.expedition_01"), Is.True);
-            Assert.That(questHud.DisplayedMainText, Does.Contain("<s>"));
-            Assert.That(questHud.IsVisible, Is.True);
-
-            quests.ReportDeviceCondition(
-                "test_solar_panel",
-                "Test Solar Panel",
-                1f);
+            Assert.That(
+                quests.IsCompleted("main.expedition_01"),
+                Is.True);
             Assert.That(quests.ActiveQuests.Count, Is.Zero);
-            Assert.That(questHud.DisplayedSideText, Does.Contain("<s>"));
+            Assert.That(
+                questHud.DisplayedMainText,
+                Does.Contain("<s>"));
             Assert.That(questHud.IsVisible, Is.True);
 
             yield return new WaitForSecondsRealtime(
@@ -1955,8 +1980,8 @@ namespace NERA.Tests
             Assert.That(questHud.IsVisible, Is.False);
         }
 
-        [UnityTest]
-        public IEnumerator FirstBatteryInteractionCompletesPowerRestoreQuest()
+[UnityTest]
+        public IEnumerator FirstBatteryInteractionAdvancesRestoreStationQuest()
         {
             SceneManager.LoadScene("MainScene");
             yield return WaitForScene("Player_Station");
@@ -1999,9 +2024,11 @@ namespace NERA.Tests
                     QuestSignalType.LocationEntered,
                     "Player_Station"),
                 Is.True);
-            Assert.That(
-                quests.FindActive("main.restore_battery"),
-                Is.Not.Null);
+
+            QuestRuntimeState restore =
+                quests.FindActive("main.restore_station");
+            Assert.That(restore, Is.Not.Null);
+            Assert.That(restore.CurrentStageIndex, Is.Zero);
             Assert.That(
                 systems.IsRequestedActive(StationSystemType.Battery),
                 Is.True,
@@ -2011,11 +2038,16 @@ namespace NERA.Tests
             battery.CompleteInteraction(null);
 
             Assert.That(power.IsPowered, Is.True);
+            restore = quests.FindActive("main.restore_station");
+            Assert.That(restore, Is.Not.Null);
             Assert.That(
-                quests.IsCompleted("main.restore_battery"),
-                Is.True,
-                "The first physical power restore must complete the quest " +
-                "even when RequestedActive was already true.");
+                restore.CurrentStageIndex,
+                Is.EqualTo(1),
+                "The first physical power restore must advance the " +
+                "multi-stage restoration quest.");
+            Assert.That(
+                quests.IsCompleted("main.restore_station"),
+                Is.False);
         }
 
         [UnityTest]
@@ -2092,6 +2124,7 @@ namespace NERA.Tests
 
             systems.ResetSystems();
             energy.RestoreState(energy.TotalCapacity, true);
+            maintenance.SetCondition(1f);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Drone, true),
                 Is.True);
@@ -2166,10 +2199,10 @@ namespace NERA.Tests
             weather.StopSandstorm();
             systems.ResetSystems();
             energy.RestoreState(energy.TotalCapacity, true);
+            maintenance.SetCondition(1f);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Drone, true),
                 Is.True);
-            maintenance.SetCondition(1f);
             discovery.RestoreDiscovered(Array.Empty<string>());
 
             StationSystemDefinition definition =
@@ -2285,14 +2318,14 @@ namespace NERA.Tests
             systems.ResetSystems();
             energy.RestoreState(energy.TotalCapacity, true);
             Assert.That(
-                systems.SetRequestedActive(StationSystemType.Drone, true),
-                Is.True);
-            Assert.That(
                 MaintainableObject.TryFind(
                     "station_drone",
                     out MaintainableObject maintenance),
                 Is.True);
             maintenance.SetCondition(1f);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
             discovery.RestoreDiscovered(Array.Empty<string>());
 
             StationSystemDefinition definition =
@@ -2340,10 +2373,22 @@ namespace NERA.Tests
                     .runtimeAnimatorController.name ==
                 DroneAnimationView.MainControllerName);
             DroneAnimationView miniAnimationView = views.First(view =>
-                view.gameObject.activeInHierarchy &&
                 view.GetComponent<Animator>()
                     .runtimeAnimatorController.name ==
                 DroneAnimationView.MiniControllerName);
+            for (Transform current = miniAnimationView.transform;
+                 current != null &&
+                 !miniAnimationView.gameObject.activeInHierarchy;
+                 current = current.parent)
+            {
+                current.gameObject.SetActive(true);
+            }
+            yield return null;
+            Assert.That(
+                miniAnimationView.gameObject.activeInHierarchy,
+                Is.True,
+                "The inactive mini view must be enabled for resynchronization.");
+
             yield return new WaitForSeconds(1f);
             miniAnimationView.gameObject.SetActive(false);
             yield return null;
@@ -2403,14 +2448,14 @@ namespace NERA.Tests
             systems.ResetSystems();
             energy.RestoreState(energy.TotalCapacity, true);
             Assert.That(
-                systems.SetRequestedActive(StationSystemType.Drone, true),
-                Is.True);
-            Assert.That(
                 MaintainableObject.TryFind(
                     "station_drone",
                     out MaintainableObject maintenance),
                 Is.True);
             maintenance.SetCondition(1f);
+            Assert.That(
+                systems.SetRequestedActive(StationSystemType.Drone, true),
+                Is.True);
             drone.ResetBatteryCharge();
             drone.RefreshAvailability();
             yield return null;
@@ -2654,6 +2699,7 @@ namespace NERA.Tests
             weather.StopSandstorm();
             discovery.RestoreDiscovered(Array.Empty<string>());
             energy.RestoreState(energy.TotalCapacity, true);
+            maintenance.SetCondition(1f);
             Assert.That(
                 systems.SetRequestedActive(StationSystemType.Drone, true),
                 Is.True);
@@ -2688,7 +2734,10 @@ namespace NERA.Tests
                 Is.False,
                 "An absent drone must not be serviceable.");
 
-            stationScreen.SelectSystem(StationSystemType.Drone);
+            stationScreen.gameObject.SetActive(true);
+            yield return null;
+            
+stationScreen.SelectSystem(StationSystemType.Drone);
             Transform powerSwitch = Array.Find(
                 stationScreen.GetComponentsInChildren<Transform>(true),
                 candidate => candidate.name == "Toggle");

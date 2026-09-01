@@ -78,24 +78,69 @@ namespace NERA.Tests
             Assert.DoesNotThrow(() => validateMethod.Invoke(null, null));
         }
 
-        [Test]
+[Test]
         public void DefaultQuestCatalogIsValidAndDataDriven()
         {
             QuestCatalog catalog = QuestCatalog.LoadDefault();
 
             Assert.That(catalog, Is.Not.Null);
             Assert.That(catalog.TryValidate(out string error), Is.True, error);
-            Assert.That(catalog.Find("main.expedition_01"), Is.Not.Null);
-            QuestDefinition cleaning =
-                catalog.Find("side.clean_solar_panel");
-            Assert.That(cleaning?.TargetScope,
-                Is.EqualTo(QuestTargetScope.PerTriggeringObject));
-            Assert.That(cleaning?.ActivationConditions[0].Target,
-                Is.EqualTo(QuestConditionTarget.AnyObject));
-            Assert.That(cleaning?.Stages[0].CompletionConditions[0].Target,
-                Is.EqualTo(QuestConditionTarget.QuestTarget));
-            Assert.That(catalog.Find("side.restore_turret")?.Availability,
-                Is.EqualTo(QuestAvailability.Repeatable));
+
+            QuestDefinition restore =
+                catalog.Find("main.restore_station");
+            QuestDefinition launch =
+                catalog.Find("main.launch_drone_expedition_01");
+            QuestDefinition expedition =
+                catalog.Find("main.expedition_01");
+            Assert.That(restore, Is.Not.Null);
+            Assert.That(launch, Is.Not.Null);
+            Assert.That(expedition, Is.Not.Null);
+
+            Assert.That(restore.Stages, Has.Count.EqualTo(3));
+            Assert.That(
+                restore.ActivationConditions.Single().SignalType,
+                Is.EqualTo(QuestSignalType.LocationEntered));
+            Assert.That(
+                restore.ActivationConditions.Single().TargetId,
+                Is.EqualTo("Player_Station"));
+            Assert.That(
+                restore.Stages[0].CompletionConditions.Single().TargetId,
+                Is.EqualTo("station_battery"));
+            Assert.That(
+                restore.Stages[1].CompletionConditions.Single().TargetId,
+                Is.EqualTo("station_terminal"));
+            Assert.That(
+                restore.Stages[2].CompletionConditions,
+                Has.Count.EqualTo(5));
+            Assert.That(
+                restore.Stages[2].CompletionConditions.Select(
+                    condition => condition.TargetId),
+                Is.EquivalentTo(new[]
+                {
+                    "station_solar_01",
+                    "station_drone",
+                    "station_antenna",
+                    "station_turret_01",
+                    "station_turret_02"
+                }));
+            Assert.That(
+                restore.Stages[2].CompletionConditions.All(
+                    condition =>
+                        condition.SignalType ==
+                            QuestSignalType.DeviceConditionRestored &&
+                        Mathf.Approximately(condition.Threshold, 1f)),
+                Is.True);
+
+            Assert.That(
+                launch.ActivationConditions.Single().SignalType,
+                Is.EqualTo(QuestSignalType.QuestCompleted));
+            Assert.That(
+                launch.ActivationConditions.Single().TargetId,
+                Is.EqualTo(restore.QuestId));
+            Assert.That(expedition.Stages, Has.Count.EqualTo(6));
+            Assert.That(
+                expedition.Stages[4].CompletionConditions.Single().TargetId,
+                Is.EqualTo("station_laboratory"));
 
             Assert.That(
                 Type.GetType(
@@ -267,7 +312,7 @@ namespace NERA.Tests
             Object.DestroyImmediate(root);
         }
 
-        [Test]
+[Test]
         public void MainExpeditionQuestAdvancesOnlyFromConfiguredSignals()
         {
             Assert.That(
@@ -281,7 +326,8 @@ namespace NERA.Tests
                 quests.FindActive("main.expedition_01");
             Assert.That(state, Is.Not.Null);
             Assert.That(state.CurrentStageIndex, Is.Zero);
-            Assert.That(state.ObjectiveTitle,
+            Assert.That(
+                state.ObjectiveTitle,
                 Is.EqualTo("Отправляйтесь в Ancient Outpost"));
 
             quests.Report(
@@ -295,11 +341,18 @@ namespace NERA.Tests
             quests.Report(QuestSignalType.ItemCollected, "io_blue_shard_01");
             quests.Report(QuestSignalType.LocationEntered, "Player_Station");
             quests.Report(
+                QuestSignalType.StationSystemActivated,
+                "station_laboratory");
+            quests.Report(
                 QuestSignalType.ResearchAnalyzed,
                 "research_io_blue_shard_01");
 
-            Assert.That(quests.FindActive("main.expedition_01"), Is.Null);
-            Assert.That(quests.IsCompleted("main.expedition_01"), Is.True);
+            Assert.That(
+                quests.FindActive("main.expedition_01"),
+                Is.Null);
+            Assert.That(
+                quests.IsCompleted("main.expedition_01"),
+                Is.True);
             Assert.That(
                 quests.GetCompletionCount("main.expedition_01"),
                 Is.EqualTo(1));
@@ -317,13 +370,14 @@ namespace NERA.Tests
                 Is.EqualTo(1));
         }
 
-        [Test]
+[Test]
         public void DroneExpeditionQuestAppearsOnceAndCompletesAfterReturn()
         {
-            quests.Report(
-                QuestSignalType.ObjectInteractionCompleted,
-                "station_terminal",
-                "Station Terminal");
+            Assert.That(
+                quests.Report(
+                    QuestSignalType.QuestCompleted,
+                    "main.restore_station"),
+                Is.True);
 
             const string questId =
                 "main.launch_drone_expedition_01";
@@ -357,44 +411,92 @@ namespace NERA.Tests
             Assert.That(quests.GetCompletionCount(questId), Is.EqualTo(1));
         }
 
-        [Test]
+[Test]
         public void DynamicMaintenanceQuestUsesTargetContextWithoutDuplicates()
         {
-            quests.ReportDeviceCondition(
-                "station_solar_01",
-                "Solar Panel 01",
-                0.3f);
+            QuestDefinition definition = CreateQuestDefinition(
+                "side.maintenance_test",
+                1,
+                1);
+            QuestCatalog catalog = null;
+            try
+            {
+                SerializedObject serialized =
+                    new SerializedObject(definition);
+                serialized.FindProperty("category").enumValueIndex =
+                    (int)QuestCategory.Side;
+                serialized.FindProperty("availability").enumValueIndex =
+                    (int)QuestAvailability.Repeatable;
+                serialized.FindProperty("targetScope").enumValueIndex =
+                    (int)QuestTargetScope.PerTriggeringObject;
 
-            const string instanceId =
-                "side.clean_solar_panel:station_solar_01";
-            QuestRuntimeState state = quests.FindActive(instanceId);
-            Assert.That(state, Is.Not.Null);
-            Assert.That(state.Title, Is.EqualTo("Запустите очистку"));
-            Assert.That(
-                state.ObjectiveTitle,
-                Is.EqualTo("Очистите Solar Panel 01"));
+                SerializedProperty activation =
+                    serialized.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0);
+                ConfigureQuestCondition(
+                    activation,
+                    QuestSignalType.DeviceConditionBelow,
+                    "*",
+                    threshold: 0.5f);
+                activation.FindPropertyRelative("target").enumValueIndex =
+                    (int)QuestConditionTarget.AnyObject;
 
-            quests.ReportDeviceCondition(
-                "station_solar_01",
-                "Solar Panel 01",
-                0.2f);
-            Assert.That(
-                quests.ActiveQuests.Count(quest =>
-                    quest.InstanceId == instanceId),
-                Is.EqualTo(1));
+                SerializedProperty completion = serialized
+                    .FindProperty("stages")
+                    .GetArrayElementAtIndex(0)
+                    .FindPropertyRelative("completionConditions")
+                    .GetArrayElementAtIndex(0);
+                ConfigureQuestCondition(
+                    completion,
+                    QuestSignalType.DeviceConditionRestored,
+                    "*",
+                    threshold: 1f);
+                completion.FindPropertyRelative("target").enumValueIndex =
+                    (int)QuestConditionTarget.QuestTarget;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
 
-            quests.ReportDeviceCondition(
-                "station_solar_01",
-                "Solar Panel 01",
-                1f);
-            Assert.That(quests.FindActive(instanceId), Is.Null);
-            Assert.That(quests.GetCompletionCount(instanceId), Is.EqualTo(1));
+                catalog = CreateQuestCatalog(definition);
+                quests.Configure(catalog);
 
-            quests.ReportDeviceCondition(
-                "station_solar_01",
-                "Solar Panel 01",
-                0.3f);
-            Assert.That(quests.FindActive(instanceId), Is.Not.Null);
+                quests.ReportDeviceCondition(
+                    "station_solar_01",
+                    "Solar Panel 01",
+                    0.3f);
+
+                const string instanceId =
+                    "side.maintenance_test:station_solar_01";
+                QuestRuntimeState state = quests.FindActive(instanceId);
+                Assert.That(state, Is.Not.Null);
+
+                quests.ReportDeviceCondition(
+                    "station_solar_01",
+                    "Solar Panel 01",
+                    0.2f);
+                Assert.That(
+                    quests.ActiveQuests.Count(quest =>
+                        quest.InstanceId == instanceId),
+                    Is.EqualTo(1));
+
+                quests.ReportDeviceCondition(
+                    "station_solar_01",
+                    "Solar Panel 01",
+                    1f);
+                Assert.That(quests.FindActive(instanceId), Is.Null);
+                Assert.That(
+                    quests.GetCompletionCount(instanceId),
+                    Is.EqualTo(1));
+
+                quests.ReportDeviceCondition(
+                    "station_solar_01",
+                    "Solar Panel 01",
+                    0.3f);
+                Assert.That(quests.FindActive(instanceId), Is.Not.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(definition);
+            }
         }
 
         [Test]
@@ -426,88 +528,56 @@ namespace NERA.Tests
                 Is.EqualTo("Исследуйте Ancient Outpost"));
         }
 
-        [Test]
+[Test]
         public void CompletingQuestActivatesConfiguredFollowUpByQuestId()
         {
-            QuestDefinition followUp =
-                ScriptableObject.CreateInstance<QuestDefinition>();
-            QuestCatalog temporaryCatalog =
-                ScriptableObject.CreateInstance<QuestCatalog>();
+            QuestDefinition prerequisite = CreateQuestDefinition(
+                "main.prerequisite",
+                0,
+                1);
+            QuestDefinition followUp = CreateQuestDefinition(
+                "main.follow_up",
+                1,
+                1);
+            QuestCatalog catalog = null;
 
             try
             {
-                SerializedObject definition =
+                SerializedObject prerequisiteObject =
+                    new SerializedObject(prerequisite);
+                ConfigureQuestCondition(
+                    prerequisiteObject.FindProperty("stages")
+                        .GetArrayElementAtIndex(0)
+                        .FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
+                    QuestSignalType.StationSystemActivated,
+                    "station_battery");
+                prerequisiteObject.ApplyModifiedPropertiesWithoutUndo();
+
+                SerializedObject followUpObject =
                     new SerializedObject(followUp);
-                definition.FindProperty("questId").stringValue =
-                    "main.inspect_station";
-                definition.FindProperty("category").enumValueIndex =
-                    (int)QuestCategory.Main;
-                definition.FindProperty("availability").enumValueIndex =
-                    (int)QuestAvailability.Once;
-                definition.FindProperty("targetScope").enumValueIndex =
-                    (int)QuestTargetScope.Single;
-                definition.FindProperty("title").stringValue =
-                    "Осмотрите станцию";
-                definition.FindProperty("description").stringValue =
-                    "Познакомьтесь с основными системами станции.";
-
-                SerializedProperty activation =
-                    definition.FindProperty("activationConditions");
-                activation.arraySize = 1;
                 ConfigureQuestCondition(
-                    activation.GetArrayElementAtIndex(0),
+                    followUpObject.FindProperty("activationConditions")
+                        .GetArrayElementAtIndex(0),
                     QuestSignalType.QuestCompleted,
-                    "main.restore_battery");
-
-                SerializedProperty stages =
-                    definition.FindProperty("stages");
-                stages.arraySize = 1;
-                SerializedProperty stage = stages.GetArrayElementAtIndex(0);
-                stage.FindPropertyRelative("title").stringValue =
-                    "Осмотрите станцию";
-                stage.FindPropertyRelative("description").stringValue =
-                    "Посетите основные помещения.";
-                SerializedProperty completion =
-                    stage.FindPropertyRelative("completionConditions");
-                completion.arraySize = 1;
+                    prerequisite.QuestId);
                 ConfigureQuestCondition(
-                    completion.GetArrayElementAtIndex(0),
+                    followUpObject.FindProperty("stages")
+                        .GetArrayElementAtIndex(0)
+                        .FindPropertyRelative("completionConditions")
+                        .GetArrayElementAtIndex(0),
                     QuestSignalType.AreaExplored,
                     "station_introduction");
-                definition.ApplyModifiedPropertiesWithoutUndo();
+                followUpObject.ApplyModifiedPropertiesWithoutUndo();
 
-                QuestCatalog defaults = QuestCatalog.LoadDefault();
-                SerializedObject catalog =
-                    new SerializedObject(temporaryCatalog);
-                SerializedProperty definitions =
-                    catalog.FindProperty("definitions");
-                definitions.arraySize = defaults.Definitions.Count + 1;
-                for (int index = 0;
-                     index < defaults.Definitions.Count;
-                     index++)
-                {
-                    definitions.GetArrayElementAtIndex(index)
-                        .objectReferenceValue = defaults.Definitions[index];
-                }
-
-                definitions.GetArrayElementAtIndex(definitions.arraySize - 1)
-                    .objectReferenceValue = followUp;
-                catalog.ApplyModifiedPropertiesWithoutUndo();
-                quests.Configure(temporaryCatalog);
+                catalog = CreateQuestCatalog(prerequisite, followUp);
+                quests.Configure(catalog);
 
                 Assert.That(
-                    quests.FindActive("main.inspect_station"),
-                    Is.Null);
-                Assert.That(
-                    quests.Report(
-                        QuestSignalType.LocationEntered,
-                        "Player_Station"),
-                    Is.True);
-                Assert.That(
-                    quests.FindActive("main.restore_battery"),
+                    quests.FindActive(prerequisite.QuestId),
                     Is.Not.Null);
                 Assert.That(
-                    quests.FindActive("main.inspect_station"),
+                    quests.FindActive(followUp.QuestId),
                     Is.Null);
 
                 Assert.That(
@@ -518,17 +588,18 @@ namespace NERA.Tests
                     Is.True);
 
                 Assert.That(
-                    quests.IsCompleted("main.restore_battery"),
+                    quests.IsCompleted(prerequisite.QuestId),
                     Is.True);
                 Assert.That(
-                    quests.FindActive("main.inspect_station"),
+                    quests.FindActive(followUp.QuestId),
                     Is.Not.Null,
                     "The configured follow-up must activate immediately.");
             }
             finally
             {
-                Object.DestroyImmediate(temporaryCatalog);
+                Object.DestroyImmediate(catalog);
                 Object.DestroyImmediate(followUp);
+                Object.DestroyImmediate(prerequisite);
             }
         }
 
@@ -1525,7 +1596,12 @@ namespace NERA.Tests
             SetPrivateField(drone, "discovery", discovery);
 
             SerializedObject locationObject = new SerializedObject(location);
-            locationObject.FindProperty("locationId").stringValue = "Test_Expedition";
+            locationObject.FindProperty("locationId").stringValue =
+                "Test_Expedition";
+            locationObject.FindProperty("locationType").enumValueIndex =
+                (int)LocationType.Expedition;
+            locationObject.FindProperty("discoverySource").enumValueIndex =
+                (int)DiscoverySource.Drone;
             locationObject.FindProperty("droneScanDuration").floatValue = 2f;
             locationObject.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -1567,20 +1643,74 @@ namespace NERA.Tests
                 "station_battery",
                 1000f,
                 0f,
-                1000f,
+                0f,
                 1000f);
             energy.SetGridEnabled(true);
             drone.RefreshAvailability();
 
-            Assert.That(power.IsPowered, Is.True);
+            Assert.That(
+                power.IsPowered,
+                Is.False,
+                "An empty main battery keeps the station offline.");
             Assert.That(drone.IsFlightReady, Is.False);
             Assert.That(drone.State, Is.EqualTo(DroneState.Locked));
+            energy.RestoreState(1000f, 0f, true);
+            Assert.That(
+                power.RestorePower(),
+                Is.True,
+                "The station power bridge must observe the restored battery.");
+            StationWeatherController.Instance?.StopSandstorm();
+            drone.RefreshAvailability();
 
-            energy.RestoreState(250f, 1000f, true);
+            Assert.That(
+                energy.TotalCapacity,
+                Is.EqualTo(1000f),
+                "The test battery must be registered.");
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(1000f),
+                "The main battery charge must be restored.");
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.Drone,
+                    "station_drone"),
+                Is.True,
+                "The drone must remain requested active.");
+            Assert.That(
+                systems.IsMaintenanceReady(
+                    StationSystemType.Drone,
+                    "station_drone"),
+                Is.True,
+                "The clean test drone must be maintenance-ready.");
+            Assert.That(
+                systems.HasRequiredCharge(
+                    StationSystemType.Drone,
+                    "station_drone"),
+                Is.True,
+                "Full main-battery charge must satisfy the drone threshold.");
 
-            Assert.That(drone.IsFlightReady, Is.True);
-            Assert.That(drone.State, Is.EqualTo(DroneState.Ready));
-            Assert.That(drone.CanLaunchScan(location), Is.True);
+            Assert.That(
+                power.IsPowered,
+                Is.True,
+                "Restoring usable battery energy must bring station power online.");
+            Assert.That(
+                StationWeatherController.Instance?.IsSandstormActive == true,
+                Is.False,
+                "The charge-threshold test requires clear weather.");
+
+            
+Assert.That(
+                drone.IsFlightReady,
+                Is.True,
+                "The controller should become flight-ready after charge restore.");
+            Assert.That(
+                drone.State,
+                Is.EqualTo(DroneState.Ready),
+                "The drone should transition to Ready after charge restore.");
+            Assert.That(
+                drone.CanLaunchScan(location),
+                Is.True,
+                "The configured drone expedition should be launchable.");
         }
 
         [Test]
@@ -1649,7 +1779,6 @@ namespace NERA.Tests
                 Is.True);
         }
 
-        [TestCase(0.5f, TestName = "DroneCannotLaunchWhileItIsDirty")]
         [TestCase(0f, TestName = "DroneCannotLaunchWhileItIsBroken")]
         public void DroneCannotLaunchWhileMaintenanceIsRequired(
             float condition)

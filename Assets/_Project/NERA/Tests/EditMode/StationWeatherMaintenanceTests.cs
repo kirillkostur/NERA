@@ -335,7 +335,7 @@ namespace NERA.Tests
                 Is.EqualTo(1f));
         }
 
-        [Test]
+[Test]
         public void SandstormFadesDensityBeforeDisablingFeature()
         {
             StationEnvironmentConfig production =
@@ -343,11 +343,16 @@ namespace NERA.Tests
             bool originalState = production.SandstormRendererFeature.isActive;
             Material material = production.VolumetricFogMaterial;
             string propertyName = production.FogDensityProperty;
+            float fadeDuration =
+                production.SandstormFogFadeDurationSeconds;
 
             try
             {
                 weather.Configure(production);
-                weather.StartSandstorm(10f);
+                Assert.That(
+                    weather.StartSandstorm(
+                        Mathf.Max(10f, fadeDuration * 4f)),
+                    Is.True);
                 Assert.That(
                     production.SandstormRendererFeature.isActive,
                     Is.True);
@@ -356,28 +361,25 @@ namespace NERA.Tests
                     Is.Zero.Within(0.001f));
                 Assert.That(weather.IsFogTransitionActive, Is.True);
 
-                weather.AdvanceSimulation(
-                    production.SandstormFogFadeDurationSeconds * 0.5f);
+                weather.AdvanceSimulation(fadeDuration * 0.5f);
                 Assert.That(
                     material.GetFloat(propertyName),
                     Is.GreaterThan(0f).And.LessThan(0.3f));
 
-                weather.AdvanceSimulation(
-                    production.SandstormFogFadeDurationSeconds);
+                weather.AdvanceSimulation(fadeDuration);
                 Assert.That(
                     material.GetFloat(propertyName),
                     Is.EqualTo(0.3f).Within(0.001f));
                 Assert.That(weather.IsFogTransitionActive, Is.False);
 
-                weather.StopSandstorm();
+                Assert.That(weather.StopSandstorm(), Is.True);
                 Assert.That(
                     production.SandstormRendererFeature.isActive,
                     Is.True,
                     "The pass must stay enabled while the fog fades out.");
                 Assert.That(weather.IsFogTransitionActive, Is.True);
 
-                weather.AdvanceSimulation(
-                    production.SandstormFogFadeDurationSeconds * 0.5f);
+                weather.AdvanceSimulation(fadeDuration * 0.5f);
                 Assert.That(
                     material.GetFloat(propertyName),
                     Is.GreaterThan(0f).And.LessThan(0.3f));
@@ -385,8 +387,7 @@ namespace NERA.Tests
                     production.SandstormRendererFeature.isActive,
                     Is.True);
 
-                weather.AdvanceSimulation(
-                    production.SandstormFogFadeDurationSeconds);
+                weather.AdvanceSimulation(fadeDuration);
                 Assert.That(
                     material.GetFloat(propertyName),
                     Is.Zero.Within(0.001f));

@@ -16,67 +16,67 @@ MonoBehaviour:
   - id: weather.storm_started
     localizationKey: notification.weather.storm_started
     severity: 2
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: weather.storm_ended
     localizationKey: notification.weather.storm_ended
     severity: 0
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: energy.battery_low
     localizationKey: notification.energy.battery_low
     severity: 1
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: energy.battery_disabled
     localizationKey: notification.energy.battery_disabled
     severity: 2
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: energy.battery_enabled
     localizationKey: notification.energy.battery_enabled
     severity: 0
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: energy.power_lost
     localizationKey: notification.energy.power_lost
     severity: 2
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: energy.power_restored
     localizationKey: notification.energy.power_restored
     severity: 0
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: drone.departed
     localizationKey: notification.drone.departed
     severity: 1
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: drone.returned
     localizationKey: notification.drone.returned
     severity: 0
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: drone.location_discovered
     localizationKey: notification.drone.location_discovered
     severity: 0
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: drone.no_new_locations
     localizationKey: notification.drone.no_new_locations
     severity: 1
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: antenna.signal_found
     localizationKey: notification.antenna.signal_found
     severity: 0
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: antenna.signal_not_found
     localizationKey: notification.antenna.signal_not_found
     severity: 1
-    visibleSeconds: 4
+    visibleSeconds: 3
   - id: research.completed
     localizationKey: notification.research.completed
     severity: 0
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: station.object_disabled
     localizationKey: notification.station.object_disabled
     severity: 1
-    visibleSeconds: 5
+    visibleSeconds: 3
   - id: station.object_contaminated
     localizationKey: notification.station.object_contaminated
     severity: 1
-    visibleSeconds: 5
+    visibleSeconds: 3
   successBackground: {r: 0.025, g: 0.16, b: 0.09, a: 0.94}
   successAccent: {r: 0.12, g: 0.95, b: 0.42, a: 1}
   warningBackground: {r: 0.22, g: 0.115, b: 0.015, a: 0.94}

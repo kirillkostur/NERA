@@ -2,6 +2,7 @@
 
 ## Актуальные документы
 
+- [`Testing_and_MCP_Guide.md`](Testing_and_MCP_Guide.md) — проверенный тестовый baseline, запуск через Unity/MCP и правила поддержки устойчивых фикстур.
 - [`Current_Project_Audit_2026-08-25.md`](Current_Project_Audit_2026-08-25.md) — главный текущий источник: полный code/asset/package/build audit, реальные test caveats, решение о готовности и план до демо.
 - [`Runtime_Performance_Baseline_2026-08-24.md`](Runtime_Performance_Baseline_2026-08-24.md) — воспроизводимые Editor-замеры до/после оптимизации и следующий player-build profiling gate.
 - [`First_Playable_Status_and_Roadmap_2026-08-04.md`](First_Playable_Status_and_Roadmap_2026-08-04.md) — границы первого полноценного среза и продуктовый порядок работ; фактический baseline обновлён аудитом от 2026-08-25.

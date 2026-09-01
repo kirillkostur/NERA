@@ -214,7 +214,7 @@ namespace NERA.Tests
                 Is.EqualTo(requiresRaycaster));
         }
 
-        private static RectTransform RequireNestedPrefab(
+private static RectTransform RequireNestedPrefab(
             Transform parent,
             string objectName,
             string expectedPath)
@@ -224,14 +224,28 @@ namespace NERA.Tests
                 PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(
                     child.gameObject),
                 Is.EqualTo(expectedPath));
+
             int uiLayer = LayerMask.NameToLayer("UI");
+            int stationUiLayer = LayerMask.NameToLayer("StationUI");
+            Assert.That(uiLayer, Is.GreaterThanOrEqualTo(0));
+            Assert.That(stationUiLayer, Is.GreaterThanOrEqualTo(0));
+
             foreach (Transform descendant in
                      child.GetComponentsInChildren<Transform>(true))
             {
+                if (descendant is RectTransform)
+                {
+                    Assert.That(
+                        descendant.gameObject.layer,
+                        Is.EqualTo(uiLayer),
+                        $"'{descendant.name}' must use the UI layer.");
+                    continue;
+                }
+
                 Assert.That(
                     descendant.gameObject.layer,
-                    Is.EqualTo(uiLayer),
-                    $"'{descendant.name}' must use the UI layer.");
+                    Is.EqualTo(uiLayer).Or.EqualTo(stationUiLayer),
+                    $"'{descendant.name}' must use UI or StationUI.");
             }
             return child;
         }

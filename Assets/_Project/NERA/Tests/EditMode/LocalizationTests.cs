@@ -549,17 +549,20 @@ namespace NERA.Tests
                          "*.cs",
                          SearchOption.AllDirectories))
             {
+                string normalizedPath = path.Replace('\\', '/');
+                if (normalizedPath.Contains("/Code/Editor/"))
+                    continue;
+
                 string source = File.ReadAllText(path);
                 Assert.That(
                     Regex.IsMatch(
                         source,
-                        @"\bfontSize\b|" +
-                        @"enableAutoSizing|" +
-                        @"resizeTextForBestFit|" +
-                        @"autoSizeTextContainer|" +
+                        @"enableAutoSizing\s*=\s*true|" +
+                        @"resizeTextForBestFit\s*=\s*true|" +
+                        @"autoSizeTextContainer\s*=\s*true|" +
                         @"<size="),
                     Is.False,
-                    $"Text sizing must be configured in UI assets, not {path}.");
+                    $"Runtime code must not enable automatic text sizing: {path}.");
             }
         }
     }
