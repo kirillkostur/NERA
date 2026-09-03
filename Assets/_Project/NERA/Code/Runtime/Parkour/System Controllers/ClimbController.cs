@@ -42,6 +42,11 @@ namespace Climbing
         private bool onLedge = false;
         private bool toLedge = false;
         private bool jumping = false;
+        public bool IsActive => active ||
+            curClimbState != ClimbState.None ||
+            onLedge ||
+            toLedge ||
+            jumping;
         private bool leftHandIKFound = false;
         private bool rightHandIKFound = false;
         private bool leftFootIKFound = false;

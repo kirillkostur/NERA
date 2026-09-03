@@ -186,7 +186,10 @@ namespace NERA.Save
                 antenna.ActiveSignalLifecycleChanged += MarkDirty;
             }
             if (inventory != null)
+            {
                 inventory.InventoryChanged += MarkDirty;
+                inventory.ItemChargeChanged += MarkDirty;
+            }
             if (research != null)
             {
                 research.ResearchAnalyzed += HandleStringChanged;
@@ -232,7 +235,10 @@ namespace NERA.Save
                 antenna.ActiveSignalLifecycleChanged -= MarkDirty;
             }
             if (inventory != null)
+            {
                 inventory.InventoryChanged -= MarkDirty;
+                inventory.ItemChargeChanged -= MarkDirty;
+            }
             if (research != null)
             {
                 research.ResearchAnalyzed -= HandleStringChanged;

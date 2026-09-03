@@ -54,6 +54,29 @@ namespace NERA.Tests
         }
 
         [Test]
+        public void NullSelectedLocaleIsRestoredBeforeReadingStrings()
+        {
+            Locale previous = LocalizationSettings.SelectedLocale;
+            try
+            {
+                LocalizationSettings.SelectedLocale = null;
+
+                string localized = NERALocalization.Get(
+                    NERALocalization.CommonTable,
+                    "common.yes");
+
+                Assert.That(localized, Is.Not.Empty);
+                Assert.That(
+                    LocalizationSettings.SelectedLocale,
+                    Is.Not.Null);
+            }
+            finally
+            {
+                LocalizationSettings.SelectedLocale = previous;
+            }
+        }
+
+        [Test]
         public void EnglishAndRussianTablesHaveEveryEntryFilled()
         {
             foreach (string collectionName in RequiredCollections)

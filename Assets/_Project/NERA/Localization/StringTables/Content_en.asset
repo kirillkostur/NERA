@@ -50,8 +50,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1123016705
-    m_Localized: Dedicated laboratory tool for integrating researched IO anomaly
-      stones.
+    m_Localized: Activates an anomaly installed in a mounted container.
     m_Metadata:
       m_Items: []
   - m_Id: 1123016706
@@ -165,9 +164,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1148182529
-    m_Localized: The Blue IO shard stores a stable power pulse. When integrated into a
-      weapon, it temporarily powers nearby non-station devices within 8 m. Player
-      station systems are unaffected.
+    m_Localized: The Blue IO shard stores a stable power pulse. When installed in
+      a container and activated by the IO Integrator, it temporarily powers nearby
+      non-station devices within 8 m. Player station systems are unaffected.
     m_Metadata:
       m_Items: []
   - m_Id: 1148182530
@@ -838,8 +837,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986436
-    m_Localized: The integrated repair node restores the operator's biological functions.
-      Activating it fully restores the player's health.
+    m_Localized: The repair node in an anomaly container restores the operator's
+      biological functions. Activating it fully restores the player's health.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986437
@@ -863,8 +862,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986442
-    m_Localized: The integrated hunter lens scans within a 10 m radius and reveals
-      enemies, devices, interactable objects, and items through walls for 6 seconds.
+    m_Localized: The hunter lens in an anomaly container scans within a 10 m radius
+      and reveals enemies, devices, interactable objects, and items through walls
+      for 6 seconds.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986443
@@ -888,9 +888,10 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986448
-    m_Localized: The integrated impact core releases the combat pulse once associated
-      with the Blue shard, dealing 40 damage to every IO enemy within 8 m. Red IO
-      entities also emit periodic disruption pulses that disable nearby devices.
+    m_Localized: The impact core in an anomaly container releases the combat pulse
+      once associated with the Blue shard, dealing 40 damage to every IO enemy within
+      8 m. Red IO entities also emit periodic disruption pulses that disable nearby
+      devices.
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986449
@@ -914,9 +915,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7742465715986454
-    m_Localized: The integrated command core permanently deactivates electronics
-      and player-station objects within 12.5 m and deals 400 damage to every IO enemy.
-      Violet IO entities also emit this disruption pulse periodically.
+    m_Localized: The command core in an anomaly container permanently deactivates
+      electronics and player-station objects within 12.5 m and deals 400 damage to
+      every IO enemy. Violet IO entities also emit this disruption pulse periodically.
     m_Metadata:
       m_Items: []
   - m_Id: 7755248641761280
@@ -965,6 +966,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 8058507847786499
     m_Localized: Idle consumption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8814963857547264
+    m_Localized: Anomaly Container
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8814963924656128
+    m_Localized: A reusable container for one researched IO anomaly.
     m_Metadata:
       m_Items: []
   references:

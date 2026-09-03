@@ -569,9 +569,6 @@ namespace NERA.Save
             if (laboratoryWorkstation != null)
             {
                 CaptureInstances(
-                    laboratoryWorkstation.ChargingItems,
-                    data.laboratoryChargingItems);
-                CaptureInstances(
                     laboratoryWorkstation.UpgradeItems,
                     data.laboratoryUpgradeItems);
             }
@@ -773,17 +770,7 @@ namespace NERA.Save
 
             if (laboratoryWorkstation != null)
             {
-                List<ItemInstance> chargingItems =
-                    ResolveInstances(data.laboratoryChargingItems);
-                if (chargingItems.Count == 0 &&
-                    data.chargingTableItem != null)
-                {
-                    chargingItems.Add(
-                        ResolveInstance(data.chargingTableItem));
-                }
-
                 laboratoryWorkstation.RestoreItems(
-                    chargingItems,
                     ResolveInstances(data.laboratoryUpgradeItems));
             }
             research?.RestoreLoadedItem(
@@ -809,7 +796,11 @@ namespace NERA.Save
                     stationStorage.RestoreLegacy(
                         ResolveInstances(data.stationStorageItems));
                 }
+
+                stationStorage.WithdrawPermanentEquipment(inventory);
             }
+
+            RestoreRemovedLaboratoryChargingItems(data);
 
             if (stationSystems != null)
             {
@@ -967,6 +958,30 @@ namespace NERA.Save
                 (data.quickAccessItems?.Count ?? 0) > 0;
         }
 
+        private void RestoreRemovedLaboratoryChargingItems(
+            SaveGameData data)
+        {
+            if (inventory == null || data == null)
+                return;
+
+            List<ItemInstance> removedItems =
+                ResolveInstances(data.laboratoryChargingItems);
+            if (removedItems.Count == 0 && data.chargingTableItem != null)
+            {
+                ItemInstance legacy = ResolveInstance(data.chargingTableItem);
+                if (legacy != null)
+                    removedItems.Add(legacy);
+            }
+
+            foreach (ItemInstance instance in removedItems)
+            {
+                if (instance?.ItemData == null)
+                    continue;
+                if (!inventory.AddItem(instance))
+                    stationStorage?.Deposit(instance);
+            }
+        }
+
         private static void CaptureInstances(
             IReadOnlyList<ItemInstance> source,
             List<InventoryItemSaveData> destination
@@ -984,7 +999,18 @@ namespace NERA.Save
                         isScanned = instance.IsScanned,
                         integratedAnomalyItemId =
                             instance.IntegratedAnomaly?.ItemId,
-                        anomalyCharges = instance.AnomalyCharges
+                        anomalyCharges = instance.ItemData
+                            .AcceptsAnomalyContainer
+                                ? 0
+                                : instance.AnomalyCharges,
+                        installedAnomalyContainerInstanceId =
+                            instance.InstalledAnomalyContainerInstanceId,
+                        installedAnomalyContainerItemId =
+                            instance.InstalledAnomalyContainer?.ItemId,
+                        installedContainerAnomalyItemId =
+                            instance.InstalledContainerAnomaly?.ItemId,
+                        installedContainerAnomalyCharges =
+                            instance.InstalledContainerAnomalyCharges
                     });
             }
         }
@@ -1001,7 +1027,17 @@ namespace NERA.Save
                     isScanned = instance.IsScanned,
                     integratedAnomalyItemId =
                         instance.IntegratedAnomaly?.ItemId,
-                    anomalyCharges = instance.AnomalyCharges
+                    anomalyCharges = instance.ItemData.AcceptsAnomalyContainer
+                        ? 0
+                        : instance.AnomalyCharges,
+                    installedAnomalyContainerInstanceId =
+                        instance.InstalledAnomalyContainerInstanceId,
+                    installedAnomalyContainerItemId =
+                        instance.InstalledAnomalyContainer?.ItemId,
+                    installedContainerAnomalyItemId =
+                        instance.InstalledContainerAnomaly?.ItemId,
+                    installedContainerAnomalyCharges =
+                        instance.InstalledContainerAnomalyCharges
                 };
         }
 
@@ -1021,19 +1057,7 @@ namespace NERA.Save
                     continue;
                 }
 
-                ItemData item = FindItem(saved.itemId);
-                resolved.Add(item != null
-                    ? ItemInstance.Restore(
-                        saved.instanceId,
-                        item,
-                        saved.charge,
-                        FindItem(saved.integratedAnomalyItemId),
-                        saved.anomalyCharges,
-                        saved.isScanned)
-                    : null);
-
-                if (item == null)
-                    Debug.LogWarning($"SaveGame: Unknown item id '{saved.itemId}'.", this);
+                resolved.Add(ResolveInstance(saved));
             }
             return resolved;
         }
@@ -1050,13 +1074,58 @@ namespace NERA.Save
                 return null;
             }
 
-            return ItemInstance.Restore(
+            ItemData directAnomaly =
+                FindItem(saved.integratedAnomalyItemId);
+            if (!item.AcceptsAnomalyContainer)
+            {
+                return ItemInstance.Restore(
+                    saved.instanceId,
+                    item,
+                    saved.charge,
+                    directAnomaly,
+                    saved.anomalyCharges,
+                    saved.isScanned);
+            }
+
+            ItemInstance restored = ItemInstance.Restore(
                 saved.instanceId,
                 item,
                 saved.charge,
-                FindItem(saved.integratedAnomalyItemId),
-                saved.anomalyCharges,
+                null,
+                0,
                 saved.isScanned);
+            ItemData container = FindItem(
+                saved.installedAnomalyContainerItemId);
+            ItemData containerAnomaly = FindItem(
+                saved.installedContainerAnomalyItemId);
+            int containerCharges =
+                saved.installedContainerAnomalyCharges;
+            string containerInstanceId =
+                saved.installedAnomalyContainerInstanceId;
+
+            if (container == null && directAnomaly != null)
+            {
+                container = FindItem("anomaly_container_01");
+                containerAnomaly = directAnomaly;
+                containerCharges = saved.anomalyCharges;
+                containerInstanceId = saved.instanceId + "_container";
+            }
+
+            if (container != null)
+            {
+                ItemInstance restoredContainer = ItemInstance.Restore(
+                    containerInstanceId,
+                    container,
+                    0f,
+                    containerAnomaly,
+                    containerCharges,
+                    false);
+                restored.TryInstallAnomalyContainer(
+                    restoredContainer,
+                    out _);
+            }
+
+            return restored;
         }
 
         private static void CaptureSlots(
@@ -1126,7 +1195,6 @@ namespace NERA.Save
                 inventory.RestoreItems(Array.Empty<ItemData>());
 
             laboratoryWorkstation?.RestoreItems(
-                Array.Empty<ItemInstance>(),
                 Array.Empty<ItemInstance>());
             research?.RestoreLoadedItem(null, inventory);
 

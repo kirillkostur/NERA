@@ -31,6 +31,8 @@ namespace NERA.Terminal
             new Dictionary<InventorySlotGroup, GameObject>();
 
         private PlayerInventory inventory;
+        private SlotView mountedContainerSlot;
+        private GameObject mountedContainerSlotRoot;
         private Canvas rootCanvas;
         private TMP_Text nameText;
         private TMP_Text descriptionText;
@@ -55,6 +57,7 @@ namespace NERA.Terminal
             BindTabs();
             StationStorageController.Instance?.ConfigureCapacities(16, 16, 16);
             BuildAllSlots();
+            BuildMountedContainerSlot();
             ShowStorageGroup(InventorySlotGroup.Backpack);
             RefreshAll();
         }
@@ -100,10 +103,6 @@ namespace NERA.Terminal
                 TerminalUIUtility.Find(
                     transform,
                     "background_Screen_Storage_Slot_Anomaly")?.gameObject;
-            storageRoots[InventorySlotGroup.QuickAccess] =
-                TerminalUIUtility.Find(
-                    transform,
-                    "background_Screen_Storage_Slot_Equipment")?.gameObject;
         }
 
         private void BindTabs()
@@ -114,9 +113,6 @@ namespace NERA.Terminal
             TerminalUIUtility.FindComponent<Button>(
                 transform, "AnomalyMapButton")?.onClick.AddListener(
                 () => ShowStorageGroup(InventorySlotGroup.Anomaly));
-            TerminalUIUtility.FindComponent<Button>(
-                transform, "EquipmentMapButton")?.onClick.AddListener(
-                () => ShowStorageGroup(InventorySlotGroup.QuickAccess));
         }
 
         private void BuildAllSlots()
@@ -132,12 +128,6 @@ namespace NERA.Terminal
                 true,
                 storageSlots);
             BuildGroup(
-                storageRoots[InventorySlotGroup.QuickAccess]?.transform,
-                InventorySlotGroup.QuickAccess,
-                true,
-                storageSlots);
-
-            BuildGroup(
                 TerminalUIUtility.Find(
                     transform,
                     "background_Screen_Storage_Slot_Invent"),
@@ -149,13 +139,6 @@ namespace NERA.Terminal
                     transform,
                     "background_Screen_Storage_Slot_Invent_Anomaly"),
                 InventorySlotGroup.Anomaly,
-                false,
-                inventorySlots);
-            BuildGroup(
-                TerminalUIUtility.Find(
-                    transform,
-                    "background_Screen_Storage_Slot_Invent_Equipment"),
-                InventorySlotGroup.QuickAccess,
                 false,
                 inventorySlots);
         }
@@ -222,6 +205,62 @@ namespace NERA.Terminal
             }
         }
 
+        private void BuildMountedContainerSlot()
+        {
+            InventoryConfig inventoryConfig =
+                InventoryConfig.Resolve(inventory?.Config);
+            GameObject slotPrefab = inventoryConfig?.SlotPrefab;
+            if (slotPrefab == null)
+                return;
+
+            Transform existing = transform.Find("MountedAnomalyContainerSlot");
+            if (existing == null)
+            {
+                GameObject root = new GameObject(
+                    "MountedAnomalyContainerSlot",
+                    typeof(RectTransform));
+                root.layer = gameObject.layer;
+                root.transform.SetParent(transform, false);
+                existing = root.transform;
+            }
+
+            RectTransform rect = (RectTransform)existing;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(675f, -150f);
+            rect.sizeDelta = new Vector2(70f, 70f);
+            rect.localRotation = Quaternion.identity;
+            rect.localScale = Vector3.one;
+
+            InventorySlotView inventorySlot =
+                InventorySlotSpawnUtility.GetOrCreate(existing, slotPrefab);
+            if (inventorySlot == null)
+                return;
+
+            inventorySlot.Initialize(-1, false, rootCanvas);
+            mountedContainerSlotRoot = existing.gameObject;
+            mountedContainerSlot = new SlotView
+            {
+                Group = InventorySlotGroup.QuickAccess,
+                Index = -1,
+                IsStorage = false,
+                Button = inventorySlot.Button ??
+                    TerminalUIUtility.EnsureButton(inventorySlot.transform),
+                Icon = inventorySlot.Icon ??
+                    TerminalUIUtility.EnsureSlotIcon(inventorySlot.transform),
+                Drag = inventorySlot.LaboratoryDrag ??
+                    inventorySlot.gameObject.AddComponent<
+                        LaboratoryInventoryItemDrag>()
+            };
+            mountedContainerSlot.Button?.onClick.AddListener(
+                () => SelectSlot(mountedContainerSlot));
+            mountedContainerSlot.Drag.InteractionStarted +=
+                _ => SelectSlot(mountedContainerSlot);
+            mountedContainerSlotRoot.SetActive(false);
+            existing.SetAsLastSibling();
+        }
+
         private void ShowStorageGroup(InventorySlotGroup group)
         {
             activeGroup = group;
@@ -247,6 +286,21 @@ namespace NERA.Terminal
             if (storage == null || inventory == null)
                 return;
 
+            if (drag.IsAnomalyContainerAttachmentSource)
+            {
+                if (!destination.IsStorage &&
+                    inventory.TryMoveInstalledAnomalyContainer(
+                        drag.SourceGroup,
+                        drag.SourceIndex,
+                        destination.Group,
+                        destination.Index))
+                {
+                    SelectSlot(destination);
+                }
+                RefreshAll();
+                return;
+            }
+
             if (destination.IsStorage)
             {
                 if (drag.IsStationStorageSource)
@@ -258,7 +312,6 @@ namespace NERA.Terminal
                         destination.Index);
                 }
                 else if (!drag.IsLaboratorySource &&
-                         !drag.IsChargingSource &&
                          !drag.IsUpgradeSource)
                 {
                     storage.MoveFromInventory(
@@ -279,7 +332,6 @@ namespace NERA.Terminal
                     destination.Index);
             }
             else if (!drag.IsLaboratorySource &&
-                     !drag.IsChargingSource &&
                      !drag.IsUpgradeSource)
             {
                 inventory.TryMoveItem(
@@ -296,8 +348,42 @@ namespace NERA.Terminal
         {
             RefreshViews(storageSlots);
             RefreshViews(inventorySlots);
+            RefreshMountedContainerSlot();
             if (selectedSlot != null)
                 ShowInfo(selectedSlot.Item);
+        }
+
+        private void RefreshMountedContainerSlot()
+        {
+            if (mountedContainerSlotRoot == null ||
+                mountedContainerSlot == null)
+            {
+                return;
+            }
+
+            ItemInstance integrator = null;
+            int integratorIndex = -1;
+            bool visible = inventory != null &&
+                inventory.TryGetAnomalyContainerMount(
+                    out integrator,
+                    out integratorIndex);
+            mountedContainerSlotRoot.SetActive(visible);
+            mountedContainerSlot.Index = visible ? integratorIndex : -1;
+            mountedContainerSlot.Item = visible
+                ? integrator.InstalledAnomalyContainer
+                : null;
+            TerminalUIUtility.SetItemIcon(
+                mountedContainerSlot.Icon,
+                mountedContainerSlot.Item);
+            mountedContainerSlot.Drag.Initialize(
+                mountedContainerSlot.Item,
+                rootCanvas,
+                InventorySlotGroup.QuickAccess,
+                mountedContainerSlot.Index,
+                false,
+                false,
+                false,
+                true);
         }
 
         private void RefreshViews(List<SlotView> views)
@@ -330,7 +416,6 @@ namespace NERA.Terminal
                         rootCanvas,
                         view.Group,
                         view.Index,
-                        false,
                         false,
                         view.IsStorage);
                 }

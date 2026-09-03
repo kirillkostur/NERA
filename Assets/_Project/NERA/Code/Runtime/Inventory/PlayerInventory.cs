@@ -40,13 +40,18 @@ namespace NERA.Inventory
         public event Action<ItemData> ItemAdded;
         public event Action<ItemData> ItemRemoved;
         public event Action InventoryChanged;
+        public event Action ItemChargeChanged;
 
         public IEnumerable<ItemData> Items
         {
             get
             {
                 foreach (ItemInstance instance in ItemInstances)
+                {
                     yield return instance?.ItemData;
+                    if (instance?.InstalledAnomalyContainer != null)
+                        yield return instance.InstalledAnomalyContainer;
+                }
             }
         }
 
@@ -80,6 +85,8 @@ namespace NERA.Inventory
                 foreach (ItemInstance item in ItemInstances)
                 {
                     if (item?.ItemData != null)
+                        count++;
+                    if (item?.InstalledAnomalyContainer != null)
                         count++;
                 }
                 return count;
@@ -150,6 +157,14 @@ namespace NERA.Inventory
                 {
                     return true;
                 }
+                if (instance?.InstalledAnomalyContainer != null &&
+                    string.Equals(
+                        instance.InstalledAnomalyContainer.ItemId,
+                        itemId,
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -164,6 +179,14 @@ namespace NERA.Inventory
             {
                 if (instance?.ItemData != null &&
                     string.Equals(instance.ItemData.ItemId, itemId, StringComparison.Ordinal))
+                {
+                    count++;
+                }
+                if (instance?.InstalledAnomalyContainer != null &&
+                    string.Equals(
+                        instance.InstalledAnomalyContainer.ItemId,
+                        itemId,
+                        StringComparison.Ordinal))
                 {
                     count++;
                 }
@@ -229,6 +252,9 @@ namespace NERA.Inventory
             removedInstance = null;
             List<ItemInstance> slots = GetInstanceSlots(group);
             if (index < 0 || index >= slots.Count || slots[index]?.ItemData == null)
+                return false;
+
+            if (IsPermanentEquipment(slots[index].ItemData))
                 return false;
 
             removedInstance = slots[index];
@@ -344,7 +370,8 @@ namespace NERA.Inventory
         {
             ItemInstance instance = GetItemInstance(group, index);
             ItemData item = instance?.ItemData;
-            if (item == null || item.WorldPrefab == null)
+            if (item == null || item.WorldPrefab == null ||
+                IsPermanentEquipment(item))
                 return false;
 
             if (!RemoveInstanceAt(group, index, out instance))
@@ -378,6 +405,11 @@ namespace NERA.Inventory
                 return false;
 
             ItemInstance destinationItem = destination[destinationIndex];
+            if (IsPermanentEquipment(sourceItem.ItemData) ||
+                IsPermanentEquipment(destinationItem?.ItemData))
+            {
+                return false;
+            }
             if (destinationItem?.ItemData != null &&
                 GetSlotGroup(destinationItem.ItemData.ItemType) != sourceGroup)
             {
@@ -386,6 +418,135 @@ namespace NERA.Inventory
 
             source[sourceIndex] = destinationItem;
             destination[destinationIndex] = sourceItem;
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryInstallAnomalyContainerOnPermanentEquipment(
+            InventorySlotGroup sourceGroup,
+            int sourceIndex)
+        {
+            for (int index = 0; index < quickAccessItemInstances.Count; index++)
+            {
+                ItemData item = quickAccessItemInstances[index]?.ItemData;
+                if (IsPermanentEquipment(item) &&
+                    item.AcceptsAnomalyContainer &&
+                    TryInstallAnomalyContainer(
+                        sourceGroup,
+                        sourceIndex,
+                        InventorySlotGroup.QuickAccess,
+                        index))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool TryGetAnomalyContainerMount(
+            out ItemInstance integrator,
+            out int integratorIndex)
+        {
+            for (int index = 0; index < quickAccessItemInstances.Count; index++)
+            {
+                ItemInstance candidate = quickAccessItemInstances[index];
+                if (IsPermanentEquipment(candidate?.ItemData) &&
+                    candidate.ItemData.AcceptsAnomalyContainer &&
+                    candidate.HasAnomalyContainer)
+                {
+                    integrator = candidate;
+                    integratorIndex = index;
+                    return true;
+                }
+            }
+
+            integrator = null;
+            integratorIndex = -1;
+            return false;
+        }
+
+        public bool TryInstallAnomalyContainer(
+            InventorySlotGroup sourceGroup,
+            int sourceIndex,
+            InventorySlotGroup integratorGroup,
+            int integratorIndex)
+        {
+            List<ItemInstance> source = GetInstanceSlots(sourceGroup);
+            List<ItemInstance> destination = GetInstanceSlots(integratorGroup);
+            if (!IsValidIndex(source, sourceIndex) ||
+                !IsValidIndex(destination, integratorIndex) ||
+                sourceGroup == integratorGroup && sourceIndex == integratorIndex)
+            {
+                return false;
+            }
+
+            ItemInstance container = source[sourceIndex];
+            ItemInstance integrator = destination[integratorIndex];
+            if (container?.ItemData == null ||
+                integrator?.ItemData?.AcceptsAnomalyContainer != true ||
+                !integrator.TryInstallAnomalyContainer(
+                    container,
+                    out ItemInstance replacedContainer))
+            {
+                return false;
+            }
+
+            source[sourceIndex] = replacedContainer;
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryMoveInstalledAnomalyContainer(
+            InventorySlotGroup integratorGroup,
+            int integratorIndex,
+            InventorySlotGroup destinationGroup,
+            int destinationIndex)
+        {
+            List<ItemInstance> source = GetInstanceSlots(integratorGroup);
+            List<ItemInstance> destination = GetInstanceSlots(destinationGroup);
+            if (!IsValidIndex(source, integratorIndex) ||
+                !IsValidIndex(destination, destinationIndex) ||
+                integratorGroup == destinationGroup &&
+                integratorIndex == destinationIndex)
+            {
+                return false;
+            }
+
+            ItemInstance integrator = source[integratorIndex];
+            if (integrator?.HasAnomalyContainer != true)
+                return false;
+
+            ItemInstance replacement = destination[destinationIndex];
+            if (replacement?.ItemData != null)
+            {
+                if (!integrator.TryInstallAnomalyContainer(
+                        replacement,
+                        out ItemInstance detached))
+                {
+                    return false;
+                }
+
+                destination[destinationIndex] = detached;
+            }
+            else
+            {
+                if (!integrator.TryRemoveAnomalyContainer(
+                        out ItemInstance detached))
+                {
+                    return false;
+                }
+
+                if (PlayerInventory.GetSlotGroup(
+                        detached.ItemData.ItemType) != destinationGroup)
+                {
+                    integrator.TryInstallAnomalyContainer(detached, out _);
+                    return false;
+                }
+
+                destination[destinationIndex] = detached;
+            }
+
             InventoryChanged?.Invoke();
             return true;
         }
@@ -402,6 +563,9 @@ namespace NERA.Inventory
 
             List<ItemInstance> slots = GetInstanceSlots(group);
             if (!IsValidIndex(slots, index))
+                return false;
+
+            if (IsPermanentEquipment(slots[index]?.ItemData))
                 return false;
 
             slots[index] = instance;
@@ -441,6 +605,9 @@ namespace NERA.Inventory
 
             List<ItemInstance> slots = GetInstanceSlots(group);
             if (!IsValidIndex(slots, index))
+                return false;
+
+            if (IsPermanentEquipment(slots[index]?.ItemData))
                 return false;
 
             replacedInstance = slots[index];
@@ -510,6 +677,44 @@ namespace NERA.Inventory
         {
             return index >= ActiveQuickAccessStartIndex &&
                    index < ActiveQuickAccessStartIndex + ActiveQuickAccessCapacity;
+        }
+
+        public static bool IsPermanentEquipment(ItemData item)
+        {
+            return item?.ItemType == ItemType.Equipment;
+        }
+
+        public bool CanDropItem(InventorySlotGroup group, int index)
+        {
+            ItemInstance instance = GetItemInstance(group, index);
+            return instance?.ItemData != null &&
+                instance.ItemData.WorldPrefab != null &&
+                !IsPermanentEquipment(instance.ItemData);
+        }
+
+        public float RechargePermanentEquipment(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return 0f;
+
+            float recharged = 0f;
+            foreach (ItemInstance instance in quickAccessItemInstances)
+            {
+                ItemData item = instance?.ItemData;
+                if (!IsPermanentEquipment(item) ||
+                    !instance.IsChargeable ||
+                    instance.IsFullyCharged)
+                {
+                    continue;
+                }
+
+                recharged += instance.Recharge(
+                    item.EnergyDefinition.RechargePerSecond * deltaTime);
+            }
+
+            if (recharged > 0f)
+                ItemChargeChanged?.Invoke();
+            return recharged;
         }
 
         public static InventorySlotGroup GetSlotGroup(ItemType itemType)

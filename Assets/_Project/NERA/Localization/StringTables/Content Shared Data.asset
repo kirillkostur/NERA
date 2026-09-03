@@ -923,6 +923,14 @@ MonoBehaviour:
     m_Key: station.laboratory.station_laboratory.stat.0
     m_Metadata:
       m_Items: []
+  - m_Id: 8814963857547264
+    m_Key: item.anomaly_container_01.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8814963924656128
+    m_Key: item.anomaly_container_01.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

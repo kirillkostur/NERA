@@ -41,15 +41,6 @@ MonoBehaviour:
     m_Localized: SCANNED
     m_Metadata:
       m_Items: []
-  - m_Id: 1429200900
-    m_Localized: Laboratory charger ready.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1429200901
-    m_Localized: CHARGE {0}%
-    m_Metadata:
-      m_Items:
-      - rid: 1138171735028269374
   - m_Id: 1429200902
     m_Localized: SELECT AN ITEM
     m_Metadata:
@@ -125,11 +116,11 @@ MonoBehaviour:
       m_Items:
       - rid: 1138171735028269374
   - m_Id: 7685672470044672
-    m_Localized: INVENTORY [TAB]
+    m_Localized: 'INVENTORY [TAB]'
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356096
-    m_Localized: INVENTORY [TAB]
+    m_Localized: 'INVENTORY [TAB]'
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356097
@@ -138,10 +129,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 7685673124356098
     m_Localized: EXIT
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356099
-    m_Localized: POWER
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356100
@@ -157,26 +144,6 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7685673124356103
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356104
-    m_Localized: Slot 1 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356105
-    m_Localized: Slot 2 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356106
-    m_Localized: Slot 3 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356107
-    m_Localized: Slot 4 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685673124356108
     m_Localized: DROP
     m_Metadata:
       m_Items: []
@@ -196,10 +163,6 @@ MonoBehaviour:
     m_Localized: EXIT
     m_Metadata:
       m_Items: []
-  - m_Id: 7685674432978945
-    m_Localized: POWER
-    m_Metadata:
-      m_Items: []
   - m_Id: 7685674432978946
     m_Localized: SCAN
     m_Metadata:
@@ -213,26 +176,6 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7685674432978949
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685674432978950
-    m_Localized: Slot 1 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685674432978951
-    m_Localized: Slot 2 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685674432978952
-    m_Localized: Slot 3 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685674432978953
-    m_Localized: Slot 4 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685674432978954
     m_Localized: DROP
     m_Metadata:
       m_Items: []
@@ -252,20 +195,8 @@ MonoBehaviour:
     m_Localized: SCAN
     m_Metadata:
       m_Items: []
-  - m_Id: 7685681659764737
-    m_Localized: Slot 2 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685681710096384
-    m_Localized: DROP
-    m_Metadata:
-      m_Items: []
   - m_Id: 7685681710096385
-    m_Localized: INVENTORY [TAB]
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685681752039424
-    m_Localized: POWER
+    m_Localized: 'INVENTORY [TAB]'
     m_Metadata:
       m_Items: []
   - m_Id: 7685681752039425
@@ -280,24 +211,12 @@ MonoBehaviour:
     m_Localized: DROP
     m_Metadata:
       m_Items: []
-  - m_Id: 7685681752039428
-    m_Localized: Slot 3 - %
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685681752039429
-    m_Localized: Slot 4 - %
-    m_Metadata:
-      m_Items: []
   - m_Id: 7685681756233728
     m_Localized: UPGRADE
     m_Metadata:
       m_Items: []
   - m_Id: 7685681756233729
     m_Localized: DROP
-    m_Metadata:
-      m_Items: []
-  - m_Id: 7685681756233730
-    m_Localized: Slot 1 - %
     m_Metadata:
       m_Items: []
   - m_Id: 7685681756233731
@@ -314,7 +233,6 @@ MonoBehaviour:
         m_SharedEntries:
         - id: 1399840768
         - id: 1429200896
-        - id: 1429200901
         - id: 1429200907
         - id: 1429200910
         - id: 1429200914

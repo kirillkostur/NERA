@@ -1,5 +1,8 @@
 using NERA.Inventory;
+using NERA.Player;
+using NERA.Research;
 using NERA.UI;
+using Climbing;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -118,16 +121,10 @@ namespace NERA.Tests
                 new Vector2(300f, 70f),
                 new Vector2(-150f, 35f));
 
-            RectTransform quickAccess = RequireNestedPrefab(
-                layer,
-                "Slot_Invent_Equipment",
-                "Assets/_Project/NERA/Prefabs/UI/HUD/" +
-                "P_HUD_QuickAccess.prefab");
-            AssertFixed(
-                quickAccess,
-                new Vector2(0.5f, 0f),
-                new Vector2(500f, 150f),
-                new Vector2(0f, 88f));
+            Assert.That(
+                layer.Find("Slot_Invent_Equipment"),
+                Is.Null,
+                "Permanent equipment must not expose removable HUD slots.");
 
             RectTransform checkpoint = RequireNestedPrefab(
                 layer,
@@ -169,10 +166,33 @@ namespace NERA.Tests
                 root.transform,
                 "ModalCanvas");
 
-            AssertScreen(
+            RectTransform inventory = AssertScreen(
                 layer,
                 "InventoryScreen",
                 "P_Screen_Inventory.prefab");
+            RectTransform containerDrop = RequireDescendant(
+                inventory,
+                "BackContainerMountDropTarget");
+            Assert.That(
+                containerDrop.GetComponent<LaboratoryItemDropSlot>(),
+                Is.Not.Null);
+            Assert.That(containerDrop.GetComponent<Image>(), Is.Not.Null);
+            Assert.That(
+                containerDrop.GetComponent<Image>().color.a,
+                Is.Zero);
+            RectTransform mountedContainerDrag = RequireDescendant(
+                containerDrop,
+                "MountedAnomalyContainerDrag");
+            Assert.That(
+                mountedContainerDrag.GetComponent<
+                    LaboratoryInventoryItemDrag>(),
+                Is.Not.Null);
+            Assert.That(
+                mountedContainerDrag.GetComponent<CanvasGroup>(),
+                Is.Not.Null);
+            Assert.That(
+                mountedContainerDrag.GetComponent<Image>().color.a,
+                Is.Zero);
             AssertScreen(
                 layer,
                 "LaboratoryScreen",
@@ -187,7 +207,197 @@ namespace NERA.Tests
                 "P_Screen_StationUpgrade.prefab");
         }
 
-        private static void AssertScreen(
+        [Test]
+        public void PlayerPrefabOwnsStationChargingAndInventoryCamera()
+        {
+            GameObject player = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Player/Player.prefab");
+            PlayerInventory inventory =
+                player.GetComponentInChildren<PlayerInventory>(true);
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(
+                inventory.GetComponent<PlayerStationEquipmentCharger>(),
+                Is.Not.Null);
+            SwitchCameras cameraSwitch =
+                player.GetComponentInChildren<SwitchCameras>(true);
+            Assert.That(cameraSwitch, Is.Not.Null);
+            Assert.That(cameraSwitch.FreeLookCamera, Is.Not.Null);
+            Assert.That(cameraSwitch.InventoryCamera, Is.Not.Null);
+            Assert.That(cameraSwitch.InventoryCamera,
+                Is.Not.SameAs(cameraSwitch.FreeLookCamera));
+            Assert.That(cameraSwitch.InventoryCamera,
+                Is.TypeOf<Unity.Cinemachine.CinemachineVirtualCamera>());
+            Assert.That(cameraSwitch.InventoryCamera.gameObject.name,
+                Is.EqualTo("InventoryCamera"));
+            Assert.That(cameraSwitch.InventoryCamera.Follow, Is.Not.Null);
+            Assert.That(cameraSwitch.InventoryCamera.LookAt, Is.Not.Null);
+            Unity.Cinemachine.CinemachineVirtualCamera inventoryCamera =
+                (Unity.Cinemachine.CinemachineVirtualCamera)
+                    cameraSwitch.InventoryCamera;
+            Assert.That(
+                (inventoryCamera.BlendHint &
+                 Unity.Cinemachine.CinemachineCore.BlendHints
+                     .SphericalPosition) != 0,
+                Is.True,
+                "Inventory camera must blend around the shared LookAt target.");
+        }
+
+        [Test]
+        public void PlayerBridgeBlocksInventoryDuringParkourStates()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/NERA/Prefabs/Player/Player.prefab");
+            GameObject player = (GameObject)PrefabUtility.InstantiatePrefab(
+                prefab);
+            try
+            {
+                ParkourPlayerBridge bridge =
+                    player.GetComponentInChildren<ParkourPlayerBridge>(true);
+                ThirdPersonController controller =
+                    bridge.GetComponent<ThirdPersonController>();
+                MovementCharacterController movement =
+                    bridge.GetComponent<MovementCharacterController>();
+
+                controller.isGrounded = true;
+                controller.allowMovement = true;
+                controller.dummy = false;
+                controller.isJumping = false;
+                controller.isVaulting = false;
+                movement.stopMotion = false;
+                Assert.That(bridge.CanOpenInventory, Is.True);
+
+                controller.isJumping = true;
+                Assert.That(bridge.CanOpenInventory, Is.False);
+                controller.isJumping = false;
+                controller.isVaulting = true;
+                Assert.That(bridge.CanOpenInventory, Is.False);
+                controller.isVaulting = false;
+                controller.isGrounded = false;
+                Assert.That(bridge.CanOpenInventory, Is.False);
+                controller.isGrounded = true;
+                controller.dummy = true;
+                Assert.That(bridge.CanOpenInventory, Is.False);
+                controller.dummy = false;
+                movement.stopMotion = true;
+                Assert.That(bridge.CanOpenInventory, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void SwitchCamerasOwnsInventoryTransition()
+        {
+            GameObject cameraRoot = new GameObject("InventoryCameraTest");
+            try
+            {
+                GameObject gameplayObject =
+                    new GameObject("FreeLookCam");
+                gameplayObject.transform.SetParent(cameraRoot.transform);
+                Unity.Cinemachine.CinemachineFreeLook gameplayCamera =
+                    gameplayObject.AddComponent<
+                        Unity.Cinemachine.CinemachineFreeLook>();
+                GameObject slideObject = new GameObject("SlideCam");
+                slideObject.transform.SetParent(cameraRoot.transform);
+                Unity.Cinemachine.CinemachineCamera slideCamera =
+                    slideObject.AddComponent<
+                        Unity.Cinemachine.CinemachineCamera>();
+                GameObject inventoryObject =
+                    new GameObject("InventoryCamera");
+                inventoryObject.transform.SetParent(cameraRoot.transform);
+                Unity.Cinemachine.CinemachineCamera inventoryCamera =
+                    inventoryObject.AddComponent<
+                        Unity.Cinemachine.CinemachineCamera>();
+                SwitchCameras cameraSwitch =
+                    cameraRoot.AddComponent<SwitchCameras>();
+                SerializedObject serializedSwitch =
+                    new SerializedObject(cameraSwitch);
+                serializedSwitch.FindProperty("FreeLook")
+                    .objectReferenceValue = gameplayCamera;
+                serializedSwitch.FindProperty("Slide")
+                    .objectReferenceValue = slideCamera;
+                serializedSwitch.FindProperty("Inventory")
+                    .objectReferenceValue = inventoryCamera;
+                serializedSwitch.ApplyModifiedPropertiesWithoutUndo();
+
+                cameraSwitch.FreeLookCam();
+                Assert.That(cameraSwitch.IsFreeLookActive, Is.True);
+                cameraSwitch.InventoryCam();
+                Assert.That(cameraSwitch.IsInventoryActive, Is.True);
+                Assert.That(
+                    (inventoryCamera.BlendHint &
+                     Unity.Cinemachine.CinemachineCore.BlendHints
+                         .SphericalPosition) != 0,
+                    Is.True);
+                Assert.That((int)inventoryCamera.Priority, Is.EqualTo(1));
+                Assert.That((int)gameplayCamera.Priority, Is.Zero);
+                Assert.That((int)slideCamera.Priority, Is.Zero);
+
+                Vector3 inventoryPosition = new Vector3(2f, 3f, 4f);
+                Quaternion inventoryRotation =
+                    Quaternion.Euler(10f, 25f, 0f);
+                inventoryCamera.ForceCameraPosition(
+                    inventoryPosition,
+                    inventoryRotation);
+                cameraSwitch.FreeLookCam();
+                Assert.That(cameraSwitch.IsFreeLookActive, Is.True);
+                Assert.That(cameraSwitch.IsInventoryActive, Is.False);
+                Assert.That((int)inventoryCamera.Priority, Is.Zero);
+                Assert.That((int)gameplayCamera.Priority, Is.EqualTo(1));
+                Assert.That(gameplayCamera.PreviousStateIsValid, Is.True);
+                Assert.That(
+                    Vector3.Distance(
+                        gameplayCamera.State.RawPosition +
+                            gameplayCamera.State.PositionCorrection,
+                        inventoryPosition),
+                    Is.LessThan(0.001f));
+
+                cameraSwitch.SlideCam();
+                Assert.That(cameraSwitch.IsFreeLookActive, Is.False);
+                Assert.That((int)slideCamera.Priority, Is.EqualTo(1));
+                Assert.That((int)gameplayCamera.Priority, Is.Zero);
+                Assert.That((int)inventoryCamera.Priority, Is.Zero);
+                cameraSwitch.FreeLookCam();
+                Assert.That(cameraSwitch.IsFreeLookActive, Is.True);
+                Assert.That((int)gameplayCamera.Priority, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraRoot);
+            }
+        }
+
+        [Test]
+        public void InventoryCameraUsesConfiguredEntryAndExitBlends()
+        {
+            Unity.Cinemachine.CinemachineBlenderSettings settings =
+                AssetDatabase.LoadAssetAtPath<
+                    Unity.Cinemachine.CinemachineBlenderSettings>(
+                    "Assets/_Project/NERA/Resources/Parkour/Camera/" +
+                    "Camera Aux Blends.asset");
+            Assert.That(settings, Is.Not.Null);
+
+            Unity.Cinemachine.CinemachineBlenderSettings.CustomBlend entry =
+                System.Array.Find(settings.CustomBlends, blend =>
+                    blend.To == "InventoryCamera");
+            Unity.Cinemachine.CinemachineBlenderSettings.CustomBlend exit =
+                System.Array.Find(settings.CustomBlends, blend =>
+                    blend.From == "InventoryCamera");
+            Assert.That(entry, Is.Not.Null);
+            Assert.That(entry.Blend.Style,
+                Is.EqualTo(Unity.Cinemachine.CinemachineBlendDefinition
+                    .Styles.EaseInOut));
+            Assert.That(entry.Blend.Time, Is.EqualTo(1f));
+            Assert.That(exit, Is.Not.Null);
+            Assert.That(exit.Blend.Style,
+                Is.EqualTo(Unity.Cinemachine.CinemachineBlendDefinition
+                    .Styles.EaseInOut));
+            Assert.That(exit.Blend.Time, Is.EqualTo(0.7f));
+        }
+
+        private static RectTransform AssertScreen(
             RectTransform layer,
             string objectName,
             string assetName)
@@ -198,6 +408,7 @@ namespace NERA.Tests
                 "Assets/_Project/NERA/Prefabs/UI/Screens/" +
                 assetName);
             AssertStretch(screen);
+            return screen;
         }
 
         private static void AssertCanvasLayer(

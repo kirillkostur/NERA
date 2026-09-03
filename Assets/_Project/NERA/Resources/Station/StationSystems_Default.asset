@@ -149,6 +149,30 @@ MonoBehaviour:
       unit: ' kW'
       decimals: 1
     slots: []
+  - systemType: 5
+    objectId: station_medical_module
+    displayName:
+    description:
+    controllable: 1
+    initiallyActive: 0
+    powerPriority: 70
+    baseStats:
+    - stat: 4
+      displayName:
+      baseValue: 0
+      unit: ' kW'
+      decimals: 1
+    - stat: 21
+      displayName:
+      baseValue: 30
+      unit: ' charge/use'
+      decimals: 0
+    - stat: 22
+      displayName:
+      baseValue: 10
+      unit: ' s'
+      decimals: 0
+    slots: []
   - systemType: 6
     objectId: station_antenna
     displayName: ANTENNA

@@ -137,6 +137,7 @@ namespace NERA.Inventory
             AnomalyIntegrationDefinition definition =
                 instance?.AnomalyIntegration;
             if (inventory == null ||
+                instance?.ItemData?.AcceptsAnomalyContainer != true ||
                 definition == null ||
                 !instance.CanUseAnomalyIntegration ||
                 !ContainsQuickAccessInstance(instance))
@@ -207,7 +208,8 @@ namespace NERA.Inventory
 
                 ItemInstance instance =
                     inventory.QuickAccessItemInstances[i];
-                if (instance?.CanUseAnomalyIntegration == true)
+                if (instance?.ItemData?.AcceptsAnomalyContainer == true &&
+                    instance.CanUseAnomalyIntegration)
                     return instance;
             }
 
@@ -308,7 +310,9 @@ namespace NERA.Inventory
                 if (!PlayerInventory.IsActiveQuickAccessSlot(index))
                     continue;
 
-                ItemData item = inventory.QuickAccessItemInstances[index]?.ItemData;
+                ItemInstance instance =
+                    inventory.QuickAccessItemInstances[index];
+                ItemData item = instance?.ItemData;
                 if (item == null || item.EquippedVisualPrefab == null)
                     continue;
 
@@ -337,6 +341,7 @@ namespace NERA.Inventory
                 visual.transform.localRotation = Quaternion.Euler(
                     item.EquippedLocalEulerAngles
                 );
+                visual.GetComponent<AnomalyAttachmentVisual>()?.Bind(instance);
                 equippedVisuals[index] = visual;
             }
         }

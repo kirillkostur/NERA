@@ -15,7 +15,8 @@ MonoBehaviour:
   integrationId: io_green_restoration
   displayName: Green IO Restoration
   displayColor: {r: 0.16, g: 0.95, b: 0.35, a: 1}
-  compatibleEquipment: []
+  compatibleContainers:
+  - {fileID: 11400000, guid: 0b99ea03760bc8e4f84bec69874c0227, type: 2}
   synthesisDuration: 8
   effect: 3
   radius: 8

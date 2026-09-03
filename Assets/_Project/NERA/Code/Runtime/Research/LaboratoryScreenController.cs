@@ -14,7 +14,6 @@ namespace NERA.Research
     {
         private enum LaboratoryMode
         {
-            Power,
             Scan,
             Upgrade
         }
@@ -32,10 +31,6 @@ namespace NERA.Research
 
         private readonly List<InventoryView> inventoryViews =
             new List<InventoryView>();
-        private readonly List<InventorySlotView> chargingViews =
-            new List<InventorySlotView>();
-        private readonly List<TMP_Text> chargingProgress =
-            new List<TMP_Text>();
         private readonly List<InventorySlotView> upgradeViews =
             new List<InventorySlotView>();
 
@@ -43,11 +38,9 @@ namespace NERA.Research
         private PlayerInventory inventory;
         [SerializeField] private Canvas rootCanvas;
         [SerializeField] private GameObject inventoryAndInfoScreen;
-        [SerializeField] private GameObject powerScreen;
         [SerializeField] private GameObject scanScreen;
         [SerializeField] private GameObject upgradeScreen;
         private InventorySlotView scanView;
-        [SerializeField] private Button powerDropButton;
         [SerializeField] private Button scanButton;
         [SerializeField] private Button scanDropButton;
         [SerializeField] private TMP_Text scanProgressText;
@@ -124,7 +117,6 @@ namespace NERA.Research
             inventoryAndInfoScreen ??= Find(
                 transform,
                 "Inventory_and_info_Screen")?.gameObject;
-            powerScreen ??= Find(transform, "PowerScreen")?.gameObject;
             scanScreen ??= Find(transform, "ScanScreen")?.gameObject;
             upgradeScreen ??= Find(transform, "UpgradeScreen")?.gameObject;
 
@@ -139,9 +131,6 @@ namespace NERA.Research
                 "Text_Description")?.GetComponent<TMP_Text>();
             infoImage ??= Find(infoRoot, "Image_info")?.GetComponent<Image>();
 
-            powerDropButton ??= Find(
-                powerScreen != null ? powerScreen.transform : null,
-                "DropButton")?.GetComponent<Button>();
             scanButton ??= Find(
                 scanScreen != null ? scanScreen.transform : null,
                 "ScanButton")?.GetComponent<Button>();
@@ -179,12 +168,6 @@ namespace NERA.Research
                     inventoryAndInfoScreen.transform,
                     "background_Screen_Storage_Slot_Invent_Anomaly"),
                 InventorySlotGroup.Anomaly,
-                config.SlotPrefab);
-            BuildInventoryGroup(
-                Find(
-                    inventoryAndInfoScreen.transform,
-                    "background_Screen_Storage_Slot_Invent_Equipment"),
-                InventorySlotGroup.QuickAccess,
                 config.SlotPrefab);
         }
 
@@ -244,28 +227,6 @@ namespace NERA.Research
                 0,
                 HandleScanDrop);
 
-            Transform powerRoot = Find(
-                powerScreen != null ? powerScreen.transform : null,
-                "background_Screen_Storage_Slot");
-            List<Transform> powerPoints =
-                GetSpawnPoints(powerRoot, "Slot_");
-            for (int index = 0; index < powerPoints.Count; index++)
-            {
-                int capturedIndex = index;
-                InventorySlotView view = CreateOperationView(
-                    powerPoints[index],
-                    config.SlotPrefab,
-                    index,
-                    drag => HandleChargingDrop(capturedIndex, drag));
-                if (view != null)
-                    chargingViews.Add(view);
-
-                TMP_Text progress = Find(
-                    powerRoot,
-                    $"Text_progress_{index + 1:00}")?.GetComponent<TMP_Text>();
-                chargingProgress.Add(progress);
-            }
-
             Transform upgradeRoot = Find(
                 upgradeScreen != null ? upgradeScreen.transform : null,
                 "background_Screen_Storage_Slot");
@@ -315,9 +276,6 @@ namespace NERA.Research
 
         private void BindButtons()
         {
-            Find(transform, "PowerMapButton")?.GetComponent<Button>()
-                ?.onClick.AddListener(
-                    () => ShowMode(LaboratoryMode.Power));
             Find(transform, "ScanMapButton")?.GetComponent<Button>()
                 ?.onClick.AddListener(
                     () => ShowMode(LaboratoryMode.Scan));
@@ -331,7 +289,6 @@ namespace NERA.Research
             Find(transform, "ExitButton")?.GetComponent<Button>()
                 ?.onClick.AddListener(() => owner?.CloseAll());
 
-            powerDropButton?.onClick.AddListener(ReturnChargingItems);
             scanButton?.onClick.AddListener(StartScan);
             scanDropButton?.onClick.AddListener(ReturnScanItem);
             upgradeDropButton?.onClick.AddListener(ReturnUpgradeItems);
@@ -340,21 +297,19 @@ namespace NERA.Research
 
         private void ShowNextMode()
         {
-            int next = ((int)activeMode + 1) % 3;
+            int next = ((int)activeMode + 1) % 2;
             ShowMode((LaboratoryMode)next);
         }
 
         private void ShowPreviousMode()
         {
-            int previous = ((int)activeMode + 2) % 3;
+            int previous = ((int)activeMode + 1) % 2;
             ShowMode((LaboratoryMode)previous);
         }
 
         private void ShowMode(LaboratoryMode mode)
         {
             activeMode = mode;
-            if (powerScreen != null)
-                powerScreen.SetActive(mode == LaboratoryMode.Power);
             if (scanScreen != null)
                 scanScreen.SetActive(mode == LaboratoryMode.Scan);
             if (upgradeScreen != null)
@@ -402,16 +357,6 @@ namespace NERA.Research
                         destinationGroup,
                         destinationIndex);
             }
-            else if (drag.IsChargingSource)
-            {
-                moved = LaboratoryWorkstationController.Instance != null &&
-                    LaboratoryWorkstationController.Instance
-                        .MoveChargingItemToInventory(
-                            drag.SourceIndex,
-                            inventory,
-                            destinationGroup,
-                            destinationIndex);
-            }
             else if (drag.IsUpgradeSource)
             {
                 moved = LaboratoryWorkstationController.Instance != null &&
@@ -453,26 +398,6 @@ namespace NERA.Research
             }
         }
 
-        private void HandleChargingDrop(
-            int slotIndex,
-            LaboratoryInventoryItemDrag drag)
-        {
-            if (!IsPlayerInventorySource(drag))
-                return;
-
-            LaboratoryWorkstationController workstation =
-                LaboratoryWorkstationController.Instance;
-            if (workstation != null &&
-                workstation.LoadChargingItem(
-                    slotIndex,
-                    inventory,
-                    drag.SourceGroup,
-                    drag.SourceIndex))
-            {
-                RefreshAll();
-            }
-        }
-
         private void HandleUpgradeDrop(
             int slotIndex,
             LaboratoryInventoryItemDrag drag)
@@ -499,7 +424,6 @@ namespace NERA.Research
             return drag?.Item != null &&
                 drag.SourceIndex >= 0 &&
                 !drag.IsLaboratorySource &&
-                !drag.IsChargingSource &&
                 !drag.IsUpgradeSource &&
                 !drag.IsStationStorageSource;
         }
@@ -513,13 +437,6 @@ namespace NERA.Research
         private void ReturnScanItem()
         {
             ResearchController.Instance?.RetrieveLoadedItem();
-            RefreshAll();
-        }
-
-        private void ReturnChargingItems()
-        {
-            LaboratoryWorkstationController.Instance
-                ?.RetrieveAllChargingItems(inventory);
             RefreshAll();
         }
 
@@ -549,7 +466,6 @@ namespace NERA.Research
 
             RefreshInventoryViews();
             RefreshScanView();
-            RefreshChargingViews();
             RefreshUpgradeViews();
         }
 
@@ -557,9 +473,6 @@ namespace NERA.Research
         {
             switch (activeMode)
             {
-                case LaboratoryMode.Power:
-                    RefreshChargingViews();
-                    break;
                 case LaboratoryMode.Scan:
                     RefreshScanView();
                     break;
@@ -630,42 +543,6 @@ namespace NERA.Research
             }
         }
 
-        private void RefreshChargingViews()
-        {
-            LaboratoryWorkstationController workstation =
-                LaboratoryWorkstationController.Instance;
-            bool hasAny = false;
-            for (int index = 0; index < chargingViews.Count; index++)
-            {
-                ItemInstance instance =
-                    workstation?.GetChargingItem(index);
-                ItemData item = instance?.ItemData;
-                hasAny |= item != null;
-                SetSlotItem(
-                    chargingViews[index],
-                    item,
-                    item != null
-                        ? PlayerInventory.GetSlotGroup(item.ItemType)
-                        : InventorySlotGroup.Backpack,
-                    index,
-                    isChargingSource: true);
-
-                TMP_Text progress = index < chargingProgress.Count
-                    ? chargingProgress[index]
-                    : null;
-                if (progress != null)
-                {
-                    progress.gameObject.SetActive(item != null);
-                    progress.text = item != null
-                        ? $"{Mathf.RoundToInt(instance.Charge01 * 100f)}%"
-                        : string.Empty;
-                }
-            }
-
-            if (powerDropButton != null)
-                powerDropButton.interactable = hasAny;
-        }
-
         private void RefreshUpgradeViews()
         {
             LaboratoryWorkstationController workstation =
@@ -721,7 +598,6 @@ namespace NERA.Research
             InventorySlotGroup group,
             int index,
             bool isScanSource = false,
-            bool isChargingSource = false,
             bool isUpgradeSource = false)
         {
             if (view == null)
@@ -745,7 +621,6 @@ namespace NERA.Research
                     group,
                     index,
                     isScanSource,
-                    isChargingSource,
                     false,
                     isUpgradeSource);
             }

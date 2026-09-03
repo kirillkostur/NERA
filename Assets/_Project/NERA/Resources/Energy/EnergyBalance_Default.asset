@@ -15,7 +15,6 @@ MonoBehaviour:
   clearDayGeneration: 40
   cloudyDayGeneration: 18
   sandstormGeneration: 5
-  itemChargingConsumption: 4
   defaultConsumerMinimumChargePercent: 25
   backupReserveMinimumPriority: 80
   stationObjectCutoffs:
@@ -34,6 +33,9 @@ MonoBehaviour:
   - systemType: 4
     objectId:
     minimumChargePercent: 25
+  - systemType: 5
+    objectId: station_medical_module
+    minimumChargePercent: 0
   - systemType: 6
     objectId: station_antenna
     minimumChargePercent: 25

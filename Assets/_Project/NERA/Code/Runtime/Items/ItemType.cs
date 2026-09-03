@@ -8,6 +8,7 @@ namespace NERA.Items
         Equipment,
         Anomaly,
         Consumable,
-        KeyItem
+        KeyItem,
+        AnomalyContainer
     }
 }

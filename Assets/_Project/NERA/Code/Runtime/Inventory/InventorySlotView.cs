@@ -1,4 +1,5 @@
 using NERA.Research;
+using NERA.Items;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,8 @@ namespace NERA.Inventory
         [SerializeField] private TMP_Text numberLabel;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private LaboratoryInventoryItemDrag laboratoryDrag;
+        private Image anomalyContainerIcon;
+        private LaboratoryInventoryItemDrag anomalyContainerDrag;
 
         private Color defaultBackgroundColor = Color.white;
         private bool backgroundColorCached;
@@ -21,6 +24,8 @@ namespace NERA.Inventory
         public Image Background => background;
         public Image Icon => icon;
         public LaboratoryInventoryItemDrag LaboratoryDrag => laboratoryDrag;
+        public LaboratoryInventoryItemDrag AnomalyContainerDrag =>
+            anomalyContainerDrag;
 
         public void SetSelected(bool selected, Color selectedColor)
         {
@@ -41,6 +46,37 @@ namespace NERA.Inventory
 
             numberLabel.gameObject.SetActive(visible);
             numberLabel.text = text;
+        }
+
+        public void SetAnomalyContainer(
+            ItemData container,
+            ItemData displayedContent,
+            Canvas rootCanvas,
+            InventorySlotGroup ownerGroup,
+            int ownerIndex)
+        {
+            EnsureAnomalyContainerView();
+            bool visible = container != null;
+            anomalyContainerIcon.gameObject.SetActive(visible);
+            if (!visible)
+                return;
+
+            ItemData display = displayedContent != null
+                ? displayedContent
+                : container;
+            anomalyContainerIcon.sprite = display.Icon;
+            anomalyContainerIcon.color = display.Icon != null
+                ? Color.white
+                : new Color(0.18f, 0.8f, 0.92f, 0.95f);
+            anomalyContainerDrag.Initialize(
+                container,
+                rootCanvas,
+                ownerGroup,
+                ownerIndex,
+                false,
+                false,
+                false,
+                true);
         }
 
         private void Awake()
@@ -100,6 +136,42 @@ namespace NERA.Inventory
                 if (laboratoryDrag == null)
                     laboratoryDrag = gameObject.AddComponent<LaboratoryInventoryItemDrag>();
             }
+        }
+
+        private void EnsureAnomalyContainerView()
+        {
+            if (anomalyContainerIcon != null &&
+                anomalyContainerDrag != null)
+            {
+                return;
+            }
+
+            Transform existing = transform.Find("AnomalyContainerAttachment");
+            GameObject view = existing != null
+                ? existing.gameObject
+                : new GameObject(
+                    "AnomalyContainerAttachment",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(CanvasGroup),
+                    typeof(LaboratoryInventoryItemDrag));
+            if (existing == null)
+                view.transform.SetParent(transform, false);
+
+            RectTransform rect = view.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.56f, 0.02f);
+            rect.anchorMax = new Vector2(0.98f, 0.44f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.SetAsLastSibling();
+
+            anomalyContainerIcon = view.GetComponent<Image>();
+            anomalyContainerIcon.preserveAspect = true;
+            anomalyContainerIcon.raycastTarget = true;
+            anomalyContainerDrag =
+                view.GetComponent<LaboratoryInventoryItemDrag>();
+            view.SetActive(false);
         }
     }
 }

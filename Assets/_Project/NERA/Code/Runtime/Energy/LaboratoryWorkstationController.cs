@@ -12,10 +12,8 @@ namespace NERA.Energy
     public sealed class LaboratoryWorkstationController : MonoBehaviour,
         IDeveloperProgressSkippable
     {
-        private const string ChargingConsumerId = "laboratory_charging";
         private const string SynthesisConsumerId = "laboratory_synthesis";
 
-        public const int ChargingSlotCapacity = 4;
         public const int UpgradeSlotCapacity = 2;
 
         public static LaboratoryWorkstationController Instance { get; private set; }
@@ -23,14 +21,11 @@ namespace NERA.Energy
         public event Action StateChanged;
         public event Action ItemsChanged;
 
-        private readonly List<ItemInstance> chargingItems =
-            new List<ItemInstance>(ChargingSlotCapacity);
         private readonly List<ItemInstance> upgradeItems =
             new List<ItemInstance>(UpgradeSlotCapacity);
         private float synthesisElapsed;
         private float synthesisDuration;
 
-        public IReadOnlyList<ItemInstance> ChargingItems => chargingItems;
         public IReadOnlyList<ItemInstance> UpgradeItems => upgradeItems;
         public bool IsUpgradeProcessing { get; private set; }
         public float SynthesisProgress => IsUpgradeProcessing
@@ -39,35 +34,6 @@ namespace NERA.Energy
         public float CurrentSynthesisDuration => IsUpgradeProcessing
             ? synthesisDuration
             : 0f;
-        public bool WantsToCharge
-        {
-            get
-            {
-                EnsureSlotCounts();
-                for (int index = 0; index < chargingItems.Count; index++)
-                {
-                    ItemInstance item = chargingItems[index];
-                    if (item?.ItemData != null && !item.IsFullyCharged)
-                        return true;
-                }
-
-                return false;
-            }
-        }
-        public bool IsCharging =>
-            WantsToCharge && IsSystemEnabled && HasOperationalPower;
-        public bool HasOperationalPower
-        {
-            get
-            {
-                EnergySystemController energy = EnergySystemController.Instance;
-                if (energy == null)
-                    return false;
-
-                EnsureEnergyRegistration();
-                return energy.IsConsumerPowered(ChargingConsumerId);
-            }
-        }
         private bool HasSynthesisOperationalPower
         {
             get
@@ -102,16 +68,7 @@ namespace NERA.Energy
 
         private void Update()
         {
-            AdvanceCharging(Time.deltaTime);
             AdvanceSynthesis(Time.deltaTime);
-        }
-
-        public ItemInstance GetChargingItem(int index)
-        {
-            EnsureSlotCounts();
-            return IsValidIndex(chargingItems, index)
-                ? chargingItems[index]
-                : null;
         }
 
         public ItemInstance GetUpgradeItem(int index)
@@ -120,21 +77,6 @@ namespace NERA.Energy
             return IsValidIndex(upgradeItems, index)
                 ? upgradeItems[index]
                 : null;
-        }
-
-        public bool LoadChargingItem(
-            int destinationIndex,
-            PlayerInventory inventory,
-            InventorySlotGroup sourceGroup,
-            int sourceIndex)
-        {
-            return MoveFromInventory(
-                chargingItems,
-                destinationIndex,
-                inventory,
-                sourceGroup,
-                sourceIndex,
-                candidate => candidate.IsChargeable);
         }
 
         public bool LoadUpgradeItem(
@@ -156,21 +98,6 @@ namespace NERA.Energy
                 candidate => IsValidUpgradeItem(destinationIndex, candidate));
         }
 
-        public bool MoveChargingItemToInventory(
-            int sourceIndex,
-            PlayerInventory inventory,
-            InventorySlotGroup destinationGroup,
-            int destinationIndex)
-        {
-            return MoveToInventory(
-                chargingItems,
-                sourceIndex,
-                inventory,
-                destinationGroup,
-                destinationIndex,
-                candidate => candidate.IsChargeable);
-        }
-
         public bool MoveUpgradeItemToInventory(
             int sourceIndex,
             PlayerInventory inventory,
@@ -187,11 +114,6 @@ namespace NERA.Energy
                 destinationGroup,
                 destinationIndex,
                 candidate => IsValidUpgradeItem(sourceIndex, candidate));
-        }
-
-        public int RetrieveAllChargingItems(PlayerInventory inventory)
-        {
-            return RetrieveAll(chargingItems, inventory);
         }
 
         public int RetrieveAllUpgradeItems(PlayerInventory inventory)
@@ -241,13 +163,6 @@ namespace NERA.Energy
                     equipment.ItemData))
             {
                 reason = "This anomaly is incompatible with the equipment.";
-                return false;
-            }
-
-            if (!equipment.IsChargeable ||
-                !equipment.IsFullyCharged)
-            {
-                reason = "Fully charge the IO integration tool first.";
                 return false;
             }
 
@@ -322,32 +237,6 @@ namespace NERA.Energy
             CompleteSynthesis();
         }
 
-        public void AdvanceCharging(float deltaTime)
-        {
-            if (deltaTime <= 0f)
-                return;
-
-            EnsureSlotCounts();
-            RefreshPowerRequest();
-            if (!IsCharging)
-                return;
-
-            bool changed = false;
-            for (int index = 0; index < chargingItems.Count; index++)
-            {
-                ItemInstance item = chargingItems[index];
-                if (item?.ItemData == null || item.IsFullyCharged)
-                    continue;
-
-                float rate = item.ItemData.EnergyDefinition.RechargePerSecond;
-                changed |= item.Recharge(rate * deltaTime) > 0f;
-            }
-
-            RefreshPowerRequest();
-            if (changed)
-                StateChanged?.Invoke();
-        }
-
         public bool CompleteActiveProgressForDebug()
         {
             bool completed = false;
@@ -359,36 +248,11 @@ namespace NERA.Energy
                 completed = true;
             }
 
-            EnsureSlotCounts();
-            bool chargeChanged = false;
-            foreach (ItemInstance item in chargingItems)
-            {
-                if (item?.ItemData == null || item.IsFullyCharged)
-                    continue;
-
-                item.SetCharge(item.MaxCharge);
-                chargeChanged = true;
-            }
-
-            if (chargeChanged)
-            {
-                RefreshPowerRequest();
-                StateChanged?.Invoke();
-                completed = true;
-            }
-
             return completed;
         }
 
-        public void RestoreItems(
-            IReadOnlyList<ItemInstance> charging,
-            IReadOnlyList<ItemInstance> upgrade)
+        public void RestoreItems(IReadOnlyList<ItemInstance> upgrade)
         {
-            RestoreGroup(
-                chargingItems,
-                charging,
-                ChargingSlotCapacity,
-                candidate => candidate.IsChargeable);
             RestoreGroup(
                 upgradeItems,
                 upgrade,
@@ -531,9 +395,6 @@ namespace NERA.Energy
         {
             EnsureEnergyRegistration();
             EnergySystemController.Instance?.SetConsumerActive(
-                ChargingConsumerId,
-                WantsToCharge && IsSystemEnabled);
-            EnergySystemController.Instance?.SetConsumerActive(
                 SynthesisConsumerId,
                 IsUpgradeProcessing && IsSystemEnabled);
         }
@@ -577,12 +438,6 @@ namespace NERA.Energy
                     StationObjectStat.IdleEnergyConsumption,
                     4f);
             energy.RegisterConsumer(
-                ChargingConsumerId,
-                energy.Config.ItemChargingConsumption,
-                energy.Config.GetMinimumCharge01(
-                    StationSystemType.Laboratory),
-                StationSystemType.Laboratory);
-            energy.RegisterConsumer(
                 SynthesisConsumerId,
                 synthesisConsumption,
                 energy.Config.GetMinimumCharge01(
@@ -607,7 +462,7 @@ namespace NERA.Energy
 
             return slotIndex switch
             {
-                0 => item.ItemData.ItemType == ItemType.Equipment &&
+                0 => item.ItemData.ItemType == ItemType.AnomalyContainer &&
                     item.ItemData.AcceptsAnomalyIntegration,
                 1 => item.ItemData.ItemType == ItemType.Anomaly &&
                     item.ItemData.AnomalyIntegrationDefinition != null,
@@ -617,7 +472,6 @@ namespace NERA.Energy
 
         private void EnsureSlotCounts()
         {
-            EnsureCount(chargingItems, ChargingSlotCapacity);
             EnsureCount(upgradeItems, UpgradeSlotCapacity);
         }
 
@@ -660,9 +514,6 @@ namespace NERA.Energy
 
         private void OnDestroy()
         {
-            EnergySystemController.Instance?.SetConsumerActive(
-                ChargingConsumerId,
-                false);
             EnergySystemController.Instance?.SetConsumerActive(
                 SynthesisConsumerId,
                 false);

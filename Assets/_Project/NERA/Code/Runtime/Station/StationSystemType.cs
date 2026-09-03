@@ -7,6 +7,7 @@ namespace NERA.Station
         Terminal = 2,
         Drone = 3,
         Laboratory = 4,
+        MedicalModule = 5,
         Antenna = 6,
         Turret = 7
     }

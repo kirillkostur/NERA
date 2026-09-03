@@ -52,7 +52,8 @@ namespace NERA.EditorTools
         private static readonly string[] CheatEquipmentItemIds =
         {
             "energy_pistol_01",
-            "io_integrator_01"
+            "io_integrator_01",
+            "anomaly_container_01"
         };
 
         private static readonly Color PanelColor =

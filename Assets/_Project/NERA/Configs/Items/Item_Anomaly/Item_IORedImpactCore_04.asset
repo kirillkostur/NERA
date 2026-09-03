@@ -26,6 +26,7 @@ MonoBehaviour:
   useKey: 323
   researchDefinition: {fileID: 11400000, guid: ab2aa80569d84e041a0e4b1f6969c76f, type: 2}
   acceptsAnomalyIntegration: 0
+  acceptsAnomalyContainer: 0
   anomalyIntegrationDefinition: {fileID: 11400000, guid: 724d02b6c4461fe4a84c2c5b9a1e5aee, type: 2}
   weaponDefinition: {fileID: 0}
   energyDefinition: {fileID: 0}

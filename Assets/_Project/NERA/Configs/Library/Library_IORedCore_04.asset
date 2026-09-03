@@ -15,7 +15,8 @@ MonoBehaviour:
   entryId: io_red_core_04
   title: RED IO // IMPACT CORE
   category: 1
-  description: The integrated impact core releases the combat pulse once associated
-    with the Blue shard, dealing 40 damage to every IO enemy within 8 m. Red IO entities
-    also emit periodic disruption pulses that disable nearby devices.
+  description: The impact core in an anomaly container releases the combat pulse
+    once associated with the Blue shard, dealing 40 damage to every IO enemy within
+    8 m. Red IO entities also emit periodic disruption pulses that disable nearby
+    devices.
   illustration: {fileID: 0}

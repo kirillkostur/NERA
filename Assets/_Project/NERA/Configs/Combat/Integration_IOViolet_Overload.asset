@@ -15,7 +15,8 @@ MonoBehaviour:
   integrationId: io_violet_overload
   displayName: Violet IO Overload
   displayColor: {r: 0.72, g: 0.22, b: 1, a: 1}
-  compatibleEquipment: []
+  compatibleContainers:
+  - {fileID: 11400000, guid: 0b99ea03760bc8e4f84bec69874c0227, type: 2}
   synthesisDuration: 25
   effect: 5
   radius: 12.5

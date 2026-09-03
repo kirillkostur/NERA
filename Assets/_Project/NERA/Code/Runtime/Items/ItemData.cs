@@ -44,6 +44,7 @@ namespace NERA.Items
 
         [Header("Anomaly Receiver")]
         [SerializeField] private bool acceptsAnomalyIntegration;
+        [SerializeField] private bool acceptsAnomalyContainer;
         [Header("Anomaly Integration")]
         [SerializeField]
         private AnomalyIntegrationDefinition anomalyIntegrationDefinition;
@@ -75,6 +76,7 @@ namespace NERA.Items
         public ResearchDefinition ResearchDefinition => researchDefinition;
         public bool AcceptsAnomalyIntegration =>
             acceptsAnomalyIntegration;
+        public bool AcceptsAnomalyContainer => acceptsAnomalyContainer;
         public AnomalyIntegrationDefinition AnomalyIntegrationDefinition =>
             anomalyIntegrationDefinition;
         public WeaponDefinition WeaponDefinition => weaponDefinition;

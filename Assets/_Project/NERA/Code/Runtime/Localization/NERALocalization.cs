@@ -30,6 +30,7 @@ namespace NERA.Localization
         {
             get
             {
+                EnsureInitialized();
                 if (!LocalizationSettings.HasSettings)
                     return EnglishCode;
 
@@ -40,11 +41,17 @@ namespace NERA.Localization
 
         public static void EnsureInitialized()
         {
-            if (subscribed || !LocalizationSettings.HasSettings)
+            if (!LocalizationSettings.HasSettings)
                 return;
 
-            subscribed = true;
-            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+            if (!subscribed)
+            {
+                subscribed = true;
+                LocalizationSettings.SelectedLocaleChanged +=
+                    OnSelectedLocaleChanged;
+            }
+
+            EnsureSelectedLocale();
         }
 
         public static bool SetLocale(string localeCode)
@@ -85,7 +92,8 @@ namespace NERA.Localization
             EnsureInitialized();
             if (!LocalizationSettings.HasSettings ||
                 string.IsNullOrWhiteSpace(table) ||
-                string.IsNullOrWhiteSpace(key))
+                string.IsNullOrWhiteSpace(key) ||
+                !EnsureSelectedLocale())
             {
                 return fallback ?? string.Empty;
             }
@@ -188,6 +196,38 @@ namespace NERA.Localization
 
                 callback.Invoke();
             }
+        }
+
+        private static bool EnsureSelectedLocale()
+        {
+            if (!LocalizationSettings.HasSettings)
+                return false;
+            if (LocalizationSettings.SelectedLocale != null)
+                return true;
+
+            Locale locale = null;
+            string preferredCode = PlayerPrefs.GetString(
+                LocalePreferenceKey,
+                string.Empty);
+            if (!string.IsNullOrWhiteSpace(preferredCode))
+            {
+                locale = LocalizationSettings.AvailableLocales.GetLocale(
+                    new LocaleIdentifier(
+                        preferredCode.Trim().ToLowerInvariant()));
+            }
+
+            if (locale == null)
+                locale = LocalizationSettings.ProjectLocale;
+            if (locale == null)
+            {
+                locale = LocalizationSettings.AvailableLocales.GetLocale(
+                    new LocaleIdentifier(EnglishCode));
+            }
+            if (locale == null)
+                return false;
+
+            LocalizationSettings.SelectedLocale = locale;
+            return true;
         }
     }
 }

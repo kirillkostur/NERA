@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NERA.Items;
 using NERA.Localization;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NERA.Combat
 {
@@ -33,7 +34,8 @@ namespace NERA.Combat
         [SerializeField] private Color displayColor = Color.white;
 
         [Header("Compatibility")]
-        [SerializeField] private List<ItemData> compatibleEquipment =
+        [SerializeField, FormerlySerializedAs("compatibleEquipment")]
+        private List<ItemData> compatibleContainers =
             new List<ItemData>();
 
         [Header("Synthesis")]
@@ -60,18 +62,18 @@ namespace NERA.Combat
         public float EffectDuration => Mathf.Max(0f, electronicDuration);
         public LayerMask AffectedLayers => affectedLayers;
 
-        public bool Supports(ItemData equipment)
+        public bool Supports(ItemData container)
         {
-            if (equipment == null ||
-                equipment.ItemType != ItemType.Equipment ||
-                !equipment.AcceptsAnomalyIntegration)
+            if (container == null ||
+                container.ItemType != ItemType.AnomalyContainer ||
+                !container.AcceptsAnomalyIntegration)
             {
                 return false;
             }
 
-            return compatibleEquipment == null ||
-                compatibleEquipment.Count == 0 ||
-                compatibleEquipment.Contains(equipment);
+            return compatibleContainers == null ||
+                compatibleContainers.Count == 0 ||
+                compatibleContainers.Contains(container);
         }
 
         private void OnValidate()

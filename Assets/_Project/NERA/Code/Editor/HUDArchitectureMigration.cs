@@ -50,10 +50,6 @@ namespace NERA.Editor
                 HudFolder + "/P_HUD_InventoryHint.prefab",
                 GameplayLayerName),
             new BlockSpec(
-                "Slot_Invent_Equipment",
-                HudFolder + "/P_HUD_QuickAccess.prefab",
-                GameplayLayerName),
-            new BlockSpec(
                 "Quest_System",
                 HudFolder + "/P_HUD_QuestTracker.prefab",
                 GameplayLayerName),
@@ -515,16 +511,6 @@ namespace NERA.Editor
                         new Vector2(150f, 35f));
                     break;
 
-                case "Slot_Invent_Equipment":
-                    ConfigureFixed(
-                        rect,
-                        new Vector2(0.5f, 0f),
-                        new Vector2(0.5f, 0f),
-                        new Vector2(0.5f, 0.5f),
-                        new Vector2(500f, 150f),
-                        new Vector2(0f, 88f));
-                    break;
-
                 case "Quest_System":
                     ConfigureStretch(rect);
                     ConfigureQuestPanel(
@@ -573,8 +559,6 @@ namespace NERA.Editor
                 dynamicHudLayer;
             serialized.FindProperty("questTrackerHud").objectReferenceValue =
                 questTrackerHud;
-            serialized.FindProperty("quickAccessHud").objectReferenceValue =
-                instances["Slot_Invent_Equipment"];
             serialized.FindProperty("inventoryPanel").objectReferenceValue =
                 instances["InventoryScreen"];
             serialized.FindProperty("laboratoryPanel").objectReferenceValue =

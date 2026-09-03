@@ -129,7 +129,6 @@ namespace NERA.Editor.Localization
                 ["Medium-range expedition drive."] = "Экспедиционный привод среднего радиуса действия.",
                 ["Long-range expedition drive."] = "Экспедиционный привод большого радиуса действия.",
                 ["Analyzes recovered objects and unlocks Library records."] = "Анализирует найденные объекты и открывает записи в библиотеке.",
-                ["Restores charge to energy-powered equipment."] = "Восстанавливает заряд энергетического оборудования.",
                 ["Detects signals. Install a replacement drive before first use."] = "Обнаруживает сигналы. Перед первым использованием установите новый привод.",
                 ["Restores short-range signal reception."] = "Восстанавливает приём сигналов малого радиуса.",
                 ["Improves signal resolution and range."] = "Повышает точность и дальность обнаружения сигналов.",
@@ -162,7 +161,9 @@ namespace NERA.Editor.Localization
                 ["item.io_blue_shard_01.name"] = "Осколок Blue IO",
                 ["item.io_blue_shard_01.description"] = "Сконденсированная аномалия, оставшаяся после сущности Blue IO. Занимает отдельную ячейку аномалий.",
                 ["item.io_integrator_01.name"] = "Интегратор IO",
-                ["item.io_integrator_01.description"] = "Специализированный лабораторный инструмент для интеграции исследованных камней аномалий IO.",
+                ["item.io_integrator_01.description"] = "Активирует аномалию, установленную в закреплённом контейнере.",
+                ["item.anomaly_container_01.name"] = "Контейнер аномалии",
+                ["item.anomaly_container_01.description"] = "Многоразовый контейнер для одной изученной IO-аномалии.",
                 ["item.nera_memory_core_01.name"] = "Ядро памяти NERA",
                 ["item.nera_memory_core_01.description"] = "Компактное ядро хранения данных NERA, найденное на Древнем аванпосте. Герметичная конструкция сохранила фрагменты записей станции.",
                 ["item.nera_signal_relay_02.name"] = "Ядро сигнального ретранслятора NERA",
@@ -772,8 +773,6 @@ namespace NERA.Editor.Localization
             AddL("scan.start", "START SCAN", "НАЧАТЬ СКАНИРОВАНИЕ");
             AddL("scan.known_item", "KNOWN ITEM", "ИЗВЕСТНЫЙ ПРЕДМЕТ");
             AddL("scan.scanned", "SCANNED", "ОТСКАНИРОВАНО");
-            AddL("charger.ready", "Laboratory charger ready.", "Лабораторное зарядное устройство готово.");
-            AddL("charger.charge", "CHARGE {0}%", "ЗАРЯД {0}%", true);
             AddL("inventory.select_item", "SELECT AN ITEM", "ВЫБЕРИТЕ ПРЕДМЕТ");
             AddL("laboratory.status.ready", "Laboratory ready.", "Лаборатория готова.");
             AddL("laboratory.status.paused_stopped", "Scanning paused — the laboratory is offline.", "Сканирование приостановлено — лаборатория остановлена.");
@@ -884,9 +883,14 @@ namespace NERA.Editor.Localization
                     string id = string.IsNullOrWhiteSpace(objectId) ? "shared" : KeyPart(objectId);
                     string baseKey = $"station.{KeyPart(type)}.{id}";
                     string name = ReadString(system.FindPropertyRelative("displayName"));
-                    AddContent(baseKey + ".name", name);
-                    AddContent(baseKey + ".description", ReadString(system.FindPropertyRelative("description")));
-                    if (!string.IsNullOrWhiteSpace(objectId))
+                    string description = ReadString(
+                        system.FindPropertyRelative("description"));
+                    if (!string.IsNullOrWhiteSpace(name))
+                        AddContent(baseKey + ".name", name);
+                    if (!string.IsNullOrWhiteSpace(description))
+                        AddContent(baseKey + ".description", description);
+                    if (!string.IsNullOrWhiteSpace(objectId) &&
+                        !string.IsNullOrWhiteSpace(name))
                         AddTarget(objectId, name, TranslateContent(baseKey + ".name", name));
 
                     SerializedProperty stats =
@@ -1303,7 +1307,7 @@ namespace NERA.Editor.Localization
                 lower.Contains("libraryscreen"))
                 return NERALocalization.TerminalTable;
             if (lower.Contains("inventory") || lower.Contains("laboratory") ||
-                lower.Contains("scanscreen") || lower.Contains("powerscreen"))
+                lower.Contains("scanscreen"))
                 return NERALocalization.InventoryLaboratoryTable;
             return NERALocalization.HudTable;
         }

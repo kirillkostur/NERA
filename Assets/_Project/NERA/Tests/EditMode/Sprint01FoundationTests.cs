@@ -174,7 +174,7 @@ namespace NERA.Tests
                          "equippedLocalEulerAngles",
                          "quickAccessAction",
                          "useKey",
-                         "acceptsAnomalyIntegration",
+                         "acceptsAnomalyContainer",
                          "weaponDefinition",
                          "energyDefinition"
                      })
@@ -207,6 +207,16 @@ namespace NERA.Tests
                     null,
                     new object[] { "acceptsAnomalyIntegration" }),
                 Is.EqualTo(false));
+
+            MethodInfo containerOnlyCheck = editorType.GetMethod(
+                "IsAnomalyContainerOnlyProperty",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(containerOnlyCheck, Is.Not.Null);
+            Assert.That(
+                containerOnlyCheck.Invoke(
+                    null,
+                    new object[] { "acceptsAnomalyIntegration" }),
+                Is.EqualTo(true));
 
             Assert.That(
                 equipmentOnlyCheck.Invoke(
@@ -328,7 +338,7 @@ namespace NERA.Tests
             Assert.That(state.CurrentStageIndex, Is.Zero);
             Assert.That(
                 state.ObjectiveTitle,
-                Is.EqualTo("Отправляйтесь в Ancient Outpost"));
+                Is.EqualTo("Travel to the Ancient Outpost"));
 
             quests.Report(
                 QuestSignalType.LocationDiscovered,
@@ -525,7 +535,7 @@ namespace NERA.Tests
             Assert.That(restored, Is.Not.Null);
             Assert.That(restored.CurrentStageIndex, Is.EqualTo(1));
             Assert.That(restored.ObjectiveTitle,
-                Is.EqualTo("Исследуйте Ancient Outpost"));
+                Is.EqualTo("Explore the Ancient Outpost"));
         }
 
 [Test]
@@ -2667,6 +2677,79 @@ Assert.That(
         }
 
         [Test]
+        public void EquipmentCannotBeRemovedMovedDroppedOrReplaced()
+        {
+            ItemData equipment = CreateItem(
+                "permanent_equipment",
+                ItemType.Equipment);
+            ItemData replacement = CreateItem(
+                "replacement_equipment",
+                ItemType.Equipment);
+            Assert.That(inventory.AddItem(equipment), Is.True);
+
+            Assert.That(
+                inventory.RemoveInstanceAt(
+                    InventorySlotGroup.QuickAccess,
+                    0,
+                    out _),
+                Is.False);
+            Assert.That(
+                inventory.TryMoveItem(
+                    InventorySlotGroup.QuickAccess,
+                    0,
+                    InventorySlotGroup.QuickAccess,
+                    1),
+                Is.False);
+            Assert.That(
+                inventory.TryReplaceInstanceAt(
+                    InventorySlotGroup.QuickAccess,
+                    0,
+                    ItemInstance.Create(replacement),
+                    out _),
+                Is.False);
+            Assert.That(
+                inventory.CanDropItem(
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.False);
+            StationStorageController storage =
+                root.AddComponent<StationStorageController>();
+            Assert.That(
+                storage.DepositFrom(
+                    inventory,
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.False);
+            Assert.That(storage.DepositAll(inventory), Is.Zero);
+            Assert.That(
+                inventory.GetItem(InventorySlotGroup.QuickAccess, 0),
+                Is.SameAs(equipment));
+        }
+
+        [Test]
+        public void StationSafeVolumeChargingOnlyAdvancesWhenPlayerIsInside()
+        {
+            ItemData equipment = CreateChargeableItem(
+                "station_charged_equipment",
+                ItemType.Equipment);
+            Assert.That(inventory.AddItem(equipment), Is.True);
+            ItemInstance instance = inventory.GetItemInstance(
+                InventorySlotGroup.QuickAccess,
+                0);
+            instance.SetCharge(0f);
+            PlayerStationEquipmentCharger charger =
+                root.AddComponent<PlayerStationEquipmentCharger>();
+
+            Assert.That(charger.AdvanceCharging(2f, false), Is.Zero);
+            Assert.That(instance.Charge, Is.Zero);
+            Assert.That(
+                charger.AdvanceCharging(2f, true),
+                Is.EqualTo(40f).Within(0.001f));
+            Assert.That(instance.Charge, Is.EqualTo(40f).Within(0.001f));
+            Assert.That(charger.IsInsidePlayerStation, Is.True);
+        }
+
+        [Test]
         public void WorldItemPickupAddsItemInstanceToPlayerInventory()
         {
             ItemData item = CreateItem("world_part", ItemType.EngineeringPart);
@@ -2978,6 +3061,7 @@ Assert.That(
         private ResearchController research;
         private LaboratoryWorkstationController workstation;
         private ItemData tool;
+        private ItemData container;
         private ItemData anomaly;
         private ResearchDefinition researchDefinition;
         private AnomalyIntegrationDefinition integrationDefinition;
@@ -3039,10 +3123,20 @@ Assert.That(
             SerializedObject serializedTool =
                 new SerializedObject(tool);
             serializedTool.FindProperty("acceptsAnomalyIntegration")
+                .boolValue = false;
+            serializedTool.FindProperty("acceptsAnomalyContainer")
                 .boolValue = true;
             serializedTool.FindProperty("energyDefinition")
                 .objectReferenceValue = toolEnergy;
             serializedTool.ApplyModifiedPropertiesWithoutUndo();
+            container = CreateItem(
+                "anomaly_container_01",
+                ItemType.AnomalyContainer);
+            SerializedObject serializedContainer =
+                new SerializedObject(container);
+            serializedContainer.FindProperty("acceptsAnomalyIntegration")
+                .boolValue = true;
+            serializedContainer.ApplyModifiedPropertiesWithoutUndo();
             anomaly = CreateItem("test_io_shard", ItemType.Anomaly);
             SerializedObject serializedAnomaly =
                 new SerializedObject(anomaly);
@@ -3053,6 +3147,7 @@ Assert.That(
             serializedAnomaly.ApplyModifiedPropertiesWithoutUndo();
 
             Assert.That(inventory.AddItem(tool), Is.True);
+            Assert.That(inventory.AddItem(container), Is.True);
             Assert.That(inventory.AddItem(anomaly), Is.True);
         }
 
@@ -3066,6 +3161,7 @@ Assert.That(
             Object.DestroyImmediate(systems);
             Object.DestroyImmediate(player);
             Object.DestroyImmediate(tool);
+            Object.DestroyImmediate(container);
             Object.DestroyImmediate(anomaly);
             Object.DestroyImmediate(researchDefinition);
             Object.DestroyImmediate(integrationDefinition);
@@ -3079,7 +3175,7 @@ Assert.That(
                 workstation.LoadUpgradeItem(
                     0,
                     inventory,
-                    InventorySlotGroup.QuickAccess,
+                    InventorySlotGroup.Backpack,
                     0),
                 Is.True);
             Assert.That(
@@ -3128,14 +3224,14 @@ Assert.That(
             workstation.AdvanceSynthesis(1f);
             Assert.That(workstation.IsUpgradeProcessing, Is.False);
 
-            ItemInstance integratedTool =
+            ItemInstance integratedContainer =
                 workstation.GetUpgradeItem(0);
-            Assert.That(integratedTool, Is.Not.Null);
-            Assert.That(integratedTool.ItemData, Is.SameAs(tool));
+            Assert.That(integratedContainer, Is.Not.Null);
+            Assert.That(integratedContainer.ItemData, Is.SameAs(container));
             Assert.That(
-                integratedTool.IntegratedAnomaly,
+                integratedContainer.IntegratedAnomaly,
                 Is.SameAs(anomaly));
-            Assert.That(integratedTool.AnomalyCharges, Is.EqualTo(1));
+            Assert.That(integratedContainer.AnomalyCharges, Is.EqualTo(1));
             Assert.That(workstation.GetUpgradeItem(1), Is.Null);
         }
 
@@ -3145,41 +3241,110 @@ Assert.That(
             ItemInstance instance = inventory.GetItemInstance(
                 InventorySlotGroup.QuickAccess,
                 0);
+            ItemInstance containerInstance = inventory.GetItemInstance(
+                InventorySlotGroup.Backpack,
+                0);
             ItemInstance anomalyInstance = inventory.GetItemInstance(
                 InventorySlotGroup.Anomaly,
                 0);
             Assert.That(
-                instance.TryInstallAnomaly(anomalyInstance),
+                containerInstance.TryInstallAnomaly(anomalyInstance),
                 Is.False,
                 "An unscanned anomaly instance must be rejected.");
             Assert.That(anomalyInstance.MarkScanned(), Is.True);
             Assert.That(
-                instance.TryInstallAnomaly(anomalyInstance),
+                containerInstance.TryInstallAnomaly(anomalyInstance),
                 Is.True);
             ItemInstance secondAnomalyInstance =
                 ItemInstance.Create(anomaly);
             Assert.That(secondAnomalyInstance.MarkScanned(), Is.True);
             Assert.That(
-                instance.TryInstallAnomaly(secondAnomalyInstance),
+                containerInstance.TryInstallAnomaly(secondAnomalyInstance),
                 Is.False,
                 "An installed anomaly must not be replaced before use.");
             equipmentController.AnomalyUseRequested += (_, _) => true;
+            Assert.That(
+                inventory.TryInstallAnomalyContainer(
+                    InventorySlotGroup.Backpack,
+                    0,
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.True);
 
             Assert.That(
                 equipmentController.TryUseIntegratedAnomaly(instance),
                 Is.True);
             Assert.That(instance.AnomalyCharges, Is.Zero);
-            Assert.That(instance.Charge, Is.Zero);
+            Assert.That(instance.Charge, Is.EqualTo(instance.MaxCharge));
             Assert.That(instance.IntegratedAnomaly, Is.Null);
+            Assert.That(instance.HasAnomalyContainer, Is.True);
+            Assert.That(instance.InstalledContainerAnomaly, Is.Null);
             Assert.That(
                 equipmentController.TryUseIntegratedAnomaly(instance),
                 Is.False);
 
-            instance.Recharge(instance.MaxCharge);
             Assert.That(
-                instance.TryInstallAnomaly(anomalyInstance),
+                inventory.TryMoveInstalledAnomalyContainer(
+                    InventorySlotGroup.QuickAccess,
+                    0,
+                    InventorySlotGroup.Backpack,
+                    0),
                 Is.True);
-            Assert.That(instance.AnomalyCharges, Is.EqualTo(1));
+            containerInstance = inventory.GetItemInstance(
+                InventorySlotGroup.Backpack,
+                0);
+            Assert.That(
+                containerInstance.TryInstallAnomaly(anomalyInstance),
+                Is.True);
+            Assert.That(containerInstance.AnomalyCharges, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void EmptyContainerDoesNotActivateAndCanBeReplaced()
+        {
+            ItemInstance toolInstance = inventory.GetItemInstance(
+                InventorySlotGroup.QuickAccess,
+                0);
+            Assert.That(
+                inventory.TryInstallAnomalyContainer(
+                    InventorySlotGroup.Backpack,
+                    0,
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.True);
+            Assert.That(toolInstance.HasAnomalyContainer, Is.True);
+            Assert.That(toolInstance.CanUseAnomalyIntegration, Is.False);
+            Assert.That(
+                equipmentController.TryUseIntegratedAnomaly(toolInstance),
+                Is.False);
+
+            ItemInstance filledContainer = ItemInstance.Create(container);
+            ItemInstance scannedAnomaly = ItemInstance.Create(anomaly);
+            scannedAnomaly.MarkScanned();
+            Assert.That(
+                filledContainer.TryInstallAnomaly(scannedAnomaly),
+                Is.True);
+            Assert.That(
+                inventory.TrySetInstanceAt(
+                    InventorySlotGroup.Backpack,
+                    0,
+                    filledContainer),
+                Is.True);
+            Assert.That(
+                inventory.TryInstallAnomalyContainer(
+                    InventorySlotGroup.Backpack,
+                    0,
+                    InventorySlotGroup.QuickAccess,
+                    0),
+                Is.True);
+            Assert.That(
+                inventory.GetItemInstance(
+                    InventorySlotGroup.Backpack,
+                    0)?.IntegratedAnomaly,
+                Is.Null);
+            Assert.That(
+                toolInstance.InstalledContainerAnomaly,
+                Is.SameAs(anomaly));
         }
 
         [Test]
@@ -3213,26 +3378,136 @@ Assert.That(
         public void RestorePreservesIntegratedAnomalyAndCharges()
         {
             ItemInstance instance = ItemInstance.Create(tool);
+            ItemInstance containerInstance = ItemInstance.Create(container);
             ItemInstance anomalyInstance = ItemInstance.Create(anomaly);
             Assert.That(anomalyInstance.MarkScanned(), Is.True);
             Assert.That(
-                instance.TryInstallAnomaly(anomalyInstance),
+                containerInstance.TryInstallAnomaly(anomalyInstance),
+                Is.True);
+            Assert.That(
+                instance.TryInstallAnomalyContainer(
+                    containerInstance,
+                    out _),
                 Is.True);
 
             ItemInstance restored = ItemInstance.Restore(
                 instance.InstanceId,
                 tool,
                 instance.Charge,
-                anomaly,
-                instance.AnomalyCharges,
+                null,
+                0,
                 true);
+            Assert.That(
+                restored.TryInstallAnomalyContainer(
+                    instance.CreateInstalledAnomalyContainerInstance(),
+                    out _),
+                Is.True);
 
             Assert.That(
                 restored.InstanceId,
                 Is.EqualTo(instance.InstanceId));
-            Assert.That(restored.IntegratedAnomaly, Is.SameAs(anomaly));
+            Assert.That(restored.IntegratedAnomaly, Is.Null);
+            Assert.That(restored.InstalledAnomalyContainer, Is.SameAs(container));
+            Assert.That(restored.InstalledContainerAnomaly, Is.SameAs(anomaly));
             Assert.That(restored.AnomalyCharges, Is.EqualTo(1));
             Assert.That(restored.IsScanned, Is.True);
+        }
+
+        [Test]
+        public void SaveStatePreservesContainerAndMigratesLegacyIntegration()
+        {
+            ItemInstance toolInstance = ItemInstance.Create(tool);
+            ItemInstance containerInstance = ItemInstance.Create(container);
+            ItemInstance anomalyInstance = ItemInstance.Create(anomaly);
+            anomalyInstance.MarkScanned();
+            containerInstance.TryInstallAnomaly(anomalyInstance);
+            toolInstance.TryInstallAnomalyContainer(
+                containerInstance,
+                out _);
+
+            ItemCatalogData catalog =
+                ScriptableObject.CreateInstance<ItemCatalogData>();
+            SerializedObject serializedCatalog =
+                new SerializedObject(catalog);
+            SerializedProperty catalogItems =
+                serializedCatalog.FindProperty("items");
+            catalogItems.arraySize = 3;
+            catalogItems.GetArrayElementAtIndex(0).objectReferenceValue = tool;
+            catalogItems.GetArrayElementAtIndex(1).objectReferenceValue =
+                container;
+            catalogItems.GetArrayElementAtIndex(2).objectReferenceValue =
+                anomaly;
+            serializedCatalog.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject saveObject = new GameObject("Test_SaveGame");
+            SaveGameController save =
+                saveObject.AddComponent<SaveGameController>();
+            SerializedObject serializedSave = new SerializedObject(save);
+            serializedSave.FindProperty("itemDatabase").objectReferenceValue =
+                catalog;
+            serializedSave.ApplyModifiedPropertiesWithoutUndo();
+
+            try
+            {
+                MethodInfo capture = typeof(SaveGameController).GetMethod(
+                    "CaptureInstance",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                MethodInfo resolve = typeof(SaveGameController).GetMethod(
+                    "ResolveInstance",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(capture, Is.Not.Null);
+                Assert.That(resolve, Is.Not.Null);
+
+                InventoryItemSaveData saved =
+                    (InventoryItemSaveData)capture.Invoke(
+                        null,
+                        new object[] { toolInstance });
+                Assert.That(
+                    saved.installedAnomalyContainerItemId,
+                    Is.EqualTo(container.ItemId));
+                Assert.That(
+                    saved.installedContainerAnomalyItemId,
+                    Is.EqualTo(anomaly.ItemId));
+
+                ItemInstance restored = (ItemInstance)resolve.Invoke(
+                    save,
+                    new object[] { saved });
+                Assert.That(
+                    restored.InstalledAnomalyContainer,
+                    Is.SameAs(container),
+                    "Saved container item was not restored.");
+                Assert.That(
+                    restored.InstalledContainerAnomaly,
+                    Is.SameAs(anomaly),
+                    "Saved container anomaly was not restored.");
+
+                InventoryItemSaveData legacy =
+                    new InventoryItemSaveData
+                    {
+                        instanceId = "legacy_integrator",
+                        itemId = tool.ItemId,
+                        charge = toolEnergy.Capacity,
+                        integratedAnomalyItemId = anomaly.ItemId,
+                        anomalyCharges = 1
+                    };
+                ItemInstance migrated = (ItemInstance)resolve.Invoke(
+                    save,
+                    new object[] { legacy });
+                Assert.That(
+                    migrated.InstalledAnomalyContainer,
+                    Is.SameAs(container),
+                    "Legacy integration did not create a container.");
+                Assert.That(
+                    migrated.InstalledContainerAnomaly,
+                    Is.SameAs(anomaly),
+                    "Legacy anomaly did not move into the container.");
+                Assert.That(migrated.AnomalyCharges, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+                Object.DestroyImmediate(catalog);
+            }
         }
 
         private static ItemData CreateItem(

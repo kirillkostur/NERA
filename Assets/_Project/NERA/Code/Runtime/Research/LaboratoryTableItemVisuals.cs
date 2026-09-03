@@ -7,21 +7,13 @@ namespace NERA.Research
     [DisallowMultipleComponent]
     public sealed class LaboratoryTableItemVisuals : MonoBehaviour
     {
-        private const int ChargingSlotCount =
-            LaboratoryWorkstationController.ChargingSlotCapacity;
         private const int UpgradeSlotCount =
             LaboratoryWorkstationController.UpgradeSlotCapacity;
 
-        private readonly Transform[] chargingSlots =
-            new Transform[ChargingSlotCount];
         private readonly Transform[] upgradeSlots =
             new Transform[UpgradeSlotCount];
-        private readonly ItemInstance[] chargingSources =
-            new ItemInstance[ChargingSlotCount];
         private readonly ItemInstance[] upgradeSources =
             new ItemInstance[UpgradeSlotCount];
-        private readonly GameObject[] chargingVisuals =
-            new GameObject[ChargingSlotCount];
         private readonly GameObject[] upgradeVisuals =
             new GameObject[UpgradeSlotCount];
 
@@ -32,13 +24,6 @@ namespace NERA.Research
         private LaboratoryWorkstationController subscribedWorkstation;
 
         public GameObject ScanVisual => scanVisual;
-
-        public GameObject GetChargingVisual(int index)
-        {
-            return IsValidIndex(chargingVisuals, index)
-                ? chargingVisuals[index]
-                : null;
-        }
 
         public GameObject GetUpgradeVisual(int index)
         {
@@ -83,12 +68,6 @@ namespace NERA.Research
         private void ResolveSlots()
         {
             scanSlot = transform.Find("Slot_Scan/Slot_1");
-            for (int index = 0; index < ChargingSlotCount; index++)
-            {
-                chargingSlots[index] = transform.Find(
-                    $"Slot_Power/Slot_{index + 1}");
-            }
-
             for (int index = 0; index < UpgradeSlotCount; index++)
             {
                 upgradeSlots[index] = transform.Find(
@@ -149,15 +128,6 @@ namespace NERA.Research
 
         private void RefreshWorkstationVisuals()
         {
-            for (int index = 0; index < ChargingSlotCount; index++)
-            {
-                RefreshSlot(
-                    chargingSlots[index],
-                    subscribedWorkstation?.GetChargingItem(index),
-                    ref chargingSources[index],
-                    ref chargingVisuals[index]);
-            }
-
             for (int index = 0; index < UpgradeSlotCount; index++)
             {
                 RefreshSlot(
@@ -200,12 +170,6 @@ namespace NERA.Research
         {
             DestroyVisual(ref scanVisual);
             scanSource = null;
-
-            for (int index = 0; index < ChargingSlotCount; index++)
-            {
-                DestroyVisual(ref chargingVisuals[index]);
-                chargingSources[index] = null;
-            }
 
             for (int index = 0; index < UpgradeSlotCount; index++)
             {

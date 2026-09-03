@@ -31,6 +31,16 @@ namespace NERA.Editor
                     continue;
                 }
 
+                bool showAnomalyContainerOptions =
+                    itemType.hasMultipleDifferentValues ||
+                    itemType.enumValueIndex ==
+                        (int)ItemType.AnomalyContainer;
+                if (!showAnomalyContainerOptions &&
+                    IsAnomalyContainerOnlyProperty(property.propertyPath))
+                {
+                    continue;
+                }
+
                 bool showAnomalyOptions =
                     itemType.hasMultipleDifferentValues ||
                     itemType.enumValueIndex == (int)ItemType.Anomaly;
@@ -118,7 +128,7 @@ namespace NERA.Editor
                 case "equippedLocalEulerAngles":
                 case "quickAccessAction":
                 case "useKey":
-                case "acceptsAnomalyIntegration":
+                case "acceptsAnomalyContainer":
                 case "weaponDefinition":
                 case "energyDefinition":
                     return true;
@@ -130,6 +140,12 @@ namespace NERA.Editor
         private static bool IsAnomalyOnlyProperty(string propertyPath)
         {
             return propertyPath == "anomalyIntegrationDefinition";
+        }
+
+        private static bool IsAnomalyContainerOnlyProperty(
+            string propertyPath)
+        {
+            return propertyPath == "acceptsAnomalyIntegration";
         }
     }
 }

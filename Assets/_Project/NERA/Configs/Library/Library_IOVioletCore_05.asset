@@ -15,7 +15,7 @@ MonoBehaviour:
   entryId: io_violet_core_05
   title: VIOLET IO // COMMAND CORE
   category: 1
-  description: The integrated command core permanently deactivates electronics and
-    player-station objects within 12.5 m and deals 400 damage to every IO enemy.
+  description: The command core in an anomaly container permanently deactivates electronics
+    and player-station objects within 12.5 m and deals 400 damage to every IO enemy.
     Violet IO entities also emit this disruption pulse periodically.
   illustration: {fileID: 0}

@@ -139,6 +139,9 @@ namespace NERA.Editor
 
         private void OnEnable()
         {
+            if (target == null)
+                return;
+
             questId = serializedObject.FindProperty("questId");
             category = serializedObject.FindProperty("category");
             availability = serializedObject.FindProperty("availability");
@@ -164,6 +167,9 @@ namespace NERA.Editor
 
         public override void OnInspectorGUI()
         {
+            if (target == null)
+                return;
+
             serializedObject.Update();
 
             DrawInspectorHeader();

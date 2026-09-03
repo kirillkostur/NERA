@@ -62,7 +62,8 @@ namespace NERA.Station
 
         public bool Deposit(ItemInstance instance)
         {
-            if (instance?.ItemData == null)
+            if (instance?.ItemData == null ||
+                PlayerInventory.IsPermanentEquipment(instance.ItemData))
                 return false;
 
             InventorySlotGroup group = PlayerInventory.GetSlotGroup(
@@ -108,7 +109,6 @@ namespace NERA.Station
 
             int moved = 0;
             moved += DepositGroup(inventory, InventorySlotGroup.Backpack);
-            moved += DepositGroup(inventory, InventorySlotGroup.QuickAccess);
             moved += DepositGroup(inventory, InventorySlotGroup.Anomaly);
             return moved;
         }
@@ -296,6 +296,30 @@ namespace NERA.Station
                 }
             }
             StorageChanged?.Invoke();
+        }
+
+        public int WithdrawPermanentEquipment(PlayerInventory inventory)
+        {
+            if (inventory == null)
+                return 0;
+
+            int moved = 0;
+            for (int index = quickAccessSlots.Count - 1; index >= 0; index--)
+            {
+                ItemInstance instance = quickAccessSlots[index];
+                if (!PlayerInventory.IsPermanentEquipment(instance?.ItemData) ||
+                    !inventory.AddItem(instance))
+                {
+                    continue;
+                }
+
+                quickAccessSlots[index] = null;
+                moved++;
+            }
+
+            if (moved > 0)
+                StorageChanged?.Invoke();
+            return moved;
         }
 
         public void ResetStorage()

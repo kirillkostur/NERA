@@ -30,9 +30,6 @@ namespace NERA.Energy
         [SerializeField, Min(0f)] private float cloudyDayGeneration = 18f;
         [SerializeField, Min(0f)] private float sandstormGeneration = 5f;
 
-        [Header("Shared Activity Consumers (per second)")]
-        [SerializeField, Min(0f)] private float itemChargingConsumption = 4f;
-
         [Header("Power Management")]
         [Tooltip(
             "Fallback cutoff for consumers that do not have an object-specific setting.")]
@@ -50,7 +47,6 @@ namespace NERA.Energy
         public float ClearDayGeneration => clearDayGeneration;
         public float CloudyDayGeneration => cloudyDayGeneration;
         public float SandstormGeneration => sandstormGeneration;
-        public float ItemChargingConsumption => itemChargingConsumption;
         public float DefaultConsumerMinimumCharge01 =>
             Mathf.Clamp(defaultConsumerMinimumChargePercent, 0f, 100f) / 100f;
         public int BackupReserveMinimumPriority =>

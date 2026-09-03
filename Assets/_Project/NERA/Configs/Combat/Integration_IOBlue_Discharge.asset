@@ -15,7 +15,8 @@ MonoBehaviour:
   integrationId: io_blue_discharge
   displayName: Blue IO Charge
   displayColor: {r: 0.1, g: 0.55, b: 1, a: 1}
-  compatibleEquipment: []
+  compatibleContainers:
+  - {fileID: 11400000, guid: 0b99ea03760bc8e4f84bec69874c0227, type: 2}
   synthesisDuration: 5
   effect: 0
   radius: 8

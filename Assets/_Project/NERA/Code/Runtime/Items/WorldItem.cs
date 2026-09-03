@@ -67,6 +67,7 @@ namespace NERA.Items
             runtimePersistentKey = string.Empty;
             SetActionText("Pick Up");
             SetAvailable(itemData != null, itemData == null ? "Item data missing" : string.Empty);
+            RefreshAttachmentVisual();
         }
 
         public void SetPersistentWorldId(string persistentKey)
@@ -78,6 +79,7 @@ namespace NERA.Items
 
         private void Start()
         {
+            RefreshAttachmentVisual();
             if (!trackWorldState)
                 return;
 
@@ -219,6 +221,14 @@ namespace NERA.Items
             }
 
             return scenePersistentKey;
+        }
+
+        private void RefreshAttachmentVisual()
+        {
+            AnomalyAttachmentVisual visual =
+                GetComponent<AnomalyAttachmentVisual>();
+            if (visual != null)
+                visual.Bind(itemInstance ?? ItemInstance.Create(itemData));
         }
     }
 }

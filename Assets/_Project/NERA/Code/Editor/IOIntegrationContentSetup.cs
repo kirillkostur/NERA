@@ -20,6 +20,19 @@ namespace NERA.EditorTools
             "Assets/_Project/NERA/Configs/Items";
         private const string LibraryRoot =
             "Assets/_Project/NERA/Configs/Library";
+        private const string EquipmentItemRoot =
+            ItemRoot + "/Item_Equipment";
+        private const string AnomalyContainerItemPath =
+            EquipmentItemRoot + "/Item_AnomalyContainer_01.asset";
+        private const string AnomalyContainerPrefabPath =
+            "Assets/_Project/NERA/Prefabs/Items/Item_Equipment/" +
+            "P_WorldItem_AnomalyContainer.prefab";
+        private const string IntegratorWorldPrefabPath =
+            "Assets/_Project/NERA/Prefabs/Items/Item_Equipment/" +
+            "P_WorldItem_IOIntegrator.prefab";
+        private const string IntegratorEquippedPrefabPath =
+            "Assets/_Project/NERA/Prefabs/Items/Item_Equipment/" +
+            "P_Equipped_IOIntegrator.prefab";
 
         private sealed class IntegrationSpec
         {
@@ -51,6 +64,22 @@ namespace NERA.EditorTools
             EnsureFolder(CombatRoot);
 
             List<IntegrationSpec> specs = CreateSpecs();
+            ItemData integrator = FindById<ItemData>(
+                ItemRoot,
+                "itemId",
+                "io_integrator_01");
+            ItemData anomalyContainer =
+                ConfigureAnomalyContainer(integrator);
+            if (integrator == null || anomalyContainer == null)
+            {
+                Debug.LogError(
+                    "IO Integrator or anomaly container content is missing.");
+                return;
+            }
+
+            ConfigureIntegrator(integrator);
+            ConfigureAttachmentPrefabs(anomalyContainer);
+
             AnomalyIntegrationDefinition blue =
                 AssetDatabase.LoadAssetAtPath<AnomalyIntegrationDefinition>(
                     CombatRoot + "/Integration_IOBlue_Discharge.asset");
@@ -63,8 +92,8 @@ namespace NERA.EditorTools
                     CombatRoot + "/Integration_IOBlue_Discharge.asset");
             }
 
-            List<Object> compatibleEquipment =
-                ReadObjectArray(blue, "compatibleEquipment");
+            List<Object> compatibleContainers =
+                new List<Object> { anomalyContainer };
             AnomalyIntegrationDefinition last = null;
 
             foreach (IntegrationSpec spec in specs)
@@ -83,7 +112,7 @@ namespace NERA.EditorTools
                 ConfigureDefinition(
                     definition,
                     spec,
-                    compatibleEquipment);
+                    compatibleContainers);
 
                 ItemData item = FindById<ItemData>(
                     ItemRoot,
@@ -142,7 +171,7 @@ namespace NERA.EditorTools
 
             Debug.Log(
                 "Configured Blue, Green, Yellow, Red, and Violet IO " +
-                "weapon integrations.");
+                "container integrations.");
         }
 
         private static List<IntegrationSpec> CreateSpecs()
@@ -168,12 +197,14 @@ namespace NERA.EditorTools
                         "BLUE IO // ЭНЕРГЕТИЧЕСКИЙ ОСКОЛОК",
                     LibraryDescriptionEnglish =
                         "The Blue IO shard stores a stable power pulse. " +
-                        "When integrated into a weapon, it temporarily powers " +
+                        "When installed in a container and activated by the IO " +
+                        "Integrator, it temporarily powers " +
                         "nearby non-station devices within 8 m. Player " +
                         "station systems are unaffected.",
                     LibraryDescriptionRussian =
                         "Осколок Blue IO хранит стабильный импульс питания. " +
-                        "После интеграции в оружие он временно включает " +
+                        "После установки в контейнер и активации интегратором " +
+                        "он временно включает " +
                         "обычные приборы в радиусе 8 м, но намеренно " +
                         "игнорирует все системы станции игрока."
                 },
@@ -195,11 +226,11 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "ЗЕЛЁНЫЙ IO // РЕМОНТНЫЙ УЗЕЛ",
                     LibraryDescriptionEnglish =
-                        "The integrated repair node restores the operator's " +
-                        "biological functions. Activating it fully restores " +
+                        "The repair node in an anomaly container restores the " +
+                        "operator's biological functions. Activating it fully restores " +
                         "the player's health.",
                     LibraryDescriptionRussian =
-                        "Интегрированный ремонтный узел восстанавливает " +
+                        "Ремонтный узел в контейнере восстанавливает " +
                         "биометрию оператора. При активации здоровье игрока " +
                         "возвращается к 100%."
                 },
@@ -221,11 +252,11 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "ЖЁЛТЫЙ IO // ЛИНЗА ОХОТНИКА",
                     LibraryDescriptionEnglish =
-                        "The integrated hunter lens scans within a 10 m radius " +
+                        "The hunter lens in an anomaly container scans within a 10 m radius " +
                         "and reveals enemies, devices, interactable objects, and items " +
                         "through walls for 6 seconds.",
                     LibraryDescriptionRussian =
-                        "Интегрированная линза сканирует область 10 м и на " +
+                        "Линза в контейнере сканирует область 10 м и на " +
                         "6 секунд отмечает сквозь стены врагов, приборы, " +
                         "интерактивные объекты и предметы."
                 },
@@ -247,12 +278,12 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "КРАСНЫЙ IO // УДАРНОЕ ЯДРО",
                     LibraryDescriptionEnglish =
-                        "The integrated impact core releases the combat pulse " +
+                        "The impact core in an anomaly container releases the combat pulse " +
                         "once associated with the Blue shard, dealing 40 damage " +
                         "to every IO enemy within 8 m. Red IO entities also emit " +
                         "periodic disruption pulses that disable nearby devices.",
                     LibraryDescriptionRussian =
-                        "Интегрированное ударное ядро создаёт прежний боевой " +
+                        "Ударное ядро в контейнере создаёт прежний боевой " +
                         "импульс синего осколка: 40 урона всем врагам IO в " +
                         "радиусе 8 м. Сам Red IO периодически полностью " +
                         "обесточивает ближайшие приборы."
@@ -276,12 +307,12 @@ namespace NERA.EditorTools
                     LibraryTitleRussian =
                         "ФИОЛЕТОВЫЙ IO // КОМАНДНОЕ ЯДРО",
                     LibraryDescriptionEnglish =
-                        "The integrated command core permanently deactivates " +
+                        "The command core in an anomaly container permanently deactivates " +
                         "electronics and player-station objects within " +
                         "12.5 m and deals 400 damage to every IO enemy. " +
                         "Violet IO entities also emit this disruption pulse periodically.",
                     LibraryDescriptionRussian =
-                        "Интегрированное командное ядро полностью отключает " +
+                        "Командное ядро в контейнере полностью отключает " +
                         "электронику и объекты станции игрока в радиусе " +
                         "12,5 м и наносит 400 урона всем врагам IO. Сам Violet " +
                         "IO также периодически применяет такое обесточивание."
@@ -292,7 +323,7 @@ namespace NERA.EditorTools
         private static void ConfigureDefinition(
             AnomalyIntegrationDefinition definition,
             IntegrationSpec spec,
-            IReadOnlyList<Object> compatibleEquipment)
+            IReadOnlyList<Object> compatibleContainers)
         {
             SetString(definition, "integrationId", spec.IntegrationId);
             SetString(definition, "displayName", spec.EnglishName);
@@ -311,8 +342,150 @@ namespace NERA.EditorTools
             SetInt(definition, "affectedLayers", ~0);
             SetObjectArray(
                 definition,
-                "compatibleEquipment",
-                compatibleEquipment);
+                "compatibleContainers",
+                compatibleContainers);
+        }
+
+        private static ItemData ConfigureAnomalyContainer(
+            ItemData integrator)
+        {
+            EnsureFolder(EquipmentItemRoot);
+            ItemData container =
+                AssetDatabase.LoadAssetAtPath<ItemData>(
+                    AnomalyContainerItemPath);
+            if (container == null)
+            {
+                container = ScriptableObject.CreateInstance<ItemData>();
+                AssetDatabase.CreateAsset(
+                    container,
+                    AnomalyContainerItemPath);
+            }
+
+            SetString(container, "itemId", "anomaly_container_01");
+            SetString(container, "displayName", "Anomaly Container");
+            SetString(
+                container,
+                "description",
+                "A reusable container for one researched IO anomaly.");
+            SetInt(
+                container,
+                "itemType",
+                (int)ItemType.AnomalyContainer);
+            SetObject(container, "icon", integrator?.Icon);
+            SetObject(container, "equippedVisualPrefab", null);
+            SetInt(container, "quickAccessAction", (int)QuickAccessAction.None);
+            SetInt(container, "useKey", (int)KeyCode.R);
+            SetBool(container, "acceptsAnomalyIntegration", true);
+            SetBool(container, "acceptsAnomalyContainer", false);
+            SetObject(container, "researchDefinition", null);
+            SetObject(container, "anomalyIntegrationDefinition", null);
+            SetObject(container, "weaponDefinition", null);
+            SetObject(container, "energyDefinition", null);
+            SetLocalized(
+                "item.anomaly_container_01.name",
+                "Anomaly Container",
+                "Контейнер аномалии");
+            SetLocalized(
+                "item.anomaly_container_01.description",
+                "A reusable container for one researched IO anomaly.",
+                "Многоразовый контейнер для одной изученной IO-аномалии.");
+            return container;
+        }
+
+        private static void ConfigureIntegrator(ItemData integrator)
+        {
+            SetBool(integrator, "acceptsAnomalyIntegration", false);
+            SetBool(integrator, "acceptsAnomalyContainer", true);
+            SetString(
+                integrator,
+                "description",
+                "Activates an anomaly installed in a mounted container.");
+            SetLocalized(
+                "item.io_integrator_01.description",
+                "Activates an anomaly installed in a mounted container.",
+                "Активирует аномалию, установленную в закреплённом контейнере.");
+        }
+
+        private static void ConfigureAttachmentPrefabs(ItemData container)
+        {
+            EditPrefab(
+                AnomalyContainerPrefabPath,
+                root =>
+                {
+                    Rigidbody body = root.GetComponent<Rigidbody>();
+                    if (body == null)
+                        body = root.AddComponent<Rigidbody>();
+                    body.useGravity = false;
+                    body.isKinematic = true;
+
+                    WorldItem worldItem = root.GetComponent<WorldItem>();
+                    if (worldItem == null)
+                        worldItem = root.AddComponent<WorldItem>();
+                    SetObject(worldItem, "itemData", container);
+                    if (root.GetComponent<AnomalyAttachmentVisual>() == null)
+                        root.AddComponent<AnomalyAttachmentVisual>();
+                });
+
+            GameObject containerPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(
+                    AnomalyContainerPrefabPath);
+            SetObject(
+                container,
+                "worldPrefab",
+                containerPrefab != null
+                    ? containerPrefab.GetComponent<WorldItem>()
+                    : null);
+
+            EditPrefab(
+                IntegratorWorldPrefabPath,
+                root =>
+                {
+                    EnsureIntegratorContainerSlot(root.transform);
+                    if (root.GetComponent<AnomalyAttachmentVisual>() == null)
+                        root.AddComponent<AnomalyAttachmentVisual>();
+                });
+            EditPrefab(
+                IntegratorEquippedPrefabPath,
+                root =>
+                {
+                    EnsureIntegratorContainerSlot(root.transform);
+                    if (root.GetComponent<AnomalyAttachmentVisual>() == null)
+                        root.AddComponent<AnomalyAttachmentVisual>();
+                });
+        }
+
+        private static void EnsureIntegratorContainerSlot(Transform root)
+        {
+            Transform slot = root.Find("Slot_AnomalyContainer");
+            if (slot == null)
+            {
+                slot = new GameObject("Slot_AnomalyContainer")
+                    .transform;
+                slot.SetParent(root, false);
+            }
+
+            slot.localPosition = new Vector3(0f, 0.0016f, -0.0336f);
+            slot.localRotation = Quaternion.Euler(
+                -9.881f,
+                0.156f,
+                0.428f);
+            slot.localScale = Vector3.one;
+        }
+
+        private static void EditPrefab(
+            string path,
+            Action<GameObject> edit)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                edit(root);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static T FindById<T>(
@@ -433,6 +606,17 @@ namespace NERA.EditorTools
                 target,
                 propertyName,
                 property => property.intValue = value);
+        }
+
+        private static void SetBool(
+            Object target,
+            string propertyName,
+            bool value)
+        {
+            SetProperty(
+                target,
+                propertyName,
+                property => property.boolValue = value);
         }
 
         private static void SetColor(

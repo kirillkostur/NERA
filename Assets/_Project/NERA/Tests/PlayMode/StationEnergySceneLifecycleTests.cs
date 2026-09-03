@@ -680,6 +680,119 @@ namespace NERA.Tests
         }
 
         [UnityTest]
+        public IEnumerator MedicalModuleStartsTreatmentWithEnergyAndUiLock()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            EnergySystemController energy = EnergySystemController.Instance;
+            StationSystemsController systems = StationSystemsController.Instance;
+            MedicalModuleController module =
+                Object.FindFirstObjectByType<MedicalModuleController>();
+            PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
+            ParkourPlayerBridge player = health != null
+                ? health.GetComponent<ParkourPlayerBridge>()
+                : null;
+
+            Assert.That(energy, Is.Not.Null);
+            Assert.That(systems, Is.Not.Null);
+            Assert.That(module, Is.Not.Null);
+            Assert.That(health, Is.Not.Null);
+            Assert.That(player, Is.Not.Null);
+
+            systems.ResetSystems();
+            energy.RestoreState(energy.TotalCapacity, true);
+            yield return null;
+
+            module.CompleteInteraction(player.gameObject);
+            yield return null;
+            Assert.That(
+                systems.IsRequestedActive(
+                    StationSystemType.MedicalModule,
+                    MedicalModuleController.DefaultObjectId),
+                Is.True);
+            InteractionPrompt localizedPrompt = module.GetPrompt();
+            Assert.That(localizedPrompt.ActionText, Is.Not.Empty);
+            Assert.That(
+                localizedPrompt.ActionText,
+                Does.Not.StartWith("interaction."));
+
+            health.TakeDamage(25f, module.gameObject);
+            float energyBefore = energy.CurrentEnergy;
+            Canvas[] enabledCanvases = Object.FindObjectsByType<Canvas>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(canvas => canvas.enabled)
+                .ToArray();
+            Assert.That(enabledCanvases, Is.Not.Empty);
+            Assert.That(player.IsInputEnabled, Is.True);
+            Vector3 positionBeforeTreatment = player.transform.position;
+            Vector3 destination = module.TreatmentPoint.position;
+            Vector3 expectedForward = destination - positionBeforeTreatment;
+            expectedForward.y = 0f;
+            Assert.That(expectedForward.sqrMagnitude, Is.GreaterThan(0.0001f));
+            Quaternion expectedTreatmentRotation = Quaternion.LookRotation(
+                expectedForward.normalized,
+                Vector3.up);
+
+            module.CompleteInteraction(player.gameObject);
+            yield return null;
+
+            Assert.That(module.IsTreating, Is.True);
+            Assert.That(player.IsInputEnabled, Is.False);
+            Assert.That(enabledCanvases.All(canvas => !canvas.enabled), Is.True);
+            Assert.That(
+                energy.CurrentEnergy,
+                Is.EqualTo(energyBefore - 30f).Within(0.001f));
+
+            float arrivalTimeout = Time.realtimeSinceStartup + 3f;
+            while (Vector3.Distance(player.transform.position, destination) >
+                    0.01f &&
+                Time.realtimeSinceStartup < arrivalTimeout)
+            {
+                yield return null;
+            }
+
+            Assert.That(
+                Vector3.Distance(player.transform.position, destination),
+                Is.LessThanOrEqualTo(0.01f));
+            Assert.That(
+                Quaternion.Angle(
+                    expectedTreatmentRotation,
+                    player.transform.rotation),
+                Is.LessThanOrEqualTo(0.1f));
+
+            float stationaryCheckUntil = Time.realtimeSinceStartup + 0.25f;
+            float maximumFacingError = 0f;
+            while (Time.realtimeSinceStartup < stationaryCheckUntil)
+            {
+                yield return null;
+                maximumFacingError = Mathf.Max(
+                    maximumFacingError,
+                    Quaternion.Angle(
+                        expectedTreatmentRotation,
+                        player.transform.rotation));
+            }
+            Assert.That(maximumFacingError, Is.LessThanOrEqualTo(0.1f));
+            Assert.That(
+                Vector3.Distance(player.transform.position, destination),
+                Is.LessThanOrEqualTo(0.01f));
+            Assert.That(
+                health.CurrentHealth,
+                Is.EqualTo(75f).Within(0.001f),
+                "Health must not be restored before the player reaches the " +
+                "treatment destination and completes the fixed cycle.");
+
+            module.enabled = false;
+            yield return null;
+            Assert.That(module.IsTreating, Is.False);
+            Assert.That(player.IsInputEnabled, Is.True);
+            Assert.That(enabledCanvases.All(canvas => canvas.enabled), Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator TerminalWorldDecorationFollowsPowerStateAndLastTab()
         {
             SceneManager.LoadScene("MainScene");
@@ -1349,7 +1462,7 @@ namespace NERA.Tests
                 Is.Null);
             Assert.That(
                 stationScreen.GetComponentsInChildren<StationObjectVisual>(true),
-                Has.Length.EqualTo(5));
+                Has.Length.EqualTo(6));
 
             Transform turretPreview = Array.Find(
                 stationScreen.GetComponentsInChildren<Transform>(true),
@@ -2932,19 +3045,21 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Transform quickRoot = FindDescendant(
                 hud.transform,
                 "Slot_Invent_Equipment");
+            GameObject containerDropTarget =
+                hud.ContainerMountDropTarget;
             Button dropButton = FindDescendant(
                 inventoryScreen,
                 "DropButton").GetComponent<Button>();
 
             Assert.That(backpackRoot.childCount, Is.EqualTo(8));
             Assert.That(anomalyRoot.childCount, Is.EqualTo(4));
-            Assert.That(quickRoot.childCount, Is.EqualTo(4));
+            Assert.That(quickRoot, Is.Null);
+            Assert.That(containerDropTarget, Is.Not.Null);
 
             foreach (Transform root in new[]
                      {
                          backpackRoot,
-                         anomalyRoot,
-                         quickRoot
+                         anomalyRoot
                      })
             {
                 for (int index = 0; index < root.childCount; index++)
@@ -2966,6 +3081,7 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Assert.That(inventory.AddItem(item), Is.True);
             hud.OpenInventory();
             Assert.That(inventoryScreen.gameObject.activeSelf, Is.True);
+            Assert.That(containerDropTarget.activeInHierarchy, Is.True);
 
             Transform sourceSlot =
                 GetSpawnedInventorySlot(backpackRoot.GetChild(0)).transform;
@@ -3016,6 +3132,57 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Object.Destroy(droppedItem.gameObject);
             hud.CloseAll();
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator EquipmentChargesInsideAuthoredStationSafeVolume()
+        {
+            SceneManager.LoadScene("MainScene");
+            yield return WaitForScene("Player_Station");
+            yield return null;
+            yield return DisablePersistenceForTest();
+
+            PlayerInventory inventory =
+                Object.FindFirstObjectByType<PlayerInventory>();
+            PlayerStationEquipmentCharger charger =
+                inventory?.GetComponent<PlayerStationEquipmentCharger>();
+            FogExclusionVolume safeVolume =
+                Object.FindFirstObjectByType<FogExclusionVolume>();
+            ItemCatalogData catalog =
+                Resources.Load<ItemCatalogData>("ItemCatalog_Default");
+            ItemData pistol = catalog?.Find("energy_pistol_01");
+
+            Assert.That(inventory, Is.Not.Null);
+            Assert.That(charger, Is.Not.Null);
+            Assert.That(safeVolume, Is.Not.Null);
+            Assert.That(pistol, Is.Not.Null);
+            Assert.That(
+                StationEnvironmentController.IsPlayerStationSceneActive,
+                Is.True);
+
+            inventory.RestoreItemInstances(Array.Empty<ItemInstance>());
+            Assert.That(inventory.AddItem(pistol), Is.True);
+            ItemInstance instance = inventory.QuickAccessItemInstances[0];
+            instance.SetCharge(0f);
+
+            BoxCollider volumeBox = safeVolume
+                .GetComponentsInChildren<BoxCollider>(true)
+                .First(box => box.gameObject.activeInHierarchy);
+            Vector3 originalPosition = inventory.transform.position;
+            Vector3 exposurePoint =
+                volumeBox.transform.TransformPoint(volumeBox.center);
+            inventory.transform.position = exposurePoint - Vector3.up;
+            Physics.SyncTransforms();
+            Assert.That(
+                FogExclusionVolume.IsWorldPointExcluded(exposurePoint),
+                Is.True);
+
+            yield return null;
+            Assert.That(charger.IsInsidePlayerStation, Is.True);
+            Assert.That(instance.Charge, Is.GreaterThan(0f));
+
+            inventory.transform.position = originalPosition;
+            inventory.RestoreItemInstances(Array.Empty<ItemInstance>());
         }
 
         [UnityTest]
@@ -3155,6 +3322,9 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             ItemData integrator = catalog != null
                 ? catalog.Find("io_integrator_01")
                 : null;
+            ItemData anomalyContainer = catalog != null
+                ? catalog.Find("anomaly_container_01")
+                : null;
             ItemData anomaly = catalog != null
                 ? catalog.Find("io_blue_shard_01")
                 : null;
@@ -3169,6 +3339,7 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Assert.That(tableVisuals, Is.Not.Null);
             Assert.That(pistol, Is.Not.Null);
             Assert.That(integrator, Is.Not.Null);
+            Assert.That(anomalyContainer, Is.Not.Null);
             Assert.That(anomaly, Is.Not.Null);
             Assert.That(record, Is.Not.Null);
 
@@ -3176,13 +3347,16 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             research.RestoreAnalyzed(Array.Empty<string>());
             research.RestoreLoadedItem(null, null);
             workstation.RestoreItems(
-                Array.Empty<ItemInstance>(),
                 Array.Empty<ItemInstance>());
             Assert.That(inventory.AddItem(pistol), Is.True, "Pistol was not added.");
             Assert.That(
                 inventory.AddItem(integrator),
                 Is.True,
                 "IO Integrator was not added.");
+            Assert.That(
+                inventory.AddItem(anomalyContainer),
+                Is.True,
+                "Anomaly container was not added.");
             Assert.That(inventory.AddItem(anomaly), Is.True, "Anomaly was not added.");
             Assert.That(inventory.AddItem(record), Is.True, "Record was not added.");
 
@@ -3203,7 +3377,6 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                 laboratory.GetComponent<LaboratoryScreenController>();
             Transform sharedInventory =
                 laboratory.Find("Inventory_and_info_Screen");
-            Transform powerScreen = laboratory.Find("PowerScreen");
             Transform scanScreen = laboratory.Find("ScanScreen");
             Transform upgradeScreen = laboratory.Find("UpgradeScreen");
 
@@ -3211,7 +3384,8 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Assert.That(screen, Is.Not.Null);
             Assert.That(sharedInventory.gameObject.activeSelf, Is.True, "Shared inventory is hidden.");
             Assert.That(scanScreen.gameObject.activeSelf, Is.True, "Scan screen is not the default.");
-            Assert.That(powerScreen.gameObject.activeSelf, Is.False);
+            Assert.That(laboratory.Find("PowerScreen"), Is.Null);
+            Assert.That(laboratory.Find("PowerMapButton"), Is.Null);
             Assert.That(upgradeScreen.gameObject.activeSelf, Is.False);
 
             AssertLaboratoryInventoryGroup(
@@ -3222,108 +3396,58 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                 sharedInventory,
                 "background_Screen_Storage_Slot_Invent_Anomaly",
                 4);
-            AssertLaboratoryInventoryGroup(
-                sharedInventory,
-                "background_Screen_Storage_Slot_Invent_Equipment",
-                4);
-
-            laboratory.Find("PowerMapButton").GetComponent<Button>()
-                .onClick.Invoke();
-            Assert.That(powerScreen.gameObject.activeSelf, Is.True, "Power tab did not open.");
-            Assert.That(scanScreen.gameObject.activeSelf, Is.False);
-            Assert.That(upgradeScreen.gameObject.activeSelf, Is.False);
-            Assert.That(sharedInventory.gameObject.activeSelf, Is.True, "Shared inventory hid after tab switch.");
+            Assert.That(
+                FindDescendant(
+                    sharedInventory,
+                    "background_Screen_Storage_Slot_Invent_Equipment"),
+                Is.Null);
 
             laboratory.Find("NextButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(screen.ActiveModeIndex, Is.EqualTo(1));
-            Assert.That(scanScreen.gameObject.activeSelf, Is.True);
+            Assert.That(scanScreen.gameObject.activeSelf, Is.False);
+            Assert.That(upgradeScreen.gameObject.activeSelf, Is.True);
             laboratory.Find("BackButton").GetComponent<Button>()
                 .onClick.Invoke();
             Assert.That(screen.ActiveModeIndex, Is.EqualTo(0));
+            Assert.That(scanScreen.gameObject.activeSelf, Is.True);
             yield return null;
             Canvas.ForceUpdateCanvases();
 
-            LaboratoryInventoryItemDrag pistolDrag =
-                FindPlayerInventoryDrag(laboratory, pistol);
-            Transform powerSlotRoot = FindDescendant(
-                powerScreen,
-                "Slot_01");
-            InventorySlotView powerSlot =
-                GetSpawnedInventorySlot(powerSlotRoot);
-            Assert.That(pistolDrag, Is.Not.Null);
-            Assert.That(powerSlot, Is.Not.Null);
-            Button inventorySlotButton =
-                pistolDrag.GetComponent<Button>();
-            Assert.That(inventorySlotButton, Is.Not.Null);
-            ClickThroughUi(inventorySlotButton);
             Component laboratoryInfoName = FindDescendant(
                     sharedInventory,
                     "Text_Name")
                 .GetComponent("TextMeshProUGUI");
             Assert.That(
-                laboratoryInfoName.GetType().GetProperty("text")
-                    ?.GetValue(laboratoryInfoName)?.ToString(),
-                Is.EqualTo(pistol.DisplayName),
-                "Laboratory inventory slot did not select its item.");
-
-            Canvas.ForceUpdateCanvases();
-            DropThroughUi(
-                pistolDrag,
-                powerSlot.GetComponent<LaboratoryItemDropSlot>());
-
-            Assert.That(
-                workstation.GetChargingItem(0)?.ItemData,
-                Is.SameAs(pistol));
-            AssertLaboratoryTableVisual(
-                tableVisuals.GetChargingVisual(0),
-                tableVisuals.transform.Find("Slot_Power/Slot_1"));
-            Transform progressTransform = FindDescendant(
-                powerScreen,
-                "Text_progress_01");
-            Component progress = progressTransform.GetComponent(
-                "TextMeshProUGUI");
-            Assert.That(progressTransform.gameObject.activeSelf, Is.True, "Charge progress is hidden.");
-            Assert.That(
-                progress.GetType().GetProperty("text")?.GetValue(progress)
-                    ?.ToString(),
-                Does.EndWith("%"));
-
-            FindDescendant(powerScreen, "DropButton")
-                .GetComponent<Button>().onClick.Invoke();
-            Assert.That(workstation.GetChargingItem(0), Is.Null);
-            Assert.That(tableVisuals.GetChargingVisual(0), Is.Null);
-            Assert.That(inventory.Contains(pistol.ItemId), Is.True, "Power Drop did not return pistol.");
+                FindPlayerInventoryDrag(laboratory, pistol),
+                Is.Null,
+                "Permanent weapons must not be shown in laboratory inventory.");
+            Assert.That(tableVisuals.transform.Find("Slot_Power"), Is.Null);
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
                 .onClick.Invoke();
-            LaboratoryInventoryItemDrag rejectedPistol =
-                FindPlayerInventoryDrag(laboratory, pistol);
-            LaboratoryInventoryItemDrag upgradeIntegrator =
-                FindPlayerInventoryDrag(laboratory, integrator);
+            LaboratoryInventoryItemDrag upgradeContainer =
+                FindPlayerInventoryDrag(laboratory, anomalyContainer);
             LaboratoryInventoryItemDrag upgradeAnomaly =
                 FindPlayerInventoryDrag(laboratory, anomaly);
             Transform upgradeSlot01 = upgradeScreen.transform.Find(
                 "background_Screen_Storage_Slot/Slot_01");
             Transform upgradeSlot02 = upgradeScreen.transform.Find(
                 "background_Screen_Storage_Slot/Slot_02");
-            GetSpawnedInventorySlot(upgradeSlot01)
-                .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(rejectedPistol);
             Assert.That(
                 workstation.GetUpgradeItem(0),
                 Is.Null,
                 "Ordinary weapons must not enter the integration slot.");
             GetSpawnedInventorySlot(upgradeSlot01)
                 .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(upgradeIntegrator);
+                .ItemDropped.Invoke(upgradeContainer);
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(upgradeAnomaly);
 
             Assert.That(
                 workstation.GetUpgradeItem(0)?.ItemData,
-                Is.SameAs(integrator));
+                Is.SameAs(anomalyContainer));
             Assert.That(
                 workstation.GetUpgradeItem(1)?.ItemData,
                 Is.SameAs(anomaly));
@@ -3499,15 +3623,15 @@ stationScreen.SelectSystem(StationSystemType.Drone);
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
                 .onClick.Invoke();
-            LaboratoryInventoryItemDrag synthesizedIntegrator =
-                FindPlayerInventoryDrag(laboratory, integrator);
+            LaboratoryInventoryItemDrag synthesizedContainer =
+                FindPlayerInventoryDrag(laboratory, anomalyContainer);
             LaboratoryInventoryItemDrag synthesizedAnomaly =
                 FindPlayerInventoryDrag(laboratory, anomaly);
-            Assert.That(synthesizedIntegrator, Is.Not.Null);
+            Assert.That(synthesizedContainer, Is.Not.Null);
             Assert.That(synthesizedAnomaly, Is.Not.Null);
             GetSpawnedInventorySlot(upgradeSlot01)
                 .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(synthesizedIntegrator);
+                .ItemDropped.Invoke(synthesizedContainer);
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(synthesizedAnomaly);
@@ -3566,14 +3690,15 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Assert.That(workstation.IsUpgradeProcessing, Is.False);
             Assert.That(synthesisProgressTransform.gameObject.activeSelf, Is.False);
 
-            ItemInstance synthesizedTool =
+            ItemInstance synthesizedContainerInstance =
                 workstation.GetUpgradeItem(0);
-            Assert.That(synthesizedTool, Is.Not.Null);
+            Assert.That(synthesizedContainerInstance, Is.Not.Null);
             Assert.That(
-                synthesizedTool.IntegratedAnomaly,
+                synthesizedContainerInstance.IntegratedAnomaly,
                 Is.SameAs(anomaly));
-            Assert.That(synthesizedTool.AnomalyCharges, Is.EqualTo(1));
-            Assert.That(synthesizedTool.IsFullyCharged, Is.True);
+            Assert.That(
+                synthesizedContainerInstance.AnomalyCharges,
+                Is.EqualTo(1));
             Assert.That(
                 workstation.GetUpgradeItem(1),
                 Is.Null,
@@ -3591,41 +3716,173 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                 .GetComponent<Button>().onClick.Invoke();
             Assert.That(tableVisuals.GetUpgradeVisual(0), Is.Null);
             Assert.That(inventory.Contains(integrator.ItemId), Is.True);
+            Assert.That(inventory.Contains(anomalyContainer.ItemId), Is.True);
             Assert.That(inventory.Contains(anomaly.ItemId), Is.False);
 
+            int integratorIndex = Enumerable.Range(
+                    0,
+                    inventory.QuickAccessItemInstances.Count)
+                .First(index =>
+                    inventory.QuickAccessItemInstances[index]?.ItemData ==
+                    integrator);
+            int containerIndex = Enumerable.Range(
+                    0,
+                    inventory.BackpackItemInstances.Count)
+                .First(index =>
+                    inventory.BackpackItemInstances[index]?.ItemData ==
+                    anomalyContainer);
+            string containerInstanceId =
+                inventory.BackpackItemInstances[containerIndex].InstanceId;
             ItemInstance equippedIntegrator =
-                inventory.QuickAccessItemInstances.FirstOrDefault(
-                    instance => instance?.ItemData == integrator);
+                inventory.QuickAccessItemInstances[integratorIndex];
             PlayerEquipmentController equipmentController =
                 inventory.GetComponent<PlayerEquipmentController>();
             Assert.That(equippedIntegrator, Is.Not.Null);
             Assert.That(equipmentController, Is.Not.Null);
+
+            hud.CloseAll();
+            hud.OpenInventory();
+            yield return null;
+            GameObject containerDropTarget =
+                hud.ContainerMountDropTarget;
+            SwitchCameras cameraSwitch = inventory.transform.root
+                .GetComponentInChildren<SwitchCameras>(true);
+            Transform inventoryScreen = FindDescendant(
+                hud.transform,
+                "InventoryScreen");
+            LaboratoryInventoryItemDrag containerDrag =
+                FindPlayerInventoryDrag(inventoryScreen, anomalyContainer);
+            Assert.That(containerDropTarget, Is.Not.Null);
+            Assert.That(containerDropTarget.activeInHierarchy, Is.True);
+            Assert.That(
+                containerDropTarget.GetComponent<Image>().color.a,
+                Is.Zero);
+            Assert.That(cameraSwitch, Is.Not.Null);
+            Assert.That(cameraSwitch.IsInventoryActive, Is.True);
+            Assert.That((int)cameraSwitch.InventoryCamera.Priority,
+                Is.EqualTo(1));
+            ParkourPlayerBridge playerBridge =
+                inventory.GetComponent<ParkourPlayerBridge>();
+            Assert.That(playerBridge, Is.Not.Null);
+            Assert.That(playerBridge.IsInputEnabled, Is.False);
+            Assert.That(containerDrag, Is.Not.Null);
+            containerDropTarget.GetComponent<LaboratoryItemDropSlot>()
+                .ItemDropped.Invoke(containerDrag);
+            Assert.That(equippedIntegrator.HasAnomalyContainer, Is.True);
+            LaboratoryInventoryItemDrag mountedInventoryDrag =
+                hud.MountedAnomalyContainerDrag;
+            Assert.That(mountedInventoryDrag, Is.Not.Null);
+            Assert.That(mountedInventoryDrag.gameObject.activeInHierarchy, Is.True);
+            Assert.That(mountedInventoryDrag.Item, Is.SameAs(anomalyContainer));
+            Assert.That(
+                mountedInventoryDrag.IsAnomalyContainerAttachmentSource,
+                Is.True);
+            hud.CloseAll();
+            Assert.That(
+                playerBridge.IsInputEnabled,
+                Is.False,
+                "Input returned before the inventory camera transition ended.");
+            Assert.That(cameraSwitch.IsInventoryActive, Is.False);
+            Assert.That(cameraSwitch.IsFreeLookActive, Is.True);
+            Assert.That((int)cameraSwitch.InventoryCamera.Priority,
+                Is.Zero);
+            Assert.That((int)cameraSwitch.FreeLookCamera.Priority,
+                Is.EqualTo(1));
+            for (int frame = 0;
+                 frame < 120 && !playerBridge.IsInputEnabled;
+                 frame++)
+            {
+                yield return null;
+            }
+            Assert.That(
+                playerBridge.IsInputEnabled,
+                Is.True,
+                "Input did not return after FreeLook became live.");
+            hud.OpenLaboratory(inventory.gameObject);
+            yield return null;
+
+            GameObject loadedIntegratorVisual =
+                equipmentController.EquippedVisuals[integratorIndex];
+            Transform mountedContainerSlot = FindDescendant(
+                loadedIntegratorVisual.transform,
+                "Slot_AnomalyContainer");
+            Assert.That(mountedContainerSlot.childCount, Is.EqualTo(1));
+            Transform loadedAnomalySlot = FindDescendant(
+                mountedContainerSlot,
+                "Slot_Anomaly");
+            Assert.That(loadedAnomalySlot.childCount, Is.EqualTo(1));
             Assert.That(
                 equipmentController.TryUseIntegratedAnomaly(
                     equippedIntegrator),
                 Is.True,
                 "R activation failed for the IO Integrator.");
-            Assert.That(equippedIntegrator.Charge, Is.Zero);
+            Assert.That(equippedIntegrator.IsFullyCharged, Is.True);
             Assert.That(equippedIntegrator.IntegratedAnomaly, Is.Null);
+            Assert.That(equippedIntegrator.HasAnomalyContainer, Is.True);
+            Assert.That(
+                equippedIntegrator.InstalledContainerAnomaly,
+                Is.Null);
+            GameObject emptyIntegratorVisual =
+                equipmentController.EquippedVisuals[integratorIndex];
+            mountedContainerSlot = FindDescendant(
+                emptyIntegratorVisual.transform,
+                "Slot_AnomalyContainer");
+            Assert.That(
+                mountedContainerSlot.childCount,
+                Is.EqualTo(1),
+                "The empty container must remain mounted after activation.");
+            Assert.That(
+                FindDescendant(
+                    mountedContainerSlot,
+                    "Slot_Anomaly").childCount,
+                Is.Zero,
+                "The used anomaly visual must disappear from its container.");
 
-            laboratory.Find("PowerMapButton").GetComponent<Button>()
-                .onClick.Invoke();
-            LaboratoryInventoryItemDrag dischargedIntegrator =
-                FindPlayerInventoryDrag(laboratory, integrator);
-            powerSlot.GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(dischargedIntegrator);
-            Assert.That(
-                workstation.GetChargingItem(0)?.ItemData,
-                Is.SameAs(integrator));
-            workstation.AdvanceCharging(
-                integrator.EnergyDefinition.Capacity /
-                integrator.EnergyDefinition.RechargePerSecond + 0.1f);
-            Assert.That(
-                workstation.GetChargingItem(0)?.IsFullyCharged,
-                Is.True,
-                "The IO Integrator did not recharge.");
-            FindDescendant(powerScreen, "DropButton")
-                .GetComponent<Button>().onClick.Invoke();
+            hud.CloseAll();
+            yield return null;
+            Terminal.TerminalUIScreen terminal =
+                Object.FindFirstObjectByType<Terminal.TerminalUIScreen>(
+                    FindObjectsInactive.Include);
+            Assert.That(terminal, Is.Not.Null);
+            StationSystemsController.Instance.SetCriticalSystemActive(
+                StationSystemType.Terminal,
+                true);
+            terminal.Open();
+            terminal.ShowStorage();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            Transform terminalStorage = terminal.transform.Find(
+                "StorageScreen");
+            LaboratoryInventoryItemDrag mountedTerminalDrag =
+                terminalStorage
+                    .GetComponentsInChildren<LaboratoryInventoryItemDrag>(true)
+                    .FirstOrDefault(drag =>
+                        drag.gameObject.activeInHierarchy &&
+                        drag.Item == anomalyContainer &&
+                        drag.IsAnomalyContainerAttachmentSource);
+            Transform destinationRoot = terminalStorage.Find(
+                "background_Screen_Storage_Slot_Invent/Slot_" +
+                (containerIndex + 1));
+            InventorySlotView destinationView =
+                GetSpawnedInventorySlot(destinationRoot);
+            Assert.That(mountedTerminalDrag, Is.Not.Null);
+            Assert.That(destinationView, Is.Not.Null);
+            DropThroughUi(
+                mountedTerminalDrag,
+                destinationView.GetComponent<LaboratoryItemDropSlot>());
+
+            Assert.That(equippedIntegrator.HasAnomalyContainer, Is.False);
+            ItemInstance detachedContainer =
+                inventory.BackpackItemInstances[containerIndex];
+            Assert.That(detachedContainer, Is.Not.Null);
+            Assert.That(detachedContainer.ItemData, Is.SameAs(anomalyContainer));
+            Assert.That(detachedContainer.InstanceId, Is.EqualTo(containerInstanceId));
+            Assert.That(detachedContainer.IntegratedAnomaly, Is.Null);
+            Assert.That(detachedContainer.AnomalyCharges, Is.Zero);
+            terminal.Close();
+            hud.OpenLaboratory(inventory.gameObject);
+            yield return null;
 
             Assert.That(
                 inventory.AddItem(anomaly),
@@ -3641,13 +3898,13 @@ stationScreen.SelectSystem(StationSystemType.Drone);
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
                 .onClick.Invoke();
-            LaboratoryInventoryItemDrag rechargedIntegrator =
-                FindPlayerInventoryDrag(laboratory, integrator);
+            LaboratoryInventoryItemDrag reusableContainer =
+                FindPlayerInventoryDrag(laboratory, anomalyContainer);
             LaboratoryInventoryItemDrag secondAnalyzedAnomaly =
                 FindPlayerInventoryDrag(laboratory, anomaly);
             GetSpawnedInventorySlot(upgradeSlot01)
                 .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(rechargedIntegrator);
+                .ItemDropped.Invoke(reusableContainer);
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(secondAnalyzedAnomaly);
@@ -3680,13 +3937,13 @@ stationScreen.SelectSystem(StationSystemType.Drone);
 
             laboratory.Find("UpgradeMapButton").GetComponent<Button>()
                 .onClick.Invoke();
-            rechargedIntegrator =
-                FindPlayerInventoryDrag(laboratory, integrator);
+            reusableContainer =
+                FindPlayerInventoryDrag(laboratory, anomalyContainer);
             secondAnalyzedAnomaly =
                 FindPlayerInventoryDrag(laboratory, anomaly);
             GetSpawnedInventorySlot(upgradeSlot01)
                 .GetComponent<LaboratoryItemDropSlot>()
-                .ItemDropped.Invoke(rechargedIntegrator);
+                .ItemDropped.Invoke(reusableContainer);
             GetSpawnedInventorySlot(upgradeSlot02)
                 .GetComponent<LaboratoryItemDropSlot>()
                 .ItemDropped.Invoke(secondAnalyzedAnomaly);
@@ -3731,9 +3988,10 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                     "background_Screen_Storage_Slot")),
                 Is.EqualTo(storage.BackpackSlots.Count));
             Assert.That(
-                CountDirectSlotButtons(storageScreen.transform.Find(
-                    "background_Screen_Storage_Slot_Equipment")),
-                Is.EqualTo(storage.QuickAccessSlots.Count));
+                storageScreen.transform.Find(
+                    "background_Screen_Storage_Slot_Equipment"),
+                Is.Null,
+                "Permanent equipment storage slots must be removed.");
             Assert.That(
                 CountDirectSlotButtons(storageScreen.transform.Find(
                     "background_Screen_Storage_Slot_Anomaly")),
@@ -3780,9 +4038,9 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                     .gameObject.activeSelf,
                 Is.True);
             Assert.That(
-                storageScreen.Find("background_Screen_Storage_Slot_Invent_Equipment")
-                    .gameObject.activeSelf,
-                Is.True);
+                storageScreen.Find(
+                    "background_Screen_Storage_Slot_Invent_Equipment"),
+                Is.Null);
 
             statusButton.onClick.Invoke();
             Assert.That(storageScreen.gameObject.activeSelf, Is.False);
@@ -3859,7 +4117,6 @@ stationScreen.SelectSystem(StationSystemType.Drone);
             Assert.That(source.SourceIndex, Is.GreaterThanOrEqualTo(0));
             Assert.That(source.IsStationStorageSource, Is.False);
             Assert.That(source.IsLaboratorySource, Is.False);
-            Assert.That(source.IsChargingSource, Is.False);
             Assert.That(storage.BackpackSlots.Count, Is.EqualTo(16));
             Assert.That(
                 PlayerInventory.GetSlotGroup(item.ItemType),
@@ -4256,7 +4513,6 @@ stationScreen.SelectSystem(StationSystemType.Drone);
                 if (drag.Item == item &&
                     drag.SourceIndex >= 0 &&
                     !drag.IsLaboratorySource &&
-                    !drag.IsChargingSource &&
                     !drag.IsUpgradeSource &&
                     !drag.IsStationStorageSource)
                 {

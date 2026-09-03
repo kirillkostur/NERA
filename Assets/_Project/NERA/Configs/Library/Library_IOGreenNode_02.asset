@@ -15,6 +15,6 @@ MonoBehaviour:
   entryId: io_green_node_02
   title: GREEN IO // REPAIR NODE
   category: 1
-  description: The integrated repair node restores the operator's biological functions.
-    Activating it fully restores the player's health.
+  description: The repair node in an anomaly container restores the operator's biological
+    functions. Activating it fully restores the player's health.
   illustration: {fileID: 0}

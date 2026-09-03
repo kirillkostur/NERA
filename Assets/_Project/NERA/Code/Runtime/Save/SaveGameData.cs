@@ -13,6 +13,10 @@ namespace NERA.Save
         public bool isScanned;
         public string integratedAnomalyItemId;
         public int anomalyCharges;
+        public string installedAnomalyContainerInstanceId;
+        public string installedAnomalyContainerItemId;
+        public string installedContainerAnomalyItemId;
+        public int installedContainerAnomalyCharges;
     }
 
     [Serializable]
@@ -50,7 +54,7 @@ namespace NERA.Save
     [Serializable]
     public sealed class SaveGameData
     {
-        public const int CurrentVersion = 22;
+        public const int CurrentVersion = 24;
 
         public int version = CurrentVersion;
         public string checkpointSceneName;
@@ -98,11 +102,12 @@ namespace NERA.Save
         public List<InventoryItemSaveData> stationQuickAccessItems = new List<InventoryItemSaveData>();
         public List<InventoryItemSaveData> stationAnomalyItems = new List<InventoryItemSaveData>();
         public List<StationSystemSaveData> stationSystems = new List<StationSystemSaveData>();
+        // Version 23 and older: returned to the player during migration.
         public List<InventoryItemSaveData> laboratoryChargingItems =
             new List<InventoryItemSaveData>();
         public List<InventoryItemSaveData> laboratoryUpgradeItems =
             new List<InventoryItemSaveData>();
-        // Version 9 and older: migrated into laboratoryChargingItems[0].
+        // Version 9 and older: returned to the player during migration.
         public InventoryItemSaveData chargingTableItem;
         public InventoryItemSaveData laboratoryItem;
         public List<string> analyzedResearchIds = new List<string>();

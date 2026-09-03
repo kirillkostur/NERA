@@ -15,7 +15,8 @@ MonoBehaviour:
   integrationId: io_yellow_scan
   displayName: Yellow IO Scan
   displayColor: {r: 1, g: 0.76, b: 0.08, a: 1}
-  compatibleEquipment: []
+  compatibleContainers:
+  - {fileID: 11400000, guid: 0b99ea03760bc8e4f84bec69874c0227, type: 2}
   synthesisDuration: 12
   effect: 4
   radius: 10

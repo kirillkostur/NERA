@@ -13,6 +13,10 @@ namespace NERA.Items
         [SerializeField] private bool isScanned;
         [SerializeField] private ItemData integratedAnomaly;
         [SerializeField] private int anomalyCharges;
+        [SerializeField] private string installedAnomalyContainerInstanceId;
+        [SerializeField] private ItemData installedAnomalyContainer;
+        [SerializeField] private ItemData installedContainerAnomaly;
+        [SerializeField] private int installedContainerAnomalyCharges;
 
         public string InstanceId => instanceId;
         public ItemData ItemData => itemData;
@@ -24,15 +28,28 @@ namespace NERA.Items
         public bool IsFullyCharged => !IsChargeable || Charge >= MaxCharge - 0.001f;
         public bool IsScanned => isScanned;
         public ItemData IntegratedAnomaly => integratedAnomaly;
+        public string InstalledAnomalyContainerInstanceId =>
+            installedAnomalyContainerInstanceId;
+        public ItemData InstalledAnomalyContainer => installedAnomalyContainer;
+        public ItemData InstalledContainerAnomaly => installedContainerAnomaly;
+        public int InstalledContainerAnomalyCharges =>
+            Mathf.Max(0, installedContainerAnomalyCharges);
+        public bool HasAnomalyContainer => installedAnomalyContainer != null;
+        public ItemData EffectiveIntegratedAnomaly =>
+            itemData?.AcceptsAnomalyContainer == true
+                ? installedContainerAnomaly
+                : integratedAnomaly;
         public AnomalyIntegrationDefinition AnomalyIntegration =>
-            integratedAnomaly?.AnomalyIntegrationDefinition;
-        public int AnomalyCharges => Mathf.Max(0, anomalyCharges);
+            EffectiveIntegratedAnomaly?.AnomalyIntegrationDefinition;
+        public int AnomalyCharges => itemData?.AcceptsAnomalyContainer == true
+            ? InstalledContainerAnomalyCharges
+            : Mathf.Max(0, anomalyCharges);
         public bool HasAnomalyIntegration => AnomalyIntegration != null;
         public bool CanUseAnomalyIntegration =>
+            itemData?.AcceptsAnomalyContainer == true &&
+            HasAnomalyContainer &&
             HasAnomalyIntegration &&
-            AnomalyCharges > 0 &&
-            IsChargeable &&
-            IsFullyCharged;
+            AnomalyCharges > 0;
 
         private ItemInstance() { }
 
@@ -113,10 +130,8 @@ namespace NERA.Items
             ItemData anomaly = anomalyInstance?.ItemData;
             AnomalyIntegrationDefinition definition =
                 anomaly?.AnomalyIntegrationDefinition;
-            if (itemData?.ItemType != ItemType.Equipment ||
+            if (itemData?.ItemType != ItemType.AnomalyContainer ||
                 !itemData.AcceptsAnomalyIntegration ||
-                !IsChargeable ||
-                !IsFullyCharged ||
                 HasAnomalyIntegration ||
                 anomalyInstance?.IsScanned != true ||
                 definition == null ||
@@ -130,15 +145,73 @@ namespace NERA.Items
             return true;
         }
 
+        public bool TryInstallAnomalyContainer(
+            ItemInstance containerInstance,
+            out ItemInstance replacedContainer)
+        {
+            replacedContainer = null;
+            ItemData container = containerInstance?.ItemData;
+            if (itemData?.ItemType != ItemType.Equipment ||
+                !itemData.AcceptsAnomalyContainer ||
+                container?.ItemType != ItemType.AnomalyContainer ||
+                !container.AcceptsAnomalyIntegration ||
+                container.AcceptsAnomalyContainer)
+            {
+                return false;
+            }
+
+            replacedContainer = CreateInstalledAnomalyContainerInstance();
+            installedAnomalyContainerInstanceId =
+                string.IsNullOrWhiteSpace(containerInstance.InstanceId)
+                    ? Guid.NewGuid().ToString("N")
+                    : containerInstance.InstanceId;
+            installedAnomalyContainer = container;
+            installedContainerAnomaly = containerInstance.IntegratedAnomaly;
+            installedContainerAnomalyCharges =
+                containerInstance.AnomalyCharges;
+            return true;
+        }
+
+        public bool TryRemoveAnomalyContainer(out ItemInstance container)
+        {
+            container = CreateInstalledAnomalyContainerInstance();
+            if (container == null)
+                return false;
+
+            ClearInstalledAnomalyContainer();
+            return true;
+        }
+
+        public ItemInstance CreateInstalledAnomalyContainerInstance()
+        {
+            if (!HasAnomalyContainer)
+                return null;
+
+            return Restore(
+                installedAnomalyContainerInstanceId,
+                installedAnomalyContainer,
+                0f,
+                installedContainerAnomaly,
+                installedContainerAnomalyCharges,
+                false);
+        }
+
         public bool TryConsumeAnomalyCharge()
         {
             if (!CanUseAnomalyIntegration)
                 return false;
 
-            charge = 0f;
-            integratedAnomaly = null;
-            anomalyCharges = 0;
+            installedContainerAnomaly = null;
+            installedContainerAnomalyCharges = 0;
             return true;
+        }
+
+        private void ClearInstalledAnomalyContainer()
+        {
+            installedAnomalyContainerInstanceId = string.Empty;
+            installedAnomalyContainer = null;
+            installedContainerAnomaly = null;
+            installedContainerAnomalyCharges = 0;
         }
 
         public bool CanConsume(float amount)

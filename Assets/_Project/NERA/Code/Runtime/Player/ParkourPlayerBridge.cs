@@ -51,6 +51,24 @@ namespace NERA.Player
         public bool IsDead => isDead;
         public Rigidbody LocomotionBody => locomotionBody;
         public Camera GameplayCamera => gameplayCamera;
+        public bool CanOpenInventory
+        {
+            get
+            {
+                ResolveReferences();
+                return IsInputEnabled &&
+                    parkourController != null &&
+                    parkourController.isGrounded &&
+                    !parkourController.isJumping &&
+                    !parkourController.isVaulting &&
+                    !parkourController.dummy &&
+                    parkourController.allowMovement &&
+                    (movementController == null ||
+                     !movementController.stopMotion) &&
+                    (climbController == null ||
+                     !climbController.IsActive);
+            }
+        }
 
         private void Awake()
         {
